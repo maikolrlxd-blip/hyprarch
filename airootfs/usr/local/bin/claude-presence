@@ -557,7 +557,7 @@ def run_daemon():
             env = {k: v for k, v in os.environ.items() if k not in ("LD_PRELOAD", "GSK_RENDERER")}
             script = os.path.expanduser("~/.config/hypr/scripts/once.sh")
             try:
-                subprocess.Popen(["bash", script, "hyprarch-claude", "claude"], env=env, start_new_session=True,
+                subprocess.Popen(["bash", script, "hyprarch-ai", "hyprarch-ai", "chat"], env=env, start_new_session=True,
                                  stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 write_state("done", "¡Hola! Te escucho")
             except Exception as e:

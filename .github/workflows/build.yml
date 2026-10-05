@@ -7,6 +7,11 @@ on:
         description: "Modo desarrollo (SSH con llave, solo para la VM)"
         type: boolean
         default: false
+      edition:
+        description: "Edición: personal (con Claude Code) o public (sin ninguna IA incluida)"
+        type: choice
+        options: [personal, public]
+        default: personal
   push:
     branches: [main]
 
@@ -25,13 +30,14 @@ jobs:
       - name: Compilar la ISO
         env:
           HYPRARCH_DEV: ${{ inputs.dev && '1' || '0' }}
+          HYPRARCH_EDITION: ${{ inputs.edition || 'personal' }}
         run: |
           sed -i 's/\r$//' build.sh
           bash build.sh
 
       - uses: actions/upload-artifact@v4
         with:
-          name: hyprarch-iso
+          name: ${{ (inputs.edition == 'public') && 'hyprarch-iso-public' || 'hyprarch-iso' }}
           path: out/*.iso
           compression-level: 0
           retention-days: 7

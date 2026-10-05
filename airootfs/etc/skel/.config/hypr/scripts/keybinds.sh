@@ -5,7 +5,8 @@ SUPER + Enter           Terminal
 SUPER + D               Lanzador de aplicaciones
 SUPER + B               Firefox
 SUPER + E               Archivos
-SUPER + A               Claude (asistente de IA)
+SUPER + A               Hablar con tu IA (también: clic en el personajito)
+SUPER + SHIFT + A       Cambiar de IA (Claude, Codex, Gemini, Ollama...)
 SUPER + N               Redes Wi-Fi
 SUPER + T               Cambiar tema de colores
 SUPER + Q  /  ALT + F4  CERRAR ventana

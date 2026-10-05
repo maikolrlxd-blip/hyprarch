@@ -1,0 +1,19 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "claude-presence set thinking 'Pensando…'" } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "claude-presence tool" } ] }
+    ],
+    "PostToolUse": [
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "claude-presence set thinking 'Pensando…'" } ] }
+    ],
+    "Notification": [
+      { "hooks": [ { "type": "command", "command": "claude-presence set waiting 'Necesito tu atención'" } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "claude-presence set done '¡Listo!'" } ] }
+    ]
+  }
+}

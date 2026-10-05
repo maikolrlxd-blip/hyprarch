@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+# hyprarch-ai — conversá con la IA que prefieras (ninguna viene obligada).
+#
+#   hyprarch-ai chat     abre la IA elegida (si todavía no elegiste ninguna, te deja elegir)
+#   hyprarch-ai setup    cambia de IA
+#   hyprarch-ai status   muestra cuál está elegida
+#
+# La elección queda en ~/.config/hyprarch/ai.conf. Si la IA no está instalada se instala sola
+# la primera vez en tu carpeta personal (~/.local), sin tocar el sistema. Cada servicio te
+# pide iniciar sesión (o una clave de API) él mismo: hyprarch no guarda ninguna credencial.
+set -u
+export PATH="$HOME/.local/bin:$PATH"
+
+CONF="${XDG_CONFIG_HOME:-$HOME/.config}/hyprarch/ai.conf"
+SHARE=/usr/share/hyprarch/ai
+AI=""
+AI_CMD=""
+# shellcheck disable=SC1090
+[[ -r $CONF ]] && . "$CONF"
+
+# id|nombre que se ve|comando|cómo se instala (npm:<paquete> | pipx:<paquete> | pacman:<paquete> | -)
+PROVIDERS=(
+  "claude|Claude Code (Anthropic)|claude|npm:@anthropic-ai/claude-code"
+  "codex|Codex (OpenAI / ChatGPT)|codex|npm:@openai/codex"
+  "gemini|Gemini CLI (Google)|gemini|npm:@google/gemini-cli"
+  "aider|Aider (cualquier modelo, con tu clave de API)|aider|pipx:aider-chat"
+  "ollama|Ollama (modelos locales, sin internet)|ollama|pacman:ollama"
+  "custom|Otra (escribo yo el comando)||-"
+)
+
+buddy() { # avisa al personajito (si está)
+  local b
+  for b in hyprarch-buddy claude-presence; do
+    command -v "$b" >/dev/null 2>&1 && { "$b" set "$1" "$2" >/dev/null 2>&1; return 0; }
+  done
+  return 0
+}
+
+field() { # field <id> <n>   (1=id 2=nombre 3=comando 4=instalación)
+  local p
+  for p in "${PROVIDERS[@]}"; do
+    [[ ${p%%|*} == "$1" ]] && { cut -d'|' -f"$2" <<<"$p"; return 0; }
+  done
+  return 1
+}
+
+save() {
+  mkdir -p "$(dirname "$CONF")"
+  local tmp
+  tmp=$(mktemp "$CONF.XXXXXX") || return 1
+  printf 'AI=%q\nAI_CMD=%q\n' "$AI" "$AI_CMD" >"$tmp" && mv -f "$tmp" "$CONF"
+}
+
+pause() { read -rp "Enter para cerrar... " _; }
+
+setup() {
+  local labels=() p choice id
+  for p in "${PROVIDERS[@]}"; do labels+=("$(cut -d'|' -f2 <<<"$p")"); done
+  clear
+  printf '\n  ¿Con qué IA querés hablar?\n  (podés cambiarla cuando quieras con SUPER+SHIFT+A)\n\n'
+  if command -v fzf >/dev/null 2>&1; then
+    choice=$(printf '%s\n' "${labels[@]}" | fzf --height=40% --reverse --prompt='IA > ' --no-info) || return 1
+  else
+    select choice in "${labels[@]}"; do [[ -n $choice ]] && break; done
+  fi
+  for p in "${PROVIDERS[@]}"; do
+    [[ $(cut -d'|' -f2 <<<"$p") == "$choice" ]] && id=${p%%|*}
+  done
+  [[ -n ${id:-} ]] || return 1
+  AI=$id
+  AI_CMD=""
+  if [[ $AI == custom ]]; then
+    read -rp "  Comando completo (ej. aichat, llm chat, mi-ia --modo chat): " AI_CMD
+    [[ -n $AI_CMD ]] || return 1
+  elif [[ $AI == ollama ]]; then
+    read -rp "  Modelo de Ollama [Enter = llama3.2]: " m
+    AI_CMD="ollama run ${m:-llama3.2}"
+  fi
+  save
+}
+
+install_provider() {
+  local method pkg
+  method=$(field "$AI" 4)
+  pkg=${method#*:}
+  case $method in
+    npm:*)
+      printf '\n  Instalando %s (solo la primera vez, hace falta internet)...\n\n' "$(field "$AI" 2)"
+      # npm reciente bloquea los scripts de instalación: Claude Code necesita el suyo para dejar el binario nativo
+      local extra=()
+      [[ $AI == claude ]] && extra=(--allow-scripts=@anthropic-ai/claude-code)
+      npm install -g --prefix "$HOME/.local" --no-fund --no-audit "${extra[@]}" "$pkg" || return 1
+      if [[ $AI == claude ]]; then
+        local d="$HOME/.local/lib/node_modules/@anthropic-ai/claude-code"
+        local n="$d/node_modules/@anthropic-ai/claude-code-linux-x64/claude"
+        # si el script igual no corrió, se enlaza el binario nativo a mano
+        [[ -x $n ]] && ln -sfn "../node_modules/@anthropic-ai/claude-code-linux-x64/claude" "$d/bin/claude.exe"
+      fi ;;
+    pipx:*)
+      printf '\n  Instalando %s (solo la primera vez, hace falta internet)...\n\n' "$(field "$AI" 2)"
+      pipx install "$pkg" ;;
+    pacman:*)
+      printf '\n  Instalando %s en el sistema (pide permisos de administrador)...\n\n' "$(field "$AI" 2)"
+      sudo pacman -S --noconfirm --needed "$pkg" && sudo systemctl start ollama 2>/dev/null ;;
+    *) return 0 ;;
+  esac
+}
+
+provider_extras() { # ajustes que dependen de la IA elegida
+  case $AI in
+    claude)
+      # Claude Code avisa al personajito (pensando / trabajando / listo) mediante sus "hooks"
+      if [[ ! -e $HOME/.claude/settings.json && -r $SHARE/claude-settings.json ]]; then
+        mkdir -p "$HOME/.claude" && cp "$SHARE/claude-settings.json" "$HOME/.claude/settings.json"
+      fi ;;
+  esac
+}
+
+chat() {
+  [[ -n $AI ]] || { setup || exit 0; }
+  local cmd
+  if [[ $AI == custom || $AI == ollama ]]; then
+    cmd=$AI_CMD
+  else
+    cmd=$(field "$AI" 3)
+  fi
+  [[ -n $cmd ]] || { echo "Configuración de IA inválida. Corré: hyprarch-ai setup"; pause; exit 1; }
+
+  local bin=${cmd%% *}
+  if ! command -v "$bin" >/dev/null 2>&1; then
+    buddy working "Instalando $(field "$AI" 2)"
+    if ! install_provider || ! command -v "$bin" >/dev/null 2>&1; then
+      buddy error "No pude instalar la IA"
+      printf '\n  No se pudo instalar. Revisá la conexión (SUPER+N) y probá de nuevo.\n'
+      pause; exit 1
+    fi
+  fi
+  provider_extras
+  buddy done "¡Listo, hablemos!"
+  # shellcheck disable=SC2086
+  exec $cmd
+}
+
+case ${1:-chat} in
+  chat)   chat ;;
+  setup)  setup && chat ;;
+  status) printf 'IA: %s\n' "${AI:-ninguna elegida}"; [[ -n $AI_CMD ]] && printf 'Comando: %s\n' "$AI_CMD" ;;
+  *)      printf 'Uso: hyprarch-ai {chat|setup|status}\n'; exit 2 ;;
+esac

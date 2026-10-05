@@ -229,7 +229,8 @@ hl.bind(mod .. " + D",      hl.dsp.exec_cmd(menu))
 hl.bind(mod .. " + B",      hl.dsp.exec_cmd(browser))
 hl.bind(mod .. " + E",      hl.dsp.exec_cmd(files))
 hl.bind(mod .. " + N",      hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-nmtui nmtui"))
-hl.bind(mod .. " + A",      hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-claude claude"))
+hl.bind(mod .. " + A",      hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-ai hyprarch-ai chat"))            -- hablar con la IA elegida
+hl.bind(mod .. " + SHIFT + A", hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-ai hyprarch-ai setup"))   -- cambiar de IA
 hl.bind(mod .. " + T",      hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-theme hyprarch-theme"))
 hl.bind(mod .. " + S",      hl.dsp.exec_cmd("bash " .. scripts .. "/toggle-shader.sh"))   -- shader CRT (apagado por defecto)
 hl.bind(mod .. " + F1",     hl.dsp.exec_cmd(scripts .. "/keybinds.sh"))
