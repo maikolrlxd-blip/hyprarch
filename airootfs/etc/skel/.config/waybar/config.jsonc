@@ -9,9 +9,10 @@
 
   "modules-left": [
     "custom/launcher",
-    "hyprland/workspaces",
+    "group/workspaces",
     "hyprland/window",
-    "custom/close"
+    "custom/close",
+    "custom/ws-events"
   ],
   "modules-center": ["clock", "custom/sys"],
   "modules-right": [
@@ -50,11 +51,28 @@
     "on-click": "fuzzel"
   },
 
-  "hyprland/workspaces": {
-    "format": "{id}",
-    "on-click": "activate",
-    "persistent-workspaces": { "*": 5 }
+  // Espacios de trabajo: el módulo hyprland/workspaces de Waybar 0.15 no puede cambiar de espacio con
+  // Hyprland en Lua (manda "dispatch workspace N", que ya no es válido). Se usan 5 botones propios;
+  // un script oculto (custom/ws-events) escucha los eventos de Hyprland y avisa a Waybar con RTMIN+8.
+  "group/workspaces": {
+    "orientation": "horizontal",
+    "modules": ["custom/ws1", "custom/ws2", "custom/ws3", "custom/ws4", "custom/ws5"]
   },
+
+  "custom/ws-events": {
+    "exec": "exec bash \"$HOME/.config/waybar/hyprarch-workspaces\" watch",
+    "return-type": "json",
+    "format": "{text}",
+    "hide-empty-text": true,
+    "tooltip": false,
+    "restart-interval": 2
+  },
+
+  "custom/ws1": { "exec": "exec bash \"$HOME/.config/waybar/hyprarch-workspaces\" show 1", "return-type": "json", "format": "{text}", "signal": 8, "exec-on-event": false, "on-click": "exec bash \"$HOME/.config/waybar/hyprarch-workspaces\" focus 1" },
+  "custom/ws2": { "exec": "exec bash \"$HOME/.config/waybar/hyprarch-workspaces\" show 2", "return-type": "json", "format": "{text}", "signal": 8, "exec-on-event": false, "on-click": "exec bash \"$HOME/.config/waybar/hyprarch-workspaces\" focus 2" },
+  "custom/ws3": { "exec": "exec bash \"$HOME/.config/waybar/hyprarch-workspaces\" show 3", "return-type": "json", "format": "{text}", "signal": 8, "exec-on-event": false, "on-click": "exec bash \"$HOME/.config/waybar/hyprarch-workspaces\" focus 3" },
+  "custom/ws4": { "exec": "exec bash \"$HOME/.config/waybar/hyprarch-workspaces\" show 4", "return-type": "json", "format": "{text}", "signal": 8, "exec-on-event": false, "on-click": "exec bash \"$HOME/.config/waybar/hyprarch-workspaces\" focus 4" },
+  "custom/ws5": { "exec": "exec bash \"$HOME/.config/waybar/hyprarch-workspaces\" show 5", "return-type": "json", "format": "{text}", "signal": 8, "exec-on-event": false, "on-click": "exec bash \"$HOME/.config/waybar/hyprarch-workspaces\" focus 5" },
 
   "hyprland/window": {
     "format": "{title}",

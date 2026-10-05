@@ -1,0 +1,239 @@
+#!/usr/bin/env bash
+# Botones de espacios de trabajo para Waybar (diseñado por Codex, revisado por Claude).
+# Uso: hyprarch-workspaces {watch | show N | focus N}
+#   watch  -> proceso oculto: escucha eventos de Hyprland, guarda el estado y avisa a Waybar con RTMIN+8
+#   show N -> imprime el JSON del botón N (lo usa custom/wsN)
+#   focus N-> cambia al espacio N (Hyprland en Lua: hl.dsp.focus)
+set -u
+umask 077
+
+runtime=${XDG_RUNTIME_DIR:?Falta XDG_RUNTIME_DIR}
+owner=$PPID
+output=${WAYBAR_OUTPUT_NAME:-default}
+output=${output//[^a-zA-Z0-9_-]/_}
+dir="$runtime/hyprarch-ws-$owner-$output"
+cache="$dir/state.json"
+
+valid_number() { [[ ${1:-} =~ ^[1-5]$ ]]; }
+
+select_instance() {
+    local data
+    data=$(timeout 2s hyprctl -j instances 2>/dev/null) || return 1
+    signature=$(jq -er --arg old "${HYPRLAND_INSTANCE_SIGNATURE:-}" \
+        --arg display "${WAYLAND_DISPLAY:-}" '
+        . as $all
+        | map(select(.instance == $old)) as $oldmatch
+        | $all | map(select(.wl_socket == $display)) as $displaymatch
+        | if ($oldmatch|length) == 1 then $oldmatch[0].instance
+          elif ($displaymatch|length) == 1 then $displaymatch[0].instance
+          elif ($all|length) == 1 then $all[0].instance
+          else empty end
+    ' <<<"$data" 2>/dev/null) || return 1
+    [[ -S "$runtime/hypr/$signature/.socket2.sock" ]]
+}
+
+unknown() {
+    jq -cn '{signature:"", buttons:[range(1;6) as $n | {
+        text:($n|tostring), class:["workspace","unknown"],
+        tooltip:("Espacio \($n): estado no disponible")
+    }]}'
+}
+
+case ${1:-} in
+    show)
+        valid_number "${2:-}" || exit 2
+        if value=$(jq -ce --argjson n "$2" \
+            '.buttons[$n-1]' "$cache" 2>/dev/null); then
+            printf '%s\n' "$value"
+        else
+            unknown | jq -c --argjson n "$2" '.buttons[$n-1]'
+        fi
+        exit 0
+        ;;
+    focus)
+        valid_number "${2:-}" || exit 2
+        select_instance || exit 1
+        exec timeout 2s hyprctl -i "$signature" dispatch \
+            "hl.dsp.focus({workspace=$2})"
+        ;;
+    watch) ;;
+    *)
+        printf 'Uso: %s {watch|show N|focus N}\n' "$0" >&2
+        exit 2
+        ;;
+esac
+
+for command in jq hyprctl socat timeout; do
+    command -v "$command" >/dev/null || {
+        printf 'hyprarch-workspaces: falta %s\n' "$command" >&2
+        exit 1
+    }
+done
+
+mkdir -p "$dir" || exit 1
+tmp="$dir/state.$$.tmp"
+fifo="$dir/events.$$"
+relay_pid=''
+fd=''
+last=''
+
+stop_relay() {
+    if [[ -n $relay_pid ]]; then
+        kill -TERM "$relay_pid" 2>/dev/null || :
+        wait "$relay_pid" 2>/dev/null || :
+        relay_pid=''
+    fi
+    if [[ -n $fd ]]; then
+        exec {fd}<&-
+        fd=''
+    fi
+}
+
+cleanup() {
+    stop_relay
+    rm -f -- "$tmp" "$fifo" "$cache"
+    rmdir -- "$dir" 2>/dev/null || :
+}
+
+trap cleanup EXIT
+trap 'exit 0' TERM INT HUP PIPE
+mkfifo "$fifo" || exit 1
+
+publish() {
+    local next=$1
+    [[ $next == "$last" ]] && return 0
+    printf '%s\n' "$next" >"$tmp" || return 1
+    mv -f -- "$tmp" "$cache" || return 1
+    last=$next
+    kill -s RTMIN+8 "$owner" 2>/dev/null || exit 0
+}
+
+snapshot() {
+    local workspaces active next
+
+    workspaces=$(timeout 2s hyprctl -i "$signature" \
+        -j workspaces 2>/dev/null) || return 1
+    active=$(timeout 2s hyprctl -i "$signature" \
+        -j activeworkspace 2>/dev/null) || return 1
+
+    next=$(jq -ecn --arg signature "$signature" \
+        --argjson w "$workspaces" --argjson a "$active" '
+        if ($w|type) != "array" or ($a.id|type) != "number"
+        then error("Respuesta IPC invalida")
+        else {signature:$signature, buttons:[range(1;6) as $n
+            | ([$w[] | select(.id == $n) | .windows][0] // 0) as $count
+            | (if $a.id == $n then "active"
+               elif $count > 0 then "occupied" else "empty" end) as $state
+            | {text:($n|tostring), class:["workspace",$state],
+               tooltip:("Espacio \($n): \($count) ventana(s)")}
+        ]} end
+    ' 2>/dev/null) || return 1
+
+    publish "$next"
+}
+
+# Socat abre UNIX-CONNECT antes de OPEN: la apertura del FIFO
+# sincroniza la suscripcion antes de consultar el estado inicial.
+relay() (
+    child=''
+    trap '[[ -z $child ]] || {
+        kill -TERM "$child" 2>/dev/null
+        wait "$child" 2>/dev/null
+    }; :' EXIT
+    trap 'exit 0' TERM INT HUP
+
+    socat -u "UNIX-CONNECT:$socket" "OPEN:$fifo,wronly" &
+    child=$!
+    wait "$child"
+    child=''
+
+    # Desbloquea la apertura del FIFO tambien si fallo la conexion.
+    printf '__disconnected__\n' >"$fifo"
+)
+
+# Conserva fragmentos si vence el timeout a mitad de una linea.
+read_event() {
+    local chunk='' status
+    IFS= read -r -t "$1" -u "$fd" chunk
+    status=$?
+    if (( status == 0 )); then
+        event="$partial$chunk"
+        partial=''
+    else
+        partial+=$chunk
+    fi
+    return "$status"
+}
+
+mark_event() {
+    case ${event%%>>*} in
+        __disconnected__)
+            disconnected=1
+            ;;
+        workspace*|focusedmon*|createworkspace*|destroyworkspace*|\
+        moveworkspace*|renameworkspace|openwindow|closewindow|\
+        movewindow*|monitoradded*|monitorremoved*|configreloaded|\
+        pin|minimized|togglegroup|moveintogroup|moveoutofgroup)
+            dirty=1
+            ;;
+    esac
+}
+
+# El modulo queda oculto; Waybar conserva su proceso continuo.
+printf '{"text":""}\n'
+publish "$(unknown)" || exit 1
+
+while kill -0 "$owner" 2>/dev/null; do
+    if ! select_instance; then
+        publish "$(unknown)" || exit 1
+        sleep 2
+        continue
+    fi
+
+    socket="$runtime/hypr/$signature/.socket2.sock"
+    relay &
+    relay_pid=$!
+    exec {fd}<"$fifo" || exit 1
+
+    partial=''
+    disconnected=0
+    retry=0
+    snapshot || { publish "$(unknown)"; retry=1; }
+
+    while kill -0 "$owner" 2>/dev/null; do
+        dirty=0
+
+        if read_event 2; then
+            mark_event
+        else
+            status=$?
+            (( status > 128 )) || break  # EOF/error, no timeout.
+            [[ -S $socket ]] || break
+            (( retry )) && dirty=1
+        fi
+
+        (( disconnected )) && break
+
+        if (( dirty )); then
+            # Agrupa rafagas; el limite evita esperar indefinidamente.
+            sleep 0.1
+            for ((i=0; i<100; i++)); do
+                read_event 0.001 || break
+                mark_event
+            done
+
+            (( disconnected )) && break
+
+            if snapshot; then
+                retry=0
+            else
+                publish "$(unknown)" || exit 1
+                retry=1
+            fi
+        fi
+    done
+
+    stop_relay
+    publish "$(unknown)" || exit 1
+    sleep 2
+done
