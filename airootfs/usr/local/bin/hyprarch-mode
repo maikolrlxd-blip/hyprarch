@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+# hyprarch-mode — modos del escritorio (gamer, cine, estudio, trabajo) con LAS APLICACIONES QUE TÚ ELIJAS.
+#
+#   hyprarch-mode toggle <modo>    activa el modo (si ya estaba activo, vuelve a normal)
+#   hyprarch-mode set <modo>       activa el modo
+#   hyprarch-mode normal           vuelve al modo normal (y a tu tema de antes)
+#   hyprarch-mode current          dice qué modo está activo
+#   hyprarch-mode edit [modo]      editor animado: elige qué apps abre cada modo
+#   hyprarch-mode apps <modo>      lista las apps del modo
+#   hyprarch-mode add <modo> <comando> [espacio]    agrega una app
+#   hyprarch-mode remove <modo> <comando>           quita una app
+#
+# Cada modo vive en ~/.config/hyprarch/modes/<modo>.conf (texto simple, una app por línea: "espacio|comando";
+# espacio 0 = donde esté). Las IAs también pueden editarlo: basta con cambiar ese archivo o usar add/remove.
+# Al activar un modo: cambia tema, fondo, animaciones (Hyprland) y abre sus apps en su espacio de trabajo.
+set -u
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/hyprarch"
+MD="$CFG/modes"
+DEF=/usr/share/hyprarch/modes
+MODES=(gamer cine estudio trabajo)
+mkdir -p "$MD"
+
+T() { command -v hyprarch-i18n >/dev/null 2>&1 && hyprarch-i18n "$1" "${2:-$1}" || printf '%s' "${2:-$1}"; }
+note() { command -v notify-send >/dev/null 2>&1 && notify-send -t 3500 "$1" "${2:-}"; }
+valid() { local m; for m in "${MODES[@]}" normal; do [[ $1 == "$m" ]] && return 0; done; return 1; }
+label() { case $1 in gamer) echo "Modo gamer";; cine) echo "Modo cine";; estudio) echo "Modo estudio";; trabajo) echo "Modo trabajo";; *) echo "Normal";; esac; }
+tint()  { case $1 in gamer) echo '#00e5ff';; cine) echo '#ffb347';; estudio) echo '#4fd1c5';; trabajo) echo '#5ec2ff';; *) echo '#5ef2c8';; esac; }
+mood()  { case $1 in gamer) echo surprised;; cine) echo sleepy;; estudio) echo wink;; trabajo) echo serious;; *) echo happy;; esac; }
+
+# primera vez: copia los modos de fábrica para que sean tuyos y editables
+init() {
+  local m
+  for m in "${MODES[@]}"; do
+    [[ -f $MD/$m.conf ]] || { [[ -f $DEF/$m.conf ]] && cp "$DEF/$m.conf" "$MD/$m.conf" || : > "$MD/$m.conf"; }
+  done
+}
+
+current() { local m; m=$(head -n1 "$CFG/mode" 2>/dev/null | tr -d '[:space:]'); echo "${m:-normal}"; }
+
+apps_of() { grep -v '^[[:space:]]*\(#\|$\)' "$MD/$1.conf" 2>/dev/null; }
+
+running() { pgrep -f -- "$(printf '%s' "$1" | awk '{print $1}')" >/dev/null 2>&1; }
+
+launch_apps() {
+  local line ws cmd bin
+  while IFS= read -r line; do
+    ws=${line%%|*}; cmd=${line#*|}
+    [[ $line == *"|"* ]] || { ws=0; cmd=$line; }
+    bin=${cmd%% *}
+    command -v "$bin" >/dev/null 2>&1 || continue          # app no instalada: se salta sin ruido
+    running "$cmd" && continue                              # ya abierta: no se duplica
+    if [[ $ws =~ ^[1-9][0-9]?$ ]]; then
+      hyprctl dispatch exec "[workspace $ws silent] $cmd" >/dev/null 2>&1
+    else
+      hyprctl dispatch exec "$cmd" >/dev/null 2>&1
+    fi
+  done < <(apps_of "$1")
+}
+
+set_mode() {
+  local m=$1 cur; cur=$(current)
+  valid "$m" || { echo "Modo desconocido: $m" >&2; return 1; }
+  init
+  if [[ $cur == normal && $m != normal ]]; then
+    cat "$CFG/current" 2>/dev/null > "$CFG/theme.before"  # recuerda tu tema para volver a él
+  fi
+  printf '%s\n' "$m" > "$CFG/mode"
+  if [[ $m == normal ]]; then
+    hyprarch-theme "$(cat "$CFG/theme.before" 2>/dev/null || echo fresco)" >/dev/null 2>&1 \
+      || hyprctl reload >/dev/null 2>&1
+    note "$(T mode.normal 'Modo normal')" "$(T mode.normal.d 'Todo vuelve a como lo dejaste')"
+  else
+    hyprarch-theme "$m" >/dev/null 2>&1 || hyprctl reload >/dev/null 2>&1
+    note "$(label "$m")" "$(T mode.opening 'Abriendo tus apps…')"
+    launch_apps "$m"
+  fi
+  # el personajito toma el aire del modo
+  command -v hyprarch-sysstate >/dev/null 2>&1 && hyprarch-sysstate >/dev/null 2>&1 || :
+}
+
+# ---------- editor ----------
+installed_apps() {  # id<TAB>nombre<TAB><TAB>descripción
+  local f n e
+  for f in /usr/share/applications/*.desktop "$HOME"/.local/share/applications/*.desktop; do
+    [[ -f $f ]] || continue
+    grep -qi '^NoDisplay=true' "$f" && continue
+    n=$(grep -m1 '^Name=' "$f" | cut -d= -f2-)
+    e=$(grep -m1 '^Exec=' "$f" | cut -d= -f2- | sed 's/ *%[a-zA-Z]//g')
+    [[ -n $n && -n $e ]] && printf '%s\t%s\t\t%s\n' "$e" "$n" "$e"
+  done | sort -t$'\t' -k2,2 -u
+}
+
+pretty() { # "ws|cmd" -> texto legible
+  local ws=${1%%|*} cmd=${1#*|}
+  [[ $1 == *"|"* ]] || { ws=0; cmd=$1; }
+  if [[ $ws == 0 ]]; then printf '%s' "$cmd"; else printf '%s  ·  %s %s' "$cmd" "$(T mode.ws 'espacio')" "$ws"; fi
+}
+
+edit_mode() {
+  local m=$1 sel app ws line items
+  while :; do
+    items=""
+    while IFS= read -r line; do
+      [[ -z $line ]] && continue
+      items+="rm:$line"$'\t'"$(pretty "$line")"$'\t'"$(tint "$m")"$'\t'"$(T mode.rm 'Tocá para quitarla de este modo')"$'\t'"serious"$'\n'
+    done < <(apps_of "$m")
+    sel=$(printf '%s' "$items"; printf '%s\n' \
+        "add"$'\t'"+  $(T mode.add 'Agregar una aplicación')"$'\t'"$(tint "$m")"$'\t'"$(T mode.add.d 'Elegí de las instaladas')"$'\thappy' \
+        "cmd"$'\t'"+  $(T mode.cmd 'Escribir un comando')"$'\t\t'"$(T mode.cmd.d 'Para cualquier programa o página web')"$'\twink' \
+        "try"$'\t'"▶  $(T mode.try 'Activar este modo ahora')"$'\t\t'"$(T mode.try.d 'Prueba cómo queda')"$'\tsurprised' \
+        "back"$'\t'"←  $(T ui.back 'Volver')"$'\t\t\tsleepy' |
+      hyprarch-pick --layout orbit --title "$(label "$m")  ·  $(T mode.apps 'aplicaciones')") || return 0
+    case $sel in
+      rm:*) remove_app "$m" "${sel#rm:}" ;;
+      add)
+        app=$(installed_apps | hyprarch-pick --layout wheel --title "$(T mode.add 'Agregar una aplicación')" \
+              --placeholder "$(T ui.search 'Buscar')") || continue
+        [[ -n $app ]] && add_app "$m" "$app" "$(ask_ws)" ;;
+      cmd)
+        app=$(hyprarch-pick --input --title "$(T mode.cmd 'Escribir un comando')" --placeholder "firefox https://…") || continue
+        [[ -n $app ]] && add_app "$m" "$app" "$(ask_ws)" ;;
+      try) set_mode "$m"; return 0 ;;
+      back|"") return 0 ;;
+    esac
+  done
+}
+
+ask_ws() {
+  printf '%s\n' \
+    $'0\tDonde esté\t\t\tsleepy' \
+    $'1\tEspacio 1\t\t\thappy' $'2\tEspacio 2\t\t\thappy' $'3\tEspacio 3\t\t\thappy' \
+    $'4\tEspacio 4\t\t\thappy' $'5\tEspacio 5\t\t\thappy' |
+    hyprarch-pick --layout orbit --title "$(T mode.ws.ask 'En qué espacio de trabajo abrirla')" || echo 0
+}
+
+add_app() {  # modo comando [espacio]
+  local m=$1 cmd=$2 ws=${3:-0}
+  [[ $ws =~ ^[0-9]+$ ]] || ws=0
+  init
+  grep -qxF "$ws|$cmd" "$MD/$m.conf" 2>/dev/null || printf '%s|%s\n' "$ws" "$cmd" >> "$MD/$m.conf"
+}
+
+remove_app() {  # modo línea-completa-o-comando
+  local m=$1 x=$2 tmp
+  tmp=$(mktemp) || return 1
+  grep -vxF -- "$x" "$MD/$m.conf" | grep -v -- "^[0-9]*|$(printf '%s' "$x" | sed 's/[][\.*^$/]/\\&/g')\$" > "$tmp" || :
+  mv -f "$tmp" "$MD/$m.conf"
+}
+
+edit() {
+  init
+  local m=${1:-} cur sel items
+  while [[ -z $m ]]; do
+    cur=$(current)
+    items=""
+    for x in "${MODES[@]}"; do
+      items+="$x"$'\t'"$(label "$x")"$'\t'"$(tint "$x")"$'\t'"$(apps_of "$x" | wc -l) $(T mode.apps 'aplicaciones')"$'\t'"$(mood "$x")"$'\n'
+    done
+    sel=$(printf '%s' "$items"; printf '%s\n' "normal"$'\t'"$(T mode.normal 'Modo normal')"$'\t#5ef2c8\t'"$(T mode.normal.d 'Sin apps automáticas')"$'\thappy' |
+      hyprarch-pick --layout orbit --title "$(T mode.edit 'Modos y sus aplicaciones')") || return 0
+    case $sel in
+      normal) set_mode normal; return 0 ;;
+      "") return 0 ;;
+      *) edit_mode "$sel" ;;
+    esac
+  done
+  edit_mode "$m"
+}
+
+case "${1:-edit}" in
+  toggle) valid "${2:-}" || exit 1
+          if [[ $(current) == "$2" ]]; then set_mode normal; else set_mode "$2"; fi ;;
+  set)    set_mode "${2:-normal}" ;;
+  normal) set_mode normal ;;
+  current) current ;;
+  edit|menu) edit "${2:-}" ;;
+  apps)   init; apps_of "${2:?modo}" ;;
+  add)    add_app "${2:?modo}" "${3:?comando}" "${4:-0}" ;;
+  remove) remove_app "${2:?modo}" "${3:?comando}" ;;
+  init)   init ;;
+  *) echo "Uso: hyprarch-mode {toggle|set|normal|current|edit|apps|add|remove} ..." >&2; exit 1 ;;
+esac

@@ -23,7 +23,7 @@ MODES = [("normal", "Normal", ""), ("gamer", "Gamer", ""), ("cine", "Cine"
 MODE_COL = {"normal": None, "gamer": (0.0, 0.90, 1.0), "cine": (1.0, 0.70, 0.28),
             "estudio": (0.31, 0.82, 0.77), "trabajo": (0.37, 0.76, 1.0)}
 ACTIONS = [("chat", "Hablar con la IA", ""), ("ia", "Cambiar de IA", ""),
-           ("activity", "Actividad reciente", ""), ("colors", "Colores del sistema", "")]
+           ("modes", "Modos y sus apps", ""), ("activity", "Actividad reciente", ""), ("colors", "Colores del sistema", "")]
 FONT = "JetBrainsMono Nerd Font"
 CARD_W = 344
 # ESTILOS (se elige en ~/.config/hyprarch/style):
@@ -746,6 +746,11 @@ def draw_scene(cr, w, h, S, pal):
             cr.stroke()
             draw_text(cr, it["icon"], ix + iw / 2, iy + ih / 2 + 9, 25, BG if active else mix(FG, col, 0.5 + 0.5 * hv), a, center=True)
             draw_text(cr, it["label"], ix + iw / 2, it["y"] + lift + ih + 17, 10.5, FG if (active or hv > 0.1) else DIM, a, bold=active, center=True)
+            if active:                                # punto vivo bajo el modo activo (late suave)
+                cr.new_sub_path()
+                cr.arc(ix + iw / 2, it["y"] + lift + ih + 26, 2.2 + 0.5 * math.sin(t * 3.0), 0, 2 * math.pi)
+                cr.set_source_rgba(*col, a)
+                cr.fill()
         elif kind == "row":
             primary = it["id"] == "chat"
             up = -2 * hv
@@ -815,6 +820,7 @@ def run_action(aid):
         "chat": ["bash", scripts, "hyprarch-ai", "hyprarch-ai", "chat"],
         "ia": ["hyprarch-ai", "pick"],
         "colors": ["hyprarch-theme"],
+        "modes": ["hyprarch-mode", "edit"],
     }
     if aid.startswith("mode:"):
         mid = aid.split(":")[1]
