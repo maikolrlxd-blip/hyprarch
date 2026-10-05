@@ -192,7 +192,8 @@ reload_all() {
   pkill -SIGUSR2 waybar 2>/dev/null
   pkill -SIGUSR1 kitty 2>/dev/null
   command -v makoctl >/dev/null 2>&1 && makoctl reload >/dev/null 2>&1
-  [[ -x $CFG/hypr/scripts/wallpaper.sh ]] && { "$CFG/hypr/scripts/wallpaper.sh" >/dev/null 2>&1 & }
+  # setsid -f: el fondo debe sobrevivir al cierre de la terminal del menú
+  [[ -x $CFG/hypr/scripts/wallpaper.sh ]] && setsid -f "$CFG/hypr/scripts/wallpaper.sh" >/dev/null 2>&1 < /dev/null
   command -v notify-send >/dev/null 2>&1 && notify-send -t 3000 "Tema aplicado" "$NAME"
   return 0
 }

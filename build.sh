@@ -71,6 +71,21 @@ enable /etc/systemd/system/live-setup.service      multi-user.target
 enable /usr/lib/systemd/system/NetworkManager.service multi-user.target
 enable /usr/lib/systemd/system/systemd-resolved.service multi-user.target
 enable /usr/lib/systemd/system/bluetooth.service   multi-user.target
+
+# Modo DESARROLLO (solo cuando se pide con HYPRARCH_DEV=1): SSH con llave para
+# controlar la ISO desde una máquina virtual. NO se usa en la ISO normal.
+if [[ "${HYPRARCH_DEV:-0}" == "1" ]]; then
+  echo "==> Modo DESARROLLO: SSH habilitado (solo con llave)"
+  sed -i 's|^iso_name=.*|iso_name="hyprarch-dev"|' "$PROFILE/profiledef.sh"
+  mkdir -p "$AIR/etc/skel/.ssh"
+  cp "$REPO/dev/authorized_keys" "$AIR/etc/skel/.ssh/authorized_keys"
+  chmod 700 "$AIR/etc/skel/.ssh"
+  chmod 600 "$AIR/etc/skel/.ssh/authorized_keys"
+  enable /usr/lib/systemd/system/sshd.service multi-user.target
+  mkdir -p "$AIR/etc/ssh/sshd_config.d"
+  printf 'PasswordAuthentication no\nPermitRootLogin no\nPubkeyAuthentication yes\n' > "$AIR/etc/ssh/sshd_config.d/20-hyprarch-dev.conf"
+fi
+
 # PipeWire para todos los usuarios
 mkdir -p "$AIR/etc/systemd/user/sockets.target.wants" "$AIR/etc/systemd/user/default.target.wants"
 ln -sf /usr/lib/systemd/user/pipewire.socket       "$AIR/etc/systemd/user/sockets.target.wants/pipewire.socket"
@@ -86,10 +101,20 @@ echo "==> Generando la paleta inicial (verde) en /etc/skel"
 HOME="$AIR/etc/skel" HYPRARCH_NO_RELOAD=1 HYPRARCH_THEMES="$REPO/airootfs/usr/share/hyprarch/themes" \
   bash "$REPO/airootfs/usr/local/bin/hyprarch-theme" verde
 
-echo "==> Permisos"
-sed -i '/^file_permissions=(/a\
-  ["/etc/sudoers.d/g_wheel"]="0:0:0440"\
-  ["/usr/local/bin/live-setup"]="0:0:0755"' "$PROFILE/profiledef.sh"
+echo "==> Permisos (mkarchiso NO conserva el bit de ejecución: hay que declararlo)"
+PERMS=/tmp/hyprarch-perms.txt
+{
+  echo '  ["/etc/sudoers.d/g_wheel"]="0:0:0440"'
+  for f in "$REPO"/airootfs/usr/local/bin/* "$REPO"/airootfs/etc/skel/.config/hypr/scripts/*; do
+    echo "  [\"/${f#"$REPO/airootfs/"}\"]=\"0:0:0755\""
+  done
+  if [[ "${HYPRARCH_DEV:-0}" == "1" ]]; then
+    echo '  ["/etc/skel/.ssh"]="0:0:0700"'
+    echo '  ["/etc/skel/.ssh/authorized_keys"]="0:0:0600"'
+  fi
+} > "$PERMS"
+sed -i "/^file_permissions=(/r $PERMS" "$PROFILE/profiledef.sh"
+echo "--- file_permissions añadidos:"; cat "$PERMS"
 
 echo "==> Compilando ISO (tarda unos minutos)"
 mkdir -p "$OUT"

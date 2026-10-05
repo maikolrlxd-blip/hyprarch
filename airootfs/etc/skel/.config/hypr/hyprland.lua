@@ -24,11 +24,22 @@ end
 -------------------------------------------------------------
 -- Monitores y programas
 -------------------------------------------------------------
+-- En una máquina virtual la escala "auto" elige 2 y todo se ve gigante: ahí usamos 1.
+local function sh(cmd)
+    local f = io.popen(cmd)
+    if not f then return "" end
+    local s = f:read("*a") or ""
+    f:close()
+    return (s:gsub("%s+$", ""))
+end
+local virt  = sh("systemd-detect-virt 2>/dev/null")
+local in_vm = (virt ~= "" and virt ~= "none")
+
 hl.monitor({
     output   = "",
     mode     = "preferred",
     position = "auto",
-    scale    = "auto",
+    scale    = in_vm and "1" or "auto",
 })
 
 local terminal = "kitty"
@@ -63,6 +74,12 @@ hl.env("XCURSOR_THEME", "Adwaita")
 hl.env("MOZ_ENABLE_WAYLAND", "1")
 hl.env("LIBVA_DRIVER_NAME", "iHD")
 hl.env("QT_QPA_PLATFORM", "wayland;xcb")
+
+if in_vm then
+    -- Gráficos virtuales (VirtualBox/VMware): sin esto kitty y otras apps se cierran al abrir.
+    -- En hardware real (Intel) esto NO se aplica.
+    hl.env("LIBGL_ALWAYS_SOFTWARE", "1")
+end
 
 -------------------------------------------------------------
 -- Apariencia
@@ -127,7 +144,6 @@ hl.config({
         force_default_wallpaper  = 0,
         disable_hyprland_logo    = true,
         disable_splash_rendering = true,
-        vfr = true,
     },
 })
 

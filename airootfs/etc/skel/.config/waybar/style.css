@@ -88,6 +88,13 @@ tooltip label {
 #window {
   color: @dim;
 }
+/* Sin ventanas abiertas: ocultar la píldora vacía */
+window#waybar.empty #window {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
 
 /* Botón de cerrar ventana: rojo, para que se vea que es peligroso */
 #custom-close {

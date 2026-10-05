@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Ejecuta un comando dentro de la sesión gráfica de Hyprland, incluso desde SSH.
+# Uso:  hyprarch-ctl hyprctl reload
+#       hyprarch-ctl grim /tmp/captura.png
+export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+sig=$(ls -t "$XDG_RUNTIME_DIR/hypr" 2>/dev/null | head -1)
+[[ -n $sig ]] && export HYPRLAND_INSTANCE_SIGNATURE="$sig"
+sock=$(ls "$XDG_RUNTIME_DIR" 2>/dev/null | grep -m1 -E '^wayland-[0-9]+$')
+[[ -n $sock ]] && export WAYLAND_DISPLAY="$sock"
+exec "$@"
