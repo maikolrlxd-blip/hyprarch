@@ -183,8 +183,97 @@ render_gtk() {
   printf '%s' "$css" > "$CFG/gtk-4.0/gtk.css"
 }
 
+render_hyprlock() {
+  cat > "$CFG/hypr/hyprlock.conf" <<EOF
+# Generado por hyprarch-theme (${NAME}). No editar a mano.
+general {
+    hide_cursor = true
+    ignore_empty_input = true
+    immediate_render = true
+}
+
+background {
+    monitor =
+    path = /usr/share/backgrounds/hyprarch-${WALL:-verde}.jpg
+    blur_passes = 2
+    blur_size = 5
+    brightness = 0.65
+    vibrancy = 0.2
+}
+
+# Marco de cristal
+shape {
+    monitor =
+    size = 520, 360
+    color = rgba(${BG}cc)
+    rounding = 26
+    border_size = 2
+    border_color = rgba(${ACCENT}ee) rgba(${ACCENT2}ee) 45deg
+    position = 0, 0
+    halign = center
+    valign = center
+}
+
+# Hora
+label {
+    monitor =
+    text = cmd[update:1000] echo "\$(date +'%H:%M')"
+    color = rgba(${ACCENT}ff)
+    font_size = 92
+    font_family = JetBrainsMono Nerd Font ExtraBold
+    position = 0, 105
+    halign = center
+    valign = center
+}
+
+# Fecha
+label {
+    monitor =
+    text = cmd[update:60000] echo "\$(date +'%A, %d de %B')"
+    color = rgba(${FG}ff)
+    font_size = 18
+    font_family = JetBrainsMono Nerd Font
+    position = 0, 30
+    halign = center
+    valign = center
+}
+
+label {
+    monitor =
+    text = Hola, \$USER
+    color = rgba(${DIM}ff)
+    font_size = 15
+    font_family = JetBrainsMono Nerd Font
+    position = 0, -22
+    halign = center
+    valign = center
+}
+
+input-field {
+    monitor =
+    size = 360, 54
+    outline_thickness = 3
+    dots_size = 0.25
+    dots_spacing = 0.2
+    inner_color = rgba(${BG}ff)
+    outer_color = rgba(${ACCENT}ee) rgba(${ACCENT2}ee) 45deg
+    check_color = rgba(${OK}ff)
+    fail_color = rgba(${ALERT}ff)
+    font_color = rgba(${FG}ff)
+    font_family = JetBrainsMono Nerd Font
+    fade_on_empty = false
+    rounding = 16
+    placeholder_text = <i>Contraseña...</i>
+    fail_text = <i>\$FAIL (\$ATTEMPTS)</i>
+    position = 0, -100
+    halign = center
+    valign = center
+}
+EOF
+}
+
 render_wallpaper() {
-  printf '/usr/share/backgrounds/hyprarch-%s.png\n' "${WALL:-verde}" > "$DATA/wallpaper"
+  printf '/usr/share/backgrounds/hyprarch-%s.jpg\n' "${WALL:-verde}" > "$DATA/wallpaper"
 }
 
 reload_all() {
@@ -203,7 +292,7 @@ apply() {
   load_theme "$1" || return 1
   printf '%s\n' "$1" > "$CURRENT"
   render_hypr; render_waybar; render_kitty; render_fuzzel
-  render_mako; render_gtk; render_wallpaper
+  render_mako; render_gtk; render_hyprlock; render_wallpaper
   reload_all
 }
 

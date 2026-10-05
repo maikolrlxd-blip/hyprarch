@@ -2,7 +2,7 @@
 # Pone el fondo de pantalla elegido por hyprarch-theme.
 # Reintenta unos segundos: al arrancar la sesión, Wayland puede no estar listo todavía.
 img=$(cat "$HOME/.config/hyprarch/wallpaper" 2>/dev/null)
-[[ -f $img ]] || img=/usr/share/backgrounds/hyprarch-verde.png
+[[ -f $img ]] || img=/usr/share/backgrounds/hyprarch-verde.jpg
 
 pkill -x swaybg 2>/dev/null
 

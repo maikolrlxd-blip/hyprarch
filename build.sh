@@ -115,10 +115,8 @@ ln -sf /usr/lib/systemd/user/pipewire.socket       "$AIR/etc/systemd/user/socket
 ln -sf /usr/lib/systemd/user/pipewire-pulse.socket "$AIR/etc/systemd/user/sockets.target.wants/pipewire-pulse.socket"
 ln -sf /usr/lib/systemd/user/wireplumber.service   "$AIR/etc/systemd/user/default.target.wants/wireplumber.service"
 
-echo "==> Fondos de pantalla"
-mkdir -p "$AIR/usr/share/backgrounds"
-magick -size 2560x1440 radial-gradient:'#0f3d1c-#050706' "$AIR/usr/share/backgrounds/hyprarch-verde.png"
-magick -size 2560x1440 radial-gradient:'#451019-#070506' "$AIR/usr/share/backgrounds/hyprarch-rojo.png"
+echo "==> Fondos de pantalla (ya vienen en airootfs/usr/share/backgrounds; los genera tools/make_wallpaper.py)"
+ls -l "$AIR/usr/share/backgrounds/"
 
 echo "==> Generando la paleta inicial (verde) en /etc/skel"
 HOME="$AIR/etc/skel" HYPRARCH_NO_RELOAD=1 HYPRARCH_THEMES="$REPO/airootfs/usr/share/hyprarch/themes" \

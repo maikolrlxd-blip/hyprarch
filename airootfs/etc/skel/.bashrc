@@ -18,3 +18,9 @@ alias vim='nvim'
 [[ -f /usr/share/fzf/completion.bash ]] && source /usr/share/fzf/completion.bash
 
 command -v starship >/dev/null && eval "$(starship init bash)"
+
+# Banner de bienvenida: solo en la primera terminal de cada arranque
+if [[ -n ${WAYLAND_DISPLAY:-} && ! -e /tmp/.hyprarch-banner-$UID ]] && command -v fastfetch >/dev/null; then
+  : > "/tmp/.hyprarch-banner-$UID"
+  fastfetch
+fi

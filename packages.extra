@@ -17,6 +17,7 @@ brightnessctl
 playerctl
 polkit-gnome
 libnotify
+hyprlock
 dconf
 
 # --- Gráficos Intel ---

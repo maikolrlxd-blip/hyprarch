@@ -21,6 +21,7 @@ ALT + Tab               Siguiente ventana
 SUPER + SHIFT + V       Historial del portapapeles
 Impr / SHIFT + Impr     Captura (área / pantalla)
 ALT + SHIFT             Cambiar distribución de teclado
+SUPER + L               Bloquear pantalla
 SUPER + ESC             Menú de energía
 SUPER + SHIFT + R       Recargar configuración
 EOF

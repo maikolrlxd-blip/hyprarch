@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-choice=$(printf 'Apagar\nReiniciar\nSuspender\nCerrar sesión' | fuzzel --dmenu --prompt "Energía > " --lines 4)
+choice=$(printf 'Bloquear\nApagar\nReiniciar\nSuspender\nCerrar sesión' | fuzzel --dmenu --prompt "Energía > " --lines 5)
 case "$choice" in
+  "Bloquear")      hyprlock ;;
   "Apagar")        systemctl poweroff ;;
   "Reiniciar")     systemctl reboot ;;
   "Suspender")     systemctl suspend ;;

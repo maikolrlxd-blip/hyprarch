@@ -74,6 +74,14 @@ hl.env("XCURSOR_THEME", "Adwaita")
 hl.env("MOZ_ENABLE_WAYLAND", "1")
 hl.env("LIBVA_DRIVER_NAME", "iHD")
 hl.env("QT_QPA_PLATFORM", "wayland;xcb")
+-- Colores del menú de Wi-Fi (nmtui, usa "newt"): verde/negro con la paleta ANSI del tema
+hl.env("NEWT_COLORS",
+    "root=,black window=green,black border=green,black title=brightgreen,black " ..
+    "button=black,green actbutton=black,brightgreen compactbutton=green,black " ..
+    "checkbox=green,black actcheckbox=black,green entry=brightgreen,black disentry=gray,black " ..
+    "label=green,black listbox=green,black actlistbox=black,green sellistbox=black,green " ..
+    "actsellistbox=black,brightgreen textbox=green,black acttextbox=black,green " ..
+    "emptyscale=black,black fullscale=black,green helpline=green,black roottext=green,black shadow=black,black")
 
 if in_vm then
     -- Gráficos virtuales (VirtualBox/VMware): sin esto kitty y otras apps se cierran al abrir.
@@ -221,6 +229,7 @@ hl.bind(mod .. " + N",      hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-nmtui 
 hl.bind(mod .. " + T",      hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-theme hyprarch-theme"))
 hl.bind(mod .. " + F1",     hl.dsp.exec_cmd(scripts .. "/keybinds.sh"))
 hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(scripts .. "/powermenu.sh"))
+hl.bind(mod .. " + L",      hl.dsp.exec_cmd("hyprlock"))
 hl.bind(mod .. " + SHIFT + V", hl.dsp.exec_cmd("cliphist list | fuzzel --dmenu --prompt 'Portapapeles > ' | cliphist decode | wl-copy"))
 
 -- Ventanas
