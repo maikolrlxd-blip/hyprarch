@@ -3,8 +3,12 @@
 
 Sin dependencias obligatorias (solo biblioteca estandar + `adb`).
 Si Pillow esta instalado, las capturas se reducen para ahorrar tokens.
-Variables de entorno: ADB (ruta de adb), ANDROID_SERIAL (dispositivo por defecto).
+Dos modos:
+  - ADB (por defecto): ADB (ruta de adb), ANDROID_SERIAL (dispositivo por defecto).
+  - Relay (app Android): PHONE_RELAY_URL (ej. https://relay.ejemplo.com) y PHONE_TOKEN.
 """
+import urllib.error
+import urllib.request
 import base64
 import io
 import json
@@ -174,6 +178,36 @@ TOOLS = {
 }
 
 
+# ---------- modo relay: la app Android ejecuta la accion ----------
+
+RELAY_URL = os.environ.get("PHONE_RELAY_URL", "").rstrip("/")
+RELAY_TOKEN = os.environ.get("PHONE_TOKEN", "")
+
+
+def relay_call(tool, args):
+    req = urllib.request.Request(
+        RELAY_URL + "/api/cmd",
+        data=json.dumps({"action": tool[len("phone_"):], "args": args}).encode(),
+        headers={"Authorization": "Bearer " + RELAY_TOKEN, "Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=40) as r:
+            res = json.load(r)
+    except urllib.error.HTTPError as e:
+        try:
+            res = json.loads(e.read())
+        except ValueError:
+            res = {"ok": False, "error": "Token invalido o relay rechazo la peticion" if e.code == 401 else f"HTTP {e.code}"}
+    except urllib.error.URLError as e:
+        raise RuntimeError(f"No se pudo contactar el relay: {e.reason}")
+    if not res.get("ok"):
+        raise RuntimeError(res.get("error", "fallo desconocido"))
+    content = []
+    if res.get("image"):
+        content.append({"type": "image", "data": res["image"], "mimeType": res.get("mime", "image/jpeg")})
+    content.append({"type": "text", "text": res.get("text", "ok")})
+    return content
+
+
 # ---------- protocolo MCP (JSON-RPC por stdio, un mensaje por linea) ----------
 
 def handle(req):
@@ -190,7 +224,8 @@ def handle(req):
         if name not in TOOLS:
             raise KeyError(name)
         try:
-            out = TOOLS[name][0](p.get("arguments") or {})
+            args = p.get("arguments") or {}
+            out = relay_call(name, args) if RELAY_URL else TOOLS[name][0](args)
             content = out if isinstance(out, list) else [{"type": "text", "text": out}]
             return {"content": content}
         except Exception as e:

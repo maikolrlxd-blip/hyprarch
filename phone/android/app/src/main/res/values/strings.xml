@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Phone MCP</string>
+    <string name="service_description">Permite que el asistente de IA que TU autorizaste vea la pantalla, toque, deslice y escriba en este celular. Solo funciona mientras la conexion este activa.</string>
+</resources>
