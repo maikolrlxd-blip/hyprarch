@@ -60,7 +60,7 @@ ln -sf "/usr/share/zoneinfo/$TIMEZONE" "$AIR/etc/localtime"
 ln -sf /run/systemd/resolve/stub-resolv.conf "$AIR/etc/resolv.conf"
 
 # NetworkManager sustituye a iwd/systemd-networkd; sshd no hace falta en un live.
-find "$AIR/etc/systemd/system" \( -name 'iwd.service' -o -name 'systemd-networkd*' -o -name 'sshd.service' \) -delete
+find "$AIR/etc/systemd/system" \( -name 'iwd.service' -o -name 'systemd-networkd*' -o -name 'sshd.service' \) -prune -exec rm -rf {} +
 
 enable() { # enable <ruta-de-la-unidad> <target>
   local unit="$1" target="$2"
