@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Se ejecuta en cada arranque del live, antes del login.
+set -e
+
+# Generar los locales configurados en /etc/locale.gen
+locale-gen >/dev/null 2>&1 || true
+
+# Crear el usuario "live" (sin contraseña) con su carpeta personal copiada de /etc/skel
+if ! id live >/dev/null 2>&1; then
+  useradd -m -s /bin/bash -G wheel,audio,video,input,storage,lp,optical live
+  passwd -d live >/dev/null
+fi

@@ -1,0 +1,94 @@
+/* Catppuccin Mocha */
+* {
+  font-family: "JetBrainsMono Nerd Font", "Noto Sans", sans-serif;
+  font-size: 13px;
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+}
+
+window#waybar {
+  background: transparent;
+  color: #cdd6f4;
+}
+
+tooltip {
+  background: #1e1e2e;
+  border: 1px solid #89b4fa;
+  border-radius: 10px;
+}
+tooltip label {
+  color: #cdd6f4;
+}
+
+/* Píldoras */
+#workspaces,
+#window,
+#clock,
+#tray,
+#language,
+#cpu,
+#memory,
+#temperature,
+#network,
+#bluetooth,
+#pulseaudio,
+#backlight,
+#battery,
+#custom-power {
+  background: rgba(30, 30, 46, 0.88);
+  padding: 0 12px;
+  margin: 0;
+  border-radius: 12px;
+}
+
+#workspaces {
+  padding: 0 4px;
+}
+#workspaces button {
+  padding: 0 8px;
+  margin: 3px 2px;
+  color: #6c7086;
+  background: transparent;
+  border-radius: 9px;
+}
+#workspaces button:hover {
+  background: #313244;
+  color: #cdd6f4;
+}
+#workspaces button.active {
+  background: #89b4fa;
+  color: #11111b;
+  font-weight: bold;
+}
+#workspaces button.urgent {
+  background: #f38ba8;
+  color: #11111b;
+}
+
+#window {
+  color: #a6adc8;
+}
+
+#clock {
+  color: #cdd6f4;
+  font-weight: bold;
+}
+
+/* Colores por módulo */
+#language    { color: #b4befe; }
+#cpu         { color: #89b4fa; }
+#memory      { color: #cba6f7; }
+#temperature { color: #f9e2af; }
+#temperature.critical { color: #f38ba8; }
+#network     { color: #94e2d5; }
+#network.disconnected { color: #f38ba8; }
+#bluetooth   { color: #89b4fa; }
+#pulseaudio  { color: #fab387; }
+#pulseaudio.muted { color: #6c7086; }
+#backlight   { color: #f9e2af; }
+#battery     { color: #a6e3a1; }
+#battery.warning:not(.charging)  { color: #f9e2af; }
+#battery.critical:not(.charging) { color: #f38ba8; }
+#custom-power { color: #f38ba8; padding: 0 14px; }
+#custom-power:hover { background: #f38ba8; color: #11111b; }

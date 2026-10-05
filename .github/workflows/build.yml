@@ -1,0 +1,30 @@
+name: Build ISO
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged
+    steps:
+      - name: Instalar git
+        run: pacman -Syu --noconfirm git
+
+      - uses: actions/checkout@v4
+
+      - name: Compilar la ISO
+        run: |
+          sed -i 's/\r$//' build.sh
+          bash build.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hyprarch-iso
+          path: out/*.iso
+          compression-level: 0
+          retention-days: 7

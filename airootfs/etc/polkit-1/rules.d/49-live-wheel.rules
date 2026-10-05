@@ -1,0 +1,6 @@
+// Live USB: el grupo wheel puede apagar, montar discos, usar NetworkManager, etc.
+polkit.addRule(function(action, subject) {
+    if (subject.isInGroup("wheel")) {
+        return polkit.Result.YES;
+    }
+});

@@ -1,0 +1,12 @@
+[Unit]
+Description=Crear usuario live y generar locales
+After=local-fs.target
+Before=getty@tty1.service systemd-user-sessions.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/live-setup
+
+[Install]
+WantedBy=multi-user.target

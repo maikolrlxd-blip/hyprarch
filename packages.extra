@@ -1,0 +1,74 @@
+# Paquetes añadidos al perfil releng (solo repositorios oficiales)
+
+# --- Escritorio: Hyprland ---
+hyprland
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gtk
+xorg-xwayland
+waybar
+fuzzel
+mako
+swaybg
+grim
+slurp
+wl-clipboard
+cliphist
+brightnessctl
+playerctl
+polkit-gnome
+libnotify
+dconf
+
+# --- Gráficos Intel ---
+mesa
+vulkan-intel
+intel-media-driver
+
+# --- Audio ---
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+pavucontrol
+sof-firmware
+alsa-ucm-conf
+
+# --- Red y Bluetooth ---
+networkmanager
+network-manager-applet
+bluez
+bluez-utils
+blueman
+
+# --- Aplicaciones ---
+kitty
+thunar
+gvfs
+firefox
+firefox-i18n-es-ar
+mousepad
+mpv
+imv
+zathura
+zathura-pdf-mupdf
+
+# --- Tipografías y tema ---
+ttf-jetbrains-mono-nerd
+noto-fonts
+noto-fonts-emoji
+gnome-themes-extra
+adwaita-icon-theme
+
+# --- Terminal / herramientas ---
+starship
+eza
+bat
+fzf
+ripgrep
+fd
+btop
+fastfetch
+neovim
+git
+unzip
+p7zip
