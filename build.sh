@@ -130,6 +130,13 @@ ln -sf /run/systemd/resolve/stub-resolv.conf "$AIR/etc/resolv.conf"
 # NetworkManager sustituye a iwd/systemd-networkd; sshd no hace falta en un live.
 find "$AIR/etc/systemd/system" \( -name 'iwd.service' -o -name 'systemd-networkd*' -o -name 'sshd.service' \) -prune -exec rm -rf {} +
 
+# Arranque más rápido y liviano (pensado también para equipos modestos): se quitan del camino los servicios del live
+# que no hacen falta para usar el escritorio. pacman-init (13 s) solo se necesita al instalar: lo hace hyprarch-install.
+find "$AIR/etc/systemd/system" \( -name 'livecd-talk.service' -o -name 'pacman-init.service' -o -name 'choose-mirror.service' \) -prune -exec rm -rf {} +
+ln -sf /dev/null "$AIR/etc/systemd/system/systemd-time-wait-sync.service"      # esperaba la hora de internet (9 s)
+# SquashFS con zstd: descomprime mucho más rápido que xz en procesadores lentos (tamaño parecido).
+sed -i "s|^airootfs_image_tool_options=.*|airootfs_image_tool_options=('-comp' 'zstd' '-Xcompression-level' '19' '-b' '1M')|" "$PROFILE/profiledef.sh"
+
 enable() { # enable <ruta-de-la-unidad> <target>
   local unit="$1" target="$2"
   mkdir -p "$AIR/etc/systemd/system/$target.wants"

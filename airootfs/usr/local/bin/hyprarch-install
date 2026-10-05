@@ -120,6 +120,8 @@ mkdir -p /mnt/boot
 mount "$ESP" /mnt/boot
 
 # ---------- sistema base ----------
+say "Preparando las llaves de paquetes"            # el live ya no lo hace al arrancar (ahorra ~13 s por arranque)
+pacman-key --init >/dev/null 2>&1 && pacman-key --populate archlinux >/dev/null 2>&1 || warn "no se pudieron preparar las llaves de pacman"
 say "Instalando paquetes (puede tardar varios minutos)"
 mapfile -t PKGS < <(grep -vE '^\s*(#|$)' /usr/share/hyprarch/packages.txt)
 pacstrap -K /mnt base linux linux-firmware intel-ucode sudo "${PKGS[@]}"

@@ -84,3 +84,4 @@ unzip
 p7zip
 socat
 python-pipx
+zram-generator

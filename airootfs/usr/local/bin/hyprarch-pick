@@ -221,7 +221,7 @@ def paint_orb(cr, x, y, rad, pal, a, sel, hv, col, t):
     """Esfera / botón redondo según el estilo."""
     import cairo
 
-    A, A2, SF, SF2, BG, FG = pal["ACCENT"], pal["ACCENT2"], pal["SURFACE"], pal["SURFACE2"], pal["BG"], pal["FG"]
+    A2, SF, SF2, BG, FG = pal["ACCENT2"], pal["SURFACE"], pal["SURFACE2"], pal["BG"], pal["FG"]
     if U.STARK:                                                          # holograma JARVIS: anillos finos que giran + marcas de escala
         s_ = 1.0 if sel else hv
         cr.new_sub_path()
@@ -437,8 +437,6 @@ def draw_buddy(cr, w, h, S, pal_full, x, y, scale):
 
 
 def draw_scene(cr, w, h, S, pal, pal_full):
-    import cairo
-
     A, A2, BG, SF, FG, DIM = (pal[k] for k in ("ACCENT", "ACCENT2", "BG", "SURFACE", "FG", "DIM"))
     t = S["t"]
     if S["closing"] is not None:
@@ -621,6 +619,7 @@ def run(args):
     import gi
 
     gi.require_version("Gtk", "4.0")
+    gi.require_version("Gdk", "4.0")
     gi.require_version("Gtk4LayerShell", "1.0")
     from gi.repository import Gdk, GLib, Gtk, Gtk4LayerShell as LS
 
@@ -628,6 +627,7 @@ def run(args):
         return args[args.index(name) + 1] if name in args and args.index(name) + 1 < len(args) else default
 
     ensure_env()
+    U.overlay_hold()                               # el personajito del escritorio se esconde mientras este menú trae el suyo
     layout = opt("--layout", "wheel")
     if "--input" in args:                          # modo escribir: devuelve el texto tipeado (para HEX, nombres, etc.)
         layout = "input"

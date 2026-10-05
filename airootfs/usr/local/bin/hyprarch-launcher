@@ -5,9 +5,7 @@ Lee los .desktop del sistema, resuelve sus íconos reales y se los pasa a hyprar
 Las aplicaciones más usadas flotan primero (historial en ~/.cache/hyprarch/launcher-history.json).
 """
 import json
-import os
 import re
-import shlex
 import subprocess
 import sys
 from pathlib import Path

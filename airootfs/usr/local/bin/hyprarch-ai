@@ -104,7 +104,9 @@ install_provider() {
       pipx install "$pkg" ;;
     pacman:*)
       printf '\n  Instalando %s en el sistema (pide permisos de administrador)...\n\n' "$(field "$AI" 2)"
-      sudo pacman -S --noconfirm --needed "$pkg" ;;
+      # el live ya no prepara las llaves de pacman al arrancar (ahorra segundos): se hace aquí la primera vez
+      { [[ -d /etc/pacman.d/gnupg/private-keys-v1.d ]] || { sudo pacman-key --init && sudo pacman-key --populate archlinux; }; } \
+        && sudo pacman -S --noconfirm --needed "$pkg" ;;
     *) return 0 ;;
   esac
 }

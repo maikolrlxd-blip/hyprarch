@@ -43,6 +43,20 @@ def buddy_name():
     return "Buddy"
 
 
+OVERLAY_FILE = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "hyprarch-overlay.pid"
+
+
+def overlay_active():
+    """True si un menú/animación a pantalla completa (hyprarch-pick, hyprarch-intro) está abierto: trae su propio
+    personajito y solo puede haber uno a la vez. El archivo guarda el PID; si ese proceso ya no existe, se ignora."""
+    try:
+        pid = int(OVERLAY_FILE.read_text().strip())
+        os.kill(pid, 0)
+        return True
+    except (OSError, ValueError):
+        return False
+
+
 def clean_agent(v):
     """Nombre corto de la IA que manda el aviso (solo letras, números, guion y punto)."""
     return v[:24] if isinstance(v, str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,24}", v) else ""
@@ -532,7 +546,7 @@ def run_daemon():
     S = {"x": 0.0, "y": 0.0, "tx": 0.0, "ty": 0.0, "facing": 1, "look": (0.0, 0.0), "t0": time.time(),
          "raw": read_state(), "state": "idle", "text": "", "bubble": 0.0, "mtime": 0.0,
          "lx": FEET[0], "ly": FEET[1], "ml": -1, "mt": -1, "n": 0, "follow": False,
-         "pal": load_palette(), "palsig": palette_signature(), "hover": False, "rgn": None}
+         "pal": load_palette(), "palsig": palette_signature(), "hover": False, "rgn": None, "vis": 1.0}
     # Resultados de hyprctl: los consulta un hilo aparte para no bloquear nunca el dibujo.
     H = {"cur": None, "mon": {"org": (0, 0), "size": (1280, 800)}}
     debug = bool(os.environ.get("CLAUDE_PRESENCE_DEBUG"))
@@ -588,6 +602,9 @@ def run_daemon():
                 cr.set_operator(cairo.OPERATOR_CLEAR)
                 cr.paint()
                 cr.set_operator(cairo.OPERATOR_OVER)
+                if S["vis"] < 0.01:          # un menú a pantalla completa trae su propio personajito: solo puede haber uno
+                    return
+                cr.push_group()
                 draw_mascot(cr, S["lx"], S["ly"], S["state"], t, S["pal"], look=S["look"], scale=1.0, facing=S["facing"])
                 # el globo se abre hacia el lado con más sitio y nunca más ancho que la ventanita
                 bx = S["lx"] + 8
@@ -595,6 +612,8 @@ def run_daemon():
                 room = (w - bx + 34) if side == "right" else (bx + 34)
                 draw_bubble(cr, bx, S["ly"] - 100, S["text"], S["pal"], alpha=S["bubble"], side=side,
                             max_w=max(120, min(360, room - 2)))
+                cr.pop_group_to_source()
+                cr.paint_with_alpha(S["vis"])
             except Exception as e:           # un error de dibujo no debe matar el overlay
                 if debug:
                     print("error de dibujo:", repr(e), flush=True)
@@ -613,10 +632,13 @@ def run_daemon():
                 return
             x = int(max(0, S["lx"] - 42))
             y = int(max(0, S["ly"] - 96))
-            key = (x // 3, y // 3)
+            key = (x // 3, y // 3, S["vis"] < 0.05)
             if not force and key == S["rgn"]:
                 return
             S["rgn"] = key
+            if S["vis"] < 0.05:                 # oculto: nada recibe clics
+                surf.set_input_region(cairo.Region())
+                return
             r = cairo.RectangleInt(x, y, 84, 104)
             surf.set_input_region(cairo.Region(r))
 
@@ -648,6 +670,10 @@ def run_daemon():
         def tick():
             try:
                 now = time.time()
+                # --- ¿hay un menú a pantalla completa con su propio personajito? entonces este se desvanece (y vuelve al cerrar)
+                S["vis"] += ((0.0 if overlay_active() else 1.0) - S["vis"]) * 0.35
+                if S["vis"] > 0.995:
+                    S["vis"] = 1.0
                 # --- estado (archivo) -------------------------------------------------
                 try:
                     m = STATE_FILE.stat().st_mtime
@@ -725,7 +751,15 @@ def run_daemon():
                 S["n"] += 1
                 if debug and S["n"] % 30 == 0:
                     print("tick", S["n"], eff, "pos=(%.0f,%.0f)" % (S["x"], S["y"]), "margenes=(%d,%d)" % (ml, mt), flush=True)
-                area.queue_draw()
+                # ahorro de CPU (equipos modestos): a pleno ritmo solo cuando hay algo que mostrar; en reposo ~15 cuadros/s
+                # (el vaivén sigue suave) y escondido casi nada
+                busy = (S["state"] != "idle" or S["bubble"] > 0.02 or S["hover"] or abs(dx) > 0.5 or abs(dy) > 0.5
+                        or S["vis"] < 0.995)
+                every = 1 if busy else 2
+                if S["vis"] < 0.01:
+                    every = 30
+                if S["n"] % every == 0:
+                    area.queue_draw()
             except Exception as e:
                 # nunca devolver una excepción: GLib quitaría el temporizador y el overlay quedaría congelado
                 if debug:

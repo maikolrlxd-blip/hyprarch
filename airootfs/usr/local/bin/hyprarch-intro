@@ -393,7 +393,16 @@ def run(once=False):
     except OSError:
         pass
 
+    import atexit
     import gi
+
+    # el personajito del escritorio se esconde mientras la entrada trae el suyo (solo puede haber uno a la vez)
+    ovl = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "hyprarch-overlay.pid"
+    try:
+        ovl.write_text(str(os.getpid()))
+        atexit.register(lambda: ovl.exists() and ovl.read_text().strip() == str(os.getpid()) and ovl.unlink())
+    except OSError:
+        pass
 
     gi.require_version("Gtk", "4.0")
     gi.require_version("Gtk4LayerShell", "1.0")

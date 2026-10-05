@@ -148,6 +148,29 @@ def read_activity(n=7):
     return out
 
 
+OVERLAY_FILE = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "hyprarch-overlay.pid"
+
+
+def overlay_hold():
+    """Avisa al personajito del escritorio que este menú trae el suyo: solo puede haber uno a la vez en pantalla.
+    Se libera al salir (y si el proceso muere, el daemon lo detecta porque el PID deja de existir)."""
+    import atexit
+
+    try:
+        OVERLAY_FILE.write_text(str(os.getpid()))
+    except OSError:
+        return
+
+    def release():
+        try:
+            if OVERLAY_FILE.read_text().strip() == str(os.getpid()):
+                OVERLAY_FILE.unlink()
+        except OSError:
+            pass
+
+    atexit.register(release)
+
+
 def play(name):
     """Sonido suave de la interfaz (si existe y si no está en silencio)."""
     if is_muted():
