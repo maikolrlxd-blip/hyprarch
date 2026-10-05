@@ -47,6 +47,7 @@
     for (const id of D.shipOrder) if (Meta.shipOwned(s, id)) s.ships[id] = true;
     if (!s.ships[s.selShip]) s.selShip = 'falcon';
   };
+  Meta.maxDiff = (s, stage) => s.diffUnlocked[stage] || 0;
   Meta.stageUnlocked = (s, id) => !D.stages[id].unlock || !!s.cleared[D.stages[id].unlock];
 
   // ---- Misiones diarias ----
@@ -106,6 +107,7 @@
     s.coins += m.reward;
     return m.reward;
   };
+  Meta.canAffordUpgrade = (s) => D.metaOrder.some((id) => Meta.level(s, id) < D.metaUpgrades[id].max && s.coins >= D.metaCost(id, Meta.level(s, id)));
   // Cuántas recompensas hay por reclamar (para la insignia del menú).
   Meta.claimable = (s) =>
     s.missions.list.filter((m) => !m.claimed && m.progress >= m.goal).length +
@@ -117,8 +119,10 @@
   Meta.applyRun = function (s, run) {
     const st = s.stats;
     const stage = D.stages[run.stage];
-    const bonus = run.won ? Math.round(150 * stage.coinMul) : 0;
-    const total = Math.round(run.coins) + bonus;
+    const dm = D.difficulty[run.difficulty || 0];
+    const bonus = run.won ? Math.round(150 * stage.coinMul * dm.coin) : 0;
+    let total = Math.round(run.coins) + bonus;
+    if (s.stats.runs < D.ASSIST.runs && total < D.ASSIST.minCoins) total = D.ASSIST.minCoins; // suelo para la primera mejora
     const before = D.shipOrder.filter((id) => Meta.shipOwned(s, id));
     st.kills += run.kills; st.runs += 1; st.bossKills += run.bossKills; st.coinsEarned += total;
     st.bestTime = Math.max(st.bestTime, Math.floor(run.time));
@@ -126,7 +130,10 @@
     st.maxWeaponLevel = Math.max(st.maxWeaponLevel, run.maxWeaponLevel || 0);
     st.evolved += run.evolved || 0;
     st.playtime += run.time;
-    if (run.won) { st.wins += 1; s.cleared[run.stage] = true; }
+    if (run.won) {
+      st.wins += 1; s.cleared[run.stage] = true;
+      s.diffUnlocked[run.stage] = Math.max(s.diffUnlocked[run.stage] || 0, Math.min(D.difficulty.length - 1, (run.difficulty || 0) + 1));
+    }
     const b = s.best[run.stage] || { time: 0, kills: 0, won: false };
     const newBest = run.won ? !b.won || run.time < b.time : (!b.won && run.time > b.time);
     if (newBest) s.best[run.stage] = { time: Math.floor(run.time), kills: run.kills, won: run.won || b.won };

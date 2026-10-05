@@ -52,7 +52,7 @@ function botChoose(sim) {
 function run(opts) {
   const s = VS.Save.defaults();
   Object.assign(s.meta, opts.meta || {});
-  const sim = new VS.Sim({ ship: opts.ship || 'falcon', stage: opts.stage || 's1', meta: VS.Meta.bonuses(s), rand: mulberry(opts.seed || 1), events: false });
+  const sim = new VS.Sim({ ship: opts.ship || 'falcon', stage: opts.stage || 's1', difficulty: opts.difficulty || 0, assist: !!opts.assist, meta: VS.Meta.bonuses(s), rand: mulberry(opts.seed || 1), events: false });
   const dt = 1 / 60, skill = opts.skill || 1;
   const stats = { maxEn: 0, ticks: 0 };
   let guard = 0;

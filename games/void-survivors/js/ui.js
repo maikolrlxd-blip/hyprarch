@@ -42,10 +42,14 @@
           </div>
           <button class="btn arrow" data-a="stage" data-v="1" ${idx === D.stageOrder.length - 1 ? 'disabled' : ''}>›</button>
         </div>
+        <div class="seg diffseg">${D.difficulty.map((_, d) => {
+          const ok = unlocked && d <= M.maxDiff(s, sid);
+          return `<button class="btn ${s.selDiff === d && ok ? 'on' : ''} ${ok ? '' : 'off'}" data-a="diff" data-v="${d}">${ok ? '' : ic('lock', '#fff') + ' '}${t('diff.' + d)}</button>`;
+        }).join('')}</div>
         <button class="btn big play ${unlocked ? '' : 'off'}" data-a="play">${t('play')}</button>
         <div class="nav">
           <button class="btn" data-a="ships">${ic('ship', '#5df')}${t('ships')}</button>
-          <button class="btn" data-a="upgrades">${ic('up', '#6f9')}${t('upgrades')}</button>
+          <button class="btn" data-a="upgrades">${ic('up', '#6f9')}${t('upgrades')}${M.canAffordUpgrade(s) ? '<span class="badge">!</span>' : ''}</button>
           <button class="btn" data-a="missions">${ic('mission', '#fc3')}${t('missions')}${claim ? `<span class="badge">${claim}</span>` : ''}</button>
           <button class="btn" data-a="trophies">${ic('trophy', '#f9f')}${t('trophies')}</button>
         </div>
@@ -128,7 +132,7 @@
       <div class="card"><div class="name">${t('stats')}</div><div class="res">
         <span>${t('total_runs')}</span><span>${S.runs}</span><span>${t('total_wins')}</span><span>${S.wins}</span><span>${t('total_kills')}</span><span>${U.fmtNum(S.kills)}</span>
         <span>${t('play_time')}</span><span>${Math.floor(S.playtime / 60)} min</span></div></div>
-      <a class="btn ghost" href="${privacyUrl}" target="_blank" rel="noopener">${t('privacy')}</a>
+      <button class="btn ghost" data-a="url" data-v="${privacyUrl}">${t('privacy')}</button>
       <button class="btn red" data-a="reset">${t('reset')}</button>
       <div class="desc" style="text-align:center">v${VS.VERSION || '1.0.0'}</div></div>`);
   };
@@ -174,7 +178,8 @@
       <button class="btn big" data-a="giveup">${t('continue')}</button></div>`, 'dim');
   };
 
-  UI.results = function (s, run, sum, adOk) {
+  UI.results = function (s, run, sum, adOk, flags) {
+    flags = flags || {};
     const won = run.won, unlocks = sum.newShips.map((id) => `<div class="newb">${t('new_unlock')}: ${t('sh.' + id + '.n')}</div>`).join('');
     UI.show(`<div class="wrap" style="margin:auto 0"><div class="big-num ${won ? 'win' : 'lose'}">${won ? t('victory') : t('defeat')}</div>
       ${sum.newBest ? `<div class="newb">${t('new_best')}</div>` : ''}${unlocks}
@@ -182,6 +187,8 @@
         <span>${t('kills')}</span><span>${run.kills}</span><span>${t('level')}</span><span>${run.level}</span>
         ${won ? `<span>${t('win_bonus')}</span><span>+${sum.bonus}</span>` : ''}
         <span>${t('coins_earned')}</span><span style="color:var(--gold)" id="gained">+${sum.total}</span></div></div>
+      ${flags.upgradeCta ? `<button class="btn big gold cta" data-a="upgrades">${ic('up', '#310')} ${t('upgrade_cta')}</button>` : ''}
+      ${flags.askRate ? `<div class="card"><div class="name">${t('rate_title')}</div><div class="desc">${t('rate_d')}</div><div class="sp"></div><div class="row"><button class="btn gold small" data-a="rate">${t('rate_btn')}</button><button class="btn ghost small" data-a="ratelater">${t('later')}</button></div></div>` : ''}
       ${adOk ? `<button class="btn gold" data-a="doublead" id="dblbtn">${ic('ad', '#310')} ${t('double_ad')}</button>` : ''}
       <div class="row" style="justify-content:center"><button class="btn big play" data-a="play" style="min-width:0">${t('retry')}</button><button class="btn big" data-a="home">${t('home')}</button></div></div>`, 'dim');
   };

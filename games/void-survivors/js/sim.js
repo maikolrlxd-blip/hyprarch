@@ -17,6 +17,10 @@
       this.stage = D.stages[cfg.stage];
       this.meta = cfg.meta;
       this.viewR = cfg.viewR || 560;
+      this.diff = cfg.difficulty || 0;
+      this.dm = D.difficulty[this.diff];
+      this.assist = !!cfg.assist;
+      this.gift = false;
       this.t = 0;
       this.state = 'running'; // running | levelup | dead | won
       this.events = [];
@@ -167,8 +171,8 @@
     scale() {
       const tm = this.t / 60, s = this.stage;
       return {
-        hp: (1 + D.tune.hpA * tm + D.tune.hpB * tm * tm) * s.hpMul,
-        dmg: (1 + 0.05 * tm) * s.dmgMul * D.tune.dmg,
+        hp: (1 + D.tune.hpA * tm + D.tune.hpB * tm * tm) * s.hpMul * this.dm.hp * (this.assist ? D.ASSIST.hp : 1),
+        dmg: (1 + 0.05 * tm) * s.dmgMul * D.tune.dmg * this.dm.dmg * (this.assist ? D.ASSIST.dmg : 1),
         spd: Math.min(0.3, 0.025 * tm) + s.spdAdd,
       };
     }
@@ -197,7 +201,8 @@
 
     director(dt) {
       const st = this.stage, t = this.t;
-      const rate = (st.rate0 + st.rateGrow * (t / 60)) * (this.bossAlive ? 0.55 : 1);
+      const rate = (st.rate0 + st.rateGrow * (t / 60)) * this.dm.rate * (this.bossAlive ? 0.55 : 1);
+      if (this.assist && !this.gift && t >= D.ASSIST.giftAt) { this.gift = true; this.drops.push({ kind: 'chest', x: this.p.x + 70, y: this.p.y - 70 }); }
       this.spawnAcc += rate * dt;
       while (this.spawnAcc >= 1) {
         const type = this.pickType();
@@ -558,7 +563,7 @@
     kill(e) {
       e.dead = true;
       this.kills++;
-      const m = this.stage.coinMul * this.st.coin;
+      const m = this.stage.coinMul * this.dm.coin * this.st.coin;
       this.ev('kill', { x: e.x, y: e.y, r: e.r, color: D.enemies[e.type].color, boss: e.boss, elite: e.elite });
       this.gems.push({ x: e.x, y: e.y, v: e.xp, pull: false, r: e.xp >= 10 ? 7 : e.xp >= 3 ? 5.5 : 4 });
       if (this.gems.length > 260) { const g0 = this.gems.shift(); this.gems[this.gems.length - 1].v += g0.v; }
@@ -653,6 +658,7 @@
     }
 
     addXp(v) {
+      if (this.assist && this.t < D.ASSIST.xpUntil) v *= D.ASSIST.xpMul;
       this.xp += v;
       while (this.xp >= this.xpNeed) {
         this.xp -= this.xpNeed;
@@ -720,7 +726,7 @@
         this.passives[c.id] = (this.passives[c.id] || 0) + 1;
         this.recompute();
       } else if (c.kind === 'heal') this.p.hp = Math.min(this.st.maxHp, this.p.hp + this.st.maxHp * 0.5);
-      else if (c.kind === 'coins') this.coins += Math.round(50 * this.stage.coinMul);
+      else if (c.kind === 'coins') this.coins += Math.round(50 * this.stage.coinMul * this.dm.coin);
       this.pending--;
       this.choices = null;
       this.state = 'running';
@@ -730,7 +736,7 @@
     result() {
       return {
         won: this.state === 'won', time: this.t, kills: this.kills, coins: this.coins, level: this.level,
-        bossKills: this.bossKills, evolved: this.evolved, stage: this.stageId, ship: this.shipId,
+        bossKills: this.bossKills, evolved: this.evolved, difficulty: this.diff, stage: this.stageId, ship: this.shipId,
         maxWeaponLevel: this.weapons.reduce((m, w) => Math.max(m, w.level), 0),
       };
     }

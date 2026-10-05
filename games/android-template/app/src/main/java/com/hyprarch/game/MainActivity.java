@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Build;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -28,8 +30,17 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void showRewarded(String callbackName) { /* sin proveedor */ }
     }
 
+    /** Abre una URL https en el navegador / Play Store. */
+    public class LinkBridge {
+        @JavascriptInterface public void open(String url) {
+            if (url == null || !url.startsWith("https://")) return;
+            try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception e) { /* sin app */ }
+        }
+    }
+
     /** Vibración corta (el WebView no implementa navigator.vibrate). */
     public class NativeBridge {
+        @JavascriptInterface public void openUrl(String url) { new LinkBridge().open(url); }
         @JavascriptInterface public void vibrate(int ms) {
             Vibrator v = (Vibrator) getSystemService(VIBRATOR_SERVICE);
             if (v == null || !v.hasVibrator()) return;

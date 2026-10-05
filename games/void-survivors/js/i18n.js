@@ -27,6 +27,7 @@
     heal: 'Reparación', 'heal.d': 'Recupera el 50% de la vida', 'coins.d': 'Obtienes monedas extra', 'bonus_coins': 'Monedas',
     evolution: 'EVOLUCIÓN', 'w.pulse.evo': 'Tormenta de pulsos', 'w.orbit.evo': 'Halo de cuchillas', 'w.chain.evo': 'Tempestad', 'w.missile.evo': 'Lluvia de misiles', 'w.nova.evo': 'Supernova', 'w.aura.evo': 'Campo vital', 'evo.need': 'Requiere {p}', 'evolved_toast': '¡{w} evolucionó!',
     'a.evolve': 'Evolución', 'a.evolve.d': 'Evoluciona un arma.', 'a.evolve2': 'Maestro de la evolución', 'a.evolve2.d': 'Evoluciona 25 armas.',
+    'diff.0': 'Normal', 'diff.1': 'Difícil', 'diff.2': 'Pesadilla', diff_lock: 'Gana en {d} para desbloquear', upgrade_cta: 'Mejorar nave', rate_title: '¿Te está gustando?', rate_d: 'Una valoración en la tienda nos ayuda muchísimo.', rate_btn: 'Valorar', later: 'Más tarde',
     // armas
     'w.pulse.n': 'Cañón de pulso', 'w.pulse.d': 'Dispara a los enemigos más cercanos.',
     'w.orbit.n': 'Cuchillas orbitales', 'w.orbit.d': 'Cuchillas que giran a tu alrededor.',
@@ -100,6 +101,7 @@
     heal: 'Repair', 'heal.d': 'Restore 50% health', 'coins.d': 'Get bonus coins', 'bonus_coins': 'Coins',
     evolution: 'EVOLUTION', 'w.pulse.evo': 'Pulse Storm', 'w.orbit.evo': 'Blade Halo', 'w.chain.evo': 'Tempest', 'w.missile.evo': 'Missile Rain', 'w.nova.evo': 'Supernova', 'w.aura.evo': 'Vital Field', 'evo.need': 'Requires {p}', 'evolved_toast': '{w} evolved!',
     'a.evolve': 'Evolution', 'a.evolve.d': 'Evolve a weapon.', 'a.evolve2': 'Evolution master', 'a.evolve2.d': 'Evolve 25 weapons.',
+    'diff.0': 'Normal', 'diff.1': 'Hard', 'diff.2': 'Nightmare', diff_lock: 'Win on {d} to unlock', upgrade_cta: 'Upgrade ship', rate_title: 'Enjoying the game?', rate_d: 'A store rating helps us a lot.', rate_btn: 'Rate', later: 'Later',
     'w.pulse.n': 'Pulse Cannon', 'w.pulse.d': 'Fires at the nearest enemies.',
     'w.orbit.n': 'Orbital Blades', 'w.orbit.d': 'Blades spinning around you.',
     'w.chain.n': 'Chain Lightning', 'w.chain.d': 'A bolt that jumps between enemies.',

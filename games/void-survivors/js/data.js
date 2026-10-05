@@ -122,6 +122,13 @@
     },
   };
   D.stageOrder = ['s1', 's2', 's3'];
+  // Dificultades por fase: se desbloquean ganando la anterior. Más difícil = más monedas.
+  D.difficulty = [
+    { hp: 1, dmg: 1, rate: 1, coin: 1 },
+    { hp: 1.5, dmg: 1.25, rate: 1.2, coin: 1.8 },
+    { hp: 2.2, dmg: 1.5, rate: 1.4, coin: 3 },
+  ];
+  D.ASSIST = { xpMul: 1.8, xpUntil: 150, hp: 0.85, dmg: 0.8, giftAt: 25, minCoins: 150, runs: 2 };
 
   // ---- Naves ----
   D.ships = {

@@ -47,13 +47,13 @@ ok('comprar naves y desbloqueo por victoria', () => {
   same(sum.newShips, ['wraith']); assert.ok(M.shipOwned(s, 'wraith')); assert.ok(M.stageUnlocked(s, 's2'));
 });
 ok('applyRun: monedas, bonus de victoria, récords y estadísticas', () => {
-  const s = fresh();
+  const s = fresh(); s.stats.runs = 5; // fuera de la ventana de ayuda inicial
   const r1 = M.applyRun(s, { won: false, time: 100, kills: 50, coins: 30, level: 5, bossKills: 0, stage: 's1', ship: 'falcon', maxWeaponLevel: 2 });
   assert.strictEqual(r1.total, 30); assert.strictEqual(s.coins, 30); assert.ok(r1.newBest);
   const r2 = M.applyRun(s, { won: false, time: 60, kills: 20, coins: 10, level: 3, bossKills: 0, stage: 's1', ship: 'falcon' });
   assert.ok(!r2.newBest); assert.strictEqual(s.best.s1.time, 100);
   const r3 = M.applyRun(s, { won: true, time: 430, kills: 1500, coins: 100, level: 25, bossKills: 3, stage: 's1', ship: 'falcon', maxWeaponLevel: 6 });
-  assert.strictEqual(r3.bonus, 150); assert.strictEqual(s.stats.runs, 3); assert.strictEqual(s.stats.wins, 1);
+  assert.strictEqual(r3.bonus, 150); assert.strictEqual(s.stats.runs, 8); assert.strictEqual(s.stats.wins, 1);
   assert.strictEqual(s.stats.bossKills, 3); assert.strictEqual(s.stats.maxWeaponLevel, 6); assert.ok(s.cleared.s1);
   assert.ok(s.best.s1.won);
   const r4 = M.applyRun(s, { won: false, time: 300, kills: 10, coins: 0, level: 3, bossKills: 0, stage: 's1', ship: 'falcon' });
@@ -151,6 +151,28 @@ ok('evolución: requiere arma al máximo y el pasivo; sube a nivel 7 y cuenta', 
   assert.strictEqual(w.level, def.max + 1); assert.strictEqual(sim.evolved, 1); assert.strictEqual(sim.result().evolved, 1);
   for (let i = 0; i < 600; i++) { sim.update(1 / 60, { x: 0.2, y: 0 }); sim.events.length = 0; if (sim.state === 'levelup') sim.choose(0); }
   assert.ok(Number.isFinite(sim.p.x));
+});
+ok('dificultades: se desbloquean al ganar y suben las monedas', () => {
+  const s = fresh();
+  assert.strictEqual(M.maxDiff(s, 's1'), 0);
+  const run = { won: true, time: 420, kills: 900, coins: 100, level: 20, bossKills: 3, stage: 's1', ship: 'falcon', difficulty: 0 };
+  const a = M.applyRun(s, run); assert.strictEqual(M.maxDiff(s, 's1'), 1); assert.strictEqual(a.bonus, 150);
+  const b = M.applyRun(s, Object.assign({}, run, { difficulty: 1 })); assert.strictEqual(M.maxDiff(s, 's1'), 2); assert.strictEqual(b.bonus, Math.round(150 * D.difficulty[1].coin));
+  M.applyRun(s, Object.assign({}, run, { difficulty: 2 })); assert.strictEqual(M.maxDiff(s, 's1'), 2, 'no pasa del máximo');
+  assert.strictEqual(M.maxDiff(s, 's2'), 0);
+  const e = mkSim({ difficulty: 2 }), n = mkSim({ difficulty: 0 });
+  assert.ok(e.scale().hp > n.scale().hp * 2 && e.scale().dmg > n.scale().dmg);
+});
+ok('ayuda de primera partida: XP extra, cofre regalo y suelo de monedas', () => {
+  const as = mkSim({ assist: true }), no = mkSim({ assist: false });
+  as.addXp(10); no.addXp(10); assert.ok(as.xp > no.xp * 1.5 || as.level > no.level);
+  for (let i = 0; i < (D.ASSIST.giftAt + 1) * 60; i++) { as.update(1 / 60, null); as.events.length = 0; if (as.state === 'levelup') as.choose(0); }
+  assert.ok(as.drops.some((d) => d.kind === 'chest') || as.pending > 0 || as.gift, 'se entrega el cofre');
+  const s = fresh(); const r = M.applyRun(s, { won: false, time: 30, kills: 3, coins: 2, level: 1, bossKills: 0, stage: 's1', ship: 'falcon' });
+  assert.strictEqual(r.total, D.ASSIST.minCoins); assert.ok(M.canAffordUpgrade(s));
+  const r2 = M.applyRun(s, { won: false, time: 30, kills: 3, coins: 2, level: 1, bossKills: 0, stage: 's1', ship: 'falcon' });
+  const r3 = M.applyRun(s, { won: false, time: 30, kills: 3, coins: 2, level: 1, bossKills: 0, stage: 's1', ship: 'falcon' });
+  assert.strictEqual(r3.total, 2, 'el suelo solo aplica a las primeras partidas');
 });
 ok('resurrección: consume una vida y devuelve a running', () => {
   const s = fresh(); s.meta.revive = 1;

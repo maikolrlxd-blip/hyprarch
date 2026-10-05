@@ -4,6 +4,7 @@
   const VS = (g.VS = g.VS || {});
   VS.VERSION = '1.0.0';
   // Debe apuntar a la política de privacidad publicada (ver store/PRIVACY.md y store/README.md).
+  const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.hyprarch.games.voidsurvivors';
   const PRIVACY_URL = 'https://github.com/maikolrlxd-blip/hyprarch/blob/main/games/void-survivors/store/PRIVACY.md';
 
   const D = VS.data, M = VS.Meta, S = VS.Save, UI = VS.UI, A = VS.Audio, I = VS.Input, U = VS.util, t = (k, v) => VS.t(k, v);
@@ -43,10 +44,11 @@
     M.ensureDaily(s);
     const newDay = M.updateLogin(s);
     save();
-    App.home();
-    if (newDay && !s.login.claimed) UI.loginPopup(s);
     last = performance.now();
     requestAnimationFrame(loop);
+    if (!s.tutorial.started && s.stats.runs === 0) { s.tutorial.started = true; save(); App.start(); return; } // primera vez: directo al juego
+    App.home();
+    if (newDay && !s.login.claimed) UI.loginPopup(s);
   };
 
   function onClick(e) {
@@ -95,9 +97,13 @@
       case 'home': click(); curScreen = ''; App.home(); break;
       case 'stage': {
         const i = D.stageOrder.indexOf(s.selStage) + (+v);
-        if (i >= 0 && i < D.stageOrder.length) { s.selStage = D.stageOrder[i]; save(); click(); App.home(); }
+        if (i >= 0 && i < D.stageOrder.length) { s.selStage = D.stageOrder[i]; s.selDiff = Math.min(s.selDiff, M.maxDiff(s, s.selStage)); save(); click(); App.home(); }
         break;
       }
+      case 'diff': if (+v <= M.maxDiff(s, s.selStage) && M.stageUnlocked(s, s.selStage)) { s.selDiff = +v; save(); click(); App.home(); } else { A.sfx('deny'); UI.toast(t('diff_lock', { d: t('diff.' + Math.max(0, +v - 1)) })); } break;
+      case 'url': App.openUrl(v); break;
+      case 'rate': s.rated = true; save(); App.openUrl(PLAY_URL); { const c = el && el.closest('.card'); if (c) c.remove(); } break;
+      case 'ratelater': s.askedAt = s.stats.runs; save(); { const c = el && el.closest('.card'); if (c) c.remove(); } break;
       case 'ships': click(); go('ships'); break;
       case 'upgrades': click(); go('upgrades'); break;
       case 'missions': click(); go('missions'); break;
@@ -148,6 +154,14 @@
     }
   };
 
+  // Abre un enlace fuera del juego (en Android, mediante el puente nativo; el WebView no abre pestañas).
+  App.openUrl = function (url) {
+    try {
+      if (g.AndroidNative && g.AndroidNative.openUrl) g.AndroidNative.openUrl(url);
+      else g.open(url, '_blank', 'noopener');
+    } catch (e) { /* sin navegador */ }
+  };
+
   App.pause = function () {
     if (App.mode !== 'game' || !App.sim || App.sim.state !== 'running' || paused) return;
     paused = true; I.release(); UI.pause(App.sim, S.data);
@@ -160,7 +174,8 @@
     const s = S.data;
     if (!M.stageUnlocked(s, s.selStage)) { A.sfx('deny'); UI.toast(t('unlock_stage')); return; }
     curScreen = '';
-    const sim = (App.sim = new VS.Sim({ ship: s.selShip, stage: s.selStage, meta: M.bonuses(s), viewR: renderer.viewR }));
+    const diff = Math.min(s.selDiff || 0, M.maxDiff(s, s.selStage));
+    const sim = (App.sim = new VS.Sim({ ship: s.selShip, stage: s.selStage, difficulty: diff, assist: s.stats.runs < D.ASSIST.runs && diff === 0, meta: M.bonuses(s), viewR: renderer.viewR }));
     for (const k of ['parts', 'texts', 'bolts', 'booms', 'banners']) renderer[k].length = 0;
     renderer.cam.x = renderer.cam.y = 0; renderer.shake = renderer.vig = 0;
     App.mode = 'game'; paused = false; acc = 0; wonT = 0; deadT = 0; levelShown = deadShown = finishing = false; itemsSig = ''; hintKey = '';
@@ -184,7 +199,11 @@
     App.mode = 'results';
     I.enabled = false; I.release();
     $('#hud').classList.add('hidden');
-    UI.results(s, run, sum, VS.Ads.available() && sum.total > 0);
+    const early = s.stats.runs <= 6;
+    UI.results(s, run, sum, VS.Ads.available() && sum.total > 0, {
+      upgradeCta: early && M.canAffordUpgrade(s),
+      askRate: !s.rated && (run.won || s.stats.runs >= 4) && (s.askedAt === undefined || s.stats.runs - s.askedAt >= 8),
+    });
     A.startMusic('menu', 0);
   }
 

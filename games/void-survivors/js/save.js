@@ -13,6 +13,9 @@
       selShip: 'falcon',
       selStage: 's1',
       cleared: {},
+      diffUnlocked: {},
+      selDiff: 0,
+      rated: false,
       best: {},
       meta: {},
       stats: { kills: 0, runs: 0, wins: 0, bossKills: 0, coinsEarned: 0, bestTime: 0, maxLevel: 0, maxWeaponLevel: 0, evolved: 0, playtime: 0 },
@@ -20,7 +23,7 @@
       missions: { day: '', list: [] },
       login: { last: '', streak: 0, claimed: true },
       settings: { sound: 1, music: 1, vibe: 1, shake: 1, numbers: 1, lang: '' },
-      tutorial: { done: false },
+      tutorial: { done: false, started: false },
     };
   }
 
@@ -32,7 +35,7 @@
       else base[k] = src[k];
     }
     // claves dinámicas (ships, cleared, best, meta, ach) que no están en defaults
-    for (const k of ['ships', 'cleared', 'best', 'meta', 'ach']) if (src[k] && typeof src[k] === 'object') Object.assign(base[k], src[k]);
+    for (const k of ['ships', 'cleared', 'best', 'meta', 'ach', 'diffUnlocked']) if (src[k] && typeof src[k] === 'object') Object.assign(base[k], src[k]);
     return base;
   }
 
