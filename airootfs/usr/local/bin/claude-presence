@@ -1,0 +1,540 @@
+#!/usr/bin/env python3
+"""claude-presence — la presencia de Claude en el escritorio (personajito "Claudito").
+
+Uso:
+  claude-presence daemon                 superposición animada en pantalla (Wayland, GTK4 + layer-shell)
+  claude-presence set <estado> [texto]   estados: idle thinking working done error waiting
+  claude-presence tool                   lee por stdin el JSON de un hook de Claude Code (PreToolUse)
+  claude-presence status                 JSON para el módulo de Waybar (custom/claude)
+  claude-presence render-sheet <png>     (desarrollo) dibuja todos los estados en una imagen
+
+El estado vive en  ~/.cache/claude-presence/state.json . Quien quiera mover al
+personajito solo tiene que escribir ahí (los hooks de Claude Code lo hacen solos).
+"""
+import json
+import math
+import os
+import re
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+STATE_FILE = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "claude-presence" / "state.json"
+STATES = ("idle", "thinking", "working", "done", "error", "waiting")
+ICONS = {"idle": "", "thinking": "", "working": "", "done": "", "error": "", "waiting": ""}
+
+# ----------------------------------------------------------------------------- estado
+
+
+def read_state():
+    try:
+        s = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+        if s.get("state") in STATES:
+            return s
+    except Exception:
+        pass
+    return {"state": "idle", "text": "", "ts": 0}
+
+
+def write_state(state, text="", **extra):
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    data = {"state": state, "text": text, "ts": time.time(), **extra}
+    tmp = STATE_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, STATE_FILE)
+
+
+def describe_tool(payload):
+    """Convierte el JSON de un hook de Claude Code en una frase corta en español."""
+    tool = payload.get("tool_name", "") or ""
+    inp = payload.get("tool_input", {}) or {}
+    short = lambda s, n=46: (s if len(s) <= n else s[: n - 1] + "…")
+    base = lambda p: os.path.basename(str(p).replace("\\", "/"))
+    if tool in ("Bash", "PowerShell"):
+        return f"Ejecutando: {short(str(inp.get('command', '')).strip().splitlines()[0] if inp.get('command') else '')}"
+    if tool in ("Edit", "Write", "NotebookEdit"):
+        return f"Editando {short(base(inp.get('file_path', '')))}"
+    if tool == "Read":
+        return f"Leyendo {short(base(inp.get('file_path', '')))}"
+    if tool in ("Grep", "Glob"):
+        return f"Buscando {short(str(inp.get('pattern', '')))}"
+    if tool in ("WebSearch", "WebFetch"):
+        return f"Buscando en la web: {short(str(inp.get('query', inp.get('url', ''))))}"
+    if tool == "Agent":
+        return "Delegando en un subagente"
+    return f"Usando {tool}" if tool else "Trabajando"
+
+
+# ----------------------------------------------------------------------------- paleta
+
+
+def load_palette():
+    """Lee los colores del tema activo (verde/rojo/personalizado)."""
+    pal = dict(ACCENT="39ff14", ACCENT2="ff1f4b", OK="39ff14", ALERT="ff1f4b", BG="0a0c0b", SURFACE="111513", FG="d7ffe3", DIM="5f7367")
+    try:
+        cur = (Path.home() / ".config/hyprarch/current").read_text().strip() or "verde"
+        f = Path.home() / ".config/hyprarch/custom.env" if cur == "custom" else Path(f"/usr/share/hyprarch/themes/{cur}.env")
+        for line in f.read_text().splitlines():
+            m = re.match(r'^([A-Z0-9_]+)=("?)([^"#]*)\2', line.strip())
+            if m:
+                pal[m.group(1)] = m.group(3).strip()
+    except Exception:
+        pass
+    return {k: tuple(int(v[i:i + 2], 16) / 255 for i in (0, 2, 4)) if re.fullmatch(r"[0-9a-fA-F]{6}", v) else v for k, v in pal.items()}
+
+
+# ----------------------------------------------------------------------------- dibujo (Cairo)
+
+
+def rrect(cr, x, y, w, h, r):
+    r = min(r, w / 2, h / 2)
+    cr.new_sub_path()
+    cr.arc(x + w - r, y + r, r, -math.pi / 2, 0)
+    cr.arc(x + w - r, y + h - r, r, 0, math.pi / 2)
+    cr.arc(x + r, y + h - r, r, math.pi / 2, math.pi)
+    cr.arc(x + r, y + r, r, math.pi, 3 * math.pi / 2)
+    cr.close_path()
+
+
+def shade(c, k):
+    return tuple(max(0.0, min(1.0, v * k)) for v in c)
+
+
+def draw_mascot(cr, x, y, state, t, pal, look=(0.0, 0.0), scale=1.0, facing=1):
+    """Dibuja a Claudito con el centro de los pies en (x, y). t = segundos."""
+    import cairo
+
+    A, A2, OK, AL = pal["ACCENT"], pal["ACCENT2"], pal["OK"], pal["ALERT"]
+    bob = {"idle": math.sin(t * 2.0) * 2.0, "thinking": math.sin(t * 3.0) * 3.0, "working": math.sin(t * 9.0) * 1.6,
+           "done": -abs(math.sin(t * 5.0)) * 10.0, "error": 0.0, "waiting": math.sin(t * 4.0) * 2.5}[state]
+    shake = math.sin(t * 40) * 3.0 if state == "error" else 0.0
+    cr.save()
+    cr.translate(x + shake, y)
+    cr.scale(scale * facing, scale)
+    # leve inclinación en el sentido del movimiento (flota, no camina)
+    cr.translate(0, -50)
+    cr.rotate(max(-1.0, min(1.0, look[0])) * 0.10 * facing)
+    cr.translate(0, 50)
+
+    # sombra en el "suelo": más chica y tenue cuanto más alto flota
+    cr.save()
+    cr.scale(1, 0.26)
+    cr.arc(0, 0, 30 + bob * 0.5, 0, 2 * math.pi)
+    cr.restore()
+    cr.set_source_rgba(0, 0, 0, 0.30)
+    cr.fill()
+
+    # cuerpo (flotando ~20 px sobre el suelo)
+    by = -80 + bob * 1.6
+
+    # propulsor: resplandor y chispas debajo del cuerpo
+    pulse_h = 0.5 + 0.5 * math.sin(t * 7.0)
+    hy = by + 60
+    cr.save()
+    cr.translate(0, hy)
+    cr.scale(1, 0.5)
+    rg_h = cairo.RadialGradient(0, 0, 1, 0, 0, 26 + 5 * pulse_h)
+    rg_h.add_color_stop_rgba(0, *shade(A, 1.1), 0.85)
+    rg_h.add_color_stop_rgba(1, *A, 0.0)
+    cr.set_source(rg_h)
+    cr.arc(0, 0, 28 + 5 * pulse_h, 0, 2 * math.pi)
+    cr.fill()
+    cr.restore()
+    for i in range(3):
+        ph = (t * 1.6 + i / 3.0) % 1.0
+        cr.arc((i - 1) * 9 + math.sin(t * 5 + i) * 2, hy + 4 + ph * 22, 2.4 * (1 - ph), 0, 2 * math.pi)
+        cr.set_source_rgba(*A, 0.8 * (1 - ph))
+        cr.fill()
+    body = {"error": AL, "done": OK}.get(state, A)
+    grad = cairo.LinearGradient(0, by, 0, by + 56)
+    grad.add_color_stop_rgb(0, *shade(body, 1.18))
+    grad.add_color_stop_rgb(1, *shade(body, 0.72))
+    rrect(cr, -32, by, 64, 56, 20)
+    cr.set_source(grad)
+    cr.fill_preserve()
+    cr.set_source_rgba(0, 0, 0, 0.55)
+    cr.set_line_width(2.4)
+    cr.stroke()
+    # brillo
+    rrect(cr, -24, by + 5, 30, 8, 4)
+    cr.set_source_rgba(1, 1, 1, 0.30)
+    cr.fill()
+
+    # pantalla/cara oscura
+    rrect(cr, -25, by + 12, 50, 32, 12)
+    cr.set_source_rgba(0.03, 0.04, 0.04, 0.92)
+    cr.fill()
+
+    # ojos
+    blink = 0.12 if (t % 4.0) < 0.12 else 1.0
+    lx, ly = look
+    for ex in (-11, 11):
+        eh = (13 if state != "done" else 5) * blink
+        cr.save()
+        cr.translate(ex, by + 27)
+        cr.scale(1, max(eh / 13, 0.12))
+        cr.arc(0, 0, 6.2, 0, 2 * math.pi)
+        cr.restore()
+        glow = {"error": AL, "done": OK}.get(state, A)
+        cr.set_source_rgb(*glow)
+        cr.fill()
+        if state not in ("done",) and blink > 0.5:
+            cr.arc(ex + lx * 2.2, by + 27 + ly * 2.2, 2.0, 0, 2 * math.pi)
+            cr.set_source_rgb(0.02, 0.03, 0.03)
+            cr.fill()
+
+    # boca
+    cr.set_line_width(2.4)
+    cr.set_line_cap(cairo.LINE_CAP_ROUND)
+    cr.set_source_rgb(*shade(body, 1.1))
+    my = by + 38
+    if state == "done":
+        cr.arc(0, my - 4, 7, 0.15 * math.pi, 0.85 * math.pi)
+    elif state == "error":
+        cr.move_to(-6, my + 1)
+        for i in range(1, 5):
+            cr.line_to(-6 + i * 3, my + (-1 if i % 2 else 1))
+    elif state == "waiting":
+        cr.arc(0, my, 2.6, 0, 2 * math.pi)
+    elif state == "thinking":
+        cr.move_to(-4, my)
+        cr.line_to(4, my)
+    else:
+        cr.arc(0, my - 3, 5, 0.2 * math.pi, 0.8 * math.pi)
+    cr.stroke()
+
+    # antena
+    ax = math.sin(t * 2.5) * 2
+    cr.set_source_rgb(*shade(A, 0.55))
+    cr.set_line_width(3)
+    cr.move_to(0, by)
+    cr.curve_to(ax, by - 8, ax * 1.5, by - 12, ax * 2, by - 16)
+    cr.stroke()
+    pulse = 0.5 + 0.5 * math.sin(t * {"idle": 2, "thinking": 6, "working": 10, "done": 4, "error": 14, "waiting": 5}[state])
+    tip = {"error": AL, "done": OK, "thinking": A2}.get(state, A)
+    rg = cairo.RadialGradient(ax * 2, by - 18, 1, ax * 2, by - 18, 12 + 6 * pulse)
+    rg.add_color_stop_rgba(0, *tip, 0.95)
+    rg.add_color_stop_rgba(1, *tip, 0.0)
+    cr.set_source(rg)
+    cr.arc(ax * 2, by - 18, 14 + 6 * pulse, 0, 2 * math.pi)
+    cr.fill()
+    cr.arc(ax * 2, by - 18, 4.2, 0, 2 * math.pi)
+    cr.set_source_rgb(*shade(tip, 1.2))
+    cr.fill()
+
+    # portátil cuando trabaja / piensa
+    if state in ("working", "thinking"):
+        # portátil flotando delante de la parte baja del cuerpo (no tapa la cara)
+        rrect(cr, -21, by + 60, 42, 5, 2)
+        cr.set_source_rgb(*shade(A, 0.4))
+        cr.fill()
+        rrect(cr, -15, by + 45, 30, 15, 3)
+        cr.set_source_rgba(0.02, 0.05, 0.03, 0.97)
+        cr.fill_preserve()
+        cr.set_source_rgb(*A)
+        cr.set_line_width(1.4)
+        cr.stroke()
+        for i in range(3):
+            w = 6 + ((int(t * 6) + i * 3) % 4) * 4
+            cr.move_to(-11, by + 49 + i * 4)
+            cr.line_to(-11 + w, by + 49 + i * 4)
+            cr.set_source_rgba(*A, 0.9)
+            cr.set_line_width(1.6)
+            cr.stroke()
+
+    # símbolos flotantes por estado
+    cr.set_font_size(20)
+    if state == "thinking":
+        for i in range(3):
+            a = 0.25 + 0.75 * max(0.0, math.sin(t * 5 - i * 0.9))
+            cr.arc(-14 + i * 14, by - 36 - math.sin(t * 5 - i * 0.9) * 3, 3.6, 0, 2 * math.pi)
+            cr.set_source_rgba(*A2, a)
+            cr.fill()
+    elif state == "waiting":
+        cr.select_font_face("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+        cr.set_source_rgba(*A2, 0.55 + 0.45 * math.sin(t * 6))
+        cr.move_to(26, by - 6)
+        cr.show_text("?")
+    elif state == "error":
+        cr.select_font_face("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+        cr.set_source_rgb(*AL)
+        cr.move_to(26, by - 4)
+        cr.show_text("!")
+    elif state == "done":
+        for i in range(6):
+            ang = t * 3 + i * math.pi / 3
+            r = 40 + 6 * math.sin(t * 6 + i)
+            px, py = math.cos(ang) * r, by + 14 + math.sin(ang) * r * 0.7
+            cr.arc(px, py, 2.6, 0, 2 * math.pi)
+            cr.set_source_rgba(*(OK if i % 2 else A2), 0.9)
+            cr.fill()
+    cr.restore()
+
+
+def draw_bubble(cr, x, y, text, pal, alpha=1.0, max_w=360, side="left"):
+    """Globo de texto con la cola apuntando hacia (x, y) (arriba del personajito)."""
+    import cairo
+
+    if not text or alpha <= 0.01:
+        return
+    cr.save()
+    cr.select_font_face("JetBrainsMono Nerd Font", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+    cr.set_font_size(14)
+    ext = cr.text_extents(text)
+    w = min(ext.width + 28, max_w)
+    while ext.width + 28 > max_w and len(text) > 4:   # recorta con "…"
+        text = text[:-2] + "…"
+        ext = cr.text_extents(text)
+        w = min(ext.width + 28, max_w)
+    h = 34
+    bx, by = (x - w + 34 if side == "left" else x - 34), y - h - 14
+    A, BG, FG = pal["ACCENT"], pal["BG"], pal["FG"]
+    rrect(cr, bx, by, w, h, 12)
+    cr.set_source_rgba(*BG, 0.94 * alpha)
+    cr.fill_preserve()
+    cr.set_source_rgba(*A, alpha)
+    cr.set_line_width(2)
+    cr.stroke()
+    cr.move_to(x - 4, by + h - 1)
+    cr.line_to(x + 8, by + h + 12)
+    cr.line_to(x + 16, by + h - 1)
+    cr.set_source_rgba(*BG, 0.94 * alpha)
+    cr.fill_preserve()
+    cr.set_source_rgba(*A, alpha)
+    cr.stroke()
+    cr.set_source_rgba(*FG, alpha)
+    cr.move_to(bx + 14, by + 22)
+    cr.show_text(text)
+    cr.restore()
+
+
+def render_sheet(out):
+    import cairo
+
+    pal = load_palette()
+    names = list(STATES)
+    cell_w, cell_h = 230, 230
+    surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, cell_w * len(names), cell_h)
+    cr = cairo.Context(surf)
+    cr.set_source_rgb(0.04, 0.06, 0.05)
+    cr.paint()
+    texts = {"idle": "", "thinking": "Pensando…", "working": "Editando hyprland.lua", "done": "¡Listo!", "error": "Algo falló", "waiting": "¿Seguimos?"}
+    for i, st in enumerate(names):
+        x = i * cell_w + cell_w / 2
+        draw_mascot(cr, x, 190, st, 1.37, pal, look=(0.6, 0.2), scale=1.15)
+        draw_bubble(cr, x + 10, 78, texts[st], pal)
+        cr.set_source_rgb(*pal["DIM"])
+        cr.select_font_face("monospace")
+        cr.set_font_size(12)
+        cr.move_to(i * cell_w + 10, 18)
+        cr.show_text(st)
+    surf.write_to_png(out)
+    print(out)
+
+
+# ----------------------------------------------------------------------------- Waybar
+
+
+def cmd_status():
+    s = read_state()
+    age = time.time() - s.get("ts", 0)
+    st = s["state"]
+    if st in ("done", "error") and age > 20:
+        st = "idle"
+    if st in ("working", "thinking") and age > 300:
+        st = "idle"
+    text = s.get("text") or {"idle": "Claude en reposo", "done": "Listo", "error": "Error"}.get(st, "")
+    print(json.dumps({"text": f"{ICONS[st]} Claude", "class": st, "tooltip": text}, ensure_ascii=False))
+
+
+# ----------------------------------------------------------------------------- superposición (GTK4 + layer-shell)
+
+
+def hypr_json(*args):
+    try:
+        out = subprocess.run(["hyprctl", "-j", *args], capture_output=True, text=True, timeout=1).stdout
+        return json.loads(out)
+    except Exception:
+        return None
+
+
+def run_daemon():
+    """Superposición liviana: una ventanita (440x270) que se desplaza con los márgenes de layer-shell."""
+    import gi
+
+    gi.require_version("Gtk", "4.0")
+    gi.require_version("Gdk", "4.0")
+    gi.require_version("Gtk4LayerShell", "1.0")
+    from gi.repository import Gdk, GLib, Gtk, Gtk4LayerShell as LS
+    import cairo
+
+    BOX_W, BOX_H = 440, 270          # tamaño de la ventanita
+    FEET = (360, 250)                # dónde pisa el personajito dentro de la ventanita (por defecto)
+
+    pal = load_palette()
+    app = Gtk.Application(application_id="local.hyprarch.claudepresence")
+    S = {"x": 0.0, "y": 0.0, "tx": 0.0, "ty": 0.0, "facing": 1, "look": (0.0, 0.0), "t0": time.time(),
+         "state": "idle", "text": "", "ts": 0.0, "mtime": 0.0, "bubble": 0.0, "mon": (1280, 800),
+         "lx": FEET[0], "ly": FEET[1], "ml": -1, "mt": -1, "n": 0}
+    debug = bool(os.environ.get("CLAUDE_PRESENCE_DEBUG"))
+
+    def on_activate(app):
+        win = Gtk.ApplicationWindow(application=app)
+        win.set_decorated(False)
+        win.set_default_size(BOX_W, BOX_H)
+        LS.init_for_window(win)
+        LS.set_layer(win, LS.Layer.OVERLAY)
+        LS.set_anchor(win, LS.Edge.TOP, True)
+        LS.set_anchor(win, LS.Edge.LEFT, True)
+        LS.set_margin(win, LS.Edge.TOP, 0)
+        LS.set_margin(win, LS.Edge.LEFT, 0)
+        LS.set_exclusive_zone(win, -1)
+        LS.set_namespace(win, "claude-presence")
+        LS.set_keyboard_mode(win, LS.KeyboardMode.NONE)
+        area = Gtk.DrawingArea()
+        area.set_content_width(BOX_W)
+        area.set_content_height(BOX_H)
+        win.set_child(area)
+
+        css = Gtk.CssProvider()
+        css.load_from_data(b"window, window.background { background: transparent; }")
+        Gtk.StyleContext.add_provider_for_display(win.get_display(), css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        def draw(_a, cr, w, h):
+            t = time.time() - S["t0"]
+            cr.set_operator(cairo.OPERATOR_CLEAR)
+            cr.paint()
+            cr.set_operator(cairo.OPERATOR_OVER)
+            draw_mascot(cr, S["lx"], S["ly"], S["state"], t, pal, look=S["look"], scale=1.0, facing=S["facing"])
+            side = "right" if S["lx"] < 230 else "left"
+            draw_bubble(cr, S["lx"] + 8, S["ly"] - 100, S["text"], pal, alpha=S["bubble"], side=side)
+
+        area.set_draw_func(draw)
+
+        cache = {"t": 0.0, "cur": None, "win": None}
+
+        def hypr_cached():
+            """Consulta a hyprctl como mucho 6 veces por segundo (no en cada cuadro)."""
+            now = time.time()
+            if now - cache["t"] > 0.16:
+                cache.update(t=now, cur=hypr_json("cursorpos"), win=hypr_json("activewindow"))
+            return cache["cur"], cache["win"]
+
+        def monitor_size():
+            try:
+                mons = win.get_display().get_monitors()
+                g = mons.get_item(0).get_geometry()
+                return (g.width, g.height)
+            except Exception:
+                return S["mon"]
+
+        def clamp(p):
+            w, h = S["mon"]
+            return (max(40.0, min(w - 40.0, p[0])), max(120.0, min(h - 16.0, p[1])))
+
+        def pick_target():
+            w, h = S["mon"]
+            rest = (w - 90, h - 24)
+            if S["state"] == "idle":
+                return rest
+            # Solo acompaña al cursor cuando Claude maneja el mouse (marca "follow"); si no, flota en su rincón.
+            if S.get("follow"):
+                cur, _awin = hypr_cached()
+                if cur:
+                    return clamp((float(cur.get("x", rest[0])) - 60, float(cur.get("y", rest[1])) + 70))
+            return rest
+
+        def tick():
+            try:
+                m = STATE_FILE.stat().st_mtime
+            except OSError:
+                m = 0.0
+            if m != S["mtime"]:
+                S["mtime"] = m
+                st = read_state()
+                S.update(state=st["state"], text=st.get("text", ""), ts=st.get("ts", 0), follow=bool(st.get("follow")))
+                if debug:
+                    print("estado ->", S["state"], repr(S["text"]), flush=True)
+            if S["n"] % 60 == 0:
+                S["mon"] = monitor_size()
+            age = time.time() - S["ts"]
+            if S["state"] in ("done", "error") and age > 8:
+                S["state"], S["text"] = "idle", ""
+            S["tx"], S["ty"] = pick_target()
+            if S["x"] == 0 and S["y"] == 0:
+                S["x"], S["y"] = S["tx"], S["ty"]
+            dx, dy = S["tx"] - S["x"], S["ty"] - S["y"]
+            S["x"] += dx * 0.12
+            S["y"] += dy * 0.12
+            if abs(dx) > 6:
+                S["facing"] = 1 if dx > 0 else -1
+            S["look"] = (max(-1, min(1, dx / 120)), max(-1, min(1, dy / 120)))
+            want = 1.0 if S["text"] and S["state"] != "idle" else 0.0
+            S["bubble"] += (want - S["bubble"]) * 0.2
+
+            # la ventanita sigue al personajito: se mueve con los márgenes de layer-shell
+            w, h = S["mon"]
+            ml = int(max(0, min(S["x"] - FEET[0], w - BOX_W)))
+            mt = int(max(0, min(S["y"] - FEET[1], h - BOX_H)))
+            if ml != S["ml"]:
+                LS.set_margin(win, LS.Edge.LEFT, ml)
+                S["ml"] = ml
+            if mt != S["mt"]:
+                LS.set_margin(win, LS.Edge.TOP, mt)
+                S["mt"] = mt
+            S["lx"], S["ly"] = S["x"] - ml, S["y"] - mt
+
+            S["n"] += 1
+            if debug and S["n"] % 30 == 0:
+                print("tick", S["n"], S["state"], "pos=(%.0f,%.0f)" % (S["x"], S["y"]), "margenes=(%d,%d)" % (ml, mt), flush=True)
+            area.queue_draw()
+            return True
+
+        GLib.timeout_add(33, tick)
+        win.present()
+        # los clics atraviesan la ventanita
+        def pass_clicks(*_):
+            surf = win.get_surface()
+            if surf:
+                surf.set_input_region(cairo.Region())
+        win.connect("realize", pass_clicks)
+        pass_clicks()
+
+    app.connect("activate", on_activate)
+    app.run(None)
+
+
+# ----------------------------------------------------------------------------- CLI
+
+
+def main(argv):
+    cmd = argv[1] if len(argv) > 1 else "status"
+    if cmd == "set":
+        st = argv[2] if len(argv) > 2 else "idle"
+        # --seguir: el personajito acompaña al cursor (para cuando Claude maneja el mouse de verdad)
+        text = " ".join(a for a in argv[3:] if a != "--seguir")
+        write_state(st if st in STATES else "idle", text, follow=("--seguir" in argv))
+    elif cmd == "tool":
+        try:
+            payload = json.loads(sys.stdin.read() or "{}")
+        except Exception:
+            payload = {}
+        write_state("working", describe_tool(payload))
+    elif cmd == "status":
+        cmd_status()
+    elif cmd == "daemon":
+        run_daemon()
+    elif cmd == "render-sheet":
+        render_sheet(argv[2] if len(argv) > 2 else "sheet.png")
+    else:
+        print(__doc__)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main(sys.argv))
+    except BrokenPipeError:
+        pass

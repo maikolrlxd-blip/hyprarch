@@ -26,7 +26,7 @@ if pacman --help 2>&1 | grep -q -- '--disable-sandbox'; then
 fi
 
 echo "==> Instalando herramientas de compilación"
-pacman -Syu --noconfirm --needed "${SANDBOX_OFF[@]}" archiso imagemagick
+pacman -Syu --noconfirm --needed "${SANDBOX_OFF[@]}" archiso nodejs npm
 
 echo "==> Copiando perfil base releng"
 rm -rf "$PROFILE" "$WORK"
@@ -65,6 +65,11 @@ echo "==> Aplicando airootfs (configuración, dotfiles, scripts)"
 find airootfs -type f -exec sed -i 's/\r$//' {} +
 chmod +x airootfs/usr/local/bin/* airootfs/etc/skel/.config/hypr/scripts/*
 cp -a airootfs/. "$AIR/"
+
+echo "==> Claude Code (paquete oficial de npm, instalado dentro de la ISO)"
+# El usuario inicia sesión él mismo la primera vez (no se guarda ninguna credencial).
+npm install -g --prefix "$AIR/usr/local" --no-fund --no-audit @anthropic-ai/claude-code
+ls -l "$AIR/usr/local/bin/" | head -20
 
 echo "==> Ocultando del lanzador las entradas inútiles"
 mkdir -p "$AIR/etc/skel/.local/share/applications"
@@ -129,6 +134,12 @@ PERMS=/tmp/hyprarch-perms.txt
   for f in "$REPO"/airootfs/usr/local/bin/* "$REPO"/airootfs/etc/skel/.config/hypr/scripts/*; do
     echo "  [\"/${f#"$REPO/airootfs/"}\"]=\"0:0:0755\""
   done
+  # Ejecutables instalados por npm (Claude Code): mkarchiso tampoco conserva su bit +x
+  if [[ -d "$AIR/usr/local/lib/node_modules" ]]; then
+    while IFS= read -r f; do
+      echo "  [\"${f#"$AIR"}\"]=\"0:0:0755\""
+    done < <(find "$AIR/usr/local/lib/node_modules" -type f -perm -u+x)
+  fi
   if [[ "${HYPRARCH_DEV:-0}" == "1" ]]; then
     echo '  ["/etc/skel/.ssh"]="0:0:0700"'
     echo '  ["/etc/skel/.ssh/authorized_keys"]="0:0:0600"'

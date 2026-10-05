@@ -15,6 +15,7 @@
   ],
   "modules-center": ["clock"],
   "modules-right": [
+    "custom/claude",
     "tray",
     "hyprland/language",
     "cpu",
@@ -138,6 +139,14 @@
 
   "tray": {
     "spacing": 8
+  },
+
+  "custom/claude": {
+    "exec": "claude-presence status",
+    "return-type": "json",
+    "interval": 1,
+    "tooltip": true,
+    "on-click": "kitty --class claude-code -e claude"
   },
 
   "custom/theme": {

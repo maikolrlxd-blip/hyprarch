@@ -5,6 +5,7 @@ SUPER + Enter           Terminal
 SUPER + D               Lanzador de aplicaciones
 SUPER + B               Firefox
 SUPER + E               Archivos
+SUPER + A               Claude (asistente de IA)
 SUPER + N               Redes Wi-Fi
 SUPER + T               Cambiar tema de colores
 SUPER + Q  /  ALT + F4  CERRAR ventana

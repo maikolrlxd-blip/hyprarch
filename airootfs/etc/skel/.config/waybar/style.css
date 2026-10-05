@@ -39,6 +39,7 @@ tooltip label {
 #pulseaudio,
 #backlight,
 #battery,
+#custom-claude,
 #custom-theme,
 #custom-help,
 #custom-power {
@@ -159,6 +160,19 @@ window#waybar.empty #window {
     background: @surface;
     color: @alert;
   }
+}
+
+/* Presencia de Claude: el color cuenta qué está haciendo */
+#custom-claude                { color: @dim; font-weight: bold; }
+#custom-claude.thinking       { color: @accent2; }
+#custom-claude.working        { color: @accent; border-color: alpha(@accent, 0.8); }
+#custom-claude.done           { color: @ok; }
+#custom-claude.waiting        { color: @accent2; animation: pulso 1.2s ease-in-out infinite alternate; }
+#custom-claude.error          { color: @surface; background: @alert; }
+#custom-claude:hover          { background: @surface2; }
+
+@keyframes pulso {
+  to { border-color: @accent2; }
 }
 
 #custom-theme:hover,
