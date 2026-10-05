@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# hyprarch-perf — perfil de rendimiento: "lite" (equipos modestos) o "full" (equipos buenos).
+#
+#   hyprarch-perf auto       detecta el equipo, escribe ~/.config/hyprarch/perf.effective y lo imprime
+#   hyprarch-perf status     muestra la elección, el resultado de la detección y el motivo
+#
+# Elección de la persona: ~/.config/hyprarch/perf  =  auto (por defecto) | lite | full
+# Se considera MODESTO si ocurre alguna de estas cosas (cualquiera basta):
+#   · 4 GB de RAM o menos      · 2 núcleos o menos      · procesador de gama baja (Celeron, Atom, Pentium, N/J de baja potencia)
+#   · sin aceleración gráfica (no hay /dev/dri/renderD*) o render por software (llvmpipe)
+# En perfil lite: sin desenfoque, sombras ni brillos, animaciones cortas, menús a menos cuadros por segundo y menos partículas,
+# y estilo visual "sutil". Los equipos buenos no pierden nada.
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/hyprarch"
+mkdir -p "$CFG"
+
+detect() {   # imprime "lite|full<TAB>motivo"
+  local ram_mb cores model why=()
+  ram_mb=$(awk '/^MemTotal:/ { printf "%d", $2 / 1024 }' /proc/meminfo 2>/dev/null)
+  cores=$(nproc 2>/dev/null || echo 4)
+  model=$(awk -F': ' '/^model name/ { print $2; exit }' /proc/cpuinfo 2>/dev/null)
+  (( ${ram_mb:-8192} <= 4200 )) && why+=("RAM ${ram_mb} MB")
+  (( ${cores:-4} <= 2 )) && why+=("${cores} núcleos")
+  [[ $model =~ (Celeron|Atom|Pentium|Intel\(R\)\ N[0-9]|Intel\(R\)\ J[0-9]|Athlon\ (Silver|Gold)|AMD\ [AE][0-9]-|E-?[0-9]{3}) ]] && why+=("procesador de gama baja")
+  compgen -G '/dev/dri/renderD*' >/dev/null || why+=("sin aceleración gráfica")
+  if command -v glxinfo >/dev/null 2>&1 && glxinfo -B 2>/dev/null | grep -qi 'llvmpipe\|softpipe'; then why+=("render por software"); fi
+  if (( ${#why[@]} )); then printf 'lite\t%s' "$(IFS=,; echo "${why[*]}")"; else printf 'full\t%s' "RAM ${ram_mb} MB, ${cores} núcleos"; fi
+}
+
+choice=$(tr -d '[:space:]' < "$CFG/perf" 2>/dev/null)
+case ${1:-auto} in
+  auto)
+    case $choice in
+      lite|full) eff=$choice ;;
+      *) eff=$(detect | cut -f1) ;;
+    esac
+    printf '%s\n' "$eff" > "$CFG/perf.effective"
+    # sin elección explícita de estilo, el perfil lite usa el más liviano
+    if [[ $eff == lite && ! -e $CFG/style ]]; then printf 'sutil\n' > "$CFG/style.auto"; else rm -f "$CFG/style.auto"; fi
+    echo "$eff" ;;
+  status)
+    d=$(detect)
+    echo "elección: ${choice:-auto}"
+    echo "detección: ${d%%$'\t'*} (${d#*$'\t'})"
+    echo "efectivo: $(cat "$CFG/perf.effective" 2>/dev/null || echo '?')" ;;
+  *) echo "Uso: hyprarch-perf [auto|status]" >&2; exit 2 ;;
+esac

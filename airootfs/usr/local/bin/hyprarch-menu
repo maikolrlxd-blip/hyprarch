@@ -37,7 +37,16 @@ CFG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "hy
 try:
     STYLE = (CFG_DIR / "style").read_text().strip().lower()
 except OSError:
-    STYLE = "fresh"
+    try:                                    # sin elección de la persona, el perfil ligero usa el estilo más liviano
+        STYLE = (CFG_DIR / "style.auto").read_text().strip().lower()
+    except OSError:
+        STYLE = "fresh"
+# Perfil de rendimiento (lo decide hyprarch-perf): en equipos modestos, menos cuadros por segundo y menos adornos
+try:
+    LITE = (CFG_DIR / "perf.effective").read_text().strip() == "lite"
+except OSError:
+    LITE = False
+FRAME_MS = 33 if LITE else 16
 #   cyber                    sci-fi / cyberpunk: esquinas cortadas, marcas de mira, líneas de escaneo, texto de HUD, parpadeo al abrir
 #   neumo                    3D inmersivo neumórfico / skeuomorfismo moderno: superficies en relieve con luz y sombra suaves;
 #                            lo elegido se "hunde" como un botón físico y se enciende un LED
@@ -149,6 +158,40 @@ def read_activity(n=7):
         except Exception:
             continue
     return out
+
+
+_STRINGS = None
+
+
+def tr(key, default=None):
+    """Texto de la interfaz en el idioma elegido (hyprarch-lang). Si falta: inglés, luego español, luego `default`."""
+    global _STRINGS
+    lang = os.environ.get("HYPRARCH_LANG") or ""
+    if not lang:
+        try:
+            lang = (CFG_DIR / "lang").read_text().strip()
+        except OSError:
+            lang = os.environ.get("LANG", "es")
+    lang = re.split(r"[._-]", lang)[0] or "es"
+    if _STRINGS is None:
+        _STRINGS = {"cols": {}, "rows": {}}
+        for p in (os.environ.get("HYPRARCH_STRINGS", ""), "/usr/share/hyprarch/i18n/strings.txt",
+                  str(Path(__file__).resolve().parents[2] / "share/hyprarch/i18n/strings.txt")):
+            if p and Path(p).is_file():
+                for line in Path(p).read_text(encoding="utf-8").splitlines():
+                    if line.startswith("#key"):
+                        _STRINGS["cols"] = {c.strip().lstrip("#"): i for i, c in enumerate(line.split(" | "))}
+                    elif line.strip() and not line.startswith("#"):
+                        parts = line.split(" | ")
+                        _STRINGS["rows"][parts[0].strip()] = parts
+                break
+    row = _STRINGS["rows"].get(key)
+    if row:
+        for code in (lang, "en", "es"):
+            i = _STRINGS["cols"].get(code)
+            if i is not None and i < len(row) and row[i].strip():
+                return row[i].strip()
+    return default if default is not None else key
 
 
 OVERLAY_FILE = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "hyprarch-overlay.pid"
@@ -918,7 +961,7 @@ def run(anchor):
             return True
 
         play("menu-open")
-        GLib.timeout_add(16, tick)
+        GLib.timeout_add(FRAME_MS, tick)
         win.present()
 
     app.connect("activate", on_activate)

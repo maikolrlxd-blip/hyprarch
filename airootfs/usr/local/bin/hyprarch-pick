@@ -417,7 +417,7 @@ def draw_life(cr, w, h, S, pal, op):
     A, A2 = pal["ACCENT"], pal["ACCENT2"]
     t = S["t"]
     px, py = S["ptr"]
-    for k, (col, fx, fy, rr) in enumerate(((A, 0.28, 0.55, 0.50), (A2, 0.74, 0.40, 0.42))):
+    for k, (col, fx, fy, rr) in enumerate(() if U.LITE else ((A, 0.28, 0.55, 0.50), (A2, 0.74, 0.40, 0.42))):
         bx = w * fx + math.sin(t * 0.25 + k * 2) * 60 - (px - w / 2) * 0.03
         by = h * fy + math.cos(t * 0.21 + k) * 50 - (py - h / 2) * 0.03
         g = cairo.RadialGradient(bx, by, 0, bx, by, h * rr)
@@ -426,7 +426,7 @@ def draw_life(cr, w, h, S, pal, op):
         cr.set_source(g)
         cr.rectangle(0, 0, w, h)
         cr.fill()
-    for (fx, fy0, sp, sz, ph, depth) in (S["parts"][:22] if U.FRESH else S["parts"]):          # fresh: menos partículas, más limpio
+    for (fx, fy0, sp, sz, ph, depth) in (S["parts"][:6] if U.LITE else (S["parts"][:22] if U.FRESH else S["parts"])):   # menos partículas
         y = (fy0 - t * sp * 0.05) % 1.15 - 0.075
         x = fx + math.sin(t * 0.6 + ph) * 0.02
         al = (0.15 + 0.35 * (0.5 + 0.5 * math.sin(t * 1.6 + ph))) * op * math.sin(clamp(y + 0.05, 0, 1) * math.pi)
@@ -703,16 +703,16 @@ def draw_game(cr, w, h, S, pal, pal_full, op, pop):
         cr.move_to(cx_ + 18, cy_ + 0.8)
         cr.line_to(cx_ + cw_ - 18, cy_ + 0.8)
         cr.stroke()
-        draw_text(cr, "QUÉ HACE", cx_ + pad_, cy_ + pad_ + 4, 9.5, A, ia * 0.95, bold=True)
+        draw_text(cr, U.tr("ui.what", "QUÉ HACE"), cx_ + pad_, cy_ + pad_ + 4, 9.5, A, ia * 0.95, bold=True)
         draw_text(cr, sel_item["label"], cx_ + pad_, cy_ + pad_ + 26, 18, FG, ia, bold=True)
         for k, ln in enumerate(lines):
             draw_text(cr, ln, cx_ + pad_, cy_ + pad_ + 50 + k * 18, 13.5, mix(FG, DIM, 0.35), ia)
     # ayudas de teclas, como en los juegos
     kx, ky = lx - 28, h - 46
-    kx += keycap(cr, kx, ky, "↑ ↓", "Elegir", pal, pop * 0.9)
-    kx += keycap(cr, kx, ky, "Enter", "Aceptar", pal, pop * 0.9)
-    kx += keycap(cr, kx, ky, "Esc", "Volver", pal, pop * 0.9)
-    draw_text(cr, "hyprarch · una casa para IAs", w - 26, h - 30, 10.5, DIM, pop * 0.7, right=True)
+    kx += keycap(cr, kx, ky, "↑ ↓", U.tr("ui.choose", "Elegir"), pal, pop * 0.9)
+    kx += keycap(cr, kx, ky, "Enter", U.tr("ui.accept", "Aceptar"), pal, pop * 0.9)
+    kx += keycap(cr, kx, ky, "Esc", U.tr("ui.back", "Volver"), pal, pop * 0.9)
+    draw_text(cr, "hyprarch · " + U.tr("ui.tagline", "una casa para IAs"), w - 26, h - 30, 10.5, DIM, pop * 0.7, right=True)
 
 
 def draw_scene(cr, w, h, S, pal, pal_full):
@@ -986,7 +986,7 @@ def run(args):
     pal = U.load_palette()
     pal_full = BUDDY.load_palette() if BUDDY else pal
     rnd = random.Random(7)
-    S = dict(items=items, layout=layout, title=opt("--title", ""), placeholder=opt("--placeholder", "Escribí para buscar…"),
+    S = dict(items=items, layout=layout, title=opt("--title", ""), placeholder=opt("--placeholder", U.tr("ui.search", "Escribí para buscar…")),
              ind=0.0, wins=[(fx, fy, ww, hh, dp, ph, [rnd.uniform(0.3, 1.0) for _ in range(int(hh / 13) - 2)])
                             for fx, fy, ww, hh, dp, ph in ((0.50, 0.17, 240, 150, 1.0, 0.0), (0.79, 0.10, 210, 120, 0.7, 1.6),
                                                            (0.58, 0.47, 190, 118, 0.6, 3.1), (0.85, 0.40, 220, 140, 1.2, 4.4),
@@ -1191,7 +1191,7 @@ def run(args):
             return True
 
         U.play("menu-open")
-        GLib.timeout_add(16, tick)
+        GLib.timeout_add(U.FRAME_MS, tick)
         win.present()
 
     app.connect("activate", on_activate)

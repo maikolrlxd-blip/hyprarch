@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# hyprarch-i18n — traductor de los textos de hyprarch (menús, asistente, avisos).
+#
+#   hyprarch-i18n <clave> [texto por defecto]    imprime el texto en el idioma elegido
+#   hyprarch-i18n --lang                         imprime el código de idioma en uso (es, en, pt, fr, ...)
+#
+# Idioma: variable HYPRARCH_LANG, o ~/.config/hyprarch/lang (lo escribe hyprarch-lang), o el prefijo de $LANG.
+# Textos: /usr/share/hyprarch/i18n/strings.txt (clave | es | en | pt | ...). Si falta, se usa inglés y luego español.
+STR=${HYPRARCH_STRINGS:-/usr/share/hyprarch/i18n/strings.txt}
+
+lang() {
+  local l=${HYPRARCH_LANG:-}
+  [[ -n $l ]] || l=$(cat "${XDG_CONFIG_HOME:-$HOME/.config}/hyprarch/lang" 2>/dev/null)
+  [[ -n $l ]] || l=${LANG:-es}
+  l=${l%%.*}; l=${l%%_*}; l=${l%%-*}
+  printf '%s' "${l:-es}"
+}
+
+[[ ${1:-} == --lang ]] && { lang; echo; exit 0; }
+key=${1:?uso: hyprarch-i18n <clave> [texto por defecto]}
+default=${2:-$key}
+want=$(lang)
+
+awk -F' [|] ' -v key="$key" -v want="$want" -v def="$default" '
+  /^#key/ { for (i = 1; i <= NF; i++) { c = $i; sub(/^#/, "", c); gsub(/ /, "", c); col[c] = i }; next }
+  /^#/ || NF == 0 { next }
+  $1 == key {
+    v = ""
+    if (want in col) v = $(col[want])
+    if (v == "" && ("en" in col)) v = $(col["en"])
+    if (v == "" && ("es" in col)) v = $(col["es"])
+    if (v != "") { print v; found = 1 }
+    exit
+  }
+  END { if (!found) print def }
+' "$STR" 2>/dev/null || printf '%s\n' "$default"

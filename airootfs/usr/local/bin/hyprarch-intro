@@ -517,7 +517,11 @@ def run(once=False):
             area.queue_draw()
             return True
 
-        GLib.timeout_add(16, tick)
+        try:                                  # equipos modestos: la entrada corre a ~30 cuadros/s
+            lite = (Path.home() / ".config/hyprarch/perf.effective").read_text().strip() == "lite"
+        except OSError:
+            lite = False
+        GLib.timeout_add(33 if lite else 16, tick)
         win.present()
 
     app.connect("activate", on_activate)

@@ -29,7 +29,33 @@ local PRESETS = {
     estudio = { dur = 1.5,  blur = true,  shadow = true,  glow = false, spring = false, rotate = false, gaps_in = 6, gaps_out = 16, border = 1 },
     trabajo = { dur = 0.8,  blur = false, shadow = true,  glow = false, spring = false, rotate = false, gaps_in = 4, gaps_out = 8,  border = 2 },
 }
+-- Equipos modestos: el perfil "lite" (lo decide hyprarch-perf según RAM, procesador y gráfica, o la elección de la persona)
+-- quita desenfoque, sombras y brillos y acorta las animaciones SOLO en el modo normal; los equipos buenos no cambian.
+PRESETS.lite = { dur = 0.55, blur = false, shadow = false, glow = false, spring = false, rotate = false, gaps_in = 4, gaps_out = 10, border = 1 }
+local PERF = "full"
+do
+    local f = io.open((os.getenv("HOME") or "") .. "/.config/hyprarch/perf.effective", "r")
+    if f then
+        PERF = (f:read("l") or "full"):match("^%s*(%a+)") or "full"
+        f:close()
+    end
+end
 local P = PRESETS[MODE] or PRESETS.normal
+if PERF == "lite" and MODE == "normal" then P = PRESETS.lite end
+
+-- Idioma: distribución de teclado elegida con hyprarch-lang (archivo "capa [variante]"); por defecto latam + es + us
+local KB_LAYOUT, KB_VARIANT = "latam,es,us", ""
+do
+    local f = io.open((os.getenv("HOME") or "") .. "/.config/hyprarch/keyboard", "r")
+    if f then
+        local l, v = (f:read("l") or ""):match("^(%S+)%s*(%S*)")
+        f:close()
+        if l then
+            KB_LAYOUT = (l == "us") and "us" or (l .. ",us")
+            KB_VARIANT = (v and v ~= "" and v ~= "-") and (v .. ((l == "us") and "" or ",")) or ""
+        end
+    end
+end
 
 -------------------------------------------------------------
 -- Colores (los cambia hyprarch-theme)
@@ -242,7 +268,8 @@ hl.animation({ leaf = "borderangle", enabled = ROTATING_BORDER and P.rotate, spe
 -------------------------------------------------------------
 hl.config({
     input = {
-        kb_layout  = "latam,es,us",
+        kb_layout  = KB_LAYOUT,
+        kb_variant = KB_VARIANT,
         kb_options = "grp:alt_shift_toggle",
         follow_mouse = 1,
         sensitivity  = 0,

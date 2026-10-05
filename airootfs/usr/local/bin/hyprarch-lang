@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# hyprarch-lang — idioma del sistema: configuración regional, teclado y textos de hyprarch.
+#
+#   hyprarch-lang pick           abre el selector animado de idiomas y lo aplica
+#   hyprarch-lang list           lista los idiomas  (código <TAB> nombre nativo <TAB> nombre en inglés)
+#   hyprarch-lang set <código>   aplica un idioma, p. ej.  es-AR  ja-JP  ar-SA  pt-BR
+#   hyprarch-lang current        muestra el idioma actual
+#
+# Qué cambia: la configuración regional (LANG) para los programas nuevos (se genera con locale-gen si hace falta),
+# la distribución de teclado (en caliente), el idioma de los menús de hyprarch y si se escribe de derecha a izquierda.
+# Los programas ya abiertos toman el idioma nuevo al volver a abrirlos; el resto del sistema al reiniciar la sesión.
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/hyprarch"
+LANGS=${HYPRARCH_LANGUAGES:-/usr/share/hyprarch/i18n/languages.txt}
+mkdir -p "$CFG"
+
+rows() { grep -vE '^\s*(#|$)' "$LANGS"; }
+field() { awk -F' [|] ' -v c="$1" -v n="$2" '$1 == c { print $n; exit }' "$LANGS"; }     # field <código> <columna>
+
+cmd=${1:-pick}
+case $cmd in
+  list)
+    rows | awk -F' [|] ' '{ printf "%s\t%s\t\t%s\n", $1, $2, $3 }' ;;
+
+  current)
+    cat "$CFG/language" 2>/dev/null || echo "${LANG:-es_AR.UTF-8}" ;;
+
+  set)
+    code=${2:?uso: hyprarch-lang set <código>}
+    loc=$(field "$code" 4)
+    [[ -n $loc ]] || { echo "idioma desconocido: $code" >&2; exit 1; }
+    kb=$(field "$code" 5); var=$(field "$code" 6); rtl=$(field "$code" 7)
+    [[ $var == - ]] && var=""
+
+    # 1) configuración regional: se genera si no existe
+    if ! locale -a 2>/dev/null | grep -qix "${loc%.UTF-8}.utf8"; then
+      sudo -n sh -c "grep -q '^$loc UTF-8' /etc/locale.gen 2>/dev/null || echo '$loc UTF-8' >> /etc/locale.gen; locale-gen >/dev/null 2>&1" \
+        || notify-send -t 5000 "hyprarch" "No pude generar el idioma $loc (hacen falta permisos de administrador)." 2>/dev/null
+    fi
+    printf 'LANG=%s\nLC_MESSAGES=%s\n' "$loc" "$loc" > "${XDG_CONFIG_HOME:-$HOME/.config}/locale.conf"
+
+    # 2) textos de hyprarch y dirección de escritura
+    printf '%s\n' "${code%%-*}" > "$CFG/lang"
+    printf '%s\n' "$code" > "$CFG/language"
+    printf '%s\n' "${rtl:-0}" > "$CFG/rtl"
+
+    # 3) teclado (se aplica en caliente y queda guardado para el próximo inicio)
+    printf '%s %s\n' "$kb" "${var:--}" > "$CFG/keyboard"
+    if command -v hyprctl >/dev/null 2>&1; then
+      hyprctl eval "hl.config({ input = { kb_layout = \"$kb\", kb_variant = \"$var\" } })" >/dev/null 2>&1
+    fi
+    command -v notify-send >/dev/null 2>&1 && notify-send -t 4000 "$(field "$code" 2)" "$loc · teclado: $kb${var:+ ($var)}" ;;
+
+  pick)
+    command -v hyprarch-pick >/dev/null 2>&1 || { echo "falta hyprarch-pick" >&2; exit 1; }
+    title=$(hyprarch-i18n w.lang.ask "Elegí tu idioma")
+    ph=$(hyprarch-i18n ui.search "Escribí para buscar…")
+    sel=$("$0" list | hyprarch-pick --layout wheel --title "$title" --placeholder "$ph") || exit 1
+    [[ -n $sel ]] && "$0" set "$sel" ;;
+
+  *) echo "Uso: hyprarch-lang [pick|list|set <código>|current]" >&2; exit 2 ;;
+esac

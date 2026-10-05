@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# Menú de energía (SUPER + ESC): estilo menú principal de videojuego (motor: hyprarch-pick).
+# Menú de energía (SUPER + ESC): estilo menú principal de videojuego (motor: hyprarch-pick). Traducido (hyprarch-i18n).
 # Formato: id <TAB> opción <TAB> ícono <TAB> qué hace (se muestra abajo a la derecha al apuntar la opción).
+T() { hyprarch-i18n "$1" "${2:-$1}"; }
 choice=$(printf '%s\n' \
-  $'continue\tContinuar\t\tCierra este menú y sigues trabajando donde estabas.' \
-  $'lock\tBloquear\t\tBloquea la pantalla. Tus programas siguen abiertos; para volver se pide la contraseña.' \
-  $'suspend\tSuspender\t\tPone el equipo en reposo y ahorra energía. Al volver, todo está como lo dejaste.' \
-  $'reboot\tReiniciar\t\tCierra todo y vuelve a encender el equipo. Guardá tu trabajo antes.' \
-  $'poweroff\tApagar\t\tCierra todo y apaga el equipo por completo. Guardá tu trabajo antes.' \
-  $'exit\tCerrar sesión\t\tCierra tu sesión y vuelve a la pantalla de inicio. Se cierran tus programas.' |
-  hyprarch-pick --layout orbit --title "¿Qué querés hacer?") || exit 0
+  "continue"$'\t'"$(T power.continue)"$'\t\t'"$(T power.continue.d)" \
+  "lock"$'\t'"$(T power.lock)"$'\t\t'"$(T power.lock.d)" \
+  "suspend"$'\t'"$(T power.suspend)"$'\t\t'"$(T power.suspend.d)" \
+  "reboot"$'\t'"$(T power.reboot)"$'\t\t'"$(T power.reboot.d)" \
+  "poweroff"$'\t'"$(T power.poweroff)"$'\t\t'"$(T power.poweroff.d)" \
+  "exit"$'\t'"$(T power.exit)"$'\t\t'"$(T power.exit.d)" |
+  hyprarch-pick --layout orbit --title "$(T power.title)") || exit 0
 
 case "$choice" in
   continue) ;;

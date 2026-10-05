@@ -1,0 +1,88 @@
+# Idiomas de hyprarch. Formato:  código | nombre nativo | nombre en inglés | configuración regional (glibc) | teclado (xkb) | variante | derecha-a-izquierda (1/0)
+# El código se usa para buscar los textos de hyprarch (columna de strings.txt); si no hay traducción se usa inglés.
+# Para sumar un idioma del sistema alcanza con agregar una línea aquí (la configuración regional debe existir en glibc).
+es-AR | Español (Argentina) | Spanish (Argentina) | es_AR.UTF-8 | latam | - | 0
+es-MX | Español (México) | Spanish (Mexico) | es_MX.UTF-8 | latam | - | 0
+es-ES | Español (España) | Spanish (Spain) | es_ES.UTF-8 | es | - | 0
+es-CO | Español (Colombia) | Spanish (Colombia) | es_CO.UTF-8 | latam | - | 0
+es-CL | Español (Chile) | Spanish (Chile) | es_CL.UTF-8 | latam | - | 0
+en-US | English (United States) | English (United States) | en_US.UTF-8 | us | - | 0
+en-GB | English (United Kingdom) | English (United Kingdom) | en_GB.UTF-8 | gb | - | 0
+en-CA | English (Canada) | English (Canada) | en_CA.UTF-8 | us | - | 0
+en-AU | English (Australia) | English (Australia) | en_AU.UTF-8 | us | - | 0
+pt-BR | Português (Brasil) | Portuguese (Brazil) | pt_BR.UTF-8 | br | - | 0
+pt-PT | Português (Portugal) | Portuguese (Portugal) | pt_PT.UTF-8 | pt | - | 0
+fr-FR | Français (France) | French (France) | fr_FR.UTF-8 | fr | - | 0
+fr-CA | Français (Canada) | French (Canada) | fr_CA.UTF-8 | ca | - | 0
+de-DE | Deutsch | German | de_DE.UTF-8 | de | - | 0
+it-IT | Italiano | Italian | it_IT.UTF-8 | it | - | 0
+ru-RU | Русский | Russian | ru_RU.UTF-8 | ru | - | 0
+zh-CN | 简体中文 | Chinese (Simplified) | zh_CN.UTF-8 | us | - | 0
+zh-TW | 繁體中文 | Chinese (Traditional) | zh_TW.UTF-8 | us | - | 0
+ja-JP | 日本語 | Japanese | ja_JP.UTF-8 | jp | - | 0
+ko-KR | 한국어 | Korean | ko_KR.UTF-8 | kr | - | 0
+ar-SA | العربية | Arabic | ar_SA.UTF-8 | ara | - | 1
+hi-IN | हिन्दी | Hindi | hi_IN.UTF-8 | in | - | 0
+af-ZA | Afrikaans | Afrikaans | af_ZA.UTF-8 | us | - | 0
+am-ET | አማርኛ | Amharic | am_ET.UTF-8 | et | - | 0
+az-AZ | Azərbaycanca | Azerbaijani | az_AZ.UTF-8 | az | - | 0
+be-BY | Беларуская | Belarusian | be_BY.UTF-8 | by | - | 0
+bg-BG | Български | Bulgarian | bg_BG.UTF-8 | bg | - | 0
+bn-BD | বাংলা | Bengali | bn_BD.UTF-8 | bd | - | 0
+bs-BA | Bosanski | Bosnian | bs_BA.UTF-8 | ba | - | 0
+ca-ES | Català | Catalan | ca_ES.UTF-8 | es | cat | 0
+cs-CZ | Čeština | Czech | cs_CZ.UTF-8 | cz | - | 0
+cy-GB | Cymraeg | Welsh | cy_GB.UTF-8 | gb | - | 0
+da-DK | Dansk | Danish | da_DK.UTF-8 | dk | - | 0
+el-GR | Ελληνικά | Greek | el_GR.UTF-8 | gr | - | 0
+eo | Esperanto | Esperanto | eo | us | - | 0
+et-EE | Eesti | Estonian | et_EE.UTF-8 | ee | - | 0
+eu-ES | Euskara | Basque | eu_ES.UTF-8 | es | - | 0
+fa-IR | فارسی | Persian | fa_IR.UTF-8 | ir | - | 1
+fi-FI | Suomi | Finnish | fi_FI.UTF-8 | fi | - | 0
+fil-PH | Filipino | Filipino | fil_PH.UTF-8 | ph | - | 0
+ga-IE | Gaeilge | Irish | ga_IE.UTF-8 | ie | - | 0
+gl-ES | Galego | Galician | gl_ES.UTF-8 | es | - | 0
+gu-IN | ગુજરાતી | Gujarati | gu_IN.UTF-8 | in | guj | 0
+he-IL | עברית | Hebrew | he_IL.UTF-8 | il | - | 1
+hr-HR | Hrvatski | Croatian | hr_HR.UTF-8 | hr | - | 0
+hu-HU | Magyar | Hungarian | hu_HU.UTF-8 | hu | - | 0
+hy-AM | Հայերեն | Armenian | hy_AM.UTF-8 | am | - | 0
+id-ID | Bahasa Indonesia | Indonesian | id_ID.UTF-8 | us | - | 0
+is-IS | Íslenska | Icelandic | is_IS.UTF-8 | is | - | 0
+ka-GE | ქართული | Georgian | ka_GE.UTF-8 | ge | - | 0
+kk-KZ | Қазақша | Kazakh | kk_KZ.UTF-8 | kz | - | 0
+km-KH | ខ្មែរ | Khmer | km_KH.UTF-8 | kh | - | 0
+kn-IN | ಕನ್ನಡ | Kannada | kn_IN.UTF-8 | in | kan | 0
+lo-LA | ລາວ | Lao | lo_LA.UTF-8 | la | - | 0
+lt-LT | Lietuvių | Lithuanian | lt_LT.UTF-8 | lt | - | 0
+lv-LV | Latviešu | Latvian | lv_LV.UTF-8 | lv | - | 0
+mk-MK | Македонски | Macedonian | mk_MK.UTF-8 | mk | - | 0
+ml-IN | മലയാളം | Malayalam | ml_IN.UTF-8 | in | mal | 0
+mn-MN | Монгол | Mongolian | mn_MN.UTF-8 | mn | - | 0
+mr-IN | मराठी | Marathi | mr_IN.UTF-8 | in | - | 0
+ms-MY | Bahasa Melayu | Malay | ms_MY.UTF-8 | us | - | 0
+mt-MT | Malti | Maltese | mt_MT.UTF-8 | mt | - | 0
+my-MM | မြန်မာ | Burmese | my_MM.UTF-8 | mm | - | 0
+nb-NO | Norsk bokmål | Norwegian | nb_NO.UTF-8 | no | - | 0
+ne-NP | नेपाली | Nepali | ne_NP.UTF-8 | np | - | 0
+nl-NL | Nederlands | Dutch | nl_NL.UTF-8 | us | - | 0
+pa-IN | ਪੰਜਾਬੀ | Punjabi | pa_IN.UTF-8 | in | guru | 0
+pl-PL | Polski | Polish | pl_PL.UTF-8 | pl | - | 0
+ro-RO | Română | Romanian | ro_RO.UTF-8 | ro | - | 0
+si-LK | සිංහල | Sinhala | si_LK.UTF-8 | lk | - | 0
+sk-SK | Slovenčina | Slovak | sk_SK.UTF-8 | sk | - | 0
+sl-SI | Slovenščina | Slovenian | sl_SI.UTF-8 | si | - | 0
+sq-AL | Shqip | Albanian | sq_AL.UTF-8 | al | - | 0
+sr-RS | Српски | Serbian | sr_RS.UTF-8 | rs | - | 0
+sv-SE | Svenska | Swedish | sv_SE.UTF-8 | se | - | 0
+sw-KE | Kiswahili | Swahili | sw_KE.UTF-8 | us | - | 0
+ta-IN | தமிழ் | Tamil | ta_IN.UTF-8 | in | tam | 0
+te-IN | తెలుగు | Telugu | te_IN.UTF-8 | in | tel | 0
+th-TH | ไทย | Thai | th_TH.UTF-8 | th | - | 0
+tr-TR | Türkçe | Turkish | tr_TR.UTF-8 | tr | - | 0
+uk-UA | Українська | Ukrainian | uk_UA.UTF-8 | ua | - | 0
+ur-PK | اردو | Urdu | ur_PK.UTF-8 | pk | - | 1
+uz-UZ | Oʻzbekcha | Uzbek | uz_UZ.UTF-8 | uz | - | 0
+vi-VN | Tiếng Việt | Vietnamese | vi_VN.UTF-8 | vn | - | 0
+zu-ZA | isiZulu | Zulu | zu_ZA.UTF-8 | us | - | 0
