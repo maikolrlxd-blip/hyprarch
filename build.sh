@@ -80,14 +80,14 @@ echo "==> Paquetes"
 grep -vE '^\s*(#|$)' packages.extra >> "$PROFILE/packages.x86_64"
 
 echo "==> Aplicando airootfs (configuración, dotfiles, scripts)"
-# Quitar finales de línea CRLF por si el repo se editó en Windows.
-find airootfs -type f -exec sed -i 's/\r$//' {} +
+# Quitar finales de línea CRLF por si el repo se editó en Windows, sin alterar imágenes.
+find airootfs -type f ! -name '*.jpg' ! -name '*.png' -exec sed -i 's/\r$//' {} +
 chmod +x airootfs/usr/local/bin/* airootfs/etc/skel/.config/hypr/scripts/*
 cp -a airootfs/. "$AIR/"
 
 echo "==> Archivos propios de la edición '$EDITION'"
 if [[ -d "editions/$EDITION/airootfs" ]]; then
-  find "editions/$EDITION/airootfs" -type f -exec sed -i 's/\r$//' {} +
+  find "editions/$EDITION/airootfs" -type f ! -name '*.jpg' ! -name '*.png' -exec sed -i 's/\r$//' {} +
   cp -a "editions/$EDITION/airootfs/." "$AIR/"
   rm -f "$AIR/.gitkeep"
 fi
@@ -105,7 +105,7 @@ if [[ "$EDITION" == "personal" ]]; then
 else
   echo "==> Edición pública: no se incluye ninguna IA (se instala la elegida al primer uso con hyprarch-ai)"
   # Salvaguarda: la edición pública nunca debe llevar software propietario de IA ni credenciales.
-  if find "$AIR" \( -path '*/@anthropic-ai/*' -o -name '.claude' -o -name '.credentials*' \) | grep -q .; then
+  if find "$AIR" \( -name '@anthropic-ai' -o -path '*/@anthropic-ai/*' -o -name '.claude' -o -name '.credentials*' \) -print -quit | grep -q .; then
     echo "ERROR: la edición pública contiene archivos de una IA/credenciales"; exit 1
   fi
 fi

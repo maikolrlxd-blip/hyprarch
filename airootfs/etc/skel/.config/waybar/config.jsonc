@@ -179,7 +179,7 @@
     "return-type": "json",
     "interval": 1,
     "tooltip": true,
-    "on-click": "kitty --class claude-code -e claude"
+    "on-click": "bash \"$HOME/.config/hypr/scripts/once.sh\" hyprarch-ai hyprarch-ai chat"
   },
 
   "custom/theme": {

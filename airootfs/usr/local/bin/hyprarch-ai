@@ -45,16 +45,20 @@ field() { # field <id> <n>   (1=id 2=nombre 3=comando 4=instalación)
 }
 
 save() {
-  mkdir -p "$(dirname "$CONF")"
+  mkdir -p "$(dirname "$CONF")" || return 1
   local tmp
   tmp=$(mktemp "$CONF.XXXXXX") || return 1
-  printf 'AI=%q\nAI_CMD=%q\n' "$AI" "$AI_CMD" >"$tmp" && mv -f "$tmp" "$CONF"
+  if printf 'AI=%q\nAI_CMD=%q\n' "$AI" "$AI_CMD" >"$tmp" && mv -f "$tmp" "$CONF"; then
+    return 0
+  fi
+  rm -f -- "$tmp"
+  return 1
 }
 
 pause() { read -rp "Enter para cerrar... " _; }
 
 setup() {
-  local labels=() p choice id
+  local labels=() p choice='' id m
   for p in "${PROVIDERS[@]}"; do labels+=("$(cut -d'|' -f2 <<<"$p")"); done
   clear
   printf '\n  ¿Con qué IA querés hablar?\n  (podés cambiarla cuando quieras con SUPER+SHIFT+A)\n\n'
@@ -70,11 +74,11 @@ setup() {
   AI=$id
   AI_CMD=""
   if [[ $AI == custom ]]; then
-    read -rp "  Comando completo (ej. aichat, llm chat, mi-ia --modo chat): " AI_CMD
+    read -rp "  Comando completo (ej. aichat, llm chat, mi-ia --modo chat): " AI_CMD || return 1
     [[ -n $AI_CMD ]] || return 1
   elif [[ $AI == ollama ]]; then
-    read -rp "  Modelo de Ollama [Enter = llama3.2]: " m
-    AI_CMD="ollama run ${m:-llama3.2}"
+    read -rp "  Modelo de Ollama [Enter = llama3.2]: " m || return 1
+    printf -v AI_CMD 'ollama run %q' "${m:-llama3.2}"
   fi
   save
 }
@@ -101,7 +105,7 @@ install_provider() {
       pipx install "$pkg" ;;
     pacman:*)
       printf '\n  Instalando %s en el sistema (pide permisos de administrador)...\n\n' "$(field "$AI" 2)"
-      sudo pacman -S --noconfirm --needed "$pkg" && sudo systemctl start ollama 2>/dev/null ;;
+      sudo pacman -S --noconfirm --needed "$pkg" ;;
     *) return 0 ;;
   esac
 }
@@ -126,8 +130,9 @@ chat() {
   fi
   [[ -n $cmd ]] || { echo "Configuración de IA inválida. Corré: hyprarch-ai setup"; pause; exit 1; }
 
-  local bin=${cmd%% *}
-  if ! command -v "$bin" >/dev/null 2>&1; then
+  local bin
+  bin=$(field "$AI" 3)
+  if [[ $AI != custom ]] && ! command -v "$bin" >/dev/null 2>&1; then
     buddy working "Instalando $(field "$AI" 2)"
     if ! install_provider || ! command -v "$bin" >/dev/null 2>&1; then
       buddy error "No pude instalar la IA"
@@ -135,10 +140,14 @@ chat() {
       pause; exit 1
     fi
   fi
+  if [[ $AI == ollama ]] && ! { systemctl is-active --quiet ollama || sudo systemctl start ollama; }; then
+    buddy error "No pude iniciar Ollama"
+    pause; exit 1
+  fi
   provider_extras
   buddy done "¡Listo, hablemos!"
-  # shellcheck disable=SC2086
-  exec $cmd
+  # El comando lo escribe el usuario: Bash interpreta sus comillas y argumentos.
+  exec bash -c "exec $cmd"
 }
 
 case ${1:-chat} in
