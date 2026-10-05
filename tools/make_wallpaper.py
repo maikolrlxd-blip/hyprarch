@@ -132,15 +132,68 @@ def render(accent, accent2, sky_top, sky_horizon, seed):
     return Image.fromarray((np.clip(img, 0, 1) * 255).astype(np.uint8))
 
 
+def render_cine(seed=5):
+    """Modo cine: sala oscura con un haz de proyector ámbar, pantalla tenue, polvo en la luz y bandas de cine."""
+    rng = np.random.default_rng(seed)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    cx = W / 2.0
+    warm = np.array([1.0, 0.70, 0.36], np.float32)
+
+    # sala: degradado casi negro, algo más cálido abajo
+    t = (yy / H)[..., None]
+    img = (np.array([0.020, 0.014, 0.010], np.float32) * (1 - t) + np.array([0.040, 0.028, 0.018], np.float32) * t)
+
+    # haz del proyector: nace arriba al centro y se abre hacia la pantalla
+    apex_y = -0.06 * H
+    d = np.maximum(yy - apex_y, 1.0)
+    half = W * (0.035 + 0.30 * (d / H))
+    cone = np.exp(-(((xx - cx) / half) ** 2) * 1.6) * np.clip(1.0 - (d / (H * 1.25)), 0, 1) ** 1.3
+    img += cone[..., None] * warm * 0.16
+
+    # pantalla: rectángulo tenue donde llega la luz, con borde suave
+    sx0, sx1, sy0, sy1 = W * 0.27, W * 0.73, H * 0.47, H * 0.80
+    scr = smoothstep(sx0, sx0 + 18, xx) * (1 - smoothstep(sx1 - 18, sx1, xx)) * smoothstep(sy0, sy0 + 18, yy) * (1 - smoothstep(sy1 - 18, sy1, yy))
+    glow = blur(np.repeat(scr[..., None], 3, axis=2) * warm, 60)
+    img += scr[..., None] * warm * 0.11 + glow * 0.30
+
+    # polvo flotando en el haz
+    dust = np.zeros((H, W), np.float32)
+    for _ in range(420):
+        y = int(rng.random() ** 0.8 * H * 0.78)
+        x = int(np.clip(rng.normal(cx, W * (0.03 + 0.20 * (y / H))), 0, W - 2))
+        dust[y:y + 2, x:x + 2] = max(dust[y, x], rng.random() * 0.8 + 0.2)
+    dust = blur(np.repeat(dust[..., None], 3, axis=2), 1.2)[..., 0]
+    img += (dust * cone)[..., None] * warm * 1.1
+
+    # zonas tranquilas: franja superior (barra) y rincón inferior derecho (Claudito)
+    top = 1 - 0.55 * (1 - smoothstep(0.0, H * 0.075, yy))[..., None]
+    corner = 1 - 0.42 * np.exp(-(((xx - W * 0.97) / (W * 0.13)) ** 2 + ((yy - H * 0.97) / (H * 0.17)) ** 2))[..., None]
+    img *= top * corner
+
+    # bandas de cine (letterbox), viñeta y grano
+    bars = smoothstep(H * 0.075, H * 0.085, yy) * (1 - smoothstep(H * 0.915, H * 0.925, yy))
+    img *= bars[..., None]
+    r = np.sqrt(((xx - cx) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2)
+    img *= (1 - 0.50 * np.clip(r - 0.30, 0, 1) ** 1.4)[..., None]
+    img += rng.normal(0, 0.010, img.shape).astype(np.float32)
+    return Image.fromarray((np.clip(img, 0, 1) * 255).astype(np.uint8))
+
+
 THEMES = {
     "verde": dict(accent="#39ff14", accent2="#ff1f4b", sky_top="#020403", sky_horizon="#0a2a14", seed=7),
     "rojo": dict(accent="#ff1f4b", accent2="#39ff14", sky_top="#040203", sky_horizon="#2a0a12", seed=11),
+    "gamer": dict(accent="#00e5ff", accent2="#b026ff", sky_top="#04010c", sky_horizon="#1a0838", seed=21),
+    "cine": None,          # composición propia: render_cine()
 }
 
 if __name__ == "__main__":
     out = Path(sys.argv[1] if len(sys.argv) > 1 else ".")
+    only = set(sys.argv[2:])               # opcional: nombres de temas a generar (por defecto, todos)
     out.mkdir(parents=True, exist_ok=True)
     for name, params in THEMES.items():
+        if only and name not in only:
+            continue
         path = out / f"hyprarch-{name}.jpg"
-        render(**params).save(path, quality=90, optimize=True, subsampling=0)
+        img = render_cine() if name == "cine" else render(**params)
+        img.save(path, quality=90, optimize=True, subsampling=0)
         print(f"{path}  {path.stat().st_size / 1024:.0f} KB")

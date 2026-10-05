@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-"""claude-presence — la presencia de Claude en el escritorio (personajito "Claudito").
+"""hyprarch-buddy — el personajito que vive en el escritorio: la cara de las IAs de la casa.
 
 Uso:
-  claude-presence daemon                 superposición animada en pantalla (Wayland, GTK4 + layer-shell)
-  claude-presence set <estado> [texto]   estados: idle thinking working done error waiting
-  claude-presence tool                   lee por stdin el JSON de un hook de Claude Code (PreToolUse)
-  claude-presence status                 JSON para el módulo de Waybar (custom/claude)
-  claude-presence render-sheet <png>     (desarrollo) dibuja todos los estados en una imagen
+  hyprarch-buddy daemon                          superposición animada en pantalla (Wayland, GTK4 + layer-shell)
+  hyprarch-buddy set <estado> [texto] [--ia X]   estados: idle thinking working done error waiting
+                                                 (--ia indica qué IA lo manda: claude, codex, ...)
+  hyprarch-buddy tool [--ia X]                   lee por stdin el JSON de un hook de Claude Code (PreToolUse)
+  hyprarch-buddy status                          JSON para el módulo de Waybar (custom/buddy)
+  hyprarch-buddy log [N]                         últimas N novedades (actividad reciente de las IAs)
+  hyprarch-buddy render-sheet <png>              (desarrollo) dibuja todos los estados en una imagen
 
-El estado vive en  ~/.cache/claude-presence/state.json . Quien quiera mover al
-personajito solo tiene que escribir ahí (los hooks de Claude Code lo hacen solos).
+El nombre se elige en ~/.config/hyprarch/buddy.conf (NAME=...; por defecto "Buddy").
+El estado vive en  ~/.cache/hyprarch-buddy/state.json  y la actividad en  log.jsonl . Quien quiera
+mover al personajito solo tiene que escribir ahí (los hooks de Claude Code lo hacen solos).
+Clic: abre el chat con la IA elegida. Clic derecho: menú (hablar, cambiar de IA, actividad, colores, silencio).
 """
 import json
 import math
@@ -20,8 +24,28 @@ import sys
 import time
 from pathlib import Path
 
-STATE_FILE = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "claude-presence" / "state.json"
+STATE_DIR = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "hyprarch-buddy"
+STATE_FILE = STATE_DIR / "state.json"
+LOG_FILE = STATE_DIR / "log.jsonl"
+CONF_FILE = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "hyprarch" / "buddy.conf"
 STATES = ("idle", "thinking", "working", "done", "error", "waiting")
+
+
+def buddy_name():
+    """Nombre del personajito (buddy.conf, línea NAME=...). Por defecto "Buddy"."""
+    try:
+        for line in CONF_FILE.read_text(encoding="utf-8").splitlines():
+            m = re.match(r"""^\s*NAME\s*=\s*['"]?([^'"#\n]{1,24}?)['"]?\s*$""", line)
+            if m and m.group(1).strip():
+                return m.group(1).strip()
+    except Exception:
+        pass
+    return "Buddy"
+
+
+def clean_agent(v):
+    """Nombre corto de la IA que manda el aviso (solo letras, números, guion y punto)."""
+    return v[:24] if isinstance(v, str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,24}", v) else ""
 ICONS = {"idle": "", "thinking": "", "working": "", "done": "", "error": "", "waiting": ""}
 
 # ----------------------------------------------------------------------------- estado
@@ -42,7 +66,7 @@ def _num(v):
 
 def read_state():
     """Lee el estado y lo NORMALIZA: ante cualquier valor raro devuelve el estado seguro (idle)."""
-    safe = {"state": "idle", "text": "", "ts": 0.0, "follow": False}
+    safe = {"state": "idle", "text": "", "ts": 0.0, "follow": False, "agent": ""}
     try:
         s = json.loads(STATE_FILE.read_text(encoding="utf-8"))
     except Exception:
@@ -52,7 +76,8 @@ def read_state():
     text = s.get("text")
     ts = s.get("ts")
     return {"state": s["state"], "text": text[:MAX_TEXT] if isinstance(text, str) else "",
-            "ts": float(ts) if _num(ts) else 0.0, "follow": s.get("follow") is True}
+            "ts": float(ts) if _num(ts) else 0.0, "follow": s.get("follow") is True,
+            "agent": clean_agent(s.get("agent"))}
 
 
 def effective_state(s):
@@ -67,6 +92,8 @@ def write_state(state, text="", **extra):
     import tempfile
 
     STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    if "agent" in extra:
+        extra["agent"] = clean_agent(extra["agent"])
     data = {"state": state, "text": str(text)[:MAX_TEXT], "ts": time.time(), **extra}
     fd, tmp = tempfile.mkstemp(dir=STATE_FILE.parent, prefix=".state-", suffix=".tmp")
     try:
@@ -78,6 +105,47 @@ def write_state(state, text="", **extra):
             os.unlink(tmp)
         except FileNotFoundError:
             pass
+    # actividad reciente: solo lo que cuenta algo (no cada "pensando")
+    if state in ("working", "done", "error", "waiting") and data["text"]:
+        append_log(data)
+
+
+def append_log(data):
+    """Agrega una línea al registro de actividad y lo mantiene corto (últimas ~150 novedades)."""
+    try:
+        line = json.dumps({"ts": data["ts"], "state": data["state"], "agent": data.get("agent", ""),
+                           "text": data["text"]}, ensure_ascii=False) + "\n"
+        fd = os.open(LOG_FILE, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)
+        try:
+            os.write(fd, line.encode("utf-8"))
+        finally:
+            os.close(fd)
+        if LOG_FILE.stat().st_size > 48_000:
+            lines = LOG_FILE.read_text(encoding="utf-8").splitlines()[-150:]
+            tmp = LOG_FILE.with_suffix(".tmp")
+            tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            os.replace(tmp, LOG_FILE)
+    except Exception:
+        pass            # el registro es un extra: nunca debe romper un aviso
+
+
+def read_log(n=12):
+    """Últimas n novedades (más nuevas primero), ya formateadas para mostrar."""
+    out = []
+    try:
+        lines = LOG_FILE.read_text(encoding="utf-8").splitlines()[-max(1, n):]
+    except Exception:
+        return out
+    icon = {"working": "", "done": "", "error": "", "waiting": ""}
+    for line in reversed(lines):
+        try:
+            e = json.loads(line)
+            hhmm = time.strftime("%H:%M", time.localtime(float(e["ts"])))
+            who = f"[{e['agent']}] " if e.get("agent") else ""
+            out.append(f"{hhmm}  {icon.get(e['state'], ' ')} {who}{e['text']}")
+        except Exception:
+            continue
+    return out
 
 
 def describe_tool(payload):

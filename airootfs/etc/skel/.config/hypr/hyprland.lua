@@ -8,6 +8,29 @@
 local ROTATING_BORDER = true   -- borde con degradado que gira (más "neón"; gasta algo más de batería)
 
 -------------------------------------------------------------
+-- Modo activo: normal | gamer | cine | estudio | trabajo   (lo cambia `hyprarch-mode`)
+-- Cada modo cambia animaciones, efectos y espacios; los colores y el fondo los pone el tema.
+-------------------------------------------------------------
+local MODE = "normal"
+do
+    local f = io.open((os.getenv("HOME") or "") .. "/.config/hyprarch/mode", "r")
+    if f then
+        local m = (f:read("l") or ""):match("^%s*([a-z]+)%s*$")
+        f:close()
+        if m then MODE = m end
+    end
+end
+-- dur: multiplica la duración de las animaciones (menos = más rápido)
+local PRESETS = {
+    normal  = { dur = 1.0,  blur = true,  shadow = true,  glow = true,  spring = true,  rotate = true,  gaps_in = 5, gaps_out = 12, border = 2 },
+    gamer   = { dur = 0.55, blur = false, shadow = false, glow = false, spring = false, rotate = false, gaps_in = 4, gaps_out = 8,  border = 2 },
+    cine    = { dur = 2.2,  blur = true,  shadow = true,  glow = false, spring = false, rotate = false, gaps_in = 0, gaps_out = 0,  border = 0 },
+    estudio = { dur = 1.5,  blur = true,  shadow = true,  glow = false, spring = false, rotate = false, gaps_in = 6, gaps_out = 16, border = 1 },
+    trabajo = { dur = 0.8,  blur = false, shadow = true,  glow = false, spring = false, rotate = false, gaps_in = 4, gaps_out = 8,  border = 2 },
+}
+local P = PRESETS[MODE] or PRESETS.normal
+
+-------------------------------------------------------------
 -- Colores (los cambia hyprarch-theme)
 -------------------------------------------------------------
 local ok, C = pcall(require, "colors")
@@ -97,9 +120,9 @@ end
 -------------------------------------------------------------
 hl.config({
     general = {
-        gaps_in  = 5,
-        gaps_out = 12,
-        border_size = 2,
+        gaps_in  = P.gaps_in,
+        gaps_out = P.gaps_out,
+        border_size = P.border,
         col = {
             active_border   = { colors = { C.accent, C.accent2 }, angle = 45 },
             inactive_border = C.inactive,
@@ -116,7 +139,7 @@ hl.config({
         inactive_opacity = 0.94,
 
         shadow = {
-            enabled      = true,
+            enabled      = P.shadow,
             range        = 18,
             render_power = 3,
             color        = C.shadow,
@@ -124,7 +147,7 @@ hl.config({
 
         -- Brillo de neón alrededor de la ventana activa
         glow = {
-            enabled      = true,
+            enabled      = P.glow,
             range        = 14,
             render_power = 2,
             color        = C.glow,
@@ -132,7 +155,7 @@ hl.config({
 
         -- Blur: la terminal (kitty) es translúcida y se desenfoca sola
         blur = {
-            enabled           = true,
+            enabled           = P.blur,
             size              = 6,
             passes            = 3,
             vibrancy          = 0.2,
@@ -168,31 +191,46 @@ hl.curve("bounce",   { type = "bezier", points = { {0.34, 1.45}, {0.64, 1.0} } }
 hl.curve("linear",   { type = "bezier", points = { {0, 0},       {1, 1} } })
 hl.curve("pop",      { type = "spring", mass = 1, stiffness = 300, dampening = 22 }) -- resorte con rebote ligero
 
+-- Cada modo escala la duración (P.dur): gamer = seco y rápido, cine/estudio = lento y suave.
+-- Los rebotes y resortes solo se usan en el modo normal.
+local function A(leaf, speed, curve, extra)
+    local t = { leaf = leaf, enabled = true, speed = speed * P.dur }
+    if curve == "pop" then
+        if P.spring then t.spring = "pop" else t.bezier = "snap" end
+    elseif not P.spring and (curve == "bounce" or curve == "softback") then
+        t.bezier = "snap"
+    else
+        t.bezier = curve
+    end
+    if extra then for k, v in pairs(extra) do t[k] = v end end
+    hl.animation(t)
+end
+
 -- Ventanas: abren con resorte, cierran rápido
-hl.animation({ leaf = "global",       enabled = true, speed = 6,   bezier = "snap" })
-hl.animation({ leaf = "windows",      enabled = true, speed = 5,   spring = "pop" })
-hl.animation({ leaf = "windowsIn",    enabled = true, speed = 5,   spring = "pop",  style = "popin 60%" })
-hl.animation({ leaf = "windowsOut",   enabled = true, speed = 3.5, bezier = "snap", style = "popin 70%" })
-hl.animation({ leaf = "windowsMove",  enabled = true, speed = 5,   spring = "pop" })
+A("global",      6,   "snap")
+A("windows",     5,   "pop")
+A("windowsIn",   5,   "pop",  { style = "popin 60%" })
+A("windowsOut",  3.5, "snap", { style = "popin 70%" })
+A("windowsMove", 5,   "pop")
 
 -- Fundidos
-hl.animation({ leaf = "fade",         enabled = true, speed = 4,   bezier = "snap" })
-hl.animation({ leaf = "fadeIn",       enabled = true, speed = 3,   bezier = "snap" })
-hl.animation({ leaf = "fadeOut",      enabled = true, speed = 2.5, bezier = "snap" })
-hl.animation({ leaf = "fadeSwitch",   enabled = true, speed = 4,   bezier = "snap" })
+A("fade",        4,   "snap")
+A("fadeIn",      3,   "snap")
+A("fadeOut",     2.5, "snap")
+A("fadeSwitch",  4,   "snap")
 
 -- Barra, lanzador y notificaciones: entran con rebote
-hl.animation({ leaf = "layers",       enabled = true, speed = 4,   bezier = "bounce" })
-hl.animation({ leaf = "layersIn",     enabled = true, speed = 4,   bezier = "bounce", style = "popin 80%" })
-hl.animation({ leaf = "layersOut",    enabled = true, speed = 3,   bezier = "snap",   style = "fade" })
+A("layers",      4,   "bounce")
+A("layersIn",    4,   "bounce", { style = "popin 80%" })
+A("layersOut",   3,   "snap",   { style = "fade" })
 
 -- Espacios de trabajo: deslizan con un pequeño pasarse
-hl.animation({ leaf = "workspaces",   enabled = true, speed = 5,   bezier = "softback", style = "slidefade 20%" })
-hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 5, bezier = "softback", style = "slidefadevert 20%" })
+A("workspaces",       5, "softback", { style = "slidefade 20%" })
+A("specialWorkspace", 5, "softback", { style = "slidefadevert 20%" })
 
 -- Bordes
-hl.animation({ leaf = "border",       enabled = true, speed = 8,   bezier = "snap" })
-hl.animation({ leaf = "borderangle",  enabled = ROTATING_BORDER, speed = 60, bezier = "linear", style = "loop" })
+A("border",      8,   "snap")
+hl.animation({ leaf = "borderangle", enabled = ROTATING_BORDER and P.rotate, speed = 60, bezier = "linear", style = "loop" })
 
 -------------------------------------------------------------
 -- Entrada
@@ -231,6 +269,12 @@ hl.bind(mod .. " + E",      hl.dsp.exec_cmd(files))
 hl.bind(mod .. " + N",      hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-nmtui nmtui"))
 hl.bind(mod .. " + A",      hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-ai hyprarch-ai chat"))            -- hablar con la IA elegida
 hl.bind(mod .. " + SHIFT + A", hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-ai hyprarch-ai setup"))   -- cambiar de IA
+-- Modos (cada atajo alterna entre ese modo y el normal)
+hl.bind(mod .. " + SHIFT + G", hl.dsp.exec_cmd("hyprarch-mode toggle gamer"))
+hl.bind(mod .. " + SHIFT + C", hl.dsp.exec_cmd("hyprarch-mode toggle cine"))
+hl.bind(mod .. " + SHIFT + U", hl.dsp.exec_cmd("hyprarch-mode toggle estudio"))
+hl.bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd("hyprarch-mode toggle trabajo"))
+hl.bind(mod .. " + SHIFT + N", hl.dsp.exec_cmd("hyprarch-mode normal"))
 hl.bind(mod .. " + T",      hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-theme hyprarch-theme"))
 hl.bind(mod .. " + S",      hl.dsp.exec_cmd("bash " .. scripts .. "/toggle-shader.sh"))   -- shader CRT (apagado por defecto)
 hl.bind(mod .. " + F1",     hl.dsp.exec_cmd(scripts .. "/keybinds.sh"))
