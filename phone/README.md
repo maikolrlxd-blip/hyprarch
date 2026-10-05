@@ -7,22 +7,21 @@ Hay dos modos:
 | **App Android + relay** (nuevo) | Instalar la app en el celular y un servidor relay | Cualquier persona, sin cable ni ADB |
 | **ADB** | Cable/Wi-Fi debug + `adb` en la PC | Desarrolladores |
 
-## Modo app Android + relay
+## Uso rápido (app Android)
 
-```
-Claude (PC) → phone_mcp.py ──HTTPS──▶ relay.py ◀──WebSocket── App Android (accesibilidad)
-```
-El celular se conecta *hacia afuera*: no hay que abrir puertos ni usar cable.
+**Una vez:**
+1. Instalá el APK (GitHub → Actions → *Build Android APK* → `phone-mcp-apk`) y activá su permiso de accesibilidad.
 
-1. **Relay** (un VPS o tu PC; detrás de HTTPS en producción): `pip install aiohttp && python3 phone/server/relay.py --port 8765`
-2. **APK**: GitHub → Actions → *Build Android APK* → artefacto `phone-mcp-apk`. Instalarlo (permitir orígenes desconocidos).
-3. En la app: activar el servicio de accesibilidad, escribir la URL del relay, **Conectar**.
-4. **Copiar comando para Claude Code** y pegarlo en la PC (ajustá la ruta de `phone_mcp.py`).
+**Cada vez:**
+1. En la PC: `python3 phone/start.py` → muestra un QR (y registra la herramienta en Claude Code por vos).
+2. En el celular: escaneá el QR con la cámara, tocá el enlace. Listo, queda conectado.
+3. Pedile cosas a Claude Code.
 
-Seguridad: la clave la genera el celular (256 bits) y el relay solo guarda su hash en memoria; mientras está activo hay una notificación permanente con botón **DETENER**; "Generar clave nueva" revoca el acceso anterior. Usá siempre HTTPS: sin él la clave viaja en claro.
-Ventaja sobre ADB: `phone_text` acepta tildes y emojis. Requiere Android 11+.
+Alcance: con [`cloudflared`](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) instalado funciona desde cualquier red (HTTPS gratis; el QR cambia en cada inicio). Sin él, funciona solo con la PC y el celular en el mismo Wi-Fi (tráfico sin cifrar dentro de tu red).
 
-> Estado: el relay y el puente están probados de punta a punta con un celular simulado. El código de la app **aún no se compiló ni probó en un dispositivo real**.
+Seguridad: la clave se guarda en `~/.phone-mcp.json` (solo tu usuario); mientras está activo hay una notificación permanente con botón **DETENER**; borrar ese archivo revoca el acceso. Requiere Android 11+. `phone_text` acepta tildes y emojis.
+
+> Estado: la app compila en CI, pero aún no se probó en un celular real.
 
 ## Modo ADB
 
