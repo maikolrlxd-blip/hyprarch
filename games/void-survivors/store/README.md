@@ -9,8 +9,10 @@ Material ya preparado en esta carpeta:
 | `graphics/icon-512.png` | Icono de la ficha (512×512) |
 | `graphics/feature-1024x500.png` | Gráfico de funciones (1024×500) |
 | `graphics/phone-*.png` | 8 capturas de teléfono (1080×1920) |
+| `video/clip-*.mp4` | 3 clips verticales de gameplay real (sin audio) para Shorts/TikTok/Reels/Reddit |
+| `GROWTH.md` | Investigación de mercado, qué se aplicó y plan de lanzamiento por fases |
 
-Regenerar los gráficos: `node ../tools/store-assets.js`.
+Regenerar: `node ../tools/store-assets.js` (gráficos) y `node ../tools/make-clips.js` (vídeos; requiere ffmpeg).
 
 ## Checklist (lo que solo puedes hacer tú)
 

@@ -181,6 +181,7 @@
     App.mode = 'game'; paused = false; acc = 0; wonT = 0; deadT = 0; levelShown = deadShown = finishing = false; itemsSig = ''; hintKey = '';
     I.enabled = true; I.release();
     $('#hud').classList.remove('hidden');
+    $('#hint').classList.remove('on'); $('#hint').textContent = '';
     UI.clear();
     A.startMusic('battle', D.stages[s.selStage].music);
     A.intensity = 0;
@@ -282,7 +283,7 @@
       renderer.update(frozen ? 0 : dt, sim);
       A.intensity = sim.bossAlive ? 2 : sim.t < 90 ? 0 : sim.t < 240 ? 1 : 2;
 
-      if (sim.state === 'levelup' && !levelShown) { levelShown = true; I.release(); updateHud(sim, true); UI.levelup(sim); }
+      if (sim.state === 'levelup' && !levelShown) { levelShown = true; I.release(); updateHud(sim, true); renderer.banners.length = 0; UI.levelup(sim); }
       if (sim.state === 'dead') {
         deadT += dt;
         if (!deadShown && deadT > 0.9) {

@@ -25,8 +25,8 @@ Sin instalar nada: el workflow **Build Android games** (`.github/workflows/andro
 
 Cada juego recibe su `applicationId` (`com.hyprarch.games.<juego>`). El proyecto usa AGP 8.9.1, compileSdk/targetSdk 36 y minSdk 24; el único permiso es VIBRATE.
 
-> Nota: el proyecto Android no se ha podido compilar en el entorno donde se escribió (sin SDK). Los juegos sí se probaron en Chromium; si Gradle se queja de alguna versión, ajusta `android-template/build.gradle` y `app/build.gradle`.
+> Verificado: el workflow compila el proyecto en GitHub (APK debug + AAB release). Lo que no se ha podido hacer desde aquí es probar el APK en un móvil real: hazlo en la prueba interna antes de publicar.
 
 ## Pasos para publicar en Play Store
 
-Ver [`void-survivors/store/README.md`](void-survivors/store/README.md).
+Ver [`void-survivors/store/README.md`](void-survivors/store/README.md) (checklist) y [`void-survivors/store/GROWTH.md`](void-survivors/store/GROWTH.md) (investigación de mercado y plan de lanzamiento con criterios de decisión).
