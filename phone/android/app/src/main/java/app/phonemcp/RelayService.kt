@@ -24,7 +24,7 @@ class RelayService : Service() {
         const val ACTION_STOP = "app.phonemcp.STOP"
         @Volatile var status = "Desconectado"
         @Volatile var onStatus: ((String) -> Unit)? = null
-        fun setStatus(s: String) { status = s; onStatus?.invoke(s) }
+        fun updateStatus(s: String) { status = s; onStatus?.invoke(s) }
     }
 
     private val http = OkHttpClient.Builder().pingInterval(20, TimeUnit.SECONDS).readTimeout(0, TimeUnit.MILLISECONDS).build()
@@ -46,16 +46,16 @@ class RelayService : Service() {
         stopped = true
         socket?.close(1000, "stop")
         worker.shutdownNow()
-        setStatus("Desconectado")
+        updateStatus("Desconectado")
     }
 
     private fun connect() {
         val prefs = getSharedPreferences("cfg", MODE_PRIVATE)
         val url = prefs.getString("relay", "")!!.trimEnd('/').replaceFirst("http", "ws") + "/ws/phone"
         val token = prefs.getString("token", "")!!
-        setStatus("Conectando…")
+        updateStatus("Conectando…")
         socket = http.newWebSocket(Request.Builder().url(url).header("Authorization", "Bearer $token").build(), object : WebSocketListener() {
-            override fun onOpen(ws: WebSocket, r: Response) = setStatus("Conectado: el asistente puede controlar este celular")
+            override fun onOpen(ws: WebSocket, r: Response) = updateStatus("Conectado: el asistente puede controlar este celular")
             override fun onMessage(ws: WebSocket, text: String) {
                 worker.execute {
                     val req = JSONObject(text)
@@ -72,7 +72,7 @@ class RelayService : Service() {
 
     private fun retry(msg: String) {
         if (stopped) return
-        setStatus("$msg. Reintentando…")
+        updateStatus("$msg. Reintentando…")
         Thread { Thread.sleep(5000); if (!stopped) connect() }.start()
     }
 
