@@ -69,9 +69,10 @@ sed -e 's/^title .*/title    hyprarch - modo detallado (UEFI)/' -e 's/^sort-key.
 # La entrada normal arranca en silencio
 sed -i 's/^options  \(.*\)$/options  \1 quiet loglevel=3 systemd.show_status=0/' "$ENTRY"
 # Espacio de escritura en RAM del sistema live: 256 MB (por defecto) no alcanza para instalar una IA
-# (Claude Code pesa ~250 MB). El tope sube a 4 GB; la RAM solo se usa a medida que hace falta.
+# (Claude Code pesa ~250 MB). El tope pasa a la MITAD de la RAM de cada equipo (4 GB -> 2 GB,
+# 32 GB -> 16 GB); la RAM solo se usa a medida que hace falta, no se reserva.
 for e in "$ENTRY" "$PROFILE/efiboot/loader/entries/02-hyprarch-verbose.conf"; do
-  sed -i 's/^options  \(.*\)$/options  \1 cow_spacesize=4G/' "$e"
+  sed -i 's/^options  \(.*\)$/options  \1 cow_spacesize=50%/' "$e"
 done
 echo "--- entrada principal:"; cat "$ENTRY"
 
