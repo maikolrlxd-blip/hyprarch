@@ -464,7 +464,7 @@ def run_daemon():
     S = {"x": 0.0, "y": 0.0, "tx": 0.0, "ty": 0.0, "facing": 1, "look": (0.0, 0.0), "t0": time.time(),
          "raw": read_state(), "state": "idle", "text": "", "bubble": 0.0, "mtime": 0.0,
          "lx": FEET[0], "ly": FEET[1], "ml": -1, "mt": -1, "n": 0, "follow": False,
-         "pal": load_palette(), "palsig": palette_signature()}
+         "pal": load_palette(), "palsig": palette_signature(), "hover": False, "rgn": None}
     # Resultados de hyprctl: los consulta un hilo aparte para no bloquear nunca el dibujo.
     H = {"cur": None, "mon": {"org": (0, 0), "size": (1280, 800)}}
     debug = bool(os.environ.get("CLAUDE_PRESENCE_DEBUG"))
@@ -538,6 +538,41 @@ def run_daemon():
             # arriba hace falta sitio para el globo (~148 px) y la antena
             return (max(40.0, min(w - 40.0, p[0])), max(170.0, min(h - 16.0, p[1])))
 
+        # --- clics: solo el cuerpo del personajito recibe el mouse; el resto de la ventanita es transparente al clic
+        def set_hit_region(force=False):
+            surf = win.get_surface()
+            if not surf:
+                return
+            x = int(max(0, S["lx"] - 42))
+            y = int(max(0, S["ly"] - 96))
+            key = (x // 3, y // 3)
+            if not force and key == S["rgn"]:
+                return
+            S["rgn"] = key
+            r = cairo.RectangleInt(x, y, 84, 104)
+            surf.set_input_region(cairo.Region(r))
+
+        def open_chat():
+            """Abre (o enfoca) una ventana flotante con Claude Code para hablar con Claudito."""
+            env = {k: v for k, v in os.environ.items() if k not in ("LD_PRELOAD", "GSK_RENDERER")}
+            script = os.path.expanduser("~/.config/hypr/scripts/once.sh")
+            try:
+                subprocess.Popen(["bash", script, "hyprarch-claude", "claude"], env=env, start_new_session=True,
+                                 stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                write_state("done", "¡Hola! Te escucho")
+            except Exception as e:
+                if debug:
+                    print("no se pudo abrir el chat:", repr(e), flush=True)
+
+        click = Gtk.GestureClick()
+        click.set_button(1)
+        click.connect("released", lambda *_: open_chat())
+        area.add_controller(click)
+        motion = Gtk.EventControllerMotion()
+        motion.connect("enter", lambda *_: S.update(hover=True))
+        motion.connect("leave", lambda *_: S.update(hover=False))
+        area.add_controller(motion)
+
         def tick():
             try:
                 now = time.time()
@@ -599,6 +634,8 @@ def run_daemon():
                 # --- globo: aparece con cada novedad y se esconde solo --------------------
                 fresh = (now - raw["ts"]) < BUBBLE_SECONDS
                 want = 1.0 if (S["text"] and eff != "idle" and fresh) else 0.0
+                if S["hover"] and not want:
+                    S["text"], want = "Clic para hablar conmigo", 1.0
                 S["bubble"] += (want - S["bubble"]) * 0.2
 
                 # --- la ventanita sigue al personajito con márgenes de layer-shell ---------
@@ -611,6 +648,7 @@ def run_daemon():
                     LS.set_margin(win, LS.Edge.TOP, mt)
                     S["mt"] = mt
                 S["lx"], S["ly"] = S["x"] - ml, S["y"] - mt
+                set_hit_region()
 
                 S["n"] += 1
                 if debug and S["n"] % 30 == 0:
@@ -625,11 +663,12 @@ def run_daemon():
         GLib.timeout_add(33, tick)
         win.present()
 
-        # los clics atraviesan la ventanita
+        # fuera del personajito los clics atraviesan la ventanita (región vacía hasta que se sepa dónde está)
         def pass_clicks(*_):
             surf = win.get_surface()
             if surf:
                 surf.set_input_region(cairo.Region())
+                S["rgn"] = None
         win.connect("realize", pass_clicks)
         pass_clicks()
 
