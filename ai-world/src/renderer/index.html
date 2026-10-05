@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-9LABGBO1E7N1T72pq3gF9L/jkBZ7Tj1+EGlTnKm+oP4='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:">
+  <title>AI World</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+  { "imports": {
+      "three": "../../node_modules/three/build/three.module.js",
+      "three/addons/": "../../node_modules/three/examples/jsm/"
+  } }
+  </script>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <aside id="panel">
+    <header>
+      <h1>AI World</h1>
+      <div class="btns">
+        <button id="pause" title="Pausar / reanudar turnos">Pausar</button>
+        <button id="settings">Ajustes</button>
+      </div>
+    </header>
+    <ul id="roster"></ul>
+    <div id="log"></div>
+    <form id="chat">
+      <input id="msg" autocomplete="off" placeholder="Habla con todos en la sala...">
+      <button>Enviar</button>
+    </form>
+  </aside>
+  <dialog id="dlg">
+    <form method="dialog" id="dlgForm">
+      <h2>Ajustes</h2>
+      <label class="row">Segundos entre turnos <input type="number" id="turn" min="2" max="60"></label>
+      <div id="agentList"></div>
+      <div class="actions">
+        <button type="button" id="addAgent">+ Agregar IA</button>
+        <span class="spacer"></span>
+        <button type="button" id="cancel">Cancelar</button>
+        <button type="submit" id="save">Guardar</button>
+      </div>
+      <p class="hint">Las API keys se guardan solo en tu equipo (userData) y nunca llegan a la interfaz del mundo.</p>
+    </form>
+  </dialog>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
