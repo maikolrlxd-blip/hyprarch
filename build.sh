@@ -13,8 +13,12 @@ CONSOLE_KEYMAP="la-latin1"
 # ---------------------------------------------------------------------------
 
 REPO="$PWD"
-PROFILE=/tmp/hyprarch-profile
-WORK=/tmp/hyprarch-work
+# Directorio temporal PRIVADO (nombres fijos en /tmp permitirían enlaces simbólicos
+# preparados por otro usuario y chocan entre compilaciones simultáneas).
+TMPD=$(mktemp -d /tmp/hyprarch.XXXXXXXX)
+trap 'rm -rf "$TMPD"' EXIT
+PROFILE="$TMPD/profile"
+WORK="$TMPD/work"
 OUT="$REPO/out"
 AIR="$PROFILE/airootfs"
 
@@ -128,7 +132,7 @@ HOME="$AIR/etc/skel" HYPRARCH_NO_RELOAD=1 HYPRARCH_THEMES="$REPO/airootfs/usr/sh
   bash "$REPO/airootfs/usr/local/bin/hyprarch-theme" verde
 
 echo "==> Permisos (mkarchiso NO conserva el bit de ejecución: hay que declararlo)"
-PERMS=/tmp/hyprarch-perms.txt
+PERMS="$TMPD/perms.txt"
 {
   echo '  ["/etc/sudoers.d/g_wheel"]="0:0:0440"'
   for f in "$REPO"/airootfs/usr/local/bin/* "$REPO"/airootfs/etc/skel/.config/hypr/scripts/*; do

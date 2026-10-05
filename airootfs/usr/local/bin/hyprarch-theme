@@ -30,6 +30,14 @@ hex_ok() { [[ $1 =~ ^#?[0-9a-fA-F]{6}$ ]]; }
 norm()   { local h=${1#\#}; printf '%s' "${h,,}"; }
 rgb()    { printf '%d, %d, %d' "$((16#${1:0:2}))" "$((16#${1:2:2}))" "$((16#${1:4:2}))"; }
 
+# Escritura atómica: se escribe en un temporal del mismo directorio y se publica con mv,
+# así Hyprland/Waybar nunca leen un archivo a medio escribir.
+put() {
+  local dest=$1 tmp
+  tmp=$(mktemp "${dest}.XXXXXX") || return 1
+  if cat > "$tmp"; then mv -f "$tmp" "$dest"; else rm -f "$tmp"; return 1; fi
+}
+
 load_theme() {
   local f
   case $1 in
@@ -43,7 +51,7 @@ load_theme() {
 
 # ---------- generadores ----------
 render_hypr() {
-  cat > "$CFG/hypr/colors.lua" <<EOF
+  put "$CFG/hypr/colors.lua" <<EOF
 -- Generado por hyprarch-theme (${NAME}). No editar a mano.
 return {
     accent   = "rgba(${ACCENT}ee)",
@@ -56,7 +64,7 @@ EOF
 }
 
 render_waybar() {
-  cat > "$CFG/waybar/colors.css" <<EOF
+  put "$CFG/waybar/colors.css" <<EOF
 /* Generado por hyprarch-theme (${NAME}). No editar a mano. */
 @define-color bg       rgba($(rgb "$BG"), 0.78);
 @define-color surface  rgba($(rgb "$SURFACE"), 0.92);
@@ -67,11 +75,12 @@ render_waybar() {
 @define-color accent2  #${ACCENT2};
 @define-color ok       #${OK};
 @define-color alert    #${ALERT};
+@define-color warn     #${WARN:-ffb300};
 EOF
 }
 
 render_kitty() {
-  cat > "$CFG/kitty/colors.conf" <<EOF
+  put "$CFG/kitty/colors.conf" <<EOF
 # Generado por hyprarch-theme (${NAME}). No editar a mano.
 foreground            #${FG}
 background            #${BG}
@@ -103,7 +112,7 @@ EOF
 }
 
 render_fuzzel() {
-  cat > "$CFG/fuzzel/fuzzel.ini" <<EOF
+  put "$CFG/fuzzel/fuzzel.ini" <<EOF
 # Generado por hyprarch-theme (${NAME}). No editar a mano.
 [main]
 font=JetBrainsMono Nerd Font:size=12
@@ -133,7 +142,7 @@ EOF
 }
 
 render_mako() {
-  cat > "$CFG/mako/config" <<EOF
+  put "$CFG/mako/config" <<EOF
 # Generado por hyprarch-theme (${NAME}). No editar a mano.
 font=JetBrainsMono Nerd Font 11
 background-color=#${BG}ee
@@ -179,12 +188,12 @@ render_gtk() {
 @define-color theme_selected_bg_color #${ACCENT};
 @define-color theme_selected_fg_color #${BG};
 "
-  printf '%s' "$css" > "$CFG/gtk-3.0/gtk.css"
-  printf '%s' "$css" > "$CFG/gtk-4.0/gtk.css"
+  printf '%s' "$css" | put "$CFG/gtk-3.0/gtk.css"
+  printf '%s' "$css" | put "$CFG/gtk-4.0/gtk.css"
 }
 
 render_hyprlock() {
-  cat > "$CFG/hypr/hyprlock.conf" <<EOF
+  put "$CFG/hypr/hyprlock.conf" <<EOF
 # Generado por hyprarch-theme (${NAME}). No editar a mano.
 general {
     hide_cursor = true
@@ -273,7 +282,7 @@ EOF
 }
 
 render_wallpaper() {
-  printf '/usr/share/backgrounds/hyprarch-%s.jpg\n' "${WALL:-verde}" > "$DATA/wallpaper"
+  printf '/usr/share/backgrounds/hyprarch-%s.jpg\n' "${WALL:-verde}" | put "$DATA/wallpaper"
 }
 
 reload_all() {
@@ -289,10 +298,13 @@ reload_all() {
 }
 
 apply() {
+  # un solo cambio de tema a la vez
+  if command -v flock >/dev/null 2>&1; then exec 9>"$DATA/.lock"; flock 9; fi
   load_theme "$1" || return 1
-  printf '%s\n' "$1" > "$CURRENT"
-  render_hypr; render_waybar; render_kitty; render_fuzzel
-  render_mako; render_gtk; render_hyprlock; render_wallpaper
+  render_hypr && render_waybar && render_kitty && render_fuzzel \
+    && render_mako && render_gtk && render_hyprlock && render_wallpaper \
+    || { echo "Error generando los archivos del tema: no se aplicó." >&2; return 1; }
+  printf '%s\n' "$1" | put "$CURRENT" || return 1
   reload_all
 }
 
@@ -309,7 +321,7 @@ custom_flow() {
   a=$(norm "$a"); b=$(norm "$b")
 
   load_theme verde || return 1
-  cat > "$CUSTOM" <<EOF
+  put "$CUSTOM" <<EOF
 NAME="Personalizado (#${a})"
 BG=${BG}
 SURFACE=${SURFACE}
@@ -320,6 +332,7 @@ ACCENT=${a}
 ACCENT2=${b}
 OK=${a}
 ALERT=${b}
+WARN=${WARN:-ffb300}
 WALL=verde
 EOF
   apply custom

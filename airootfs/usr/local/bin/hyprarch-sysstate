@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Indicador de salud del sistema para Waybar:  SYS // NOMINAL  ->  WARN  ->  ALERT
+# Imprime JSON {"text","class","tooltip"}. Clases: ok (verde), warn (ámbar), alert (rojo).
+
+warn=(); alert=()
+
+# CPU: carga de 1 min contra la cantidad de núcleos
+read -r load _ < /proc/loadavg
+cores=$(nproc 2>/dev/null || echo 1)
+pct=$(awk -v l="$load" -v c="$cores" 'BEGIN { printf "%d", (l / c) * 100 }')
+(( pct >= 150 )) && alert+=("CPU saturada (${pct}%)") || { (( pct >= 90 )) && warn+=("CPU alta (${pct}%)"); }
+
+# Memoria
+mem=$(awk '/MemTotal/ {t=$2} /MemAvailable/ {a=$2} END { printf "%d", (t - a) * 100 / t }' /proc/meminfo)
+(( mem >= 95 )) && alert+=("RAM casi llena (${mem}%)") || { (( mem >= 85 )) && warn+=("RAM alta (${mem}%)"); }
+
+# Temperatura (la mayor de las zonas térmicas, si existen)
+temp=$(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | sort -n | tail -1)
+if [[ -n $temp ]]; then
+  t=$((temp / 1000))
+  (( t >= 90 )) && alert+=("Temperatura crítica (${t} °C)") || { (( t >= 80 )) && warn+=("Temperatura alta (${t} °C)"); }
+fi
+
+# Red: ¿hay ruta por defecto?
+if ! ip -4 route show default 2>/dev/null | grep -q '^default' &&
+   ! ip -6 route show default 2>/dev/null | grep -q '^default'; then
+  warn+=("Sin conexión de red")
+fi
+
+# Batería (si hay)
+for b in /sys/class/power_supply/BAT*; do
+  [[ -r $b/capacity ]] || continue
+  # si la lectura falla (batería extraíble que se desconecta) se ignora, no se toma como 0 %
+  cap=$(<"$b/capacity") || continue
+  st=$(<"$b/status") || continue
+  [[ $cap =~ ^[0-9]+$ && -n $st ]] || continue
+  cap=$((10#$cap))
+  (( cap <= 100 )) || continue
+  if [[ $st != Charging && $st != Full ]]; then
+    (( cap <= 10 )) && alert+=("Batería crítica (${cap}%)") || { (( cap <= 20 )) && warn+=("Batería baja (${cap}%)"); }
+  fi
+done
+
+# Disco raíz persistente, si hay un disco real montado en /
+rootuse=$(df --output=pcent / 2>/dev/null | tail -1 | tr -dc '0-9')
+if [[ -n $rootuse ]] && [[ $(findmnt -no FSTYPE / 2>/dev/null) != overlay* ]] && [[ $(findmnt -no FSTYPE / 2>/dev/null) != airootfs* ]]; then
+  (( rootuse >= 95 )) && alert+=("Disco casi lleno (${rootuse}%)") || { (( rootuse >= 90 )) && warn+=("Disco lleno (${rootuse}%)"); }
+fi
+
+if (( ${#alert[@]} )); then
+  cls=alert; txt="SYS // ALERT"; tip=$(printf '%s\n' "${alert[@]}" "${warn[@]}")
+elif (( ${#warn[@]} )); then
+  cls=warn; txt="SYS // WARN"; tip=$(printf '%s\n' "${warn[@]}")
+else
+  cls=ok; txt="SYS // NOMINAL"; tip="Todo en orden: CPU ${pct}% · RAM ${mem}%"
+fi
+
+# JSON escapado (comillas y saltos de línea)
+tip=${tip//\\/\\\\}; tip=${tip//\"/\\\"}; tip=${tip//$'\n'/\\n}
+printf '{"text":"%s","class":"%s","tooltip":"%s"}\n' "$txt" "$cls" "$tip"

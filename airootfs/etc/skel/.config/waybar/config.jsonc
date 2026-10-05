@@ -13,23 +13,35 @@
     "hyprland/window",
     "custom/close"
   ],
-  "modules-center": ["clock"],
+  "modules-center": ["clock", "custom/sys"],
   "modules-right": [
     "custom/claude",
     "tray",
     "hyprland/language",
-    "cpu",
-    "memory",
-    "temperature",
-    "network",
-    "bluetooth",
-    "pulseaudio",
-    "backlight",
+    "group/sistema",
+    "group/conex",
     "battery",
     "custom/theme",
     "custom/help",
     "custom/power"
   ],
+
+  "group/sistema": {
+    "orientation": "horizontal",
+    "modules": ["cpu", "memory", "temperature"]
+  },
+
+  "group/conex": {
+    "orientation": "horizontal",
+    "modules": ["network", "bluetooth", "pulseaudio", "backlight"]
+  },
+
+  "custom/sys": {
+    "exec": "hyprarch-sysstate",
+    "return-type": "json",
+    "interval": 3,
+    "tooltip": true
+  },
 
   "custom/launcher": {
     "format": "",

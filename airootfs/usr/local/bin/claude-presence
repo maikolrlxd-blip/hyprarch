@@ -27,32 +27,70 @@ ICONS = {"idle": "", "thinking": "", "working": "", "done": "", "err
 # ----------------------------------------------------------------------------- estado
 
 
+MAX_TEXT = 200          # el texto del globo se limita al recibirlo
+EXPIRE = {"done": 8.0, "error": 8.0, "working": 300.0, "thinking": 300.0, "waiting": 300.0}
+
+
+def _num(v):
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        return False
+    try:
+        return math.isfinite(v)
+    except OverflowError:       # un entero enorme no se puede convertir a float
+        return False
+
+
 def read_state():
+    """Lee el estado y lo NORMALIZA: ante cualquier valor raro devuelve el estado seguro (idle)."""
+    safe = {"state": "idle", "text": "", "ts": 0.0, "follow": False}
     try:
         s = json.loads(STATE_FILE.read_text(encoding="utf-8"))
-        if s.get("state") in STATES:
-            return s
     except Exception:
-        pass
-    return {"state": "idle", "text": "", "ts": 0}
+        return safe
+    if not isinstance(s, dict) or s.get("state") not in STATES:
+        return safe
+    text = s.get("text")
+    ts = s.get("ts")
+    return {"state": s["state"], "text": text[:MAX_TEXT] if isinstance(text, str) else "",
+            "ts": float(ts) if _num(ts) else 0.0, "follow": s.get("follow") is True}
+
+
+def effective_state(s):
+    """Estado que realmente se muestra: lo que lleva mucho tiempo sin actualizarse vuelve a reposo.
+    Lo usan tanto el daemon como Waybar, para que nunca se contradigan."""
+    st, age = s["state"], time.time() - s["ts"]
+    return "idle" if age > EXPIRE.get(st, 1e9) else st
 
 
 def write_state(state, text="", **extra):
+    """Escritura atómica con un temporal exclusivo por proceso (varios hooks pueden escribir a la vez)."""
+    import tempfile
+
     STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-    data = {"state": state, "text": text, "ts": time.time(), **extra}
-    tmp = STATE_FILE.with_suffix(".tmp")
-    tmp.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
-    os.replace(tmp, STATE_FILE)
+    data = {"state": state, "text": str(text)[:MAX_TEXT], "ts": time.time(), **extra}
+    fd, tmp = tempfile.mkstemp(dir=STATE_FILE.parent, prefix=".state-", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+        os.replace(tmp, STATE_FILE)
+    finally:
+        try:
+            os.unlink(tmp)
+        except FileNotFoundError:
+            pass
 
 
 def describe_tool(payload):
     """Convierte el JSON de un hook de Claude Code en una frase corta en español."""
+    payload = payload if isinstance(payload, dict) else {}
     tool = payload.get("tool_name", "") or ""
-    inp = payload.get("tool_input", {}) or {}
+    inp = payload.get("tool_input")
+    inp = inp if isinstance(inp, dict) else {}
     short = lambda s, n=46: (s if len(s) <= n else s[: n - 1] + "…")
     base = lambda p: os.path.basename(str(p).replace("\\", "/"))
     if tool in ("Bash", "PowerShell"):
-        return f"Ejecutando: {short(str(inp.get('command', '')).strip().splitlines()[0] if inp.get('command') else '')}"
+        lines = str(inp.get("command") or "").strip().splitlines()
+        return f"Ejecutando: {short(lines[0] if lines else '')}"
     if tool in ("Edit", "Write", "NotebookEdit"):
         return f"Editando {short(base(inp.get('file_path', '')))}"
     if tool == "Read":
@@ -81,7 +119,14 @@ def load_palette():
                 pal[m.group(1)] = m.group(3).strip()
     except Exception:
         pass
-    return {k: tuple(int(v[i:i + 2], 16) / 255 for i in (0, 2, 4)) if re.fullmatch(r"[0-9a-fA-F]{6}", v) else v for k, v in pal.items()}
+    # Solo se aceptan colores de 6 dígitos hexadecimales; cualquier otro valor conserva el color por defecto.
+    default = dict(ACCENT="39ff14", ACCENT2="ff1f4b", OK="39ff14", ALERT="ff1f4b", BG="0a0c0b", SURFACE="111513", FG="d7ffe3", DIM="5f7367")
+    out = {}
+    for k, d in default.items():
+        v = str(pal.get(k, d)).strip().lstrip("#")
+        v = v if re.fullmatch(r"[0-9a-fA-F]{6}", v) else d
+        out[k] = tuple(int(v[i:i + 2], 16) / 255 for i in (0, 2, 4))
+    return out
 
 
 # ----------------------------------------------------------------------------- dibujo (Cairo)
@@ -272,6 +317,34 @@ def draw_mascot(cr, x, y, state, t, pal, look=(0.0, 0.0), scale=1.0, facing=1):
     cr.restore()
 
 
+_FIT_CACHE = {}
+
+
+def _fit_text(cr, text, avail):
+    """Recorta con '…' por búsqueda binaria (no carácter a carácter) y recuerda el resultado."""
+    key = (text, int(avail))
+    hit = _FIT_CACHE.get(key)
+    if hit:
+        return hit
+    width = cr.text_extents(text).x_advance
+    if width <= avail:
+        res = (text, width)
+    else:
+        lo, hi = 1, len(text)
+        while lo < hi:
+            mid = (lo + hi + 1) // 2
+            if cr.text_extents(text[:mid] + "…").x_advance <= avail:
+                lo = mid
+            else:
+                hi = mid - 1
+        cut = text[:lo] + "…"
+        res = (cut, cr.text_extents(cut).x_advance)
+    if len(_FIT_CACHE) > 64:
+        _FIT_CACHE.clear()
+    _FIT_CACHE[key] = res
+    return res
+
+
 def draw_bubble(cr, x, y, text, pal, alpha=1.0, max_w=360, side="left"):
     """Globo de texto con la cola apuntando hacia (x, y) (arriba del personajito)."""
     import cairo
@@ -281,12 +354,8 @@ def draw_bubble(cr, x, y, text, pal, alpha=1.0, max_w=360, side="left"):
     cr.save()
     cr.select_font_face("JetBrainsMono Nerd Font", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     cr.set_font_size(14)
-    ext = cr.text_extents(text)
-    w = min(ext.width + 28, max_w)
-    while ext.width + 28 > max_w and len(text) > 4:   # recorta con "…"
-        text = text[:-2] + "…"
-        ext = cr.text_extents(text)
-        w = min(ext.width + 28, max_w)
+    text, tw = _fit_text(cr, text[:MAX_TEXT], max_w - 28)
+    w = min(tw + 28, max_w)
     h = 34
     bx, by = (x - w + 34 if side == "left" else x - 34), y - h - 14
     A, BG, FG = pal["ACCENT"], pal["BG"], pal["FG"]
@@ -338,13 +407,8 @@ def render_sheet(out):
 
 def cmd_status():
     s = read_state()
-    age = time.time() - s.get("ts", 0)
-    st = s["state"]
-    if st in ("done", "error") and age > 20:
-        st = "idle"
-    if st in ("working", "thinking") and age > 300:
-        st = "idle"
-    text = s.get("text") or {"idle": "Claude en reposo", "done": "Listo", "error": "Error"}.get(st, "")
+    st = effective_state(s)
+    text = (s.get("text") if st == s["state"] else "") or {"idle": "Claude en reposo", "done": "Listo", "error": "Error"}.get(st, "")
     print(json.dumps({"text": f"{ICONS[st]} Claude", "class": st, "tooltip": text}, ensure_ascii=False))
 
 
@@ -359,25 +423,74 @@ def hypr_json(*args):
         return None
 
 
+def palette_files():
+    """Archivos que definen la paleta activa (para detectar cambios de tema)."""
+    home = Path.home()
+    files = [home / ".config/hyprarch/current"]
+    try:
+        cur = files[0].read_text().strip() or "verde"
+    except Exception:
+        cur = "verde"
+    files.append(home / ".config/hyprarch/custom.env" if cur == "custom" else Path(f"/usr/share/hyprarch/themes/{cur}.env"))
+    return files
+
+
+def palette_signature():
+    sig = []
+    for f in palette_files():
+        try:
+            sig.append(f.stat().st_mtime)
+        except OSError:
+            sig.append(0.0)
+    return tuple(sig)
+
+
 def run_daemon():
     """Superposición liviana: una ventanita (440x270) que se desplaza con los márgenes de layer-shell."""
+    import threading
+
     import gi
 
     gi.require_version("Gtk", "4.0")
-    gi.require_version("Gdk", "4.0")
     gi.require_version("Gtk4LayerShell", "1.0")
-    from gi.repository import Gdk, GLib, Gtk, Gtk4LayerShell as LS
+    from gi.repository import GLib, Gtk, Gtk4LayerShell as LS
     import cairo
 
     BOX_W, BOX_H = 440, 270          # tamaño de la ventanita
-    FEET = (360, 250)                # dónde pisa el personajito dentro de la ventanita (por defecto)
+    FEET = (360, 250)                # dónde pisa el personajito dentro de la ventanita
+    BUBBLE_SECONDS = 8.0             # el globo se esconde solo pasado este tiempo sin novedades
 
-    pal = load_palette()
     app = Gtk.Application(application_id="local.hyprarch.claudepresence")
     S = {"x": 0.0, "y": 0.0, "tx": 0.0, "ty": 0.0, "facing": 1, "look": (0.0, 0.0), "t0": time.time(),
-         "state": "idle", "text": "", "ts": 0.0, "mtime": 0.0, "bubble": 0.0, "mon": (1280, 800),
-         "lx": FEET[0], "ly": FEET[1], "ml": -1, "mt": -1, "n": 0}
+         "raw": read_state(), "state": "idle", "text": "", "bubble": 0.0, "mtime": 0.0,
+         "lx": FEET[0], "ly": FEET[1], "ml": -1, "mt": -1, "n": 0, "follow": False,
+         "pal": load_palette(), "palsig": palette_signature()}
+    # Resultados de hyprctl: los consulta un hilo aparte para no bloquear nunca el dibujo.
+    H = {"cur": None, "mon": {"org": (0, 0), "size": (1280, 800)}}
     debug = bool(os.environ.get("CLAUDE_PRESENCE_DEBUG"))
+
+    def poller():
+        last_mon = 0.0
+        while True:
+            now = time.time()
+            if S["follow"]:
+                cur = hypr_json("cursorpos")
+                if isinstance(cur, dict):
+                    H["cur"] = cur
+            else:
+                H["cur"] = None
+            if now - last_mon > 1.0:
+                last_mon = now
+                mons = hypr_json("monitors")
+                if isinstance(mons, list) and mons:
+                    m = next((x for x in mons if x.get("focused")), mons[0])
+                    sc = float(m.get("scale") or 1.0) or 1.0
+                    H["mon"] = {"org": (float(m.get("x", 0)), float(m.get("y", 0))),
+                                "size": (float(m.get("width", 1280)) / sc, float(m.get("height", 800)) / sc),
+                                "name": m.get("name")}
+            time.sleep(0.16)
+
+    threading.Thread(target=poller, daemon=True).start()
 
     def on_activate(app):
         win = Gtk.ApplicationWindow(application=app)
@@ -402,97 +515,116 @@ def run_daemon():
         Gtk.StyleContext.add_provider_for_display(win.get_display(), css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
         def draw(_a, cr, w, h):
-            t = time.time() - S["t0"]
-            cr.set_operator(cairo.OPERATOR_CLEAR)
-            cr.paint()
-            cr.set_operator(cairo.OPERATOR_OVER)
-            draw_mascot(cr, S["lx"], S["ly"], S["state"], t, pal, look=S["look"], scale=1.0, facing=S["facing"])
-            side = "right" if S["lx"] < 230 else "left"
-            draw_bubble(cr, S["lx"] + 8, S["ly"] - 100, S["text"], pal, alpha=S["bubble"], side=side)
+            try:
+                t = time.time() - S["t0"]
+                cr.set_operator(cairo.OPERATOR_CLEAR)
+                cr.paint()
+                cr.set_operator(cairo.OPERATOR_OVER)
+                draw_mascot(cr, S["lx"], S["ly"], S["state"], t, S["pal"], look=S["look"], scale=1.0, facing=S["facing"])
+                # el globo se abre hacia el lado con más sitio y nunca más ancho que la ventanita
+                bx = S["lx"] + 8
+                side = "right" if bx < w / 2 else "left"
+                room = (w - bx + 34) if side == "right" else (bx + 34)
+                draw_bubble(cr, bx, S["ly"] - 100, S["text"], S["pal"], alpha=S["bubble"], side=side,
+                            max_w=max(120, min(360, room - 2)))
+            except Exception as e:           # un error de dibujo no debe matar el overlay
+                if debug:
+                    print("error de dibujo:", repr(e), flush=True)
 
         area.set_draw_func(draw)
 
-        cache = {"t": 0.0, "cur": None, "win": None}
-
-        def hypr_cached():
-            """Consulta a hyprctl como mucho 6 veces por segundo (no en cada cuadro)."""
-            now = time.time()
-            if now - cache["t"] > 0.16:
-                cache.update(t=now, cur=hypr_json("cursorpos"), win=hypr_json("activewindow"))
-            return cache["cur"], cache["win"]
-
-        def monitor_size():
-            try:
-                mons = win.get_display().get_monitors()
-                g = mons.get_item(0).get_geometry()
-                return (g.width, g.height)
-            except Exception:
-                return S["mon"]
-
-        def clamp(p):
-            w, h = S["mon"]
-            return (max(40.0, min(w - 40.0, p[0])), max(120.0, min(h - 16.0, p[1])))
-
-        def pick_target():
-            w, h = S["mon"]
-            rest = (w - 90, h - 24)
-            if S["state"] == "idle":
-                return rest
-            # Solo acompaña al cursor cuando Claude maneja el mouse (marca "follow"); si no, flota en su rincón.
-            if S.get("follow"):
-                cur, _awin = hypr_cached()
-                if cur:
-                    return clamp((float(cur.get("x", rest[0])) - 60, float(cur.get("y", rest[1])) + 70))
-            return rest
+        def clamp(p, size):
+            w, h = size
+            # arriba hace falta sitio para el globo (~148 px) y la antena
+            return (max(40.0, min(w - 40.0, p[0])), max(170.0, min(h - 16.0, p[1])))
 
         def tick():
             try:
-                m = STATE_FILE.stat().st_mtime
-            except OSError:
-                m = 0.0
-            if m != S["mtime"]:
-                S["mtime"] = m
-                st = read_state()
-                S.update(state=st["state"], text=st.get("text", ""), ts=st.get("ts", 0), follow=bool(st.get("follow")))
+                now = time.time()
+                # --- estado (archivo) -------------------------------------------------
+                try:
+                    m = STATE_FILE.stat().st_mtime
+                except OSError:
+                    m = 0.0
+                if m != S["mtime"]:
+                    S["mtime"] = m
+                    S["raw"] = read_state()
+                    if debug:
+                        print("estado ->", S["raw"]["state"], repr(S["raw"]["text"]), flush=True)
+                raw = S["raw"]
+                eff = effective_state(raw)
+                S["state"] = eff
+                S["text"] = raw["text"] if eff == raw["state"] else ""
+                S["follow"] = bool(raw["follow"]) and eff in ("working", "thinking")
+
+                # --- tema: si cambia la paleta, se recarga sin reiniciar -----------------
+                if S["n"] % 30 == 0:
+                    sig = palette_signature()
+                    if sig != S["palsig"]:
+                        S["palsig"], S["pal"] = sig, load_palette()
+
+                # --- monitor: la ventanita debe estar en el mismo que se usa para los cálculos ---
+                mon = H["mon"]
+                if S["n"] % 30 == 0 and mon.get("name"):
+                    try:
+                        mons = win.get_display().get_monitors()
+                        for i in range(mons.get_n_items()):
+                            gm = mons.get_item(i)
+                            if gm.get_connector() == mon["name"]:
+                                if LS.get_monitor(win) != gm:
+                                    LS.set_monitor(win, gm)
+                                break
+                    except Exception as e:
+                        if debug:
+                            print("no se pudo fijar el monitor:", repr(e), flush=True)
+
+                # --- hacia dónde ir ------------------------------------------------------
+                size, org = mon["size"], mon["org"]
+                rest = (size[0] - 90, size[1] - 24)
+                target = rest
+                cur = H["cur"]
+                if S["follow"] and cur:
+                    # el cursor de hyprctl es global: se pasa a coordenadas del monitor activo
+                    target = clamp((float(cur.get("x", 0)) - org[0] - 60, float(cur.get("y", 0)) - org[1] + 70), size)
+                S["tx"], S["ty"] = target
+                if S["x"] == 0 and S["y"] == 0:
+                    S["x"], S["y"] = S["tx"], S["ty"]
+                dx, dy = S["tx"] - S["x"], S["ty"] - S["y"]
+                S["x"] += dx * 0.12
+                S["y"] += dy * 0.12
+                if abs(dx) > 6:
+                    S["facing"] = 1 if dx > 0 else -1
+                S["look"] = (max(-1, min(1, dx / 120)), max(-1, min(1, dy / 120)))
+
+                # --- globo: aparece con cada novedad y se esconde solo --------------------
+                fresh = (now - raw["ts"]) < BUBBLE_SECONDS
+                want = 1.0 if (S["text"] and eff != "idle" and fresh) else 0.0
+                S["bubble"] += (want - S["bubble"]) * 0.2
+
+                # --- la ventanita sigue al personajito con márgenes de layer-shell ---------
+                ml = int(max(0, min(S["x"] - FEET[0], size[0] - BOX_W)))
+                mt = int(max(0, min(S["y"] - FEET[1], size[1] - BOX_H)))
+                if ml != S["ml"]:
+                    LS.set_margin(win, LS.Edge.LEFT, ml)
+                    S["ml"] = ml
+                if mt != S["mt"]:
+                    LS.set_margin(win, LS.Edge.TOP, mt)
+                    S["mt"] = mt
+                S["lx"], S["ly"] = S["x"] - ml, S["y"] - mt
+
+                S["n"] += 1
+                if debug and S["n"] % 30 == 0:
+                    print("tick", S["n"], eff, "pos=(%.0f,%.0f)" % (S["x"], S["y"]), "margenes=(%d,%d)" % (ml, mt), flush=True)
+                area.queue_draw()
+            except Exception as e:
+                # nunca devolver una excepción: GLib quitaría el temporizador y el overlay quedaría congelado
                 if debug:
-                    print("estado ->", S["state"], repr(S["text"]), flush=True)
-            if S["n"] % 60 == 0:
-                S["mon"] = monitor_size()
-            age = time.time() - S["ts"]
-            if S["state"] in ("done", "error") and age > 8:
-                S["state"], S["text"] = "idle", ""
-            S["tx"], S["ty"] = pick_target()
-            if S["x"] == 0 and S["y"] == 0:
-                S["x"], S["y"] = S["tx"], S["ty"]
-            dx, dy = S["tx"] - S["x"], S["ty"] - S["y"]
-            S["x"] += dx * 0.12
-            S["y"] += dy * 0.12
-            if abs(dx) > 6:
-                S["facing"] = 1 if dx > 0 else -1
-            S["look"] = (max(-1, min(1, dx / 120)), max(-1, min(1, dy / 120)))
-            want = 1.0 if S["text"] and S["state"] != "idle" else 0.0
-            S["bubble"] += (want - S["bubble"]) * 0.2
-
-            # la ventanita sigue al personajito: se mueve con los márgenes de layer-shell
-            w, h = S["mon"]
-            ml = int(max(0, min(S["x"] - FEET[0], w - BOX_W)))
-            mt = int(max(0, min(S["y"] - FEET[1], h - BOX_H)))
-            if ml != S["ml"]:
-                LS.set_margin(win, LS.Edge.LEFT, ml)
-                S["ml"] = ml
-            if mt != S["mt"]:
-                LS.set_margin(win, LS.Edge.TOP, mt)
-                S["mt"] = mt
-            S["lx"], S["ly"] = S["x"] - ml, S["y"] - mt
-
-            S["n"] += 1
-            if debug and S["n"] % 30 == 0:
-                print("tick", S["n"], S["state"], "pos=(%.0f,%.0f)" % (S["x"], S["y"]), "margenes=(%d,%d)" % (ml, mt), flush=True)
-            area.queue_draw()
+                    print("error en tick:", repr(e), flush=True)
             return True
 
         GLib.timeout_add(33, tick)
         win.present()
+
         # los clics atraviesan la ventanita
         def pass_clicks(*_):
             surf = win.get_surface()
