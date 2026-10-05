@@ -74,6 +74,10 @@ code { word-break: break-all; font-size: 12px; color: #8affff; }
 #status { position: fixed; top: 22px; left: 22px; z-index: 5; background: rgba(40, 8, 40, .85); border: 1px solid var(--pink); color: #ffc3ea; padding: 6px 12px; border-radius: 99px; font-size: 13px; backdrop-filter: blur(8px); }
 #status[hidden] { display: none; }
 
+#menuBtn { display: none; }
+body.standalone #menuBtn { display: inline-block; }
+body.standalone #mobile { display: none; }
+
 /* pantalla de carga */
 #splash { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
   background: radial-gradient(100% 80% at 50% 30%, #3a1380, #120626 70%); transition: opacity .8s, visibility .8s; }

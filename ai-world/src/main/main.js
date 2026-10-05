@@ -2,13 +2,10 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { Store } = require('./store');
-const { PROVIDERS, chat } = require('./providers');
-const brain = require('./brain');
 const QRCode = require('qrcode');
 const { NetServer } = require('./netserver');
 
 const histories = new Map(); // agentId -> [{role, content}]
-const MAX_HISTORY = 10;
 let store;
 let win;
 const net = new NetServer({
@@ -25,8 +22,11 @@ function createWindow() {
   win.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
 }
 
-app.whenReady().then(() => {
-  store = new Store(app.getPath('userData'));
+app.whenReady().then(async () => {
+  // La logica de las IAs vive en src/shared (ES modules) para que el celular use exactamente la misma.
+  const [{ PROVIDERS, chat }, brain, { DEFAULT_AGENTS, DEFAULT_TURN_SECONDS }] = await Promise.all([
+    import('../shared/providers.mjs'), import('../shared/brain.mjs'), import('../shared/defaults.mjs')]);
+  store = new Store(app.getPath('userData'), { agents: DEFAULT_AGENTS, turnSeconds: DEFAULT_TURN_SECONDS });
 
   ipcMain.handle('config:get', () => ({ ...store.load(), providers: PROVIDERS }));
   ipcMain.handle('config:save', (_e, cfg) => {
@@ -39,17 +39,9 @@ app.whenReady().then(() => {
   ipcMain.handle('brain:think', async (_e, { agentId, world }) => {
     const agent = store.load().agents.find(a => a.id === agentId);
     if (!agent) return { error: 'Agente no encontrado' };
-    const history = histories.get(agentId) || [];
-    const perception = brain.buildPerception(agent, world);
     try {
-      const raw = await chat({
-        agent,
-        system: brain.buildSystem(agent),
-        messages: brain.toMessages(history, perception),
-      });
-      const decision = brain.parseDecision(raw);
-      history.push({ role: 'user', content: perception }, { role: 'assistant', content: JSON.stringify(decision) });
-      histories.set(agentId, history.slice(-MAX_HISTORY));
+      const { decision, history } = await brain.think({ agent, world, history: histories.get(agentId) || [], chat });
+      histories.set(agentId, history);
       return { decision };
     } catch (err) {
       return { error: String(err.message || err) };

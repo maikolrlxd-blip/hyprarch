@@ -2,8 +2,15 @@ import { World, ROOM } from './world.js';
 
 const $ = id => document.getElementById(id);
 const world = new World($('scene'));
-const isHost = !!window.aiWorld; // dentro de Electron = anfitrion; en el navegador del celular = cliente
+// Tres formas de ejecutarse:
+//  - Electron (PC): `window.aiWorld` -> anfitrion; las IAs corren en el proceso principal.
+//  - App Android independiente: `window.AiNative` -> anfitrion local; las IAs corren en el telefono.
+//  - Navegador/WebView apuntando a la PC: sin ninguno -> cliente que solo muestra el mundo.
+const api = window.aiWorld || (window.AiNative ? (await import('./standalone.js')).createStandaloneApi(window.AiNative) : null);
+const isHost = !!api;
+const isStandalone = !!api?.standalone;
 document.body.classList.add(isHost ? 'host' : 'remote');
+if (isStandalone) document.body.classList.add('standalone');
 
 let agents = [];          // { id, name, color, provider, ... }
 const thinking = new Set();
@@ -54,7 +61,6 @@ function togglePause() { paused = !paused; $('pause').textContent = paused ? 'Re
 //  ANFITRION (PC): corre las IAs y retransmite todo a los celulares
 // =====================================================================
 async function startHost() {
-  const api = window.aiWorld;
   const config = await api.getConfig();
   let turnIndex = 0, sinceTurn = 0;
 
@@ -168,7 +174,12 @@ async function startHost() {
   api.onNetClients(n => { $('mobile').textContent = n ? `Celular (${n})` : 'Celular'; $('mobileCount').textContent = n; });
 
   setAgents(config.agents);
-  addLine('Sistema', 'Bienvenido. Las IAs usan el proveedor "Simulado" hasta que configures una API key en Ajustes. Pulsa "Celular" para conectar tu telefono.', 'err');
+  if (isStandalone) {
+    $('menuBtn').onclick = () => api.exit();
+    addLine('Sistema', 'Modo independiente: las IAs viven en tu celular. Usan el proveedor "Simulado" hasta que agregues una API key en Ajustes (necesitas internet para los modelos reales).', 'err');
+  } else {
+    addLine('Sistema', 'Bienvenido. Las IAs usan el proveedor "Simulado" hasta que configures una API key en Ajustes. Pulsa "Celular" para conectar tu telefono.', 'err');
+  }
 }
 
 // =====================================================================

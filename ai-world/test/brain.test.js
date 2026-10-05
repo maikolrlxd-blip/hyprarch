@@ -1,30 +1,36 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert');
-const { parseDecision, toMessages, buildSystem } = require('../src/main/brain');
-const { chat } = require('../src/main/providers');
+const shared = Promise.all([import('../src/shared/brain.mjs'), import('../src/shared/providers.mjs')]);
+const brainP = shared.then(([b]) => b), provP = shared.then(([, p]) => p);
 
-test('parseDecision extrae JSON envuelto en markdown', () => {
+test('parseDecision extrae JSON envuelto en markdown', async () => {
+  const { parseDecision } = await brainP;
   const d = parseDecision('```json\n{"say":"hola","action":"wave","target":"Rex"}\n```');
   assert.deepStrictEqual(d, { say: 'hola', action: 'wave', target: 'Rex' });
 });
-test('parseDecision tolera acciones invalidas y texto plano', () => {
+test('parseDecision tolera acciones invalidas y texto plano', async () => {
+  const { parseDecision } = await brainP;
   assert.strictEqual(parseDecision('{"say":"x","action":"fly"}').action, 'idle');
   assert.strictEqual(parseDecision('solo texto').say, 'solo texto');
 });
-test('toMessages alterna roles y empieza con user', () => {
+test('toMessages alterna roles y empieza con user', async () => {
+  const { toMessages } = await brainP;
   const m = toMessages([{ role: 'assistant', content: 'a' }, { role: 'assistant', content: 'b' }], 'P');
   assert.strictEqual(m[0].role, 'user');
   assert.deepStrictEqual(m.map(x => x.role), ['user', 'assistant', 'user']);
 });
-test('buildSystem incluye nombre y personalidad', () => {
+test('buildSystem incluye nombre y personalidad', async () => {
+  const { buildSystem } = await brainP;
   assert.match(buildSystem({ name: 'Luna', personality: 'soniadora' }), /Luna[\s\S]*soniadora/);
 });
 test('proveedor mock devuelve una decision parseable', async () => {
+  const { chat } = await provP; const { parseDecision } = await brainP;
   const raw = await chat({ agent: { provider: 'mock' }, system: '', messages: [{ role: 'user', content: 'x' }] });
   assert.ok(['idle', 'walk_to', 'wave', 'dance', 'jump'].includes(parseDecision(raw).action));
 });
 test('proveedor con key requerida falla sin key', async () => {
+  const { chat } = await provP;
   await assert.rejects(chat({ agent: { provider: 'anthropic' }, system: '', messages: [] }), /API key/);
 });
 
@@ -49,4 +55,28 @@ test('los imports del renderer existen y no dependen de carpetas que el empaquet
       assert.ok(fs.existsSync(path.join(dir, path.dirname(f), spec)), `${f}: falta ${spec}`);
     }
   }
+});
+
+test('think() corre un turno completo con transporte HTTP inyectado (como en Android)', async () => {
+  const { think } = await brainP; const { chat } = await provP;
+  const calls = [];
+  const http = async (url, headers, body) => { calls.push({ url, headers, body }); return { choices: [{ message: { content: '{"say":"hola desde el celular","action":"wave","target":""}' } }] }; };
+  const agent = { id: 'a', name: 'A', personality: 'x', provider: 'custom', baseUrl: 'http://mock/v1', apiKey: 'k', model: 'm' };
+  const world = { self: { x: 0, z: 0 }, size: 12, others: [], log: [] };
+  const r1 = await think({ agent, world, history: [], chat, http });
+  assert.strictEqual(r1.decision.say, 'hola desde el celular');
+  assert.strictEqual(calls[0].url, 'http://mock/v1/chat/completions');
+  assert.strictEqual(calls[0].headers.authorization, 'Bearer k');
+  assert.strictEqual(r1.history.length, 2);
+  const r2 = await think({ agent, world, history: r1.history, chat, http });
+  assert.strictEqual(r2.history.length, 4);
+});
+
+test('el transporte nativo recibe cabeceras de Anthropic y Gemini correctas', async () => {
+  const { chat } = await provP; const seen = [];
+  const http = async (url, headers) => { seen.push({ url, headers }); return { content: [{ type: 'text', text: 'ok' }], candidates: [{ content: { parts: [{ text: 'ok' }] } }] }; };
+  await chat({ agent: { provider: 'anthropic', apiKey: 'sk', model: 'm' }, system: 's', messages: [{ role: 'user', content: 'x' }] }, http);
+  await chat({ agent: { provider: 'gemini', apiKey: 'gk', model: 'g' }, system: 's', messages: [{ role: 'user', content: 'x' }] }, http);
+  assert.strictEqual(seen[0].headers['x-api-key'], 'sk');
+  assert.strictEqual(seen[1].headers['x-goog-api-key'], 'gk');
 });

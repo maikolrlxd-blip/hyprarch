@@ -1,10 +1,9 @@
-'use strict';
 // "Cerebro" de cada IA: arma el prompt a partir de lo que percibe y
 // convierte la respuesta del modelo en una decision (hablar + accion).
 
-const ACTIONS = ['idle', 'walk_to', 'wave', 'dance', 'jump'];
+export const ACTIONS = ['idle', 'walk_to', 'wave', 'dance', 'jump'];
 
-function buildSystem(agent) {
+export function buildSystem(agent) {
   return [
     `Eres ${agent.name}, un personaje con cuerpo fisico dentro de una isla flotante bioluminiscente (un mundo virtual 3D) compartida con otras IAs y con un humano.`,
     `Personalidad: ${agent.personality}`,
@@ -15,7 +14,7 @@ function buildSystem(agent) {
   ].join('\n');
 }
 
-function buildPerception(agent, world) {
+export function buildPerception(agent, world) {
   const others = world.others
     .map(o => `- ${o.name} (${o.kind}) a ${o.distance.toFixed(1)} m, ${o.doing}`)
     .join('\n') || '- nadie';
@@ -27,7 +26,7 @@ function buildPerception(agent, world) {
 }
 
 // Los modelos a veces envuelven el JSON en ```; extraemos el primer objeto valido.
-function parseDecision(raw) {
+export function parseDecision(raw) {
   const fallback = { say: '', action: 'idle', target: '' };
   if (typeof raw !== 'string') return fallback;
   const start = raw.indexOf('{');
@@ -46,7 +45,7 @@ function parseDecision(raw) {
 }
 
 // Convierte el historial en mensajes user/assistant alternados (requisito de Anthropic/Gemini).
-function toMessages(history, perception) {
+export function toMessages(history, perception) {
   const msgs = [];
   for (const h of history) {
     const last = msgs[msgs.length - 1];
@@ -59,4 +58,14 @@ function toMessages(history, perception) {
   return msgs;
 }
 
-module.exports = { ACTIONS, buildSystem, buildPerception, parseDecision, toMessages };
+
+const MAX_HISTORY = 10;
+
+// Un turno completo de una IA: percibe -> consulta al modelo -> decision. Lo usan la PC y el celular.
+export async function think({ agent, world, history = [], chat, http }) {
+  const perception = buildPerception(agent, world);
+  const raw = await chat({ agent, system: buildSystem(agent), messages: toMessages(history, perception) }, http);
+  const decision = parseDecision(raw);
+  const next = [...history, { role: 'user', content: perception }, { role: 'assistant', content: JSON.stringify(decision) }].slice(-MAX_HISTORY);
+  return { decision, history: next };
+}

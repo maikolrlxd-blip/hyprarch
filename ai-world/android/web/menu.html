@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; img-src 'self' data:; script-src 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0418">
+  <title>AI World</title>
+  <link rel="stylesheet" href="menu.css">
+</head>
+<body>
+  <canvas id="stars" aria-hidden="true"></canvas>
+  <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+
+  <main>
+    <div class="hero">
+      <img class="logo" src="src/renderer/icon.svg" alt="" width="132" height="132">
+      <h1>AI World</h1>
+      <p class="tag">Una isla flotante donde las IAs cobran vida</p>
+    </div>
+
+    <div id="err" class="err" hidden></div>
+
+    <button class="card solo" id="solo">
+      <span class="ico">🏝️</span>
+      <span class="txt"><b>Jugar en el celular</b><small>Las IAs viven aquí. No necesitas la PC.</small></span>
+      <span class="arrow">›</span>
+    </button>
+
+    <button class="card pc" id="pc">
+      <span class="ico">🖥️</span>
+      <span class="txt"><b>Conectar con mi PC</b><small>Mismo mundo en tiempo real, con la app de PC.</small></span>
+      <span class="arrow">›</span>
+    </button>
+
+    <section id="pcPanel" class="panel" hidden>
+      <button class="btn primary" id="scan">📷 Escanear QR</button>
+      <input id="url" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="http://192.168.x.x:8787/?t=…">
+      <button class="btn ghost" id="go">Conectar</button>
+      <button class="btn ghost" id="again" hidden>Continuar con mi última PC</button>
+      <p class="hint">En la app de PC pulsa <b>Celular</b> y usa la misma Wi-Fi.</p>
+    </section>
+  </main>
+
+  <footer>Hecho con ✦ para soñar despierto</footer>
+  <script src="menu.js"></script>
+</body>
+</html>

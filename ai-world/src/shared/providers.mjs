@@ -1,8 +1,7 @@
-'use strict';
 // Adaptadores de modelos. Todos exponen: chat({ agent, system, messages }) -> string
 // messages: [{ role: 'user' | 'assistant', content: string }]
 
-const PROVIDERS = {
+export const PROVIDERS = {
   mock: { label: 'Simulado (sin API)', needsKey: false, defaultModel: 'mock' },
   anthropic: { label: 'Anthropic (Claude)', needsKey: true, defaultModel: 'claude-sonnet-5-5' },
   openai: { label: 'OpenAI', needsKey: true, defaultModel: 'gpt-4o-mini', baseUrl: 'https://api.openai.com/v1' },
@@ -12,7 +11,8 @@ const PROVIDERS = {
   custom: { label: 'Compatible OpenAI (URL propia)', needsKey: false, defaultModel: '', baseUrl: '' },
 };
 
-async function postJson(url, headers, body, signal) {
+// Transporte por defecto (PC / navegador). En Android se inyecta uno nativo que evita CORS.
+export async function fetchHttp(url, headers, body, signal) {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json', ...headers },
@@ -24,8 +24,8 @@ async function postJson(url, headers, body, signal) {
   try { return JSON.parse(text); } catch { throw new Error('Respuesta no JSON: ' + text.slice(0, 200)); }
 }
 
-async function anthropic({ agent, system, messages, signal }) {
-  const data = await postJson('https://api.anthropic.com/v1/messages', {
+async function anthropic({ agent, system, messages, signal, http }) {
+  const data = await http('https://api.anthropic.com/v1/messages', {
     'x-api-key': agent.apiKey,
     'anthropic-version': '2023-06-01',
   }, {
@@ -37,11 +37,11 @@ async function anthropic({ agent, system, messages, signal }) {
   return (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
 }
 
-async function openaiCompatible({ agent, system, messages, signal }) {
+async function openaiCompatible({ agent, system, messages, signal, http }) {
   const base = (agent.baseUrl || PROVIDERS[agent.provider]?.baseUrl || '').replace(/\/$/, '');
   if (!base) throw new Error('Falta la URL base del proveedor');
   const headers = agent.apiKey ? { authorization: `Bearer ${agent.apiKey}` } : {};
-  const data = await postJson(`${base}/chat/completions`, headers, {
+  const data = await http(`${base}/chat/completions`, headers, {
     model: agent.model || PROVIDERS[agent.provider]?.defaultModel,
     max_tokens: 400,
     messages: [{ role: 'system', content: system }, ...messages],
@@ -49,10 +49,10 @@ async function openaiCompatible({ agent, system, messages, signal }) {
   return data.choices?.[0]?.message?.content ?? '';
 }
 
-async function gemini({ agent, system, messages, signal }) {
+async function gemini({ agent, system, messages, signal, http }) {
   const model = agent.model || PROVIDERS.gemini.defaultModel;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
-  const data = await postJson(url, { 'x-goog-api-key': agent.apiKey }, {
+  const data = await http(url, { 'x-goog-api-key': agent.apiKey }, {
     systemInstruction: { parts: [{ text: system }] },
     contents: messages.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
     generationConfig: { maxOutputTokens: 400 },
@@ -82,7 +82,8 @@ async function mock({ agent, messages }) {
   return JSON.stringify({ say, action, target });
 }
 
-async function chat(args) {
+export async function chat(args, http = fetchHttp) {
+  args = { ...args, http };
   const p = args.agent.provider;
   if (p === 'mock') return mock(args);
   if (PROVIDERS[p]?.needsKey && !args.agent.apiKey) throw new Error(`Falta la API key de ${PROVIDERS[p].label}`);
@@ -91,5 +92,3 @@ async function chat(args) {
   if (p in PROVIDERS) return openaiCompatible(args);
   throw new Error(`Proveedor desconocido: ${p}`);
 }
-
-module.exports = { PROVIDERS, chat };

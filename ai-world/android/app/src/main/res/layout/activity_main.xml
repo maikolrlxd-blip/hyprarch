@@ -2,98 +2,18 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_connect">
+    android:background="#0A0418">
 
+    <!-- Menu y modo independiente: paginas locales de la app, con acceso al puente nativo -->
     <WebView
-        android:id="@+id/web"
+        android:id="@+id/local"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Mundo servido por la PC: contenido externo, SIN puente nativo -->
+    <WebView
+        android:id="@+id/remote"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone" />
-
-    <ScrollView
-        android:id="@+id/connect"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:padding="24dp">
-
-            <ImageView
-                android:id="@+id/logo"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_marginTop="32dp"
-                android:src="@mipmap/ic_launcher" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="AI World"
-                android:textColor="#B9A8FF"
-                android:textSize="28sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="En la app de PC pulsa «Celular». Con el telefono en la misma Wi-Fi, escanea el QR o pega el enlace que aparece."
-                android:textColor="#c8c8e0"
-                android:textSize="15sp" />
-
-            <Button
-                android:id="@+id/scan"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/btn_primary"
-                android:minHeight="52dp"
-                android:stateListAnimator="@null"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:text="Escanear QR" />
-
-            <EditText
-                android:id="@+id/url"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/input_bg"
-                android:padding="14dp"
-                android:hint="http://192.168.x.x:8787/?t=..."
-                android:inputType="textUri"
-                android:textColor="#ffffff"
-                android:textColorHint="#707090" />
-
-            <Button
-                android:id="@+id/go"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/btn_secondary"
-                android:minHeight="52dp"
-                android:stateListAnimator="@null"
-                android:textAllCaps="false"
-                android:textColor="#8AFFFF"
-                android:textSize="16sp"
-                android:text="Conectar" />
-
-            <TextView
-                android:id="@+id/error"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:textColor="#ff8a8a"
-                android:textSize="14sp"
-                android:visibility="gone" />
-        </LinearLayout>
-    </ScrollView>
 </FrameLayout>

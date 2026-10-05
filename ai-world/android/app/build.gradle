@@ -27,6 +27,23 @@ android {
     }
 }
 
+// El mundo 3D (src/renderer + src/shared + three.js) y el menu se empaquetan dentro del APK
+// con la misma estructura de carpetas que el repo, para que las rutas relativas funcionen igual.
+def webAssets = layout.buildDirectory.dir('generated/web')
+tasks.register('copyWebAssets', Copy) {
+    def three = file('../../node_modules/three/build/three.module.js')
+    doFirst {
+        if (!three.exists()) throw new GradleException('Falta ai-world/node_modules/three: ejecuta "npm ci" en ai-world/ antes de compilar el APK.')
+    }
+    into webAssets.map { it.dir('web') }
+    from('../web')
+    from('../../src/renderer') { into 'src/renderer' }
+    from('../../src/shared') { into 'src/shared' }
+    from(three) { into 'node_modules/three/build' }
+}
+android.sourceSets.main.assets.srcDir(webAssets)
+tasks.named('preBuild') { dependsOn 'copyWebAssets' }
+
 dependencies {
     // Escaner de QR de Google: no necesita permiso de camara en la app.
     implementation 'com.google.android.gms:play-services-code-scanner:16.1.0'
