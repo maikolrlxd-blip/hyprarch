@@ -210,7 +210,7 @@ general {
 
 background {
     monitor =
-    path = /usr/share/backgrounds/hyprarch-${WALL:-verde}.jpg
+    path = /usr/share/backgrounds/hyprarch-${WALL:-fresco}.jpg
     blur_passes = 2
     blur_size = 5
     brightness = 0.65
@@ -289,7 +289,7 @@ EOF
 }
 
 render_wallpaper() {
-  printf '/usr/share/backgrounds/hyprarch-%s.jpg\n' "${WALL:-verde}" | put "$DATA/wallpaper"
+  printf '/usr/share/backgrounds/hyprarch-%s.jpg\n' "${WALL:-fresco}" | put "$DATA/wallpaper"
 }
 
 reload_all() {
@@ -350,7 +350,7 @@ custom_flow() {
 # ---------- menú ----------
 menu() {
   local cur sel
-  cur=$(cat "$CURRENT" 2>/dev/null || echo verde)
+  cur=$(cat "$CURRENT" 2>/dev/null || echo fresco)
   load_theme "$cur" >/dev/null 2>&1 || load_theme verde
 
   # Menú animado (hyprarch-pick): rueda curva con cuadritos de color. Sin terminal, sin fzf.
@@ -376,7 +376,7 @@ menu() {
 }
 
 toggle() {
-  local cur; cur=$(cat "$CURRENT" 2>/dev/null || echo verde)
+  local cur; cur=$(cat "$CURRENT" 2>/dev/null || echo fresco)
   if [[ $cur == verde ]]; then apply rojo; else apply verde; fi
 }
 
@@ -386,7 +386,7 @@ case "${1:-menu}" in
   rojo)    apply rojo ;;
   custom)  apply custom ;;
   toggle)  toggle ;;
-  actual)  apply "$(cat "$CURRENT" 2>/dev/null || echo verde)" ;;
+  actual)  apply "$(cat "$CURRENT" 2>/dev/null || echo fresco)" ;;
   *)
     # cualquier tema que exista en /usr/share/hyprarch/themes (fresco, gamer, cine, estudio, trabajo, ...)
     if [[ ${1:-} =~ ^[a-z0-9_-]+$ && -f "$THEMES_DIR/$1.env" ]]; then

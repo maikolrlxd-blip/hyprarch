@@ -193,7 +193,7 @@ def load_palette():
     """Lee los colores del tema activo (verde/rojo/personalizado)."""
     pal = dict(ACCENT="39ff14", ACCENT2="ff1f4b", OK="39ff14", ALERT="ff1f4b", BG="0a0c0b", SURFACE="111513", FG="d7ffe3", DIM="5f7367")
     try:
-        cur = (Path.home() / ".config/hyprarch/current").read_text().strip() or "verde"
+        cur = (Path.home() / ".config/hyprarch/current").read_text().strip() or "fresco"
         f = Path.home() / ".config/hyprarch/custom.env" if cur == "custom" else Path(f"/usr/share/hyprarch/themes/{cur}.env")
         for line in f.read_text().splitlines():
             m = re.match(r'^([A-Z0-9_]+)=("?)([^"#]*)\2', line.strip())
@@ -711,7 +711,7 @@ def palette_files():
     home = Path.home()
     files = [home / ".config/hyprarch/current"]
     try:
-        cur = files[0].read_text().strip() or "verde"
+        cur = files[0].read_text().strip() or "fresco"
     except Exception:
         cur = "verde"
     files.append(home / ".config/hyprarch/custom.env" if cur == "custom" else Path(f"/usr/share/hyprarch/themes/{cur}.env"))

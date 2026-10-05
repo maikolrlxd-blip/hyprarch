@@ -170,9 +170,9 @@ ln -sf /usr/lib/systemd/user/wireplumber.service   "$AIR/etc/systemd/user/defaul
 echo "==> Fondos de pantalla (ya vienen en airootfs/usr/share/backgrounds; los genera tools/make_wallpaper.py)"
 ls -l "$AIR/usr/share/backgrounds/"
 
-echo "==> Generando la paleta inicial (verde) en /etc/skel"
+echo "==> Generando la paleta inicial (fresco: menta y cielo) en /etc/skel"
 HOME="$AIR/etc/skel" HYPRARCH_NO_RELOAD=1 HYPRARCH_THEMES="$REPO/airootfs/usr/share/hyprarch/themes" \
-  bash "$REPO/airootfs/usr/local/bin/hyprarch-theme" verde
+  bash "$REPO/airootfs/usr/local/bin/hyprarch-theme" fresco
 
 echo "==> Permisos (mkarchiso NO conserva el bit de ejecución: hay que declararlo)"
 PERMS="$TMPD/perms.txt"

@@ -95,7 +95,7 @@ def load_palette():
     default = dict(ACCENT="39ff14", ACCENT2="ff1f4b", BG="0a0c0b", SURFACE="111513", SURFACE2="1b221e", FG="d7ffe3", DIM="5f7367")
     pal = dict(default)
     try:
-        cur = (CFG / "current").read_text().strip() or "verde"
+        cur = (CFG / "current").read_text().strip() or "fresco"
         f = CFG / "custom.env" if cur == "custom" else Path(f"/usr/share/hyprarch/themes/{cur}.env")
         for line in f.read_text().splitlines():
             m = re.match(r'^([A-Z0-9_]+)=("?)([^"#]*)\2', line.strip())

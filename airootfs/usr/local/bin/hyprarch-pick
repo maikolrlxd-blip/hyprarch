@@ -128,7 +128,10 @@ def draw_icon(cr, it, cx, cy, size, col, alpha, pal):
         draw_text(cr, ic, cx, cy + size * 0.32, size * 0.82, col, alpha, center=True)
     else:
         cr.set_source_rgba(*mix(pal["SURFACE2"], pal["ACCENT"], 0.35), alpha * 0.9)
-        cr.arc(cx, cy, size * 0.48, 0, 2 * math.pi)
+        if U.FRESH:                                   # fresco: cuadrado suave (como un ícono de app), no un círculo
+            rrect(cr, cx - size * 0.48, cy - size * 0.48, size * 0.96, size * 0.96, size * 0.28)
+        else:
+            cr.arc(cx, cy, size * 0.48, 0, 2 * math.pi)
         cr.fill()
         draw_text(cr, (it["label"][:1] or "?").upper(), cx, cy + size * 0.2, size * 0.5, pal["FG"], alpha, bold=True, center=True)
 
@@ -154,6 +157,10 @@ def text_w(cr, s, size):
 # ----------------------------------------------------------------------------- objetivos de posición (cada presentación)
 
 
+def grid_cols(n):
+    return min(6, max(3, int(math.ceil(math.sqrt(max(1, min(n, 48)) * 1.5)))))
+
+
 def targets(w, h, S):
     """Para cada ítem visible: (x, y, escala, alfa, radio). Las posiciones reales se acercan a esto con suavidad."""
     lay, idx, t = S["layout"], S["idx"], S["t"]
@@ -162,6 +169,25 @@ def targets(w, h, S):
     px, py = S["ptr"]
     n = len(idx)
     if lay == "input":
+        return out
+    if lay == "row":                                    # fresco: fila relajada de tarjetas de cristal con vaivén desfasado
+        size, gap = 112, 24
+        total = n * size + max(0, n - 1) * gap
+        x0 = cx - total / 2 + size / 2
+        for k, i in enumerate(idx):
+            out[i] = (x0 + k * (size + gap), cy + 70 + math.sin(t * 1.1 + k * 1.4) * 5, 1.0, 1.0, size / 2)
+        return out
+    if lay == "grid":                                   # fresco: cuadrícula limpia de íconos
+        cols = grid_cols(n)
+        cw, ch = 132, 124
+        first = S["scroll"] * cols
+        shown = idx[first:first + cols * 4]
+        rows = int(math.ceil(len(shown) / cols))
+        x0 = cx - (cols - 1) * cw / 2
+        y0 = cy - (rows - 1) * ch / 2 + 44
+        for k, i in enumerate(shown):
+            r, c = divmod(k, cols)
+            out[i] = (x0 + c * cw, y0 + r * ch + math.sin(t * 0.9 + k * 0.8) * 2.0, 1.0, 1.0, 46)
         return out
     if lay == "orbit":
         R = min(w, h) * 0.285
@@ -517,6 +543,10 @@ def draw_scene(cr, w, h, S, pal, pal_full):
                 cr.stroke()
         draw_buddy(cr, w, h, S, pal_full, cx, cy + 118, 1.7 * (0.75 + 0.25 * pop))
         draw_text(cr, S["title"], cx, cy - min(w, h) * 0.39 - 4, 26, FG, pop, bold=True, center=True)
+    elif lay == "row":
+        draw_buddy(cr, w, h, S, pal_full, cx, cy - 18, 1.35 * (0.75 + 0.25 * pop))
+        draw_text(cr, S["title"], cx, cy - 285, 26, FG, pop, bold=True, center=True)
+        draw_text(cr, "← →  elegir · Enter  confirmar · Esc  salir", cx, cy + 215, 11, DIM, pop * 0.75, center=True)
     elif lay == "wheel":
         draw_buddy(cr, w, h, S, pal_full, cx - 330, cy + 150, 1.5 * (0.75 + 0.25 * pop))
         draw_text(cr, S["title"], cx - 330, cy - 110, 22, FG, pop, bold=True, center=True)
@@ -609,6 +639,26 @@ def draw_scene(cr, w, h, S, pal, pal_full):
             if it["sub"]:
                 draw_text(cr, clip_text(cr, it["sub"], 11 * sc, 200 * sc), rx + rw - 18 * sc, y + 4 * sc, 11 * sc,
                           BG if (sel and not U.NEUMO) else DIM, a * 0.9, right=True)
+        elif lay in ("row", "grid"):
+            # fresco: tarjeta de cristal con esquinas suaves (fila) o ícono limpio con placa solo al apuntar (cuadrícula)
+            sz = 112 if lay == "row" else 88
+            lift = -8 * max(hv, 1.0 if sel else 0.0)
+            tx_, ty_ = x - sz / 2, y - sz / 2 + lift
+            if lay == "row" or sel or hv > 0.05:
+                if U.DEPTH and (sel or hv > 0.05 or lay == "row"):
+                    for dy, al in ((16, 0.07), (10, 0.10), (5, 0.14)):
+                        rrect(cr, tx_ + 4, ty_ + dy, sz - 8, sz, sz * 0.27)
+                        cr.set_source_rgba(0, 0, 0, al * a * (1.0 if lay == "row" else max(hv, 1.0 if sel else 0.0)))
+                        cr.fill()
+                U.paint_item(cr, tx_, ty_, sz, sz, sz * 0.27, pal, a, sel, hv, A, t)
+            isz = 52 if lay == "row" else 50
+            ic_y = ty_ + (sz * 0.40 if lay == "row" else sz * 0.46)
+            draw_icon(cr, it, x, ic_y, isz, BG if (sel and lay == "row" and not (U.NEUMO or U.CYBER)) else (A if lay == "row" else FG), a, pal)
+            lab = clip_text(cr, it["label"], 13, sz + 20)
+            if lay == "row":
+                draw_text(cr, lab, x, ty_ + sz - 16, 13, BG if (sel and not (U.NEUMO or U.CYBER)) else FG, a, bold=sel, center=True)
+            else:
+                draw_text(cr, lab, x, ty_ + sz + 18, 12.5, FG, a * (1.0 if (sel or hv > 0.1) else 0.82), bold=sel, center=True)
         else:
             glow = max(hv, 1.0 if sel else 0.0)
             r = rad * sc * (1.0 + (0.10 if lay == "orbit" else 0.0) * glow)
@@ -643,7 +693,7 @@ def draw_scene(cr, w, h, S, pal, pal_full):
         for yy in range(0, int(h), 4):
             cr.rectangle(0, yy, w, 1)
         cr.fill()
-    if lay != "orbit":
+    if lay not in ("orbit", "row"):
         draw_text(cr, f"{len(S['idx'])} / {len(S['items'])}" if S["query"] else f"{len(S['items'])}", w - 24, 30, 11, DIM, pop * 0.8, right=True)
 
 
@@ -657,6 +707,12 @@ def hit_item(S, px, py):
         if S["layout"] == "wheel":
             if abs(px - x) <= 260 * sc and abs(py - y) <= 28 * sc:
                 d = abs(py - y)
+                if d < bd:
+                    best, bd = i, d
+        elif S["layout"] in ("row", "grid"):
+            half = 56 if S["layout"] == "row" else 46
+            if abs(px - x) <= half and -half - 6 <= py - y <= half + 26:
+                d = math.hypot(px - x, py - y)
                 if d < bd:
                     best, bd = i, d
         else:
@@ -688,14 +744,18 @@ def run(args):
         items = parse_items(sys.stdin.read())
         if not items:
             return 1
-    layout = {"tiles": "orbit", "list": "wheel", "grid": "bubbles"}.get(layout, layout)
-    if layout not in ("orbit", "wheel", "bubbles", "input"):
+    layout = {"tiles": "orbit", "list": "wheel"}.get(layout, layout)
+    if U.FRESH:                          # estilo fresco: nada de bolas forzadas; fila de tarjetas y cuadrícula de íconos
+        layout = {"orbit": "row", "bubbles": "grid"}.get(layout, layout)
+    elif layout == "grid":
+        layout = "bubbles"
+    if layout not in ("orbit", "wheel", "bubbles", "row", "grid", "input"):
         layout = "wheel"
     pal = U.load_palette()
     pal_full = BUDDY.load_palette() if BUDDY else pal
     rnd = random.Random(7)
     S = dict(items=items, layout=layout, title=opt("--title", ""), placeholder=opt("--placeholder", "Escribí para buscar…"),
-             search=("--no-search" not in args and layout != "orbit"), query="", scroll=0, idx=([] if layout == "input" else list(range(len(items)))), sel=(-1 if layout == "input" else 0),
+             search=("--no-search" not in args and layout not in ("orbit", "row")), query="", scroll=0, idx=([] if layout == "input" else list(range(len(items)))), sel=(-1 if layout == "input" else 0),
              selk=0.0, t0=time.time(), t=0.0, dt=0.016, last=time.time(), closing=None, close_t0=None, hov={}, hover=None,
              ptr=(640.0, 400.0), result=None, size=(1280, 800), pos={}, tg={}, ripples=[], drift=0.0,
              parts=[(rnd.random(), rnd.random(), rnd.uniform(0.6, 2.0), rnd.uniform(0.8, 2.2), rnd.random() * 6.28, rnd.uniform(0.5, 3)) for _ in range(46)])
@@ -789,16 +849,18 @@ def run(args):
                 return
             k = max(0, min(len(S["idx"]) - 1, sel_pos() + delta))
             S["sel"] = S["idx"][k]
-            if layout == "bubbles":
-                cols = max(3, int(math.ceil(math.sqrt(max(1, min(len(S["idx"]), 60)) * 1.7))))
-                row = k // cols
+            if layout in ("bubbles", "grid"):
+                vis = 4 if layout == "grid" else 5
+                row = k // cols()
                 if row < S["scroll"]:
                     S["scroll"] = row
-                elif row >= S["scroll"] + 5:
-                    S["scroll"] = row - 4
+                elif row >= S["scroll"] + vis:
+                    S["scroll"] = row - vis + 1
             U.play("menu-hover")
 
         def cols():
+            if layout == "grid":
+                return grid_cols(len(S["idx"]))
             return max(3, int(math.ceil(math.sqrt(max(1, min(len(S["idx"]), 60)) * 1.7))))
 
         def on_key(_c, keyval, _kc, state):
@@ -813,9 +875,9 @@ def run(args):
                 elif S["sel"] in S["idx"]:
                     close(items[S["sel"]]["id"])
             elif name == "Down" or (name == "Tab" and not ctrl) or (ctrl and name in ("n", "j")):
-                move(cols() if layout == "bubbles" else 1)
+                move(cols() if layout in ("bubbles", "grid") else 1)
             elif name in ("Up", "ISO_Left_Tab") or (ctrl and name in ("p", "k")):
-                move(-cols() if layout == "bubbles" else -1)
+                move(-cols() if layout in ("bubbles", "grid") else -1)
             elif name == "Right":
                 move(1)
             elif name == "Left":
@@ -833,7 +895,7 @@ def run(args):
                 S["idx"] = filtered(items, S["query"])
                 S["scroll"] = 0
                 reselect()
-            elif layout == "orbit" and name.isdigit() and 1 <= int(name) <= len(S["idx"]):
+            elif layout in ("orbit", "row") and name.isdigit() and 1 <= int(name) <= len(S["idx"]):
                 close(items[S["idx"][int(name) - 1]]["id"])
             elif S["search"] and not ctrl:
                 ch = Gdk.keyval_to_unicode(keyval)
@@ -848,9 +910,10 @@ def run(args):
         def on_scroll(_c, _dx, dy):
             if layout == "wheel":
                 move(1 if dy > 0 else -1)
-            elif layout == "bubbles":
+            elif layout in ("bubbles", "grid"):
                 rows = int(math.ceil(len(S["idx"]) / cols()))
-                S["scroll"] = int(max(0, min(max(0, rows - 5), S["scroll"] + (1 if dy > 0 else -1))))
+                vis = 4 if layout == "grid" else 5
+                S["scroll"] = int(max(0, min(max(0, rows - vis), S["scroll"] + (1 if dy > 0 else -1))))
             return True
 
         mo = Gtk.EventControllerMotion()
@@ -917,8 +980,11 @@ def render_frames(outdir):
     cases = (("q1-orbita", "orbit", power, 1.3, "", 1, (860, 330)), ("q2-rueda", "wheel", apps, 1.3, "", 3, (640, 420)),
              ("q3-burbujas", "bubbles", apps, 1.4, "", 5, (600, 380)), ("q4-busqueda", "wheel", apps, 1.3, "ar", 0, (640, 420)))
     for name, lay, items, t, q, sel, ptr in cases:
-        S = dict(items=items, layout=lay, title={"orbit": "Energía", "wheel": "Portapapeles", "bubbles": "Aplicaciones"}[lay],
-                 placeholder="Escribí para buscar…", search=(lay != "orbit"), query=q, scroll=0, idx=[], sel=sel, selk=0.0, t=t, dt=0.05,
+        title0 = {"orbit": "Energía", "wheel": "Portapapeles", "bubbles": "Aplicaciones"}[lay]
+        if U.FRESH:
+            lay = {"orbit": "row", "bubbles": "grid"}.get(lay, lay)
+        S = dict(items=items, layout=lay, title=title0,
+                 placeholder="Escribí para buscar…", search=(lay not in ("orbit", "row")), query=q, scroll=0, idx=[], sel=sel, selk=0.0, t=t, dt=0.05,
                  closing=None, hov={sel: 1.0}, hover=sel, ptr=ptr, size=(1280, 800), pos={}, tg={}, ripples=[(500, 300, t - 0.2)], drift=0.0,
                  parts=[(random.Random(i).random(), random.Random(i + 9).random(), 1.0, 1.4, i * 0.7, 1.5) for i in range(40)])
         S["idx"] = filtered(items, q)
