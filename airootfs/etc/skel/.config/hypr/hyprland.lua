@@ -78,6 +78,8 @@ local scripts  = (os.getenv("HOME") or "") .. "/.config/hypr/scripts"
 hl.on("hyprland.start", function()
     -- Animación de entrada con sonido (una vez por arranque; se apaga con: echo off > ~/.config/hyprarch/intro)
     hl.exec_cmd("env GSK_RENDERER=cairo LD_PRELOAD=/usr/lib/libgtk4-layer-shell.so hyprarch-intro --once")
+    -- Asistente de primer inicio: aparece cuando termina la animación de entrada (solo la primera vez)
+    hl.exec_cmd("bash -c 'sleep 8; hyprarch-welcome'")
     hl.exec_cmd(scripts .. "/wallpaper.sh")
     hl.exec_cmd("waybar")
     hl.exec_cmd("mako")

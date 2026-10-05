@@ -154,6 +154,7 @@ chat() {
 case ${1:-chat} in
   chat)   chat ;;
   setup)  setup && chat ;;
+  setup-only) setup ;;           # solo elegir la IA (lo usa el asistente de primer inicio), sin abrir la conversación
   pick)   # solo el selector (sin terminal); si se eligió una IA, abre su conversación en una ventana flotante
           setup && bash "$HOME/.config/hypr/scripts/once.sh" hyprarch-ai hyprarch-ai chat ;;
   status) printf 'IA: %s\n' "${AI:-ninguna elegida}"; [[ -n $AI_CMD ]] && printf 'Comando: %s\n' "$AI_CMD" ;;

@@ -57,7 +57,7 @@ def parse_items(text):
             continue
         f = line.split("\t")
         items.append(dict(id=f[0], label=(f[1] if len(f) > 1 and f[1] else f[0]), icon=(f[2] if len(f) > 2 else ""),
-                          sub=(f[3] if len(f) > 3 else "")))
+                          sub=(f[3] if len(f) > 3 else ""), mood=(f[4].strip() if len(f) > 4 else "")))
     return items
 
 
@@ -484,23 +484,59 @@ def draw_reactor(cr, cx, cy, R, pal, t, a):
     draw_text(cr, f"CORE {int(97 + 3 * math.sin(t))}%  ·  ARC STABLE", cx, cy + R * 1.32, 9, A, 0.8 * a, center=True)
 
 
+# Cara del robot según la opción (el color SIEMPRE es el del tema: las caras no lo cambian)
+MOOD_BY_ID = {"continue": "happy", "lock": "serious", "suspend": "sleepy", "reboot": "dizzy", "poweroff": "surprised",
+              "exit": "wave", "recomendado": "happy", "mi-gusto": "wink"}
+
+
 def draw_buddy(cr, w, h, S, pal_full, x, y, scale):
     if BUDDY is None:
         return
-    mood = "idle"
-    sel = S["items"][S["sel"]]["label"].lower() if 0 <= S["sel"] < len(S["items"]) else ""
+    t = S["t"]
+    state, mood, tilt, hop = "idle", None, 0.0, 0.0
+    it = S["items"][S["sel"]] if 0 <= S["sel"] < len(S["items"]) else None
     if S["closing"] is not None:
-        mood = "done"
-    elif any(k in sel for k in DANGER):
-        mood = "waiting"
+        state, mood = "done", "happy"
+    elif S["layout"] == "game" and it is not None:
+        mood = it.get("mood") or MOOD_BY_ID.get(it["id"])
+    elif it is not None and any(k in it["label"].lower() for k in DANGER):
+        state = "waiting"
     elif S["query"]:
-        mood = "thinking"
+        state = "thinking"
+    if mood:                                                  # cada cara se mueve a su manera
+        tilt = {"dizzy": math.sin(t * 4.2) * 0.11, "sleepy": 0.07 + math.sin(t * 0.9) * 0.05,
+                "happy": math.sin(t * 3.0) * 0.035, "wink": 0.05, "wave": -0.04 + math.sin(t * 2.0) * 0.02,
+                "serious": 0.0, "surprised": 0.0}.get(mood, 0.0)
+        age = t - S.get("kick", -9.0)                         # al cambiar de opción el robot da un saltito
+        hop = (16 if mood == "surprised" else 11) * math.exp(-age * 6.5) * abs(math.sin(age * 13)) if age < 1.2 else 0.0
+        if mood == "happy":
+            hop += abs(math.sin(t * 3.0)) * 4
+    x += math.sin(t * 0.8) * 7 * scale / 2.5                   # se mece un poquito de lado a lado
     px, py = S["ptr"]
     look = (clamp((px - x) / 320, -1, 1), clamp((py - (y - 60 * scale)) / 320, -1, 1))
     try:
-        BUDDY.draw_mascot(cr, x, y, mood, S["t"], pal_full, look=look, scale=scale, facing=1)
+        BUDDY.draw_mascot(cr, x, y, state, t, pal_full, look=look, scale=scale, facing=1, mood=mood, tilt=tilt, hop=hop * scale / 2.5)
+    except TypeError:
+        BUDDY.draw_mascot(cr, x, y, state, t, pal_full, look=look, scale=scale, facing=1)
     except Exception:
         pass
+
+
+def wrap_text(cr, text, size, maxw):
+    """Parte un texto en líneas que entren en maxw píxeles."""
+    cr.select_font_face(U.FONT)
+    cr.set_font_size(size)
+    lines, cur = [], ""
+    for word in text.split():
+        trial = (cur + " " + word).strip()
+        if cr.text_extents(trial).x_advance <= maxw or not cur:
+            cur = trial
+        else:
+            lines.append(cur)
+            cur = word
+    if cur:
+        lines.append(cur)
+    return lines[:4]
 
 
 GAME_ROW = 66
@@ -609,6 +645,7 @@ def draw_game(cr, w, h, S, pal, pal_full, op, pop):
     # opciones: una debajo de la otra
     pos = game_pos(w, h, len(S["idx"]))
     sel_y = None
+    sel_item = None
     for k, i in enumerate(S["idx"]):
         it = S["items"][i]
         x, y = pos[k]
@@ -625,8 +662,8 @@ def draw_game(cr, w, h, S, pal, pal_full, op, pop):
             draw_text(cr, it["label"], xx + 1, y + 1, 34, A, a * 0.30, bold=True)
             draw_text(cr, it["label"], xx - 1, y - 1, 34, A2, a * 0.20, bold=True)
         draw_text(cr, it["label"], xx, y, 34 if sel else 30, col, a * (1.0 if sel else 0.78), bold=sel)
-        if sel and it["sub"]:
-            draw_text(cr, it["sub"], xx + 2, y + 24, 12.5, DIM, a)
+        if sel:
+            sel_item = it
     # indicador que se desliza hacia lo elegido (barra + flecha)
     if sel_y is not None:
         S["ind"] += (sel_y - S["ind"]) * (1 - math.exp(-S["dt"] * 14)) if S["ind"] else (sel_y - S["ind"])
@@ -641,6 +678,35 @@ def draw_game(cr, w, h, S, pal, pal_full, op, pop):
         cr.close_path()
         cr.set_source_rgba(*A, 0.95 * pop)
         cr.fill()
+    # cuadro "qué hace esta opción" abajo a la derecha: aparece con un fundido cada vez que cambia la opción elegida
+    if S["sel"] != S.get("info_id"):
+        S["info_id"], S["info_t"] = S["sel"], t
+        S["kick"] = t
+    if sel_item is not None and (sel_item["sub"] or sel_item["label"]):
+        ia = clamp((t - S.get("info_t", 0.0)) / 0.28)
+        ia = ease_out_strong(ia) * pop
+        cw_, pad_ = min(400.0, w * 0.32), 22.0
+        lines = wrap_text(cr, sel_item["sub"], 13.5, cw_ - 2 * pad_)
+        ch_ = pad_ * 2 + 34 + 18 * max(1, len(lines))
+        cx_, cy_ = w - cw_ - w * 0.035, h - ch_ - h * 0.085 + (1 - ia) * 14
+        rrect(cr, cx_ + 3, cy_ + 12, cw_, ch_, 18)
+        cr.set_source_rgba(0, 0, 0, 0.28 * ia)
+        cr.fill()
+        rrect(cr, cx_, cy_, cw_, ch_, 18)
+        cr.set_source_rgba(*mix(BG, (1, 1, 1), 0.07), 0.80 * ia)
+        cr.fill_preserve()
+        cr.set_source_rgba(1, 1, 1, 0.18 * ia)
+        cr.set_line_width(1.0)
+        cr.stroke()
+        cr.set_source_rgba(*A, 0.95 * ia)                                  # hilo de color arriba
+        cr.set_line_width(1.6)
+        cr.move_to(cx_ + 18, cy_ + 0.8)
+        cr.line_to(cx_ + cw_ - 18, cy_ + 0.8)
+        cr.stroke()
+        draw_text(cr, "QUÉ HACE", cx_ + pad_, cy_ + pad_ + 4, 9.5, A, ia * 0.95, bold=True)
+        draw_text(cr, sel_item["label"], cx_ + pad_, cy_ + pad_ + 26, 18, FG, ia, bold=True)
+        for k, ln in enumerate(lines):
+            draw_text(cr, ln, cx_ + pad_, cy_ + pad_ + 50 + k * 18, 13.5, mix(FG, DIM, 0.35), ia)
     # ayudas de teclas, como en los juegos
     kx, ky = lx - 28, h - 46
     kx += keycap(cr, kx, ky, "↑ ↓", "Elegir", pal, pop * 0.9)
@@ -967,7 +1033,7 @@ def run(args):
                 S["closing"] = 0.0
                 S["close_t0"] = time.time()
                 S["result"] = result
-                U.play("menu-click" if result is not None else "menu-hover")
+                U.play("menu-select" if result is not None else "menu-back")
 
         def draw(_a, cr, w, h):
             S["size"] = (w, h)
@@ -996,7 +1062,7 @@ def run(args):
                     S["sel"] = hv
                     if layout == "wheel" and hv in S["idx"]:
                         S["selk_target"] = S["idx"].index(hv)
-                    U.play("menu-hover")
+                    U.play(f"menu-move-{(S['idx'].index(hv) if hv in S['idx'] else 0) % 6}")
 
         def on_click(_g, _n, px, py):
             if S["closing"] is not None:
@@ -1026,7 +1092,7 @@ def run(args):
                     S["scroll"] = row
                 elif row >= S["scroll"] + vis:
                     S["scroll"] = row - vis + 1
-            U.play("menu-hover")
+            U.play(f"menu-move-{k % 6}")
 
         def cols():
             if layout == "grid":
@@ -1154,13 +1220,17 @@ def render_frames(outdir):
         if U.FRESH:
             lay = {"orbit": "game", "bubbles": "grid"}.get(lay, lay)
             if lay == "game":
-                items = parse_items("continue\tContinuar\t\tvolver al escritorio\nlock\tBloquear\t\tla sesión queda protegida\n"
-                                    "suspend\tSuspender\t\tpausa rápida, ahorra energía\nreboot\tReiniciar\t\tapagar y volver a encender\n"
-                                    "poweroff\tApagar\t\thasta la próxima\nexit\tCerrar sesión\t\tvolver a la pantalla de inicio")
+                items = parse_items("continue\tContinuar\t\tCierra este menú y sigues trabajando donde estabas.\n"
+                                    "lock\tBloquear\t\tBloquea la pantalla. Tus programas siguen abiertos; para volver se pide la contraseña.\n"
+                                    "suspend\tSuspender\t\tPone el equipo en reposo y ahorra energía. Al volver, todo está como lo dejaste.\n"
+                                    "reboot\tReiniciar\t\tCierra todo y vuelve a encender el equipo. Guardá tu trabajo antes.\n"
+                                    "poweroff\tApagar\t\tCierra todo y apaga el equipo por completo. Guardá tu trabajo antes.\n"
+                                    "exit\tCerrar sesión\t\tCierra tu sesión y vuelve a la pantalla de inicio. Se cierran tus programas.")
                 sel = 4
         S = dict(items=items, layout=lay, title=title0,
                  placeholder="Escribí para buscar…", search=(lay not in ("orbit", "row")), query=q, scroll=0, idx=[], sel=sel, selk=0.0, t=t, dt=0.05,
                  closing=None, hov={sel: 1.0}, hover=sel, ptr=ptr, size=(1280, 800), pos={}, tg={}, ripples=[], drift=0.0, ind=0.0,
+                 info_id=sel, info_t=-5.0, kick=-5.0,
                  wins=[(fx, fy, ww, hh, dp, ph, [random.Random(int(ph * 10) + k).uniform(0.3, 1.0) for k in range(int(hh / 13) - 2)])
                        for fx, fy, ww, hh, dp, ph in ((0.50, 0.17, 240, 150, 1.0, 0.0), (0.79, 0.10, 210, 120, 0.7, 1.6),
                                                       (0.58, 0.47, 190, 118, 0.6, 3.1), (0.85, 0.40, 220, 140, 1.2, 4.4),

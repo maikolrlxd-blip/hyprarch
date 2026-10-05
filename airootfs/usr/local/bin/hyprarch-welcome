@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# hyprarch-welcome — asistente de PRIMER INICIO: te pregunta tus preferencias con los menús animados de hyprarch.
+#
+#   hyprarch-welcome           corre solo la primera vez (si ya lo hiciste, no hace nada)
+#   hyprarch-welcome --force   lo vuelve a abrir cuando quieras (también desde el menú de Claudito)
+#
+# Pregunta: colores · estilo visual · robotito (aspecto y nombre) · IA · animación de entrada y sonido · rendimiento.
+# Todo queda en ~/.config/hyprarch/ y se puede cambiar después. Primera opción: "Usar lo recomendado" (sin preguntas).
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/hyprarch"
+DONE="$CFG/first-run-done"
+mkdir -p "$CFG"
+[[ ${1:-} == --force || ! -e $DONE ]] || exit 0
+command -v hyprarch-pick >/dev/null 2>&1 || exit 0
+
+ask_game() { hyprarch-pick --layout orbit --title "$1"; }      # opciones de juego: una debajo de la otra
+ask_list() { hyprarch-pick --layout wheel --title "$1" --placeholder "${2:-Escribí para buscar…}"; }
+
+mode=$(printf '%s\n' \
+  $'recomendado\tUsar lo recomendado\t\tColores Fresco, estilo fresco, robot de élite, entrada con sonido y rendimiento automático. Después podés cambiar todo cuando quieras.\thappy' \
+  $'mi-gusto\tConfigurar a mi gusto\t\tTe hago unas preguntas rápidas: colores, estilo visual, tu robot, tu IA, la animación de entrada y el rendimiento.\twink' |
+  ask_game "Bienvenido a hyprarch") || mode=recomendado
+
+if [[ $mode == mi-gusto ]]; then
+  # 1) color: el que elijas es el color del sistema y también el de tu robot
+  t=$(printf '%s\n' \
+      $'fresco\tFresco\t#5ef2c8\tmenta y cielo, limpio y aireado' \
+      $'verde\tVerde neón\t#39ff14\tel clásico de hyprarch' \
+      $'rojo\tRojo carmesí\t#ff1f4b\tintenso y dramático' \
+      $'cine\tÁmbar cine\t#ffb347\tcálido, como una sala oscura' \
+      $'estudio\tVerde agua\t#4fd1c5\tcalma para concentrarse' \
+      $'trabajo\tCeleste\t#5ec2ff\tclaro y productivo' \
+      $'gamer\tCian gamer\t#00e5ff\tcian y violeta arcade' |
+    ask_list "Elegí tu color" "El color del sistema es también el de tu robot") && hyprarch-theme "$t" >/dev/null 2>&1
+
+  # 2) estilo visual
+  s=$(printf '%s\n' \
+      $'fresh\tFresco (recomendado)\t\tcristal claro, líneas finas, sombras suaves y detalles' \
+      $'dinamico\tDinámico\t\trebotes enérgicos al abrir y al elegir' \
+      $'3d\tProfundidad 3D\t\tcapas flotando, sombras y paralaje con el mouse' \
+      $'sutil\tSutil\t\tanimaciones cortas y discretas' \
+      $'neumo\tRelieve suave\t\tbotones en relieve que se hunden al elegirlos' \
+      $'cyber\tCyberpunk\t\tesquinas cortadas, escaneo y mira' \
+      $'stark\tHolograma\t\thologramas con reactor y lecturas de datos' |
+    ask_list "Elegí el estilo visual") && printf '%s\n' "$s" > "$CFG/style"
+
+  # 3) el robotito: aspecto y nombre
+  m=$(printf '%s\n' \
+      $'elite\tDe élite (recomendado)\t\tcasco angular, visor de luz y anillo holográfico\thappy' \
+      $'cute\tSimple y redondo\t\tel robotito amistoso de siempre\twink' |
+    ask_game "¿Cómo querés a tu robot?") && printf '%s\n' "$m" > "$CFG/mascot"
+  n=$(hyprarch-pick --input --title "¿Cómo se llama tu robot?" --placeholder "Claudito") && printf 'NAME=%s\n' "$n" > "$CFG/buddy.conf"
+
+  # 4) la IA
+  command -v hyprarch-ai >/dev/null 2>&1 && hyprarch-ai setup-only >/dev/null 2>&1
+
+  # 5) animación de entrada y sonido
+  i=$(printf '%s\n' \
+      $'on\tCompleta, con sonido\t\tla animación de arranque con su música\thappy' \
+      $'mute\tCompleta, sin sonido\t\tsolo la animación\twink' \
+      $'off\tSin animación\t\tarranca directo al escritorio\tserious' |
+    ask_game "Animación de entrada") && printf '%s\n' "$i" > "$CFG/intro"
+
+  # 6) rendimiento
+  p=$(printf '%s\n' \
+      $'auto\tAutomático (recomendado)\t\tel sistema elige según tu equipo\thappy' \
+      $'lite\tLigero\t\tmenos efectos: para equipos modestos o con poca batería\tsleepy' \
+      $'full\tCompleto\t\ttodos los efectos y animaciones\tsurprised' |
+    ask_game "Rendimiento") && printf '%s\n' "$p" > "$CFG/perf"
+else
+  hyprarch-theme fresco >/dev/null 2>&1
+fi
+
+touch "$DONE"
+# el personajito del escritorio recoge el nombre y el aspecto nuevos
+if pgrep -f "claude-presence daemon" >/dev/null 2>&1; then
+  pkill -f "claude-presence daemon" 2>/dev/null
+  setsid -f env GSK_RENDERER=cairo LD_PRELOAD=/usr/lib/libgtk4-layer-shell.so claude-presence daemon >/dev/null 2>&1
+fi
+command -v notify-send >/dev/null 2>&1 && notify-send -t 6000 "¡Listo!" "Todo quedó a tu gusto. Podés cambiarlo cuando quieras: clic en tu robot o SUPER + T."

@@ -243,12 +243,18 @@ def _poly(cr, pts):
     cr.close_path()
 
 
-def draw_mascot_elite(cr, x, y, state, t, pal, look=(0.0, 0.0), scale=1.0, facing=1):
+EXPRESSIONS = ("happy", "wave", "sleepy", "dizzy", "wink", "serious", "surprised")
+
+
+def draw_mascot_elite(cr, x, y, state, t, pal, look=(0.0, 0.0), scale=1.0, facing=1, mood=None, tilt=0.0, hop=0.0):
     """Guardián de élite: casco angular, visor con ojos de luz, anillo holográfico orbitando y núcleo con propulsor.
-    Los pies (x, y) quedan en el suelo; la cabeza flota ~96 px más arriba."""
+    Los pies (x, y) quedan en el suelo; la cabeza flota ~96 px más arriba.
+    `mood` pone una CARA (happy, wave, sleepy, dizzy, wink, serious, surprised) sin cambiar el estado; `tilt` lo inclina
+    (radianes) y `hop` lo hace saltar (px)."""
     import cairo
 
     A, A2, AL, BG, SF, FG = pal["ACCENT"], pal["ACCENT2"], pal["ALERT"], pal["BG"], pal["SURFACE"], pal["FG"]
+    m = mood if mood in EXPRESSIONS else None
     col = {"error": AL, "waiting": (1.0, 0.70, 0.0)}.get(state, A)
     hot = tuple(min(1.0, c * 0.45 + 0.55) for c in col)                      # versión casi blanca del color (brillo del visor)
     bob = (math.sin(t * 1.8) * 3.0 + (math.sin(t * 9) * 1.2 if state == "working" else 0.0)
@@ -256,7 +262,8 @@ def draw_mascot_elite(cr, x, y, state, t, pal, look=(0.0, 0.0), scale=1.0, facin
     shake = math.sin(t * 47) * 2.6 if state == "error" else 0.0
     lx, ly = max(-1.0, min(1.0, look[0])), max(-1.0, min(1.0, look[1]))
     cr.save()
-    cr.translate(x + shake, y)
+    cr.translate(x + shake, y - hop)
+    cr.rotate(tilt * facing)                                                  # se inclina desde los pies
     cr.scale(scale * facing, scale)
     hy = -98 + bob                                                            # centro de la cabeza
 
@@ -359,7 +366,51 @@ def draw_mascot_elite(cr, x, y, state, t, pal, look=(0.0, 0.0), scale=1.0, facin
     blink = 1.0 if (t % 4.3) < 0.11 else 0.0
     ex_off = lx * 5
     ey = hy - 2 + ly * 2
-    if state == "thinking":                                                  # barrido de escaneo
+    if m:                                                                    # CARAS: reemplazan a los ojos normales
+        cr.set_line_cap(cairo.LINE_CAP_ROUND)
+        for ex in (-11, 11):
+            exx = ex + ex_off
+            cr.set_source_rgba(*hot, 0.95)
+            cr.set_line_width(2.6)
+            if m in ("happy", "wave"):                                       # ojos sonrientes ^ ^
+                cr.new_sub_path()
+                cr.arc(exx, ey + 4, 5.5, math.pi * 1.12, math.pi * 1.88)
+                cr.stroke()
+            elif m == "sleepy":                                              # párpados que caen y se abren un poco
+                lid = 0.5 + 0.5 * math.sin(t * 1.1)
+                cr.move_to(exx - 5.5, ey)
+                cr.line_to(exx + 5.5, ey + 1 + lid * 1.8)
+                cr.stroke()
+            elif m == "dizzy":                                               # espirales
+                cr.new_sub_path()
+                for k in range(26):
+                    ang = k * 0.62 + t * 9
+                    r_ = 0.5 + k * 0.22
+                    (cr.move_to if k == 0 else cr.line_to)(exx + math.cos(ang) * r_, ey + math.sin(ang) * r_)
+                cr.set_line_width(1.6)
+                cr.stroke()
+            elif m == "wink":
+                if ex < 0:
+                    _poly(cr, [(exx - 6, ey - 4), (exx + 6, ey - 5), (exx + 7, ey + 4), (exx - 5, ey + 5)])
+                    cr.fill()
+                else:
+                    cr.move_to(exx - 5, ey + 1)
+                    cr.line_to(exx + 5.5, ey - 1)
+                    cr.stroke()
+            elif m == "serious":                                             # cejas bajas: ojos rasgados
+                sgn = 1 if ex < 0 else -1
+                _poly(cr, [(exx - 6, ey - 2 - 2.6 * sgn), (exx + 6, ey - 2 + 2.6 * sgn), (exx + 6, ey + 3 + 2 * sgn), (exx - 6, ey + 3 - 2 * sgn)])
+                cr.fill()
+            elif m == "surprised":                                           # ojos grandes redondos
+                cr.new_sub_path()
+                cr.arc(exx, ey, 5.8 + 0.6 * math.sin(t * 12), 0, 2 * math.pi)
+                cr.set_line_width(2.4)
+                cr.stroke()
+                cr.new_sub_path()
+                cr.arc(exx + lx * 1.5, ey, 1.8, 0, 2 * math.pi)
+                cr.fill()
+        eyes_a = 0.0
+    elif state == "thinking":                                                # barrido de escaneo
         sx = math.sin(t * 3.2) * 20
         g = cairo.LinearGradient(sx - 8, 0, sx + 8, 0)
         g.add_color_stop_rgba(0, *col, 0.0)
@@ -400,8 +451,39 @@ def draw_mascot_elite(cr, x, y, state, t, pal, look=(0.0, 0.0), scale=1.0, facin
     _poly(cr, [(-25, hy - 9), (-4, hy - 11), (-14, hy + 8), (-21, hy + 9)])
     cr.fill()
     cr.restore()
+    cr.select_font_face("JetBrainsMono Nerd Font", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+    if m == "sleepy":                                                        # zzz que suben y se desvanecen
+        for k in range(3):
+            ph = ((t * 0.55 + k / 3) % 1.0)
+            cr.set_font_size(11 + 7 * ph)
+            cr.set_source_rgba(*hot, (1 - ph) * 0.9)
+            cr.move_to(26 + ph * 14, hy - 26 - ph * 34)
+            cr.show_text("z")
+    elif m == "dizzy":                                                       # estrellitas que giran sobre la cabeza
+        for k in range(3):
+            ang = t * 4 + k * 2.094
+            cr.set_source_rgba(*hot, 0.95)
+            cr.arc(math.cos(ang) * 30, hy - 44 + math.sin(ang) * 7, 2.6, 0, 2 * math.pi)
+            cr.fill()
+    elif m == "surprised":
+        cr.set_font_size(26)
+        cr.set_source_rgba(*hot, 0.95)
+        cr.move_to(30, hy - 38 + math.sin(t * 14) * 1.5)
+        cr.show_text("!")
+    elif m == "wave":                                                        # una mano que saluda
+        ang = math.sin(t * 7) * 0.55
+        cr.save()
+        cr.translate(-34, hy + 10)
+        cr.rotate(-1.0 + ang)
+        cr.set_source_rgba(*col, 0.9)
+        cr.set_line_width(3)
+        cr.move_to(0, 0)
+        cr.line_to(0, -26)
+        cr.stroke()
+        cr.arc(0, -30, 5, 0, 2 * math.pi)
+        cr.fill()
+        cr.restore()
     if state == "waiting":                                                   # signo de pregunta ámbar sobre la cabeza
-        cr.select_font_face("JetBrainsMono Nerd Font", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
         cr.set_font_size(20)
         cr.set_source_rgba(*col, 0.95)
         cr.move_to(22, hy - 40 + math.sin(t * 6) * 2)
@@ -426,11 +508,12 @@ def draw_mascot_elite(cr, x, y, state, t, pal, look=(0.0, 0.0), scale=1.0, facin
     cr.restore()
 
 
-def draw_mascot(cr, x, y, state, t, pal, look=(0.0, 0.0), scale=1.0, facing=1):
+def draw_mascot(cr, x, y, state, t, pal, look=(0.0, 0.0), scale=1.0, facing=1, mood=None, tilt=0.0, hop=0.0):
     """Dibuja a Claudito con el centro de los pies en (x, y). t = segundos.
-    Estilo del personaje: ~/.config/hyprarch/mascot  (elite por defecto · cute = el robotito redondo original)."""
+    Estilo del personaje: ~/.config/hyprarch/mascot  (elite por defecto · cute = el robotito redondo original).
+    mood/tilt/hop (solo elite): cara, inclinación y salto para darle personalidad en los menús."""
     if MASCOT == "elite":
-        return draw_mascot_elite(cr, x, y, state, t, pal, look, scale, facing)
+        return draw_mascot_elite(cr, x, y, state, t, pal, look, scale, facing, mood, tilt, hop)
     import cairo
 
     A, A2, OK, AL = pal["ACCENT"], pal["ACCENT2"], pal["OK"], pal["ALERT"]
