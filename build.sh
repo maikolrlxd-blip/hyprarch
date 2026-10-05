@@ -73,6 +73,12 @@ cp -a airootfs/. "$AIR/"
 echo "==> Claude Code (paquete oficial de npm, instalado dentro de la ISO)"
 # El usuario inicia sesión él mismo la primera vez (no se guarda ninguna credencial).
 npm install -g --prefix "$AIR/usr/local" --no-fund --no-audit @anthropic-ai/claude-code
+# El postinstall de npm no corre en este contexto y deja un stub en bin/claude.exe:
+# se apunta (enlace simbólico, sin duplicar 240 MB) al binario nativo ya descargado.
+CC="$AIR/usr/local/lib/node_modules/@anthropic-ai/claude-code"
+NATIVE="$CC/node_modules/@anthropic-ai/claude-code-linux-x64/claude"
+[[ -x "$NATIVE" ]] || { echo "ERROR: falta el binario nativo de Claude Code ($NATIVE)"; exit 1; }
+ln -sfn "../node_modules/@anthropic-ai/claude-code-linux-x64/claude" "$CC/bin/claude.exe"
 ls -l "$AIR/usr/local/bin/" | head -20
 
 echo "==> Ocultando del lanzador las entradas inútiles"
