@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#05060f">
+<title>Void Survivors</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="xpbar"><i id="xpfill"></i></div>
+  <div class="hud-row">
+    <div class="hud-left">
+      <div class="lvl"><span id="lvl">Nv 1</span></div>
+      <div id="hpbar"><i id="hpfill"></i><b id="hptxt"></b></div>
+      <div id="items"></div>
+    </div>
+    <div id="clock">0:00</div>
+    <div class="hud-right">
+      <button id="pausebtn" class="iconbtn" data-a="pause" aria-label="Pausa"></button>
+      <div class="stat" id="killsStat"></div>
+      <div class="stat" id="coinsStat"></div>
+    </div>
+  </div>
+  <div id="hint"></div>
+</div>
+
+<div id="screen"></div>
+<div id="toast"></div>
+
+<script src="js/util.js"></script>
+<script src="js/data.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/save.js"></script>
+<script src="js/meta.js"></script>
+<script src="js/sim.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/ads.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/input.js"></script>
+<script src="js/render.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

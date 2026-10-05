@@ -3,17 +3,30 @@ package com.hyprarch.game;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.window.OnBackInvokedDispatcher;
 
 /** Carga el juego HTML5 empaquetado en assets/ dentro de un WebView a pantalla completa. */
 public class MainActivity extends Activity {
     private WebView web;
 
-    @SuppressLint("SetJavaScriptEnabled")
+    /**
+     * Puente de anuncios que el juego espera (window.AndroidAds). Por defecto NO hay anuncios:
+     * isReady() devuelve false y el juego oculta los botones de anuncio. Para activar AdMob,
+     * implementa aquí isReady()/showRewarded() con el SDK y llama a window[callback](true|false).
+     */
+    public class AdsBridge {
+        @JavascriptInterface public boolean isReady() { return false; }
+        @JavascriptInterface public void showRewarded(String callbackName) { /* sin proveedor */ }
+    }
+
+    @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
@@ -25,11 +38,28 @@ public class MainActivity extends Activity {
         web.setHapticFeedbackEnabled(false);
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
-        s.setDomStorageEnabled(true);                 // localStorage para los récords
+        s.setDomStorageEnabled(true);                 // localStorage: partidas guardadas y récords
         s.setMediaPlaybackRequiresUserGesture(false);
-        s.setAllowFileAccess(false);
+        s.setAllowFileAccess(false);                  // no afecta a file:///android_asset
+        web.addJavascriptInterface(new AdsBridge(), "AndroidAds");
         setContentView(web);
+        if (Build.VERSION.SDK_INT >= 33) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::handleBack);
+        }
         web.loadUrl("file:///android_asset/index.html");
+    }
+
+    /** El juego decide si consume el botón Atrás (pausa / volver al menú); si no, se cierra la app. */
+    private void handleBack() {
+        web.evaluateJavascript("(window.__onBack && window.__onBack()) ? '1' : '0'", v -> {
+            if (!"\"1\"".equals(v)) finish();
+        });
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public void onBackPressed() {
+        if (Build.VERSION.SDK_INT < 33) handleBack(); else super.onBackPressed();
     }
 
     @Override
