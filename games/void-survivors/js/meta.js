@@ -124,6 +124,7 @@
     st.bestTime = Math.max(st.bestTime, Math.floor(run.time));
     st.maxLevel = Math.max(st.maxLevel, run.level);
     st.maxWeaponLevel = Math.max(st.maxWeaponLevel, run.maxWeaponLevel || 0);
+    st.evolved += run.evolved || 0;
     st.playtime += run.time;
     if (run.won) { st.wins += 1; s.cleared[run.stage] = true; }
     const b = s.best[run.stage] || { time: 0, kills: 0, won: false };

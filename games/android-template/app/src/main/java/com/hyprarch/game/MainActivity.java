@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
@@ -26,6 +28,17 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void showRewarded(String callbackName) { /* sin proveedor */ }
     }
 
+    /** Vibración corta (el WebView no implementa navigator.vibrate). */
+    public class NativeBridge {
+        @JavascriptInterface public void vibrate(int ms) {
+            Vibrator v = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+            if (v == null || !v.hasVibrator()) return;
+            ms = Math.max(10, Math.min(ms, 400));
+            if (Build.VERSION.SDK_INT >= 26) v.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE));
+            else v.vibrate(ms);
+        }
+    }
+
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override
     protected void onCreate(Bundle b) {
@@ -42,6 +55,7 @@ public class MainActivity extends Activity {
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setAllowFileAccess(false);                  // no afecta a file:///android_asset
         web.addJavascriptInterface(new AdsBridge(), "AndroidAds");
+        web.addJavascriptInterface(new NativeBridge(), "AndroidNative");
         setContentView(web);
         if (Build.VERSION.SDK_INT >= 33) {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::handleBack);

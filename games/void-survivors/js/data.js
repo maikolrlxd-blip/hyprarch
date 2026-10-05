@@ -56,6 +56,20 @@
     },
   };
 
+
+  // ---- Evoluciones: arma al nivel máximo + el pasivo indicado => nivel 7 (versión evolucionada) ----
+  const evolve = (id, passive, over) => {
+    const w = D.weapons[id];
+    w.evo = passive;
+    w.levels.push(Object.assign({}, w.levels[w.levels.length - 1], over));
+  };
+  evolve('pulse', 'overclock', { cd: 0.3, n: 5, dmg: 30, pierce: 3, spd: 700 });
+  evolve('orbit', 'lens', { n: 7, dmg: 40, R: 105, spin: 5 });
+  evolve('chain', 'power', { cd: 0.7, dmg: 60, jumps: 12, range: 220 });
+  evolve('missile', 'magnet', { cd: 1.0, n: 6, dmg: 70, aoe: 90 });
+  evolve('nova', 'barrier', { cd: 1.6, dmg: 100, R: 280, knock: 420 });
+  evolve('aura', 'regen', { R: 135, dmg: 36, tick: 0.3 });
+
   // ---- Pasivos: efecto por nivel (máx 5) ----
   D.passives = {
     power: { color: '#f66', max: 5, per: 0.12, fmt: '+12% dmg' },
@@ -94,7 +108,7 @@
     },
     s2: {
       color: ['#10061f', '#4a1a6a'], grid: '#3a1f5a', duration: 450, cap: 300,
-      rate0: 1.8, rateGrow: 2.7, hpMul: 1.3, dmgMul: 1.15, spdAdd: 0.04, coinMul: 1.7,
+      rate0: 1.8, rateGrow: 2.95, hpMul: 1.5, dmgMul: 1.15, spdAdd: 0.04, coinMul: 1.7,
       eliteStart: 80, eliteEvery: 42, swarmStart: 60, swarmEvery: 45, w: { shooter: 2.2, dasher: 1.6 },
       bosses: [{ t: 110, type: 'sentinel' }, { t: 270, type: 'hive' }, { t: 450, type: 'jugg', final: true }],
       unlock: 's1', music: 1,
@@ -166,5 +180,7 @@
     { id: 'ships', stat: 'shipsOwned', goal: 3, reward: 500 },
     { id: 'maxw', stat: 'maxWeaponLevel', goal: 6, reward: 400 },
     { id: 'upg', stat: 'metaLevels', goal: 25, reward: 700 },
+    { id: 'evolve', stat: 'evolved', goal: 1, reward: 500 },
+    { id: 'evolve2', stat: 'evolved', goal: 25, reward: 1500 },
   ];
 })(typeof window !== 'undefined' ? window : globalThis);

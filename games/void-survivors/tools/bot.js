@@ -41,8 +41,9 @@ function botChoose(sim) {
   let bi = 0, bs = -1;
   c.forEach((o, i) => {
     let s = 1;
-    if (o.kind === 'weapon') s = 5 + (o.level > 1 ? 3 : 0) - PREF.indexOf(o.id) * 0.3;
-    else if (o.kind === 'passive') s = ({ power: 4, overclock: 4, plating: 3, regen: 3, thrusters: 2.5, magnet: 2, barrier: 3 })[o.id] || 1.5;
+    if (o.evo) s = 20;
+    else if (o.kind === 'weapon') s = 5 + (o.level > 1 ? 3 : 0) - PREF.indexOf(o.id) * 0.3;
+    else if (o.kind === 'passive') s = ({ power: 4, overclock: 5, lens: 3, magnet: 3, barrier: 3, regen: 3.5, plating: 3, regen: 3, thrusters: 2.5, magnet: 2, barrier: 3 })[o.id] || 1.5;
     if (s > bs) { bs = s; bi = i; }
   });
   sim.choose(bi);

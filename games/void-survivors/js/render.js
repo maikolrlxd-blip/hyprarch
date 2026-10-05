@@ -119,12 +119,18 @@
         case 'bolt': this.bolts.push({ pts: ev.pts, t: 0, max: 0.25 }); break;
         case 'boom': this.booms.push({ x: ev.x, y: ev.y, r: ev.r, t: 0, max: 0.3, color: ev.color || '#fa6' }); for (let i = 0; i < 10; i++) this.burst(ev.x, ev.y, ev.color || '#fa6', 140, 0.3 + Math.random() * 0.3, 2); break;
         case 'nova': this.shake = Math.max(this.shake, opts.shake ? 0.12 : 0); break;
-        case 'levelup': this.banners.push({ txt: VS.t('levelup'), t: 0, max: 1.2, col: '#ff6', size: 1 }); for (let i = 0; i < 24; i++) this.burst(P.x, P.y, '#ff6', 200, 0.5, 2); break;
-        case 'warn': this.banners.push({ txt: VS.t('warn.' + ev.key), t: 0, max: 1.6, col: '#f96', size: 1 }); break;
-        case 'boss': this.banners.push({ txt: ev.final ? VS.t('warn.final') : VS.t('warn.boss') + ' ' + VS.t('boss.' + ev.id), t: 0, max: 2.4, col: '#f44', size: 1.25 }); if (opts.shake) this.shake = Math.max(this.shake, 0.4); break;
+        case 'levelup': this.banner({ txt: VS.t('levelup'), t: 0, max: 1.2, col: '#ff6', size: 1 }); for (let i = 0; i < 24; i++) this.burst(P.x, P.y, '#ff6', 200, 0.5, 2); break;
+        case 'warn': this.banner({ txt: VS.t('warn.' + ev.key), t: 0, max: 1.6, col: '#f96', size: 1 }); break;
+        case 'boss': this.banner({ txt: ev.final ? VS.t('warn.final') : VS.t('warn.boss') + ' ' + VS.t('boss.' + ev.id), t: 0, max: 2.4, col: '#f44', size: 1.25 }); if (opts.shake) this.shake = Math.max(this.shake, 0.4); break;
+        case 'evolve': this.banner({ txt: VS.t('evolved_toast', { w: VS.t('w.' + ev.id + '.evo') }), t: 0, max: 2.2, col: '#fc3', size: 1.1 }); for (let i = 0; i < 40; i++) this.burst(P.x, P.y, '#fc3', 320, 0.8, 3); break;
         case 'revive': for (let i = 0; i < 40; i++) this.burst(P.x, P.y, '#fff', 300, 0.7, 2.5); break;
         case 'dead': for (let i = 0; i < 50; i++) this.burst(P.x, P.y, '#5df', 260, 0.9, 3); break;
       }
+    }
+    banner(b) { // sin duplicados y con un máximo de 3 simultáneos
+      this.banners = this.banners.filter((x) => x.txt !== b.txt);
+      this.banners.push(b);
+      if (this.banners.length > 3) this.banners.shift();
     }
     burst(x, y, color, speed, life, size) {
       if (this.parts.length > 700) return;
@@ -209,7 +215,7 @@
       // armas orbitales
       for (const w of sim.weapons) if (w.id === 'orbit') for (const b of w.blades) {
         c.save(); c.translate(b.x, b.y); c.rotate(b.a * 3);
-        c.fillStyle = '#fd5'; c.shadowColor = '#fd5'; c.shadowBlur = 10;
+        const evo = w.level >= 7; c.fillStyle = evo ? '#fff' : '#fd5'; c.shadowColor = evo ? '#f90' : '#fd5'; c.shadowBlur = 10;
         c.beginPath(); c.moveTo(0, -b.r * 1.3); c.lineTo(b.r * 0.55, 0); c.lineTo(0, b.r * 1.3); c.lineTo(-b.r * 0.55, 0); c.closePath(); c.fill();
         c.restore();
       }
@@ -217,7 +223,7 @@
       // disparos propios
       for (const s of sim.shots) {
         if (!vis(s.x, s.y)) continue;
-        if (s.kind === 'pulse') { c.save(); c.translate(s.x, s.y); c.rotate(Math.atan2(s.vy, s.vx)); c.fillStyle = '#7ff'; c.shadowColor = '#6ff'; c.shadowBlur = 8; c.beginPath(); c.roundRect(-8, -2.2, 16, 4.4, 2); c.fill(); c.restore(); }
+        if (s.kind === 'pulse') { c.save(); c.translate(s.x, s.y); c.rotate(Math.atan2(s.vy, s.vx)); const k = s.evo ? 1.5 : 1; c.fillStyle = s.evo ? '#fff' : '#7ff'; c.shadowColor = s.evo ? '#fd5' : '#6ff'; c.shadowBlur = 8; c.beginPath(); c.roundRect(-8 * k, -2.2 * k, 16 * k, 4.4 * k, 2); c.fill(); c.restore(); }
         else { c.save(); c.translate(s.x, s.y); c.rotate(s.ang); c.fillStyle = '#fb7'; c.shadowColor = '#f94'; c.shadowBlur = 8; c.beginPath(); c.moveTo(8, 0); c.lineTo(-6, -4.5); c.lineTo(-3, 0); c.lineTo(-6, 4.5); c.closePath(); c.fill(); c.restore(); }
       }
       c.shadowBlur = 0;
@@ -261,13 +267,17 @@
       // flecha hacia el jefe fuera de pantalla + barra de vida
       const boss = sim.enemies.find((e) => e.boss);
       if (boss) this.drawBoss(c, sim, boss);
-      // banners
-      for (const b of this.banners) {
+      // banners (apilados; el texto se ajusta al ancho de la pantalla)
+      this.banners.forEach((b, i) => {
         const k = b.t / b.max, a = k < 0.15 ? k / 0.15 : k > 0.75 ? (1 - k) / 0.25 : 1;
         c.globalAlpha = Math.max(0, a); c.textAlign = 'center'; c.fillStyle = b.col; c.strokeStyle = 'rgba(0,0,0,.7)'; c.lineWidth = 6;
-        c.font = `900 ${Math.min(W * 0.1, 44) * b.size}px system-ui,sans-serif`;
-        const y = H * 0.3 + (1 - Math.min(1, k * 6)) * 16; c.strokeText(b.txt, W / 2, y); c.fillText(b.txt, W / 2, y); c.globalAlpha = 1;
-      }
+        let size = Math.min(W * 0.1, 44) * b.size;
+        c.font = `900 ${size}px system-ui,sans-serif`;
+        const tw = c.measureText(b.txt).width;
+        if (tw > W * 0.92) { size *= (W * 0.92) / tw; c.font = `900 ${size}px system-ui,sans-serif`; }
+        const y = H * 0.27 + i * Math.min(W * 0.12, 54) + (1 - Math.min(1, k * 6)) * 16;
+        c.strokeText(b.txt, W / 2, y); c.fillText(b.txt, W / 2, y); c.globalAlpha = 1;
+      });
       // joystick
       if (input && input.active && input.show) {
         c.globalAlpha = 0.35; c.strokeStyle = '#fff'; c.lineWidth = 3; c.beginPath(); c.arc(input.ox, input.oy, input.max, 0, TAU); c.stroke();

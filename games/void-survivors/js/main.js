@@ -81,6 +81,7 @@
       if (paused) { App.resume(); return true; }
       return true;
     }
+    if (App.mode === 'results') { curScreen = ''; App.home(); return true; }
     if (App.mode === 'menu' && curScreen) { curScreen = ''; App.home(); return true; }
     return false;
   };
@@ -179,6 +180,7 @@
     s.tutorial.done = true;
     save();
     lastSum = sum; sum.doubled = false;
+    renderer.banners.length = 0;
     App.mode = 'results';
     I.enabled = false; I.release();
     $('#hud').classList.add('hidden');
@@ -187,7 +189,13 @@
   }
 
   // ------------------------------------------------------------------ eventos de la simulación
-  function vibrate(ms) { if (S.data.settings.vibe && g.navigator && g.navigator.vibrate) { try { g.navigator.vibrate(ms); } catch (e) { /* ok */ } } }
+  function vibrate(ms) {
+    if (!S.data.settings.vibe) return;
+    try {
+      if (g.AndroidNative && g.AndroidNative.vibrate) g.AndroidNative.vibrate(ms); // WebView: puente nativo
+      else if (g.navigator && g.navigator.vibrate) g.navigator.vibrate(ms);
+    } catch (e) { /* sin vibración */ }
+  }
   function handle(ev, sim) {
     renderer.event(ev, sim, { numbers: S.data.settings.numbers, shake: S.data.settings.shake });
     switch (ev.type) {
@@ -202,6 +210,7 @@
       case 'hurt': A.sfx('hurt'); vibrate(35); break;
       case 'levelup': A.sfx('levelup'); break;
       case 'chest': A.sfx('chest'); break;
+      case 'evolve': A.sfx('win'); vibrate(80); break;
       case 'warn': A.sfx('warn'); break;
       case 'boss': A.sfx('boss'); vibrate(120); break;
       case 'won': A.sfx('win'); vibrate(200); break;

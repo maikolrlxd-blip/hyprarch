@@ -146,11 +146,12 @@
   UI.levelup = function (sim) {
     const cards = sim.choices.map((c, i) => {
       let icon, name, tag = '', desc;
-      if (c.kind === 'weapon') { const def = D.weapons[c.id]; icon = ic(c.id, def.color); name = t('w.' + c.id + '.n'); tag = c.level === 1 ? `<span class="tagnew">${t('stat.new')}</span>` : `<span class="lvl">${t('level')} ${c.level}${c.level === def.max ? ' · ' + t('max') : ''}</span>`; desc = c.level === 1 ? t('w.' + c.id + '.d') : diffText(c.id, c.level); }
+      if (c.kind === 'weapon' && c.evo) { const def = D.weapons[c.id]; icon = ic(c.id, '#ffd24a'); name = t('w.' + c.id + '.evo'); tag = `<span class="tagnew" style="color:#fc3">${t('evolution')}</span>`; desc = diffText(c.id, c.level); }
+      else if (c.kind === 'weapon') { const def = D.weapons[c.id]; icon = ic(c.id, def.color); name = t('w.' + c.id + '.n'); tag = c.level === 1 ? `<span class="tagnew">${t('stat.new')}</span>` : `<span class="lvl">${t('level')} ${c.level}${c.level === def.max ? ' · ' + t('max') : ''}</span>`; desc = c.level === 1 ? t('w.' + c.id + '.d') : diffText(c.id, c.level); }
       else if (c.kind === 'passive') { const def = D.passives[c.id]; icon = ic(c.id, def.color); name = t('p.' + c.id + '.n'); tag = `<span class="lvl">${t('level')} ${c.level}${c.level === def.max ? ' · ' + t('max') : ''}</span>`; desc = t('p.' + c.id + '.d'); }
       else if (c.kind === 'heal') { icon = ic('heart', '#f66'); name = t('heal'); desc = t('heal.d'); }
       else { icon = ic('coin', '#fc3'); name = t('bonus_coins'); desc = t('coins.d'); }
-      return `<button class="choice ${c.kind}" data-a="choose" data-v="${i}"><div class="ico">${icon}</div><div class="grow"><div class="name">${name} ${tag}</div><div class="desc">${desc}</div></div></button>`;
+      return `<button class="choice ${c.kind}${c.evo ? ' evo' : ''}" data-a="choose" data-v="${i}"><div class="ico">${icon}</div><div class="grow"><div class="name">${name} ${tag}</div><div class="desc">${desc}</div></div></button>`;
     }).join('');
     const rr = sim.rerolls > 0 ? `<button class="btn" data-a="reroll">${ic('lens', '#fa6')} ${t('reroll')} (${sim.rerolls})</button>` : '';
     UI.show(`<div class="wrap" style="margin:auto 0"><h3 class="lv-title">${t('levelup')}</h3><p class="lv-sub">${t('choose_upgrade')}</p>${cards}<div style="text-align:center">${rr}</div></div>`, 'dim');
@@ -159,7 +160,7 @@
   // ---------------------------------------------------------------- pausa
   UI.pause = function (sim, s) {
     const st = s.settings, tog = (k, l) => `<div class="switch"><span>${l}</span><button class="tog ${st[k] ? 'on' : ''}" data-a="tog" data-v="${k}" data-r="pause"></button></div>`;
-    const items = sim.weapons.map((w) => `<div class="row">${ic(w.id, D.weapons[w.id].color)}<span class="grow">${t('w.' + w.id + '.n')}</span><b>${t('level')} ${w.level}</b></div>`).join('') +
+    const items = sim.weapons.map((w) => `<div class="row">${ic(w.id, D.weapons[w.id].color)}<span class="grow">${t('w.' + w.id + (w.level >= 7 ? '.evo' : '.n'))}</span><b>${t('level')} ${w.level}</b></div>`).join('') +
       Object.keys(sim.passives).map((id) => `<div class="row">${ic(id, D.passives[id].color)}<span class="grow">${t('p.' + id + '.n')}</span><b>${t('level')} ${sim.passives[id]}</b></div>`).join('');
     UI.show(`<div class="wrap" style="margin:auto 0"><h3 class="lv-title" style="color:#fff">${t('pause')}</h3>
       <div class="card">${items}</div><div class="card">${tog('sound', t('sound'))}${tog('music', t('music'))}</div>

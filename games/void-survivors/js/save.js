@@ -15,7 +15,7 @@
       cleared: {},
       best: {},
       meta: {},
-      stats: { kills: 0, runs: 0, wins: 0, bossKills: 0, coinsEarned: 0, bestTime: 0, maxLevel: 0, maxWeaponLevel: 0, playtime: 0 },
+      stats: { kills: 0, runs: 0, wins: 0, bossKills: 0, coinsEarned: 0, bestTime: 0, maxLevel: 0, maxWeaponLevel: 0, evolved: 0, playtime: 0 },
       ach: {},
       missions: { day: '', list: [] },
       login: { last: '', streak: 0, claimed: true },

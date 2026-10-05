@@ -7,13 +7,26 @@ android {
         applicationId "__APP_ID__"
         minSdk 24
         targetSdk 36
-        versionCode 1
-        versionName "1.0"
+        versionCode (project.findProperty('versionCode') ?: 1).toString().toInteger()
+        versionName (project.findProperty('versionName') ?: '1.0.0')
+    }
+    signingConfigs {
+        // Solo se activa si el CI/entorno proporciona el keystore (ver .github/workflows/android-games.yml).
+        release {
+            if (System.getenv('KEYSTORE_FILE')) {
+                storeFile file(System.getenv('KEYSTORE_FILE'))
+                storePassword System.getenv('KEYSTORE_PASSWORD')
+                keyAlias System.getenv('KEY_ALIAS')
+                keyPassword System.getenv('KEY_PASSWORD')
+            }
+        }
     }
     buildTypes {
         release {
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (System.getenv('KEYSTORE_FILE')) signingConfig signingConfigs.release
         }
     }
     compileOptions {

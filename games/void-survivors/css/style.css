@@ -136,3 +136,5 @@ h2.title { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 1px; te
 @keyframes float { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-9px) rotate(2deg); } }
 .gear { position: absolute; }
 a.btn { text-decoration: none; }
+
+.choice.evo { border-color: #fc3; background: linear-gradient(135deg, rgba(90,60,0,.55), var(--panel)); box-shadow: 0 0 18px rgba(255,200,60,.45); animation: pulse 1.2s infinite alternate; }

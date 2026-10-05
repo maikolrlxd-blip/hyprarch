@@ -27,7 +27,7 @@ Completa misiones cada día, mantén tu racha de recompensas y consigue 15 logro
 
 ✔ Partidas de 7 a 8 minutos, perfectas para jugar en cualquier momento
 ✔ Control con un solo dedo
-✔ Funciona sin conexión, sin cuentas ni permisos
+✔ Funciona sin conexión y sin cuentas
 ✔ Español e inglés
 
 ¿Cuánto aguantarás en el vacío?
@@ -59,7 +59,7 @@ Complete missions every day, keep your reward streak and earn 15 trophies.
 
 ✔ 7–8 minute runs, perfect for any moment
 ✔ One-finger controls
-✔ Works offline, no accounts, no permissions
+✔ Works offline, no accounts
 ✔ English and Spanish
 
 How long will you last in the void?

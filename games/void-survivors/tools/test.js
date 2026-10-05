@@ -137,7 +137,20 @@ ok('las opciones nunca repiten ni superan los huecos de armas/pasivos', () => {
     }
   }
   assert.ok(sim.weapons.length <= D.MAX_WEAPONS); assert.ok(Object.keys(sim.passives).length <= D.MAX_PASSIVES);
-  for (const w of sim.weapons) assert.ok(w.level <= D.weapons[w.id].max);
+  for (const w of sim.weapons) assert.ok(w.level <= D.weapons[w.id].max + 1);
+});
+ok('evolución: requiere arma al máximo y el pasivo; sube a nivel 7 y cuenta', () => {
+  const sim = mkSim(); const w = sim.weapons[0]; const def = D.weapons[w.id];
+  w.level = def.max;
+  const hasEvo = () => { sim.pending = 1; sim.choices = sim.makeChoices(); return sim.choices.some((c) => c.evo); };
+  assert.ok(!hasEvo(), 'sin pasivo no hay evolución');
+  sim.passives[def.evo] = 1;
+  let found = false; for (let i = 0; i < 20 && !found; i++) found = hasEvo();
+  assert.ok(found, 'con el pasivo aparece la evolución');
+  sim.state = 'levelup'; sim.choices = [{ kind: 'weapon', id: w.id, level: def.max + 1, evo: true }]; sim.choose(0);
+  assert.strictEqual(w.level, def.max + 1); assert.strictEqual(sim.evolved, 1); assert.strictEqual(sim.result().evolved, 1);
+  for (let i = 0; i < 600; i++) { sim.update(1 / 60, { x: 0.2, y: 0 }); sim.events.length = 0; if (sim.state === 'levelup') sim.choose(0); }
+  assert.ok(Number.isFinite(sim.p.x));
 });
 ok('resurrección: consume una vida y devuelve a running', () => {
   const s = fresh(); s.meta.revive = 1;

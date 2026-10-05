@@ -25,7 +25,7 @@
       this.passives = {};
       this.enemies = []; this.shots = []; this.eshots = []; this.gems = []; this.drops = []; this.rings = [];
       this.level = 1; this.xp = 0; this.xpNeed = D.xpNeed(1); this.pending = 0; this.choices = null;
-      this.kills = 0; this.coins = 0; this.bossKills = 0; this.dmgTaken = 0; this.dmgDone = 0;
+      this.kills = 0; this.coins = 0; this.bossKills = 0; this.evolved = 0; this.dmgTaken = 0; this.dmgDone = 0;
       this.rerolls = this.meta.rerolls; this.revives = this.meta.revives; this.adRevived = false;
       this.spawnAcc = 0;
       this.eliteT = this.stage.eliteEvery;
@@ -296,14 +296,14 @@
         let a = Math.atan2(e.y - p.y, e.x - p.x);
         if (tg.length < L.n) a += (k - (L.n - 1) / 2) * 0.14;
         const sp = L.spd * st.pspeed;
-        this.shots.push({ x: p.x, y: p.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, r: 5, dmg: L.dmg * st.dmg, pierce: L.pierce, life: 1.1, hits: [], kind: 'pulse', color: '#6ff' });
+        this.shots.push({ x: p.x, y: p.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, evo: w.level >= 7, r: w.level >= 7 ? 7 : 5, dmg: L.dmg * st.dmg, pierce: L.pierce, life: 1.1, hits: [], kind: 'pulse', color: '#6ff' });
       }
       this.ev('shoot', { k: 'pulse' });
     }
 
     wOrbit(w, L, dt, st) {
       w.angle += L.spin * dt;
-      const R = L.R * st.area, p = this.p, sz = 11 * Math.sqrt(st.area);
+      const R = L.R * st.area, p = this.p, sz = (w.level >= 7 ? 15 : 11) * Math.sqrt(st.area);
       w.blades.length = L.n;
       for (let i = 0; i < L.n; i++) {
         const a = w.angle + (i / L.n) * Math.PI * 2, bx = p.x + Math.cos(a) * R, by = p.y + Math.sin(a) * R;
@@ -673,7 +673,11 @@
     // ------------------------------------------------------------------ subida de nivel
     makeChoices() {
       const opts = [];
-      for (const w of this.weapons) if (w.level < D.weapons[w.id].max) opts.push({ kind: 'weapon', id: w.id, level: w.level + 1, wt: 3 });
+      for (const w of this.weapons) {
+        const def = D.weapons[w.id];
+        if (w.level < def.max) opts.push({ kind: 'weapon', id: w.id, level: w.level + 1, wt: 3 });
+        else if (w.level === def.max && (this.passives[def.evo] || 0) >= 1) opts.push({ kind: 'weapon', id: w.id, level: w.level + 1, evo: true, wt: 12 });
+      }
       if (this.weapons.length < D.MAX_WEAPONS) {
         for (const id in D.weapons) if (!this.weapons.some((w) => w.id === id)) opts.push({ kind: 'weapon', id, level: 1, wt: 2.4 });
       }
@@ -711,7 +715,7 @@
       if (!c) return;
       if (c.kind === 'weapon') {
         const w = this.weapons.find((x) => x.id === c.id);
-        if (w) w.level++; else this.addWeapon(c.id);
+        if (w) { w.level++; if (c.evo) { this.evolved++; this.ev('evolve', { id: c.id }); } } else this.addWeapon(c.id);
       } else if (c.kind === 'passive') {
         this.passives[c.id] = (this.passives[c.id] || 0) + 1;
         this.recompute();
@@ -726,7 +730,7 @@
     result() {
       return {
         won: this.state === 'won', time: this.t, kills: this.kills, coins: this.coins, level: this.level,
-        bossKills: this.bossKills, stage: this.stageId, ship: this.shipId,
+        bossKills: this.bossKills, evolved: this.evolved, stage: this.stageId, ship: this.shipId,
         maxWeaponLevel: this.weapons.reduce((m, w) => Math.max(m, w.level), 0),
       };
     }
