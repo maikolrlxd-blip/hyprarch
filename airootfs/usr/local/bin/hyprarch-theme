@@ -35,18 +35,25 @@ rgb()    { printf '%d, %d, %d' "$((16#${1:0:2}))" "$((16#${1:2:2}))" "$((16#${1:
 put() {
   local dest=$1 tmp
   tmp=$(mktemp "${dest}.XXXXXX") || return 1
-  if cat > "$tmp"; then mv -f "$tmp" "$dest"; else rm -f "$tmp"; return 1; fi
+  if cat > "$tmp" && mv -f "$tmp" "$dest"; then return 0; else rm -f "$tmp"; return 1; fi
 }
 
 load_theme() {
-  local f
+  local f v
   case $1 in
     custom) f=$CUSTOM ;;
     *)      f="$THEMES_DIR/$1.env" ;;
   esac
   if [[ ! -f $f ]]; then echo "Tema no encontrado: $1" >&2; return 1; fi
+  unset NAME BG SURFACE SURFACE2 FG DIM ACCENT ACCENT2 OK ALERT WARN WALL
   # shellcheck disable=SC1090
-  . "$f"
+  . "$f" || return 1
+  [[ -n ${NAME:-} ]] || { echo "Tema sin nombre: $1" >&2; return 1; }
+  WARN=${WARN:-ffb300}
+  for v in BG SURFACE SURFACE2 FG DIM ACCENT ACCENT2 OK ALERT WARN; do
+    hex_ok "${!v:-}" || { echo "HEX inválido en $v del tema: $1" >&2; return 1; }
+    printf -v "$v" '%s' "$(norm "${!v}")"
+  done
 }
 
 # ---------- generadores ----------
@@ -158,7 +165,7 @@ height=220
 anchor=top-right
 default-timeout=5000
 
-[urgency=high]
+[urgency=critical]
 border-color=#${ALERT}
 default-timeout=0
 EOF
@@ -188,7 +195,7 @@ render_gtk() {
 @define-color theme_selected_bg_color #${ACCENT};
 @define-color theme_selected_fg_color #${BG};
 "
-  printf '%s' "$css" | put "$CFG/gtk-3.0/gtk.css"
+  printf '%s' "$css" | put "$CFG/gtk-3.0/gtk.css" || return 1
   printf '%s' "$css" | put "$CFG/gtk-4.0/gtk.css"
 }
 
@@ -292,50 +299,52 @@ reload_all() {
   pkill -SIGUSR1 kitty 2>/dev/null
   command -v makoctl >/dev/null 2>&1 && makoctl reload >/dev/null 2>&1
   # setsid -f: el fondo debe sobrevivir al cierre de la terminal del menú
-  [[ -x $CFG/hypr/scripts/wallpaper.sh ]] && setsid -f "$CFG/hypr/scripts/wallpaper.sh" >/dev/null 2>&1 < /dev/null
+  [[ -x $CFG/hypr/scripts/wallpaper.sh ]] && setsid -f "$CFG/hypr/scripts/wallpaper.sh" 9>&- >/dev/null 2>&1 < /dev/null
   command -v notify-send >/dev/null 2>&1 && notify-send -t 3000 "Tema aplicado" "$NAME"
   return 0
 }
 
-apply() {
+apply() (
   # un solo cambio de tema a la vez
-  if command -v flock >/dev/null 2>&1; then exec 9>"$DATA/.lock"; flock 9; fi
+  if command -v flock >/dev/null 2>&1; then exec 9>"$DATA/.lock" || return 1; flock 9 || return 1; fi
+  if [[ $1 == custom && $# == 3 ]]; then
+    load_theme verde || return 1
+    put "$CUSTOM" <<EOF || return 1
+NAME="Personalizado (#${2})"
+BG=${BG}
+SURFACE=${SURFACE}
+SURFACE2=${SURFACE2}
+FG=${FG}
+DIM=${DIM}
+ACCENT=${2}
+ACCENT2=${3}
+OK=39ff14
+ALERT=ff1f4b
+WARN=${WARN:-ffb300}
+WALL=verde
+EOF
+  fi
   load_theme "$1" || return 1
   render_hypr && render_waybar && render_kitty && render_fuzzel \
     && render_mako && render_gtk && render_hyprlock && render_wallpaper \
     || { echo "Error generando los archivos del tema: no se aplicó." >&2; return 1; }
   printf '%s\n' "$1" | put "$CURRENT" || return 1
   reload_all
-}
+)
 
 # ---------- personalizado ----------
 custom_flow() {
   local a b
   echo
-  read -rp "Color de ACENTO en HEX (ej. 00ffaa)   [Enter = cancelar]: " a
+  read -rp "Color de ACENTO en HEX (ej. 00ffaa)   [Enter = cancelar]: " a || return 0
   [[ -z $a ]] && return 0
   if ! hex_ok "$a"; then echo "HEX inválido (se esperan 6 dígitos)."; sleep 2; return 0; fi
-  read -rp "ACENTO secundario en HEX (ej. ff1f4b) [Enter = ff1f4b]: " b
+  read -rp "ACENTO secundario en HEX (ej. ff1f4b) [Enter = ff1f4b]: " b || return 0
   b=${b:-ff1f4b}
   if ! hex_ok "$b"; then echo "HEX inválido (se esperan 6 dígitos)."; sleep 2; return 0; fi
   a=$(norm "$a"); b=$(norm "$b")
 
-  load_theme verde || return 1
-  put "$CUSTOM" <<EOF
-NAME="Personalizado (#${a})"
-BG=${BG}
-SURFACE=${SURFACE}
-SURFACE2=${SURFACE2}
-FG=${FG}
-DIM=${DIM}
-ACCENT=${a}
-ACCENT2=${b}
-OK=39ff14
-ALERT=ff1f4b
-WARN=${WARN:-ffb300}
-WALL=verde
-EOF
-  apply custom
+  apply custom "$a" "$b"
 }
 
 # ---------- menú ----------

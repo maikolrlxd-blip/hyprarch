@@ -4,7 +4,7 @@ export EDITOR=nvim
 export HISTCONTROL=ignoredups:erasedups
 
 alias grep='grep --color=auto'
-if [[ -n $WAYLAND_DISPLAY ]]; then
+if [[ -n ${WAYLAND_DISPLAY:-} ]]; then
   alias ls='eza --icons --group-directories-first'
   alias ll='eza -l --icons --group-directories-first'
 else

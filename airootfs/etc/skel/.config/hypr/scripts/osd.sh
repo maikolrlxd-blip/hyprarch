@@ -10,12 +10,12 @@ notify() { # notify <titulo> <porcentaje> <texto>
 case "$1" in
   vol-up|vol-down|mute)
     case "$1" in
-      vol-up)   wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+ ;;
-      vol-down) wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- ;;
-      mute)     wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle ;;
+      vol-up)   wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+ || exit 1 ;;
+      vol-down) wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- || exit 1 ;;
+      mute)     wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle || exit 1 ;;
     esac
-    out=$(wpctl get-volume @DEFAULT_AUDIO_SINK@)
-    pct=$(awk '{printf "%d", $2 * 100}' <<<"$out")
+    out=$(wpctl get-volume @DEFAULT_AUDIO_SINK@) || exit 1
+    pct=$(LC_ALL=C awk '{printf "%d", $2 * 100}' <<<"$out")
     if grep -q MUTED <<<"$out"; then
       notify "Volumen" 0 "Silenciado"
     else
@@ -23,8 +23,9 @@ case "$1" in
     fi
     ;;
   bright-up|bright-down)
-    if [[ $1 == bright-up ]]; then brightnessctl -q set 5%+; else brightnessctl -q set 5%-; fi
-    pct=$(brightnessctl -m | cut -d, -f4 | tr -d %)
+    if [[ $1 == bright-up ]]; then brightnessctl -q set 5%+ || exit 1; else brightnessctl -q set 5%- || exit 1; fi
+    out=$(brightnessctl -m) || exit 1
+    pct=$(cut -d, -f4 <<<"$out" | tr -d %)
     notify "Brillo" "$pct" "$pct%"
     ;;
 esac

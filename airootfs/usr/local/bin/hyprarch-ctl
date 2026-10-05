@@ -2,9 +2,13 @@
 # Ejecuta un comando dentro de la sesión gráfica de Hyprland, incluso desde SSH.
 # Uso:  hyprarch-ctl hyprctl reload
 #       hyprarch-ctl grim /tmp/captura.png
-export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-sig=$(ls -t "$XDG_RUNTIME_DIR/hypr" 2>/dev/null | head -1)
-[[ -n $sig ]] && export HYPRLAND_INSTANCE_SIGNATURE="$sig"
-sock=$(ls "$XDG_RUNTIME_DIR" 2>/dev/null | grep -m1 -E '^wayland-[0-9]+$')
-[[ -n $sock ]] && export WAYLAND_DISPLAY="$sock"
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+while IFS= read -r sig; do
+  # El lock de cada instancia contiene su PID y su socket Wayland.
+  { read -r pid; IFS= read -r sock; } < "$XDG_RUNTIME_DIR/hypr/$sig/hyprland.lock" 2>/dev/null || continue
+  [[ $pid =~ ^[0-9]+$ && -n $sock ]] || continue
+  kill -0 "$pid" 2>/dev/null || continue
+  export HYPRLAND_INSTANCE_SIGNATURE="$sig" WAYLAND_DISPLAY="$sock"
+  break
+done < <(ls -t "$XDG_RUNTIME_DIR/hypr" 2>/dev/null)
 exec "$@"
