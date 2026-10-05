@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { OrbitControls } from './vendor/OrbitControls.js';
 import { Avatar } from './avatar.js';
 
 export const ROOM = 12; // metros por lado

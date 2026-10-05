@@ -5,7 +5,10 @@
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "dist": "electron-builder",
+    "dist:linux": "electron-builder --linux",
+    "dist:win": "electron-builder --win"
   },
   "license": "MIT",
   "dependencies": {
@@ -14,6 +17,48 @@
     "ws": "^8.22.0"
   },
   "devDependencies": {
-    "electron": "^33.4.11"
-  }
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  },
+  "author": "AI World",
+  "build": {
+    "appId": "com.aiworld.app",
+    "productName": "AI World",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "AI-World-Setup-${version}.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "build/icon.png",
+      "category": "Game",
+      "maintainer": "AI World <noreply@example.com>",
+      "artifactName": "AI-World-${version}.${ext}"
+    },
+    "publish": null
+  },
+  "homepage": "https://github.com/maikolrlxd-blip/hyprarch"
 }

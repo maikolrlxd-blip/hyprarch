@@ -3,7 +3,9 @@ html, body { margin: 0; height: 100%; height: 100dvh; background: #0b0b14; color
 #scene { position: fixed; inset: 0 340px 0 0; width: calc(100% - 340px); height: 100%; display: block; }
 #panel { position: fixed; top: 0; right: 0; bottom: 0; width: 340px; display: flex; flex-direction: column; background: #12121f; border-left: 1px solid #2a2a44; }
 header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid #2a2a44; }
-h1 { font-size: 16px; margin: 0; letter-spacing: .08em; color: #8affff; }
+h1 { white-space: nowrap; font-size: 16px; margin: 0; letter-spacing: .08em; color: #8affff; }
+header .btns { display: flex; gap: 4px; }
+header .btns button { padding: 5px 8px; font-size: 13px; }
 button { background: #1d1d34; color: inherit; border: 1px solid #3a3a60; border-radius: 6px; padding: 6px 10px; cursor: pointer; font: inherit; }
 button:hover { background: #28284a; }
 #roster { list-style: none; margin: 0; padding: 8px 14px; border-bottom: 1px solid #2a2a44; display: flex; flex-wrap: wrap; gap: 6px; }

@@ -35,3 +35,18 @@ test('el hash CSP del importmap coincide con el HTML', () => {
   const hash = crypto.createHash('sha256').update(body).digest('base64');
   assert.ok(html.includes(`'sha256-${hash}'`));
 });
+
+test('los imports del renderer existen y no dependen de carpetas que el empaquetador elimina', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const dir = path.join(__dirname, '../src/renderer');
+  const files = fs.readdirSync(dir).filter(f => f.endsWith('.js')).concat(fs.readdirSync(path.join(dir, 'vendor')).filter(f => f.endsWith('.js')).map(f => 'vendor/' + f));
+  for (const f of files) {
+    const src = fs.readFileSync(path.join(dir, f), 'utf8');
+    for (const m of src.matchAll(/from\s+'([^']+)'/g)) {
+      const spec = m[1];
+      if (spec === 'three') continue;
+      assert.ok(spec.startsWith('.'), `${f}: import "${spec}" no resoluble (solo 'three' y relativos)`);
+      assert.ok(fs.existsSync(path.join(dir, path.dirname(f), spec)), `${f}: falta ${spec}`);
+    }
+  }
+});
