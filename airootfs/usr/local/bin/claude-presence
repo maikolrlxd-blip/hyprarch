@@ -228,8 +228,209 @@ def shade(c, k):
     return tuple(max(0.0, min(1.0, v * k)) for v in c)
 
 
+try:
+    MASCOT = (Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "hyprarch" / "mascot").read_text().strip().lower()
+except OSError:
+    MASCOT = "elite"
+if MASCOT not in ("elite", "cute"):
+    MASCOT = "elite"
+
+
+def _poly(cr, pts):
+    cr.move_to(*pts[0])
+    for p in pts[1:]:
+        cr.line_to(*p)
+    cr.close_path()
+
+
+def draw_mascot_elite(cr, x, y, state, t, pal, look=(0.0, 0.0), scale=1.0, facing=1):
+    """Guardián de élite: casco angular, visor con ojos de luz, anillo holográfico orbitando y núcleo con propulsor.
+    Los pies (x, y) quedan en el suelo; la cabeza flota ~96 px más arriba."""
+    import cairo
+
+    A, A2, AL, BG, SF, FG = pal["ACCENT"], pal["ACCENT2"], pal["ALERT"], pal["BG"], pal["SURFACE"], pal["FG"]
+    col = {"error": AL, "waiting": (1.0, 0.70, 0.0)}.get(state, A)
+    hot = tuple(min(1.0, c * 0.45 + 0.55) for c in col)                      # versión casi blanca del color (brillo del visor)
+    bob = (math.sin(t * 1.8) * 3.0 + (math.sin(t * 9) * 1.2 if state == "working" else 0.0)
+           - (abs(math.sin(t * 5)) * 9.0 if state == "done" else 0.0))
+    shake = math.sin(t * 47) * 2.6 if state == "error" else 0.0
+    lx, ly = max(-1.0, min(1.0, look[0])), max(-1.0, min(1.0, look[1]))
+    cr.save()
+    cr.translate(x + shake, y)
+    cr.scale(scale * facing, scale)
+    hy = -98 + bob                                                            # centro de la cabeza
+
+    # sombra en el suelo y aura
+    cr.save()
+    cr.scale(1, 0.22)
+    cr.arc(0, 0, 34 + bob * 0.4, 0, 2 * math.pi)
+    cr.restore()
+    cr.set_source_rgba(0, 0, 0, 0.35)
+    cr.fill()
+    aura = cairo.RadialGradient(0, hy, 8, 0, hy, 78)
+    aura.add_color_stop_rgba(0, *col, 0.30)
+    aura.add_color_stop_rgba(1, *col, 0.0)
+    cr.set_source(aura)
+    cr.arc(0, hy, 78, 0, 2 * math.pi)
+    cr.fill()
+
+    # anillo holográfico: mitad de atrás (antes de la cabeza)
+    def ring(front):
+        cr.save()
+        cr.translate(0, hy + 6)
+        cr.scale(1, 0.26)
+        cr.arc(0, 0, 54, 0 if front else math.pi, math.pi if front else 2 * math.pi)
+        cr.restore()
+        cr.set_source_rgba(*col, 0.85 if front else 0.35)
+        cr.set_line_width(1.6 if front else 1.0)
+        cr.stroke()
+        for k in range(3):
+            ang = t * 1.5 + k * 2.094
+            if (math.sin(ang) > 0) == front:
+                px, py = math.cos(ang) * 54, hy + 6 + math.sin(ang) * 54 * 0.26
+                cr.set_source_rgba(*hot, 0.95)
+                cr.arc(px, py, 2.6 if front else 1.8, 0, 2 * math.pi)
+                cr.fill()
+    ring(False)
+
+    # propulsor y núcleo (debajo de la cabeza)
+    flame = 14 + 6 * math.sin(t * 22) + (8 if state == "working" else 0)
+    fg = cairo.LinearGradient(0, hy + 52, 0, hy + 52 + flame)
+    fg.add_color_stop_rgba(0, *hot, 0.95)
+    fg.add_color_stop_rgba(0.5, *col, 0.55)
+    fg.add_color_stop_rgba(1, *col, 0.0)
+    _poly(cr, [(-7, hy + 52), (7, hy + 52), (0, hy + 52 + flame)])
+    cr.set_source(fg)
+    cr.fill()
+    for rad, al in ((12, 0.15), (9, 0.30), (6, 1.0)):                        # núcleo hexagonal que late
+        pul = 1 + 0.12 * math.sin(t * 4)
+        cr.new_sub_path()
+        for k in range(6):
+            a_ = math.pi / 6 + k * math.pi / 3
+            (cr.move_to if k == 0 else cr.line_to)(math.cos(a_) * rad * pul, hy + 44 + math.sin(a_) * rad * pul * 0.9)
+        cr.close_path()
+        cr.set_source_rgba(*(hot if rad == 6 else col), al)
+        cr.fill()
+
+    # aletas del casco
+    # una sola cuchilla afilada barrida hacia atrás (dos aletas parecían orejas de gato: demasiado simpático)
+    for pts, al in (([(8, hy - 35), (40, hy - 66), (24, hy - 27)], 0.95), ([(-30, hy - 4), (-40, hy + 6), (-30, hy + 14)], 0.55)):
+        _poly(cr, pts)
+        cr.set_source_rgba(*col, al)
+        cr.fill()
+
+    # casco angular con degradado y borde de luz
+    helmet = [(-30, hy - 6), (-22, hy - 28), (-6, hy - 35), (12, hy - 35), (27, hy - 24), (33, hy - 3), (27, hy + 20),
+              (11, hy + 30), (-14, hy + 30), (-29, hy + 17)]
+    hg = cairo.LinearGradient(-30, hy - 35, 30, hy + 30)
+    hg.add_color_stop_rgba(0, *[c * 0.55 + b * 0.45 for c, b in zip(col, SF)], 1.0)
+    hg.add_color_stop_rgba(0.45, *[c * 0.12 + b * 0.88 for c, b in zip(col, SF)], 1.0)
+    hg.add_color_stop_rgba(1, *BG, 1.0)
+    _poly(cr, helmet)
+    cr.set_source(hg)
+    cr.fill_preserve()
+    cr.set_source_rgba(*col, 0.95)
+    cr.set_line_width(1.8)
+    cr.stroke()
+    cr.set_source_rgba(*hot, 0.55)                                           # reflejo en el borde superior izquierdo
+    cr.set_line_width(1.2)
+    cr.move_to(-22, hy - 28)
+    cr.line_to(-6, hy - 35)
+    cr.line_to(12, hy - 35)
+    cr.stroke()
+    cr.set_source_rgba(*col, 0.35)                                           # placa interior
+    cr.set_line_width(0.9)
+    cr.move_to(-20, hy + 22)
+    cr.line_to(-8, hy + 26)
+    cr.line_to(10, hy + 26)
+    cr.stroke()
+
+    # visor
+    visor = [(-25, hy - 9), (26, hy - 14), (29, hy + 3), (-21, hy + 9)]
+    _poly(cr, visor)
+    cr.set_source_rgba(*BG, 0.96)
+    cr.fill_preserve()
+    cr.set_source_rgba(*col, 0.8)
+    cr.set_line_width(1.2)
+    cr.stroke()
+    cr.save()
+    _poly(cr, visor)
+    cr.clip()
+    blink = 1.0 if (t % 4.3) < 0.11 else 0.0
+    ex_off = lx * 5
+    ey = hy - 2 + ly * 2
+    if state == "thinking":                                                  # barrido de escaneo
+        sx = math.sin(t * 3.2) * 20
+        g = cairo.LinearGradient(sx - 8, 0, sx + 8, 0)
+        g.add_color_stop_rgba(0, *col, 0.0)
+        g.add_color_stop_rgba(0.5, *hot, 0.95)
+        g.add_color_stop_rgba(1, *col, 0.0)
+        cr.set_source(g)
+        cr.rectangle(sx - 8, hy - 16, 16, 30)
+        cr.fill()
+        eyes_a = 0.35
+    elif state == "working":                                                 # flujo de datos
+        for k in range(8):
+            hgt = 3 + (math.sin(t * 14 + k * 1.9) + 1) * 4
+            cr.set_source_rgba(*hot, 0.9)
+            cr.rectangle(-20 + k * 6, hy - 2 - hgt / 2, 3.5, hgt)
+            cr.fill()
+        eyes_a = 0.0
+    else:
+        eyes_a = 1.0
+    if eyes_a > 0:
+        for ex in (-11, 11):
+            if state == "error":                                             # ojos en X
+                cr.set_source_rgba(*hot, 0.95)
+                cr.set_line_width(2.2)
+                for s_ in (1, -1):
+                    cr.move_to(ex + ex_off - 5, ey - 5 * s_)
+                    cr.line_to(ex + ex_off + 5, ey + 5 * s_)
+                cr.stroke()
+            else:
+                h_ = (7 if state != "done" else 11) * (1 - 0.9 * blink)
+                if state == "waiting":
+                    h_ *= 0.6 + 0.4 * math.sin(t * 5) ** 2
+                _poly(cr, [(ex + ex_off - 6, ey - h_ / 2 - 1), (ex + ex_off + 6, ey - h_ / 2 - 2), (ex + ex_off + 7, ey + h_ / 2 + 1),
+                           (ex + ex_off - 5, ey + h_ / 2 + 2)])
+                cr.set_source_rgba(*hot, eyes_a)
+                cr.fill()
+    # brillo diagonal del cristal
+    cr.set_source_rgba(1, 1, 1, 0.10)
+    _poly(cr, [(-25, hy - 9), (-4, hy - 11), (-14, hy + 8), (-21, hy + 9)])
+    cr.fill()
+    cr.restore()
+    if state == "waiting":                                                   # signo de pregunta ámbar sobre la cabeza
+        cr.select_font_face("JetBrainsMono Nerd Font", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+        cr.set_font_size(20)
+        cr.set_source_rgba(*col, 0.95)
+        cr.move_to(22, hy - 40 + math.sin(t * 6) * 2)
+        cr.show_text("?")
+    if state == "done":                                                      # onda de energía al terminar
+        k = (t * 1.3) % 1.0
+        cr.set_source_rgba(*hot, (1 - k) * 0.6)
+        cr.set_line_width(2.0 * (1 - k) + 0.5)
+        cr.new_sub_path()
+        cr.arc(0, hy, 36 + k * 46, 0, 2 * math.pi)
+        cr.stroke()
+    if state == "error" and int(t * 20) % 5 == 0:                            # glitch cromático
+        for dx, c_ in ((-3, A2), (3, (0.1, 0.9, 1.0))):
+            cr.save()
+            cr.translate(dx, 0)
+            _poly(cr, helmet)
+            cr.set_source_rgba(*c_, 0.35)
+            cr.set_line_width(1.5)
+            cr.stroke()
+            cr.restore()
+    ring(True)                                                               # mitad delantera del anillo
+    cr.restore()
+
+
 def draw_mascot(cr, x, y, state, t, pal, look=(0.0, 0.0), scale=1.0, facing=1):
-    """Dibuja a Claudito con el centro de los pies en (x, y). t = segundos."""
+    """Dibuja a Claudito con el centro de los pies en (x, y). t = segundos.
+    Estilo del personaje: ~/.config/hyprarch/mascot  (elite por defecto · cute = el robotito redondo original)."""
+    if MASCOT == "elite":
+        return draw_mascot_elite(cr, x, y, state, t, pal, look, scale, facing)
     import cairo
 
     A, A2, OK, AL = pal["ACCENT"], pal["ACCENT2"], pal["OK"], pal["ALERT"]

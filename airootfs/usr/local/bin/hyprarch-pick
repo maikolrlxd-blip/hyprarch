@@ -222,6 +222,47 @@ def paint_orb(cr, x, y, rad, pal, a, sel, hv, col, t):
     import cairo
 
     A2, SF, SF2, BG, FG = pal["ACCENT2"], pal["SURFACE"], pal["SURFACE2"], pal["BG"], pal["FG"]
+    if U.FRESH:                                                          # esfera de cristal clara con brillo, órbita fina al apuntar
+        s_ = 1.0 if sel else hv
+        if s_ > 0.01:
+            for k, al in ((rad * 0.55, 0.06), (rad * 0.28, 0.10)):             # halo suave de color (no neón)
+                cr.new_sub_path()
+                cr.arc(x, y + 4, rad + k, 0, 2 * math.pi)
+                cr.set_source_rgba(*col, al * a * s_)
+                cr.fill()
+        g = cairo.RadialGradient(x - rad * 0.3, y - rad * 0.45, rad * 0.05, x, y, rad)
+        if sel:
+            g.add_color_stop_rgba(0, *mix(col, (1, 1, 1), 0.45), 0.97 * a)
+            g.add_color_stop_rgba(1, *mix(col, A2, 0.55), 0.90 * a)
+        else:
+            g.add_color_stop_rgba(0, 1, 1, 1, (0.20 + 0.10 * hv) * a)
+            g.add_color_stop_rgba(0.6, *mix(SF2, col, 0.18 * hv), 0.35 * a)
+            g.add_color_stop_rgba(1, *mix(SF, BG, 0.5), 0.55 * a)
+        cr.new_sub_path()
+        cr.arc(x, y, rad, 0, 2 * math.pi)
+        cr.set_source(g)
+        cr.fill()
+        cr.new_sub_path()
+        cr.arc(x, y, rad, 0, 2 * math.pi)
+        cr.set_source_rgba(1, 1, 1, (0.18 + 0.30 * s_) * a)
+        cr.set_line_width(1.0)
+        cr.stroke()
+        cr.new_sub_path()                                                    # reflejo de vidrio arriba-izquierda
+        cr.arc(x - rad * 0.30, y - rad * 0.44, rad * 0.34, 0, 2 * math.pi)
+        cr.set_source_rgba(1, 1, 1, (0.16 if sel else 0.10) * a)
+        cr.fill()
+        if s_ > 0.05:                                                        # órbita fina con un nodo, microdetalle
+            cr.new_sub_path()
+            cr.arc(x, y, rad + 9, 0, 2 * math.pi)
+            cr.set_source_rgba(*col, 0.35 * a * s_)
+            cr.set_line_width(0.9)
+            cr.stroke()
+            ang = t * 1.6
+            cr.new_sub_path()
+            cr.arc(x + math.cos(ang) * (rad + 9), y + math.sin(ang) * (rad + 9), 2.4, 0, 2 * math.pi)
+            cr.set_source_rgba(1, 1, 1, 0.95 * a * s_)
+            cr.fill()
+        return
     if U.STARK:                                                          # holograma JARVIS: anillos finos que giran + marcas de escala
         s_ = 1.0 if sel else hv
         cr.new_sub_path()
@@ -359,7 +400,7 @@ def draw_life(cr, w, h, S, pal, op):
         cr.set_source(g)
         cr.rectangle(0, 0, w, h)
         cr.fill()
-    for (fx, fy0, sp, sz, ph, depth) in S["parts"]:
+    for (fx, fy0, sp, sz, ph, depth) in (S["parts"][:22] if U.FRESH else S["parts"]):          # fresh: menos partículas, más limpio
         y = (fy0 - t * sp * 0.05) % 1.15 - 0.075
         x = fx + math.sin(t * 0.6 + ph) * 0.02
         al = (0.15 + 0.35 * (0.5 + 0.5 * math.sin(t * 1.6 + ph))) * op * math.sin(clamp(y + 0.05, 0, 1) * math.pi)
@@ -444,7 +485,7 @@ def draw_scene(cr, w, h, S, pal, pal_full):
     else:
         op = clamp(t / (U.OPEN_T * 0.5))
         pop = clamp(t / (U.OPEN_T * 0.4))
-    cr.set_source_rgba(*mix(BG, (0, 0, 0), 0.5), 0.72 * op)
+    cr.set_source_rgba(*mix(BG, (0, 0, 0), 0.5), (0.50 if U.FRESH else 0.72) * op)       # fresh: se ve más el escritorio detrás
     cr.paint()
     draw_life(cr, w, h, S, pal, op)
     lay = S["layout"]
@@ -455,6 +496,17 @@ def draw_scene(cr, w, h, S, pal, pal_full):
         pop *= 0.93 + 0.07 * abs(math.sin(t * 47)) if int(t * 9) % 11 == 0 else 1.0
     # personajito compañero
     if lay == "orbit":
+        if U.FRESH:                                                        # anillos finos y suaves alrededor del personaje
+            for k, (rr, al, dash) in enumerate(((0.19, 0.20, None), (0.255, 0.12, [3, 7]), (0.34, 0.08, [2, 9]))):
+                cr.save()
+                if dash:
+                    cr.set_dash(dash, t * (8 if k % 2 else -8))
+                cr.new_sub_path()
+                cr.arc(cx, cy + 30, min(w, h) * rr, 0, 2 * math.pi)
+                cr.set_source_rgba(1, 1, 1, al * pop)
+                cr.set_line_width(1.0)
+                cr.stroke()
+                cr.restore()
         if U.STARK:
             draw_reactor(cr, cx, cy + 30, min(w, h) * 0.20, pal, t, pop)
             for _i, _c in S["pos"].items():                                # rayos finos del reactor a cada nodo

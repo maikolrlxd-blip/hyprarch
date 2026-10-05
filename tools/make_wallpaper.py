@@ -179,7 +179,49 @@ def render_cine(seed=5):
     return Image.fromarray((np.clip(img, 0, 1) * 255).astype(np.uint8))
 
 
+def render_fresco(seed=9):
+    """Fondo fresco y limpio: cielo azul profundo con cintas de aurora suaves (menta y cielo), pocas estrellas y un
+    horizonte apenas insinuado. Todo desenfocado y aireado; sin rejilla ni elementos recargados."""
+    rng = np.random.default_rng(seed)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    top, bot = np.array([0.020, 0.035, 0.075], np.float32), np.array([0.030, 0.062, 0.110], np.float32)
+    t = (yy / H)[..., None]
+    img = top * (1 - t) + bot * t
+    cols = (np.array([0.30, 0.95, 0.78], np.float32), np.array([0.46, 0.66, 1.0], np.float32), np.array([0.62, 0.50, 1.0], np.float32))
+    ribbons = np.zeros((H, W, 3), np.float32)
+    for k, c in enumerate(cols):
+        yc = H * (0.26 + 0.11 * k) + np.sin(xx / W * (2.6 + k * 0.7) * np.pi + k * 1.7) * H * (0.07 - 0.01 * k) \
+            + np.sin(xx / W * 7.0 + k) * H * 0.012
+        thick = H * (0.045 + 0.012 * k)
+        band = np.exp(-(((yy - yc) / thick) ** 2))
+        shimmer = 0.45 + 0.55 * np.sin(xx / W * (5.0 + k) * np.pi + k * 2.1) ** 2
+        fine = 0.75 + 0.25 * np.sin(xx / W * 90 + yy / H * 14 + k)              # rayitas verticales finas (cortina de luz)
+        ribbons += (band * shimmer * fine)[..., None] * c * (0.62 - 0.08 * k)
+        edge = np.exp(-(((yy - (yc + thick * 0.55)) / (thick * 0.18)) ** 2))   # borde inferior más brillante, como una cortina real
+        ribbons += (edge * shimmer)[..., None] * c * 0.30
+    ribbons = blur(np.clip(ribbons, 0, 1), 9) * 0.85 + blur(np.clip(ribbons, 0, 1), 34) * 0.75 + blur(np.clip(ribbons, 0, 1), 100) * 0.55
+    img = img + ribbons * 0.60
+    # estrellas sueltas
+    stars = np.zeros((H, W), np.float32)
+    for _ in range(170):
+        x, y = rng.integers(0, W), int(rng.random() ** 1.4 * H * 0.7)
+        stars[y:y + 2, x:x + 2] = rng.random() * 0.7 + 0.25
+    img += stars[..., None] * np.array([0.85, 0.95, 1.0], np.float32) * 0.55
+    # niebla suave en el horizonte
+    hz = np.exp(-(((yy - H * 0.80) / (H * 0.14)) ** 2))[..., None]
+    img += hz * np.array([0.05, 0.10, 0.16], np.float32) * 0.9
+    # zonas tranquilas (barra y rincón del personaje) y viñeta
+    topz = 1 - 0.40 * (1 - smoothstep(0.0, H * 0.08, yy))[..., None]
+    corner = 1 - 0.35 * np.exp(-(((xx - W * 0.97) / (W * 0.13)) ** 2 + ((yy - H * 0.97) / (H * 0.17)) ** 2))[..., None]
+    img *= topz * corner
+    r = np.sqrt(((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2)
+    img *= (1 - 0.30 * np.clip(r - 0.4, 0, 1) ** 1.5)[..., None]
+    img += rng.normal(0, 0.006, img.shape).astype(np.float32)
+    return Image.fromarray((np.clip(img, 0, 1) * 255).astype(np.uint8))
+
+
 THEMES = {
+    "fresco": None,        # composición propia: render_fresco()
     "verde": dict(accent="#39ff14", accent2="#ff1f4b", sky_top="#020403", sky_horizon="#0a2a14", seed=7),
     "rojo": dict(accent="#ff1f4b", accent2="#39ff14", sky_top="#040203", sky_horizon="#2a0a12", seed=11),
     "gamer": dict(accent="#00e5ff", accent2="#b026ff", sky_top="#04010c", sky_horizon="#1a0838", seed=21),
@@ -196,6 +238,6 @@ if __name__ == "__main__":
         if only and name not in only:
             continue
         path = out / f"hyprarch-{name}.jpg"
-        img = render_cine() if name == "cine" else render(**params)
+        img = render_cine() if name == "cine" else (render_fresco() if name == "fresco" else render(**params))
         img.save(path, quality=90, optimize=True, subsampling=0)
         print(f"{path}  {path.stat().st_size / 1024:.0f} KB")

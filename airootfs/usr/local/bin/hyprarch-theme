@@ -355,6 +355,7 @@ menu() {
 
   # Menú animado (hyprarch-pick): rueda curva con cuadritos de color. Sin terminal, sin fzf.
   sel=$(printf '%s\n' \
+      $'fresco\tFresco\t#5ef2c8\tmenta y cielo, limpio' \
       $'verde\tVerde dominante\t#39ff14\tneón clásico' \
       $'rojo\tRojo dominante\t#ff1f4b\tcarmesí' \
       $'gamer\tModo gamer\t#00e5ff\tcian y violeta arcade' \
@@ -367,7 +368,7 @@ menu() {
         --placeholder "Tema actual: ${cur}") || return 0
 
   case $sel in
-    verde|rojo|gamer|cine|estudio|trabajo) apply "$sel" ;;
+    fresco|verde|rojo|gamer|cine|estudio|trabajo) apply "$sel" ;;
     custom) custom_flow ;;
     toggle) toggle ;;
     *) ;;
@@ -386,5 +387,12 @@ case "${1:-menu}" in
   custom)  apply custom ;;
   toggle)  toggle ;;
   actual)  apply "$(cat "$CURRENT" 2>/dev/null || echo verde)" ;;
-  *) echo "Uso: hyprarch-theme [menu|verde|rojo|custom|toggle|actual]" >&2; exit 1 ;;
+  *)
+    # cualquier tema que exista en /usr/share/hyprarch/themes (fresco, gamer, cine, estudio, trabajo, ...)
+    if [[ ${1:-} =~ ^[a-z0-9_-]+$ && -f "$THEMES_DIR/$1.env" ]]; then
+      apply "$1"
+    else
+      echo "Uso: hyprarch-theme [menu|<tema>|custom|toggle|actual]   (temas: $(cd "$THEMES_DIR" 2>/dev/null && ls ./*.env 2>/dev/null | sed 's|./||;s|\.env||' | tr '\n' ' '))" >&2
+      exit 1
+    fi ;;
 esac

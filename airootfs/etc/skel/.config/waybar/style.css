@@ -41,13 +41,19 @@ tooltip label {
 #custom-theme,
 #custom-help,
 #custom-power {
-  background: @bg;
+  /* Fresco y limpio: cristal translúcido (Hyprland lo desenfoca), borde finísimo claro y mucho aire entre píldoras.
+     El color solo aparece en lo activo y al pasar el mouse. */
+  background: alpha(@bg, 0.50);
   color: @fg;
-  padding: 0 12px;
+  padding: 0 14px;
   margin: 0;
-  border-radius: 12px;
-  border: 1px solid alpha(@accent, 0.14);
-  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  border-radius: 16px;
+  border: 1px solid alpha(@fg, 0.10);
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+}
+#custom-launcher:hover, #clock:hover, #custom-sys:hover, #custom-claude:hover, #custom-theme:hover,
+#custom-help:hover, #custom-power:hover, #custom-close:hover, #sistema:hover, #conex:hover, #battery:hover {
+  border-color: alpha(@accent, 0.55);
 }
 
 /* Módulos dentro de una píldora de grupo: sin fondo ni borde propios */

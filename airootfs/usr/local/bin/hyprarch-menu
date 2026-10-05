@@ -32,22 +32,25 @@ CARD_W = 344
 #   sutil                    animaciones cortas y discretas (principios de Emil Kowalski: menos de 300 ms, salida fuerte,
 #                            nada nace de escala 0, el panel crece desde el personaje, cierre más rápido que la apertura)
 CFG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "hyprarch"
+#   fresh (por defecto)      fresco, limpio y suelto pero con detalles: vidrio esmerilado claro, líneas finas, sombras suaves
+#                            en vez de neón pesado, capas 3D que flotan, rebote dinámico y microdetalles (marcas, puntos, órbitas finas)
 try:
     STYLE = (CFG_DIR / "style").read_text().strip().lower()
 except OSError:
-    STYLE = "dinamico"
+    STYLE = "fresh"
 #   cyber                    sci-fi / cyberpunk: esquinas cortadas, marcas de mira, líneas de escaneo, texto de HUD, parpadeo al abrir
 #   neumo                    3D inmersivo neumórfico / skeuomorfismo moderno: superficies en relieve con luz y sombra suaves;
 #                            lo elegido se "hunde" como un botón físico y se enciende un LED
 #   stark                    hologramas estilo Tony Stark / JARVIS: paneles translúcidos de contorno fino, anillos de reactor arc
 #                            que giran, marcas de escala y lecturas de datos flotando, leve parpadeo de holograma
-if STYLE not in ("dinamico", "3d", "sutil", "cyber", "neumo", "stark"):
-    STYLE = "dinamico"
+if STYLE not in ("fresh", "dinamico", "3d", "sutil", "cyber", "neumo", "stark"):
+    STYLE = "fresh"
 CYBER = STYLE == "cyber"
 NEUMO = STYLE == "neumo"
 STARK = STYLE == "stark"
-BOUNCY = STYLE in ("dinamico", "3d", "neumo")
-DEPTH = STYLE == "3d"
+FRESH = STYLE == "fresh"
+BOUNCY = STYLE in ("fresh", "dinamico", "3d", "neumo")
+DEPTH = STYLE in ("fresh", "3d")
 if STYLE in ("cyber", "stark"):
     OPEN_T, CLOSE_T, ITEM_T, STAGGER = 0.26, 0.14, 0.20, 0.022
 elif STYLE == "neumo":
@@ -250,6 +253,42 @@ def paint_card(cr, x, y, w, h, r, pal, a, t=0.0):
     import cairo
 
     A, A2, BG, SF2, FG = pal["ACCENT"], pal["ACCENT2"], pal["BG"], pal["SURFACE2"], pal["FG"]
+    if FRESH:                                                                  # vidrio esmerilado claro, línea de luz arriba y detalles finos
+        rrect(cr, x, y, w, h, r)
+        cr.set_source_rgba(*mix(BG, (1, 1, 1), 0.07), 0.74 * a)
+        cr.fill()
+        top = cairo.LinearGradient(0, y, 0, y + h * 0.55)                       # luz suave desde arriba
+        top.add_color_stop_rgba(0, 1, 1, 1, 0.11 * a)
+        top.add_color_stop_rgba(1, 1, 1, 1, 0.0)
+        rrect(cr, x, y, w, h * 0.55, r)
+        cr.set_source(top)
+        cr.fill()
+        rrect(cr, x + 0.5, y + 0.5, w - 1, h - 1, r)                            # borde fino claro
+        cr.set_source_rgba(1, 1, 1, 0.17 * a)
+        cr.set_line_width(1.0)
+        cr.stroke()
+        hair = cairo.LinearGradient(x + r, 0, x + w - r, 0)                     # hilo de color en el borde superior
+        hair.add_color_stop_rgba(0, *A, 0.0)
+        hair.add_color_stop_rgba(0.3, *A, 0.95 * a)
+        hair.add_color_stop_rgba(0.7, *A2, 0.95 * a)
+        hair.add_color_stop_rgba(1, *A2, 0.0)
+        cr.set_source(hair)
+        cr.set_line_width(1.6)
+        cr.move_to(x + r, y + 0.8)
+        cr.line_to(x + w - r, y + 0.8)
+        cr.stroke()
+        for k, c_ in enumerate((A2, (1.0, 0.75, 0.2), A)):                      # tres puntitos tipo ventana (toque skeuomórfico)
+            cr.set_source_rgba(*c_, 0.85 * a)
+            cr.arc(x + 18 + k * 11, y + 14, 3, 0, 2 * math.pi)
+            cr.fill()
+        cr.set_source_rgba(1, 1, 1, 0.20 * a)                                   # microescala en el borde inferior
+        cr.set_line_width(1.0)
+        for k in range(int((w - 40) / 16)):
+            ln = 5 if k % 4 == 0 else 2.5
+            cr.move_to(x + 20 + k * 16, y + h - 1)
+            cr.line_to(x + 20 + k * 16, y + h - 1 - ln)
+        cr.stroke()
+        return
     if STARK:                                                                  # holograma: casi transparente, contorno doble, escala y datos
         rrect(cr, x, y, w, h, r)
         cr.set_source_rgba(*mix(BG, A, 0.05), 0.40 * a)
@@ -357,6 +396,30 @@ def paint_item(cr, x, y, w, h, r, pal, a, sel, hv, col=None, t=0.0):
 
     A, A2, SF, SF2, BG, FG = pal["ACCENT"], pal["ACCENT2"], pal["SURFACE"], pal["SURFACE2"], pal["BG"], pal["FG"]
     col = col or A
+    if FRESH:                                                                  # cristal claro; lo elegido se llena con degradado y flota con sombra suave
+        if sel:
+            for k, al in ((16, 0.10), (10, 0.14), (5, 0.18)):                  # sombra de color suave debajo (no neón)
+                rrect(cr, x + 2, y + k * 0.8 + 2, w - 4, h, r)
+                cr.set_source_rgba(*col, al * a)
+                cr.fill()
+            gg = cairo.LinearGradient(x, y, x + w, y + h)
+            gg.add_color_stop_rgba(0, *mix(col, (1, 1, 1), 0.10), 0.95 * a)
+            gg.add_color_stop_rgba(1, *mix(col, A2, 0.55), 0.88 * a)
+            rrect(cr, x, y, w, h, r)
+            cr.set_source(gg)
+            cr.fill()
+            rrect(cr, x + 0.5, y + 0.5, w - 1, h * 0.5, r)                      # brillo superior
+            cr.set_source_rgba(1, 1, 1, 0.20 * a)
+            cr.fill()
+        else:
+            rrect(cr, x, y, w, h, r)
+            cr.set_source_rgba(1, 1, 1, (0.045 + 0.075 * hv) * a)
+            cr.fill()
+            rrect(cr, x + 0.5, y + 0.5, w - 1, h - 1, r)
+            cr.set_source_rgba(*(mix((1, 1, 1), col, 0.5 * hv)), (0.10 + 0.30 * hv) * a)
+            cr.set_line_width(1.0)
+            cr.stroke()
+        return
     if STARK:                                                                  # holograma: contorno fino, esquinas de mira, barrido al elegir
         rrect(cr, x, y, w, h, min(r, 10))
         cr.set_source_rgba(*(col if sel else mix(SF, col, 0.4)), (0.20 if sel else 0.07 + 0.10 * hv) * a)

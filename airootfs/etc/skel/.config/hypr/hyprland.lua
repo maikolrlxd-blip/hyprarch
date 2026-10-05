@@ -22,7 +22,8 @@ do
 end
 -- dur: multiplica la duración de las animaciones (menos = más rápido)
 local PRESETS = {
-    normal  = { dur = 1.0,  blur = true,  shadow = true,  glow = true,  spring = true,  rotate = true,  gaps_in = 5, gaps_out = 12, border = 2 },
+    -- normal = "fresco": más aire entre ventanas, borde finísimo, sombra suave en vez de neón, resortes con rebote
+    normal  = { dur = 1.0,  blur = true,  shadow = true,  glow = false, spring = true,  rotate = false, gaps_in = 7, gaps_out = 20, border = 1 },
     gamer   = { dur = 0.55, blur = false, shadow = false, glow = false, spring = false, rotate = false, gaps_in = 4, gaps_out = 8,  border = 2 },
     cine    = { dur = 2.2,  blur = true,  shadow = true,  glow = false, spring = false, rotate = false, gaps_in = 0, gaps_out = 0,  border = 0 },
     estudio = { dur = 1.5,  blur = true,  shadow = true,  glow = false, spring = false, rotate = false, gaps_in = 6, gaps_out = 16, border = 1 },
@@ -135,14 +136,14 @@ hl.config({
     },
 
     decoration = {
-        rounding       = 12,
+        rounding       = 16,
         rounding_power = 2,
         active_opacity   = 1.0,
-        inactive_opacity = 0.94,
+        inactive_opacity = 0.92,
 
         shadow = {
             enabled      = P.shadow,
-            range        = 18,
+            range        = 34,
             render_power = 3,
             color        = C.shadow,
         },
@@ -158,7 +159,7 @@ hl.config({
         -- Blur: la terminal (kitty) es translúcida y se desenfoca sola
         blur = {
             enabled           = P.blur,
-            size              = 6,
+            size              = 9,
             passes            = 3,
             vibrancy          = 0.2,
             noise             = 0.02,

@@ -1,11 +1,11 @@
 {
   "layer": "top",
   "position": "top",
-  "height": 34,
-  "margin-top": 6,
-  "margin-left": 10,
-  "margin-right": 10,
-  "spacing": 6,
+  "height": 36,
+  "margin-top": 10,
+  "margin-left": 16,
+  "margin-right": 16,
+  "spacing": 10,
 
   "modules-left": [
     "custom/launcher",
