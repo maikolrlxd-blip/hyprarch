@@ -48,7 +48,7 @@
     "format": "",
     "tooltip-format": "Aplicaciones (SUPER + D)",
     "tooltip": true,
-    "on-click": "fuzzel"
+    "on-click": "hyprarch-launcher"
   },
 
   // Espacios de trabajo: el módulo hyprland/workspaces de Waybar 0.15 no puede cambiar de espacio con
@@ -186,7 +186,7 @@
     "format": "",
     "tooltip": true,
     "tooltip-format": "Cambiar colores (SUPER + T)",
-    "on-click": "$HOME/.config/hypr/scripts/once.sh hyprarch-theme hyprarch-theme"
+    "on-click": "hyprarch-theme"
   },
 
   "custom/help": {

@@ -183,6 +183,8 @@ THEMES = {
     "verde": dict(accent="#39ff14", accent2="#ff1f4b", sky_top="#020403", sky_horizon="#0a2a14", seed=7),
     "rojo": dict(accent="#ff1f4b", accent2="#39ff14", sky_top="#040203", sky_horizon="#2a0a12", seed=11),
     "gamer": dict(accent="#00e5ff", accent2="#b026ff", sky_top="#04010c", sky_horizon="#1a0838", seed=21),
+    "estudio": dict(accent="#4fd1c5", accent2="#7aa2ff", sky_top="#02080a", sky_horizon="#0a2a2e", seed=31),
+    "trabajo": dict(accent="#5ec2ff", accent2="#8b9cff", sky_top="#03060a", sky_horizon="#0a1830", seed=41),
     "cine": None,          # composición propia: render_cine()
 }
 

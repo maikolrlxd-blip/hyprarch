@@ -1,0 +1,129 @@
+#!/usr/bin/env python3
+"""hyprarch-launcher — el lanzador de aplicaciones (SUPER + D): un campo de burbujas flotantes con buscador.
+
+Lee los .desktop del sistema, resuelve sus íconos reales y se los pasa a hyprarch-pick (--layout bubbles).
+Las aplicaciones más usadas flotan primero (historial en ~/.cache/hyprarch/launcher-history.json).
+"""
+import json
+import os
+import re
+import shlex
+import subprocess
+import sys
+from pathlib import Path
+
+HOME = Path.home()
+DIRS = [Path("/usr/share/applications"), Path("/usr/local/share/applications"), HOME / ".local/share/applications",
+        Path("/var/lib/flatpak/exports/share/applications"), HOME / ".local/share/flatpak/exports/share/applications"]
+ICON_DIRS = [HOME / ".local/share/icons", Path("/usr/share/icons/hicolor"), Path("/usr/share/icons/Adwaita"),
+             Path("/usr/share/icons"), Path("/usr/share/pixmaps")]
+SIZES = ("128x128", "96x96", "72x72", "64x64", "48x48", "256x256", "scalable", "512x512", "32x32")
+HIST = HOME / ".cache/hyprarch/launcher-history.json"
+
+
+def find_icon(name):
+    if not name:
+        return ""
+    if name.startswith("/"):
+        return name if Path(name).exists() else ""
+    for base in ICON_DIRS:
+        if base.name == "pixmaps":
+            for ext in (".png", ".svg", ".xpm"):
+                p = base / (name + ext)
+                if p.exists():
+                    return str(p)
+            continue
+        for size in SIZES:
+            for sub in ("apps", "legacy", "mimetypes"):
+                for ext in (".png", ".svg"):
+                    p = base / size / sub / (name + ext)
+                    if p.exists():
+                        return str(p)
+    return ""
+
+
+def parse_desktop(path):
+    d, in_main = {}, False
+    try:
+        for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            line = line.strip()
+            if line.startswith("["):
+                in_main = line == "[Desktop Entry]"
+                continue
+            if in_main and "=" in line and not line.startswith("#"):
+                k, v = line.split("=", 1)
+                if k not in d:                         # el primer valor (sin traducción) manda
+                    d[k] = v
+    except OSError:
+        return None
+    if d.get("Type", "Application") != "Application" or d.get("NoDisplay") == "true" or d.get("Hidden") == "true":
+        return None
+    if not d.get("Name") or not d.get("Exec"):
+        return None
+    return d
+
+
+def load_apps():
+    apps = {}
+    for base in DIRS:
+        if not base.is_dir():
+            continue
+        for f in sorted(base.rglob("*.desktop")):
+            d = parse_desktop(f)
+            if not d:
+                continue
+            ident = f.stem
+            apps[ident] = dict(id=ident, name=d["Name"], exec=d["Exec"], icon=find_icon(d.get("Icon", "")),
+                               comment=d.get("Comment", d.get("GenericName", "")), terminal=d.get("Terminal") == "true",
+                               path=d.get("Path", ""))
+    return list(apps.values())
+
+
+def load_hist():
+    try:
+        return json.loads(HIST.read_text())
+    except Exception:
+        return {}
+
+
+def run_app(app):
+    cmd = re.sub(r"%[a-zA-Z%]", "", app["exec"]).strip()
+    if app["terminal"]:
+        cmd = "kitty -e " + cmd
+    subprocess.Popen(["setsid", "-f", "bash", "-c", cmd], cwd=app["path"] or str(HOME), stdin=subprocess.DEVNULL,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
+
+def main():
+    apps = load_apps()
+    hist = load_hist()
+    apps.sort(key=lambda a: (-hist.get(a["id"], 0), a["name"].lower()))
+    lines = []
+    for a in apps:
+        sub = a["comment"].replace("\t", " ").replace("\n", " ")[:80]
+        lines.append("\t".join((a["id"], a["name"].replace("\t", " "), a["icon"], sub)))
+    try:
+        p = subprocess.run(["hyprarch-pick", "--layout", "bubbles", "--title", "Aplicaciones",
+                            "--placeholder", "Escribí el nombre de una aplicación…"],
+                           input="\n".join(lines), capture_output=True, text=True)
+    except FileNotFoundError:
+        print("falta hyprarch-pick", file=sys.stderr)
+        return 1
+    sel = p.stdout.strip()
+    if p.returncode != 0 or not sel:
+        return 0
+    app = next((a for a in apps if a["id"] == sel), None)
+    if not app:
+        return 1
+    hist[sel] = hist.get(sel, 0) + 1
+    try:
+        HIST.parent.mkdir(parents=True, exist_ok=True)
+        HIST.write_text(json.dumps(hist))
+    except OSError:
+        pass
+    run_app(app)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -66,7 +66,7 @@ hl.monitor({
 })
 
 local terminal = "kitty"
-local menu     = "fuzzel"
+local menu     = "hyprarch-launcher"      -- burbujas animadas (motor hyprarch-pick); ya no se usa fuzzel
 local files    = "thunar"
 local browser  = "firefox"
 local scripts  = (os.getenv("HOME") or "") .. "/.config/hypr/scripts"
@@ -270,19 +270,19 @@ hl.bind(mod .. " + B",      hl.dsp.exec_cmd(browser))
 hl.bind(mod .. " + E",      hl.dsp.exec_cmd(files))
 hl.bind(mod .. " + N",      hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-nmtui nmtui"))
 hl.bind(mod .. " + A",      hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-ai hyprarch-ai chat"))            -- hablar con la IA elegida
-hl.bind(mod .. " + SHIFT + A", hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-ai hyprarch-ai setup"))   -- cambiar de IA
+hl.bind(mod .. " + SHIFT + A", hl.dsp.exec_cmd("hyprarch-ai pick"))                                     -- cambiar de IA (órbita animada)
 -- Modos (cada atajo alterna entre ese modo y el normal)
 hl.bind(mod .. " + SHIFT + G", hl.dsp.exec_cmd("hyprarch-mode toggle gamer"))
 hl.bind(mod .. " + SHIFT + C", hl.dsp.exec_cmd("hyprarch-mode toggle cine"))
 hl.bind(mod .. " + SHIFT + U", hl.dsp.exec_cmd("hyprarch-mode toggle estudio"))
 hl.bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd("hyprarch-mode toggle trabajo"))
 hl.bind(mod .. " + SHIFT + N", hl.dsp.exec_cmd("hyprarch-mode normal"))
-hl.bind(mod .. " + T",      hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-theme hyprarch-theme"))
+hl.bind(mod .. " + T",      hl.dsp.exec_cmd("hyprarch-theme"))                                            -- colores (rueda animada)
 hl.bind(mod .. " + S",      hl.dsp.exec_cmd("bash " .. scripts .. "/toggle-shader.sh"))   -- shader CRT (apagado por defecto)
 hl.bind(mod .. " + F1",     hl.dsp.exec_cmd(scripts .. "/keybinds.sh"))
 hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(scripts .. "/powermenu.sh"))
 hl.bind(mod .. " + L",      hl.dsp.exec_cmd("hyprlock"))
-hl.bind(mod .. " + SHIFT + V", hl.dsp.exec_cmd("cliphist list | fuzzel --dmenu --prompt 'Portapapeles > ' | cliphist decode | wl-copy"))
+hl.bind(mod .. " + SHIFT + V", hl.dsp.exec_cmd(scripts .. "/clipboard.sh"))
 
 -- Ventanas
 hl.bind(mod .. " + Q",       hl.dsp.window.close())

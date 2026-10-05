@@ -1,29 +1,34 @@
 #!/usr/bin/env bash
-# Hoja de atajos (SUPER + F1). SUPER = tecla Windows.
-cat <<'EOF' | fuzzel --dmenu --prompt "Atajos > " --lines 22 --width 58 >/dev/null
-SUPER + Enter           Terminal
-SUPER + D               Lanzador de aplicaciones
-SUPER + B               Firefox
-SUPER + E               Archivos
-SUPER + A               Hablar con tu IA (también: clic en el personajito)
-SUPER + SHIFT + A       Cambiar de IA (Claude, Codex, Gemini, Ollama...)
-SUPER + N               Redes Wi-Fi
-SUPER + T               Cambiar tema de colores
-SUPER + Q  /  ALT + F4  CERRAR ventana
-SUPER + F               Pantalla completa
-SUPER + V               Ventana flotante
-SUPER + J               Cambiar división
-SUPER + flechas         Mover foco
-SUPER + SHIFT + flechas Mover ventana
-SUPER + CTRL + flechas  Redimensionar
-SUPER + 1..9            Ir al espacio de trabajo
-SUPER + SHIFT + 1..9    Enviar ventana al espacio
-SUPER + Tab             Espacio anterior
-ALT + Tab               Siguiente ventana
-SUPER + SHIFT + V       Historial del portapapeles
-Impr / SHIFT + Impr     Captura (área / pantalla)
-ALT + SHIFT             Cambiar distribución de teclado
-SUPER + L               Bloquear pantalla
-SUPER + ESC             Menú de energía
-SUPER + SHIFT + R       Recargar configuración
+# Hoja de atajos (SUPER + F1): rueda curva animada con buscador. Motor: hyprarch-pick.  SUPER = tecla Windows.
+# Formato: id <TAB> descripción <TAB> ícono <TAB> combinación (se ve a la derecha y también se puede buscar).
+cat <<'EOF' | hyprarch-pick --layout wheel --title "Atajos" --placeholder "¿Qué querés hacer? (ej. captura, cerrar)" >/dev/null
+a	Terminal		SUPER + Enter
+b	Lanzador de aplicaciones		SUPER + D
+c	Firefox		SUPER + B
+d	Archivos		SUPER + E
+e	Hablar con tu IA (o clic en el personajito)		SUPER + A
+f	Cambiar de IA		SUPER + SHIFT + A
+g	Redes Wi-Fi		SUPER + N
+h	Colores del sistema		SUPER + T
+i	CERRAR ventana		SUPER + Q  /  ALT + F4
+j	Pantalla completa		SUPER + F
+k	Ventana flotante		SUPER + V
+l	Cambiar división		SUPER + J
+m	Mover foco		SUPER + flechas
+n	Mover ventana		SUPER + SHIFT + flechas
+o	Redimensionar		SUPER + CTRL + flechas
+p	Ir al espacio de trabajo		SUPER + 1..9
+q	Enviar ventana al espacio		SUPER + SHIFT + 1..9
+r	Espacio anterior		SUPER + Tab
+s	Siguiente ventana		ALT + Tab
+t	Historial del portapapeles		SUPER + SHIFT + V
+u	Captura de área		Impr
+v	Captura de pantalla		SHIFT + Impr
+w	Cambiar distribución de teclado		ALT + SHIFT
+x	Bloquear pantalla		SUPER + L
+y	Menú de energía		SUPER + ESC
+z	Modo gamer / cine / estudio / trabajo		SUPER + SHIFT + G / C / U / W
+za	Volver al modo normal		SUPER + SHIFT + N
+zb	Efecto de pantalla (CRT)		SUPER + S
+zc	Recargar configuración		SUPER + SHIFT + R
 EOF

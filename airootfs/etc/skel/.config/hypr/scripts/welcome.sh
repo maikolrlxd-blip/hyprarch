@@ -9,4 +9,4 @@ elif (( h >= 13 && h < 20 )); then saludo="¡Buenas tardes!"
 else                               saludo="¡Buenas noches!"
 fi
 sleep 2
-claude-presence set done "$saludo Clic en mí para hablar" >/dev/null 2>&1 || true
+claude-presence set 'done' "$saludo Clic en mí: ¿qué hacemos?" >/dev/null 2>&1 || true

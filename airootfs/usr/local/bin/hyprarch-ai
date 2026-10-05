@@ -58,26 +58,25 @@ save() {
 pause() { read -rp "Enter para cerrar... " _; }
 
 setup() {
-  local labels=() p choice='' id m
-  for p in "${PROVIDERS[@]}"; do labels+=("$(cut -d'|' -f2 <<<"$p")"); done
-  clear
-  printf '\n  ¿Con qué IA querés hablar?\n  (podés cambiarla cuando quieras con SUPER+SHIFT+A)\n\n'
-  if command -v fzf >/dev/null 2>&1; then
-    choice=$(printf '%s\n' "${labels[@]}" | fzf --height=40% --reverse --prompt='IA > ' --no-info) || return 1
-  else
-    select choice in "${labels[@]}"; do [[ -n $choice ]] && break; done
-  fi
+  # Selector animado (hyprarch-pick): los proveedores flotan en órbita alrededor del personajito.
+  local p id m glyph items=()
   for p in "${PROVIDERS[@]}"; do
-    [[ $(cut -d'|' -f2 <<<"$p") == "$choice" ]] && id=${p%%|*}
+    case ${p%%|*} in
+      claude) glyph=$'' ;; codex) glyph=$'' ;; gemini) glyph=$'' ;;
+      aider)  glyph=$'' ;; ollama) glyph=$'' ;; *) glyph=$'' ;;
+    esac
+    items+=("$(printf '%s\t%s\t%s' "${p%%|*}" "$(cut -d'|' -f2 <<<"$p")" "$glyph")")
   done
+  if ! command -v hyprarch-pick >/dev/null 2>&1; then echo "falta hyprarch-pick"; return 1; fi
+  id=$(printf '%s\n' "${items[@]}" | hyprarch-pick --layout orbit --title "¿Con qué IA querés hablar?") || return 1
   [[ -n ${id:-} ]] || return 1
   AI=$id
   AI_CMD=""
   if [[ $AI == custom ]]; then
-    read -rp "  Comando completo (ej. aichat, llm chat, mi-ia --modo chat): " AI_CMD || return 1
+    AI_CMD=$(hyprarch-pick --input --title "Comando de tu IA" --placeholder "ej. aichat  ·  llm chat  ·  mi-ia --modo chat") || return 1
     [[ -n $AI_CMD ]] || return 1
   elif [[ $AI == ollama ]]; then
-    read -rp "  Modelo de Ollama [Enter = llama3.2]: " m || return 1
+    m=$(hyprarch-pick --input --title "Modelo de Ollama" --placeholder "llama3.2") || m=""
     printf -v AI_CMD 'ollama run %q' "${m:-llama3.2}"
   fi
   save
@@ -145,7 +144,7 @@ chat() {
     pause; exit 1
   fi
   provider_extras
-  buddy done "¡Listo, hablemos!"
+  buddy 'done' "¡Listo, hablemos!"
   # El comando lo escribe el usuario: Bash interpreta sus comillas y argumentos.
   exec bash -c "exec $cmd"
 }
@@ -153,6 +152,8 @@ chat() {
 case ${1:-chat} in
   chat)   chat ;;
   setup)  setup && chat ;;
+  pick)   # solo el selector (sin terminal); si se eligió una IA, abre su conversación en una ventana flotante
+          setup && bash "$HOME/.config/hypr/scripts/once.sh" hyprarch-ai hyprarch-ai chat ;;
   status) printf 'IA: %s\n' "${AI:-ninguna elegida}"; [[ -n $AI_CMD ]] && printf 'Comando: %s\n' "$AI_CMD" ;;
   *)      printf 'Uso: hyprarch-ai {chat|setup|status}\n'; exit 2 ;;
 esac

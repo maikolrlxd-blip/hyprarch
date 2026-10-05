@@ -36,11 +36,23 @@ try:
     STYLE = (CFG_DIR / "style").read_text().strip().lower()
 except OSError:
     STYLE = "dinamico"
-if STYLE not in ("dinamico", "3d", "sutil"):
+#   cyber                    sci-fi / cyberpunk: esquinas cortadas, marcas de mira, líneas de escaneo, texto de HUD, parpadeo al abrir
+#   neumo                    3D inmersivo neumórfico / skeuomorfismo moderno: superficies en relieve con luz y sombra suaves;
+#                            lo elegido se "hunde" como un botón físico y se enciende un LED
+#   stark                    hologramas estilo Tony Stark / JARVIS: paneles translúcidos de contorno fino, anillos de reactor arc
+#                            que giran, marcas de escala y lecturas de datos flotando, leve parpadeo de holograma
+if STYLE not in ("dinamico", "3d", "sutil", "cyber", "neumo", "stark"):
     STYLE = "dinamico"
-BOUNCY = STYLE in ("dinamico", "3d")
+CYBER = STYLE == "cyber"
+NEUMO = STYLE == "neumo"
+STARK = STYLE == "stark"
+BOUNCY = STYLE in ("dinamico", "3d", "neumo")
 DEPTH = STYLE == "3d"
-if BOUNCY:
+if STYLE in ("cyber", "stark"):
+    OPEN_T, CLOSE_T, ITEM_T, STAGGER = 0.26, 0.14, 0.20, 0.022
+elif STYLE == "neumo":
+    OPEN_T, CLOSE_T, ITEM_T, STAGGER = 0.50, 0.20, 0.44, 0.040
+elif BOUNCY:
     OPEN_T, CLOSE_T, ITEM_T, STAGGER = 0.48, 0.18, 0.42, 0.042
 else:
     OPEN_T, CLOSE_T, ITEM_T, STAGGER = 0.28, 0.16, 0.22, 0.028
@@ -183,6 +195,17 @@ def layout(w, h, anchor, page):
 
 
 def rrect(cr, x, y, w, h, r):
+    if CYBER:                                   # sci-fi: esquinas cortadas en diagonal (arriba-izquierda y abajo-derecha)
+        c = min(r * 0.55, 14, w / 3, h / 3)
+        cr.new_sub_path()
+        cr.move_to(x + c, y)
+        cr.line_to(x + w, y)
+        cr.line_to(x + w, y + h - c)
+        cr.line_to(x + w - c, y + h)
+        cr.line_to(x, y + h)
+        cr.line_to(x, y + c)
+        cr.close_path()
+        return
     r = min(r, w / 2, h / 2)
     cr.new_sub_path()
     cr.arc(x + w - r, y + r, r, -math.pi / 2, 0)
@@ -194,6 +217,235 @@ def rrect(cr, x, y, w, h, r):
 
 def mix(a, b, t):
     return tuple(a[i] + (b[i] - a[i]) * t for i in range(3))
+
+
+# ----------------------------------------------------------------------------- superficies según el estilo
+
+
+def paint_card(cr, x, y, w, h, r, pal, a, t=0.0):
+    """Fondo de la tarjeta según el estilo (vidrio / HUD sci-fi / placa neumórfica)."""
+    import cairo
+
+    A, A2, BG, SF2, FG = pal["ACCENT"], pal["ACCENT2"], pal["BG"], pal["SURFACE2"], pal["FG"]
+    if STARK:                                                                  # holograma: casi transparente, contorno doble, escala y datos
+        rrect(cr, x, y, w, h, r)
+        cr.set_source_rgba(*mix(BG, A, 0.05), 0.40 * a)
+        cr.fill()
+        for inset, al, lw in ((0, 0.85, 1.2), (6, 0.30, 0.8)):
+            rrect(cr, x + inset, y + inset, w - 2 * inset, h - 2 * inset, max(4, r - inset))
+            cr.set_source_rgba(*A, al * a)
+            cr.set_line_width(lw)
+            cr.stroke()
+        cr.set_source_rgba(*A, 0.55 * a)                                        # regla de marcas en el borde superior
+        cr.set_line_width(1.0)
+        for k in range(int(w / 14)):
+            ln = 6 if k % 5 == 0 else 3
+            cr.move_to(x + 14 + k * 14, y)
+            cr.line_to(x + 14 + k * 14, y + ln)
+        cr.stroke()
+        cr.save()
+        rrect(cr, x, y, w, h, r)
+        cr.clip()
+        cr.set_source_rgba(*A, 0.04 * a)
+        for yy in range(int(y), int(y + h), 3):
+            cr.rectangle(x, yy, w, 1)
+        cr.fill()
+        cr.restore()
+        draw_text(cr, "SYS 100%  ·  LINK OK  ·  HYPRARCH", x + w - 14, y + h - 10, 8.5, A, 0.7 * a, right=True)
+        return
+    if NEUMO:
+        base = mix(SF2, FG, 0.06)
+        for k, al in ((18, 0.10), (12, 0.14), (7, 0.18), (3, 0.22)):          # sombra oscura (abajo-derecha)
+            rrect(cr, x + k * 0.8, y + k * 0.9, w, h, r + 4)
+            cr.set_source_rgba(0, 0, 0, al * a)
+            cr.fill()
+        for k, al in ((12, 0.03), (7, 0.045), (3, 0.06)):                     # luz (arriba-izquierda)
+            rrect(cr, x - k * 0.7, y - k * 0.7, w, h, r + 4)
+            cr.set_source_rgba(*FG, al * a)
+            cr.fill()
+        g = cairo.LinearGradient(x, y, x + w, y + h)
+        g.add_color_stop_rgba(0, *mix(base, FG, 0.07), 0.98 * a)
+        g.add_color_stop_rgba(1, *mix(base, (0, 0, 0), 0.30), 0.98 * a)
+        rrect(cr, x, y, w, h, r)
+        cr.set_source(g)
+        cr.fill()
+        rrect(cr, x + 0.8, y + 0.8, w - 1.6, h - 1.6, r)                      # borde de luz fino
+        cr.set_source_rgba(*FG, 0.10 * a)
+        cr.set_line_width(1.0)
+        cr.stroke()
+        return
+    if CYBER:
+        glow_rrect(cr, x, y, w, h, r, A, a * 0.8, 10)
+        rrect(cr, x, y, w, h, r)
+        cr.set_source_rgba(*BG, 0.92 * a)
+        cr.fill_preserve()
+        cr.set_source_rgba(*A, 0.85 * a)
+        cr.set_line_width(1.4)
+        cr.stroke()
+        # líneas de escaneo suaves dentro de la tarjeta
+        cr.save()
+        rrect(cr, x, y, w, h, r)
+        cr.clip()
+        cr.set_source_rgba(*A, 0.045 * a)
+        for yy in range(int(y), int(y + h), 4):
+            cr.rectangle(x, yy, w, 1)
+        cr.fill()
+        sweep = (t * 0.35) % 1.4 - 0.2                                         # barrido de luz que baja
+        sg = cairo.LinearGradient(0, y + sweep * h - 30, 0, y + sweep * h + 30)
+        sg.add_color_stop_rgba(0, *A, 0.0)
+        sg.add_color_stop_rgba(0.5, *A, 0.07 * a)
+        sg.add_color_stop_rgba(1, *A, 0.0)
+        cr.set_source(sg)
+        cr.rectangle(x, y + sweep * h - 30, w, 60)
+        cr.fill()
+        cr.restore()
+        # marcas de mira en las cuatro esquinas
+        cr.set_source_rgba(*A2, 0.95 * a)
+        cr.set_line_width(2.0)
+        for cx_, cy_, sx_, sy_ in ((x - 3, y - 3, 1, 1), (x + w + 3, y - 3, -1, 1), (x - 3, y + h + 3, 1, -1), (x + w + 3, y + h + 3, -1, -1)):
+            cr.move_to(cx_, cy_ + sy_ * 14)
+            cr.line_to(cx_, cy_)
+            cr.line_to(cx_ + sx_ * 14, cy_)
+            cr.stroke()
+        draw_text(cr, "// HYPRARCH", x + w - 14, y + h + 16, 9.5, pal["DIM"], 0.9 * a, right=True)
+        return
+    glow_rrect(cr, x, y, w, h, r, A, a, 14)                                    # vidrio (dinamico / 3d / sutil)
+    rrect(cr, x, y, w, h, r)
+    cr.set_source_rgba(*BG, 0.86 * a)
+    cr.fill_preserve()
+    g = cairo.LinearGradient(x, y, x + w, y + h)
+    g.add_color_stop_rgba(0, *A, 0.85 * a)
+    g.add_color_stop_rgba(0.5, *A, 0.12 * a)
+    g.add_color_stop_rgba(1, *A2, 0.75 * a)
+    cr.set_source(g)
+    cr.set_line_width(1.6)
+    cr.stroke()
+    hl = cairo.LinearGradient(0, y, 0, y + 90)
+    hl.add_color_stop_rgba(0, 1, 1, 1, 0.07 * a)
+    hl.add_color_stop_rgba(1, 1, 1, 1, 0.0)
+    rrect(cr, x + 1, y + 1, w - 2, 90, r - 1)
+    cr.set_source(hl)
+    cr.fill()
+
+
+def paint_item(cr, x, y, w, h, r, pal, a, sel, hv, col=None, t=0.0):
+    """Fondo de un botón / fila según el estilo. `sel` = elegido o activo, `hv` = 0..1 del mouse."""
+    import cairo
+
+    A, A2, SF, SF2, BG, FG = pal["ACCENT"], pal["ACCENT2"], pal["SURFACE"], pal["SURFACE2"], pal["BG"], pal["FG"]
+    col = col or A
+    if STARK:                                                                  # holograma: contorno fino, esquinas de mira, barrido al elegir
+        rrect(cr, x, y, w, h, min(r, 10))
+        cr.set_source_rgba(*(col if sel else mix(SF, col, 0.4)), (0.20 if sel else 0.07 + 0.10 * hv) * a)
+        cr.fill()
+        rrect(cr, x, y, w, h, min(r, 10))
+        cr.set_source_rgba(*col, a * (0.95 if sel else 0.22 + 0.55 * hv))
+        cr.set_line_width(1.2 if sel else 0.9)
+        cr.stroke()
+        L = 7
+        cr.set_source_rgba(*col, a * (0.95 if sel or hv > 0.3 else 0.45))
+        cr.set_line_width(1.6)
+        for cx_, cy_, sx_, sy_ in ((x - 2, y - 2, 1, 1), (x + w + 2, y - 2, -1, 1), (x - 2, y + h + 2, 1, -1), (x + w + 2, y + h + 2, -1, -1)):
+            cr.move_to(cx_, cy_ + sy_ * L)
+            cr.line_to(cx_, cy_)
+            cr.line_to(cx_ + sx_ * L, cy_)
+            cr.stroke()
+        if sel:
+            sx_ = x + ((t * 0.9) % 1.0) * w
+            sg = cairo.LinearGradient(sx_ - 24, 0, sx_ + 24, 0)
+            sg.add_color_stop_rgba(0, *col, 0.0)
+            sg.add_color_stop_rgba(0.5, *col, 0.30 * a)
+            sg.add_color_stop_rgba(1, *col, 0.0)
+            cr.save()
+            rrect(cr, x, y, w, h, min(r, 10))
+            cr.clip()
+            cr.set_source(sg)
+            cr.rectangle(sx_ - 24, y, 48, h)
+            cr.fill()
+            cr.restore()
+        return
+    if NEUMO:
+        base = mix(SF2, FG, 0.06)
+        if sel:                                                                # hundido (presionado) + LED encendido
+            rrect(cr, x, y, w, h, r)
+            cr.set_source_rgba(*mix(base, (0, 0, 0), 0.38), 0.98 * a)
+            cr.fill()
+            ig = cairo.LinearGradient(x, y, x + w * 0.5, y + h * 0.9)           # sombra interior arriba-izquierda
+            ig.add_color_stop_rgba(0, 0, 0, 0, 0.55 * a)
+            ig.add_color_stop_rgba(1, 0, 0, 0, 0.0)
+            rrect(cr, x, y, w, h, r)
+            cr.set_source(ig)
+            cr.fill()
+            rrect(cr, x + 0.8, y + 0.8, w - 1.6, h - 1.6, r)
+            cr.set_source_rgba(*FG, 0.07 * a)                                   # reborde de luz abajo-derecha
+            cr.set_line_width(1.0)
+            cr.stroke()
+            led = (x + w - 14, y + 13) if w > 90 else (x + w - 10, y + 10)
+            for rad, al in ((9, 0.10), (6, 0.18), (3.2, 1.0)):
+                cr.set_source_rgba(*col, al * a)
+                cr.arc(led[0], led[1], rad, 0, 2 * math.pi)
+                cr.fill()
+        else:                                                                   # en relieve
+            lift = 4 - 2 * hv
+            for k, al in ((lift * 2, 0.16), (lift * 1.3, 0.22), (lift * 0.6, 0.30)):
+                rrect(cr, x + k * 0.8, y + k * 0.9, w, h, r)
+                cr.set_source_rgba(0, 0, 0, al * a)
+                cr.fill()
+            for k, al in ((lift * 1.2, 0.035), (lift * 0.6, 0.06)):
+                rrect(cr, x - k * 0.7, y - k * 0.7, w, h, r)
+                cr.set_source_rgba(*FG, al * a)
+                cr.fill()
+            g = cairo.LinearGradient(x, y, x + w * 0.6, y + h)
+            g.add_color_stop_rgba(0, *mix(base, FG, 0.09 + 0.05 * hv), 0.98 * a)
+            g.add_color_stop_rgba(1, *mix(base, (0, 0, 0), 0.25), 0.98 * a)
+            rrect(cr, x, y, w, h, r)
+            cr.set_source(g)
+            cr.fill()
+            rrect(cr, x + 0.8, y + 0.8, w - 1.6, h - 1.6, r)
+            cr.set_source_rgba(*FG, (0.08 + 0.06 * hv) * a)
+            cr.set_line_width(1.0)
+            cr.stroke()
+        return
+    if CYBER:
+        if sel or hv > 0.01:
+            glow_rrect(cr, x, y, w, h, r, col, a * (0.9 if sel else hv), 8)
+        rrect(cr, x, y, w, h, r)
+        if sel:
+            gg = cairo.LinearGradient(x, y, x + w, y)
+            gg.add_color_stop_rgba(0, *col, 0.92 * a)
+            gg.add_color_stop_rgba(1, *mix(col, A2, 0.5), 0.55 * a)
+            cr.set_source(gg)
+        else:
+            cr.set_source_rgba(*mix(SF, col, 0.12 * hv), 0.9 * a)
+        cr.fill()
+        rrect(cr, x, y, w, h, r)
+        cr.set_source_rgba(*col, a * (0.95 if sel else 0.22 + 0.6 * hv))
+        cr.set_line_width(1.2)
+        cr.stroke()
+        cr.set_source_rgba(*(BG if sel else col), a * (0.9 if sel else 0.5 + 0.5 * hv))       # barra lateral y marcas
+        cr.rectangle(x, y + h * 0.22, 3, h * 0.56)
+        cr.fill()
+        if w > 90:
+            for k in range(3):
+                cr.rectangle(x + w - 22 + k * 5, y + h - 8, 3, 3)
+            cr.fill()
+        return
+    if sel or hv > 0.01:                                                       # vidrio (dinamico / 3d / sutil)
+        glow_rrect(cr, x, y, w, h, r, col, a * (1.0 if sel else hv), 12)
+    rrect(cr, x, y, w, h, r)
+    if sel:
+        gg = cairo.LinearGradient(x, y, x + w, y + h)
+        gg.add_color_stop_rgba(0, *col, 0.92 * a)
+        gg.add_color_stop_rgba(1, *mix(col, A2, 0.55), 0.92 * a)
+        cr.set_source(gg)
+    else:
+        cr.set_source_rgba(*mix(SF, col, 0.22 * hv) if col != A else mix(SF, SF2, hv), a * 0.95)
+    cr.fill()
+    if not sel:
+        rrect(cr, x, y, w, h, r)
+        cr.set_source_rgba(*col, a * (0.12 + 0.5 * hv))
+        cr.set_line_width(1.1)
+        cr.stroke()
 
 
 # ----------------------------------------------------------------------------- dibujo
@@ -432,8 +684,8 @@ def run_action(aid):
     scripts = os.path.expanduser("~/.config/hypr/scripts/once.sh")
     cmds = {
         "chat": ["bash", scripts, "hyprarch-ai", "hyprarch-ai", "chat"],
-        "ia": ["bash", scripts, "hyprarch-ai", "hyprarch-ai", "setup"],
-        "colors": ["bash", scripts, "hyprarch-theme", "hyprarch-theme"],
+        "ia": ["hyprarch-ai", "pick"],
+        "colors": ["hyprarch-theme"],
     }
     if aid.startswith("mode:"):
         mid = aid.split(":")[1]
@@ -460,6 +712,11 @@ def toggle_mute():
 
 
 def run(anchor):
+    if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza solo con el entorno correcto
+        env = dict(os.environ)
+        env["LD_PRELOAD"] = (env.get("LD_PRELOAD", "") + " /usr/lib/libgtk4-layer-shell.so").strip()
+        env["GSK_RENDERER"] = "cairo"
+        os.execvpe(sys.executable, [sys.executable] + sys.argv, env)
     import gi
 
     gi.require_version("Gtk", "4.0")

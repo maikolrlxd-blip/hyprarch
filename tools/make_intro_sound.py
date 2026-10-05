@@ -135,7 +135,7 @@ glitch(5.1, 0.07, 0.17)
 # ---------------------------------------------------------------- 3.1-3.9 destello que barre el título (brillo agudo)
 t = tt(0.8)
 sp = np.zeros_like(t)
-for k in range(14):
+for _ in range(14):
     f = rng.uniform(2200, 6500)
     c = rng.uniform(0.05, 0.75)
     sp += np.sin(2 * np.pi * f * t) * np.exp(-((t - c) ** 2) / 0.004)

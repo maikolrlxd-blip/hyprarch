@@ -336,12 +336,12 @@ EOF
 custom_flow() {
   local a b
   echo
-  read -rp "Color de ACENTO en HEX (ej. 00ffaa)   [Enter = cancelar]: " a || return 0
+  a=$(hyprarch-pick --input --title "Color de acento (HEX)" --placeholder "ej. 00ffaa") || return 0
   [[ -z $a ]] && return 0
-  if ! hex_ok "$a"; then echo "HEX inválido (se esperan 6 dígitos)."; sleep 2; return 0; fi
-  read -rp "ACENTO secundario en HEX (ej. ff1f4b) [Enter = ff1f4b]: " b || return 0
+  if ! hex_ok "$a"; then notify-send "Color inválido" "Se esperan 6 dígitos hexadecimales (ej. 00ffaa)"; return 0; fi
+  b=$(hyprarch-pick --input --title "Acento secundario (HEX)" --placeholder "ej. ff1f4b (Esc = carmesí)") || b=ff1f4b
   b=${b:-ff1f4b}
-  if ! hex_ok "$b"; then echo "HEX inválido (se esperan 6 dígitos)."; sleep 2; return 0; fi
+  if ! hex_ok "$b"; then notify-send "Color inválido" "Se esperan 6 dígitos hexadecimales (ej. ff1f4b)"; return 0; fi
   a=$(norm "$a"); b=$(norm "$b")
 
   apply custom "$a" "$b"
@@ -353,28 +353,23 @@ menu() {
   cur=$(cat "$CURRENT" 2>/dev/null || echo verde)
   load_theme "$cur" >/dev/null 2>&1 || load_theme verde
 
+  # Menú animado (hyprarch-pick): rueda curva con cuadritos de color. Sin terminal, sin fzf.
   sel=$(printf '%s\n' \
-      "Modo Verde Dominante" \
-      "Modo Rojo Dominante" \
-      "Acento personalizado (HEX)" \
-      "Alternar verde / rojo" \
-      "Ver colores actuales" \
-      "Salir" |
-    fzf --reverse --border=rounded --no-info --height=100% \
-        --prompt="Tema ❯ " --header="Tema actual: ${cur}   ·   Enter = aplicar" \
-        --color="bg:#${BG},fg:#${FG},hl:#${ACCENT},fg+:#${FG},bg+:#${SURFACE2},hl+:#${ACCENT},pointer:#${ACCENT},prompt:#${ACCENT},border:#${ACCENT},header:#${DIM}")
+      $'verde\tVerde dominante\t#39ff14\tneón clásico' \
+      $'rojo\tRojo dominante\t#ff1f4b\tcarmesí' \
+      $'gamer\tModo gamer\t#00e5ff\tcian y violeta arcade' \
+      $'cine\tModo cine\t#ffb347\támbar sobre negro' \
+      $'estudio\tModo estudio\t#4fd1c5\tcalma y foco' \
+      $'trabajo\tModo trabajo\t#5ec2ff\tclaro y productivo' \
+      $'custom\tColor personalizado\t\tescribí un HEX' \
+      $'toggle\tAlternar verde / rojo\t\t' |
+    hyprarch-pick --layout wheel --title "Colores del sistema" --select "$cur" \
+        --placeholder "Tema actual: ${cur}") || return 0
 
   case $sel in
-    "Modo Verde Dominante")       apply verde ;;
-    "Modo Rojo Dominante")        apply rojo ;;
-    "Acento personalizado (HEX)") custom_flow ;;
-    "Alternar verde / rojo")      toggle ;;
-    "Ver colores actuales")
-        echo
-        for v in BG SURFACE SURFACE2 FG DIM ACCENT ACCENT2 OK ALERT; do
-          printf '  %-9s #%s\n' "$v" "${!v}"
-        done
-        echo; read -rsn1 -p "Pulsa una tecla para salir..." ;;
+    verde|rojo|gamer|cine|estudio|trabajo) apply "$sel" ;;
+    custom) custom_flow ;;
+    toggle) toggle ;;
     *) ;;
   esac
 }
