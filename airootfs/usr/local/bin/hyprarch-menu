@@ -1,0 +1,626 @@
+#!/usr/bin/env python3
+"""hyprarch-menu — el menú animado del personajito (Buddy / Claudito).
+
+Aparece junto al personaje con un efecto de resorte: botones redondos para los modos, tarjetas con brillo
+al pasar el mouse y la actividad reciente de las IAs dentro del mismo panel.
+
+Uso:
+  hyprarch-menu --anchor X,Y     lo abre apuntando a (X, Y) de la pantalla (lo hace el personajito al hacer clic)
+  hyprarch-menu frames DIR       (desarrollo) dibuja fotogramas de ejemplo en PNG
+Esc o clic fuera: cerrar.
+"""
+import json
+import math
+import os
+import re
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+MODES = [("normal", "Normal", ""), ("gamer", "Gamer", ""), ("cine", "Cine", ""),
+         ("estudio", "Estudio", ""), ("trabajo", "Trabajo", "")]
+MODE_COL = {"normal": None, "gamer": (0.0, 0.90, 1.0), "cine": (1.0, 0.70, 0.28),
+            "estudio": (0.31, 0.82, 0.77), "trabajo": (0.37, 0.76, 1.0)}
+ACTIONS = [("chat", "Hablar con la IA", ""), ("ia", "Cambiar de IA", ""),
+           ("activity", "Actividad reciente", ""), ("colors", "Colores del sistema", "")]
+FONT = "JetBrainsMono Nerd Font"
+CARD_W = 344
+# ESTILOS (se elige en ~/.config/hyprarch/style):
+#   dinamico  (por defecto)  rebotón y enérgico: resortes con rebote, los elementos "saltan" al aparecer
+#   3d                       dinámico + profundidad 3D: capas que flotan, sombras de profundidad y paralaje con el mouse
+#   sutil                    animaciones cortas y discretas (principios de Emil Kowalski: menos de 300 ms, salida fuerte,
+#                            nada nace de escala 0, el panel crece desde el personaje, cierre más rápido que la apertura)
+CFG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "hyprarch"
+try:
+    STYLE = (CFG_DIR / "style").read_text().strip().lower()
+except OSError:
+    STYLE = "dinamico"
+if STYLE not in ("dinamico", "3d", "sutil"):
+    STYLE = "dinamico"
+BOUNCY = STYLE in ("dinamico", "3d")
+DEPTH = STYLE == "3d"
+if BOUNCY:
+    OPEN_T, CLOSE_T, ITEM_T, STAGGER = 0.48, 0.18, 0.42, 0.042
+else:
+    OPEN_T, CLOSE_T, ITEM_T, STAGGER = 0.28, 0.16, 0.22, 0.028
+REDUCE_MOTION = (CFG_DIR / "reduce-motion").exists()
+if REDUCE_MOTION:                   # accesibilidad: sin movimiento, solo un fundido corto
+    OPEN_T, CLOSE_T, ITEM_T, STAGGER = 0.08, 0.06, 0.06, 0.0
+    BOUNCY = DEPTH = False
+
+CFG = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "hyprarch"
+CACHE = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "hyprarch-buddy"
+SOUNDS = Path("/usr/share/hyprarch/sounds")
+
+
+# ----------------------------------------------------------------------------- utilidades
+
+
+def clamp(x, a=0.0, b=1.0):
+    return max(a, min(b, x))
+
+
+def ease_out(x):
+    return 1 - (1 - clamp(x)) ** 3
+
+
+def spring(x):
+    """Resorte con rebote marcado (0 → 1 pasándose ~12 % y asentándose)."""
+    x = clamp(x)
+    return 1 - math.exp(-7.0 * x) * math.cos(10.5 * x)
+
+
+def ease_out_strong(x):
+    """Salida fuerte: arranca muy rápido y frena suave (equivale a cubic-bezier(0.23, 1, 0.32, 1))."""
+    return 1 - (1 - clamp(x)) ** 5
+
+
+def load_palette():
+    default = dict(ACCENT="39ff14", ACCENT2="ff1f4b", BG="0a0c0b", SURFACE="111513", SURFACE2="1b221e", FG="d7ffe3", DIM="5f7367")
+    pal = dict(default)
+    try:
+        cur = (CFG / "current").read_text().strip() or "verde"
+        f = CFG / "custom.env" if cur == "custom" else Path(f"/usr/share/hyprarch/themes/{cur}.env")
+        for line in f.read_text().splitlines():
+            m = re.match(r'^([A-Z0-9_]+)=("?)([^"#]*)\2', line.strip())
+            if m and m.group(1) in default:
+                pal[m.group(1)] = m.group(3).strip()
+    except Exception:
+        pass
+    out = {}
+    for k, d in default.items():
+        v = str(pal.get(k, d)).strip().lstrip("#")
+        v = v if re.fullmatch(r"[0-9a-fA-F]{6}", v) else d
+        out[k] = tuple(int(v[i:i + 2], 16) / 255 for i in (0, 2, 4))
+    return out
+
+
+def current_mode():
+    try:
+        m = (CFG / "mode").read_text().strip()
+        return m if m in MODE_COL else "normal"
+    except OSError:
+        return "normal"
+
+
+def buddy_name():
+    try:
+        for line in (CFG / "buddy.conf").read_text(encoding="utf-8").splitlines():
+            m = re.match(r"""^\s*NAME\s*=\s*['"]?([^'"#\n]{1,24}?)['"]?\s*$""", line)
+            if m and m.group(1).strip():
+                return m.group(1).strip()
+    except Exception:
+        pass
+    return "Buddy"
+
+
+def is_muted():
+    return (CACHE / "mute").exists()
+
+
+def read_activity(n=7):
+    icon = {"working": "", "done": "", "error": "", "waiting": ""}
+    out = []
+    try:
+        lines = (CACHE / "log.jsonl").read_text(encoding="utf-8").splitlines()[-n:]
+    except Exception:
+        return out
+    for line in reversed(lines):
+        try:
+            e = json.loads(line)
+            out.append((time.strftime("%H:%M", time.localtime(float(e["ts"]))), e.get("state", ""),
+                        icon.get(e.get("state"), ""), (f"[{e['agent']}] " if e.get("agent") else "") + e.get("text", "")))
+        except Exception:
+            continue
+    return out
+
+
+def play(name):
+    """Sonido suave de la interfaz (si existe y si no está en silencio)."""
+    if is_muted():
+        return
+    f = SOUNDS / f"{name}.wav"
+    if not f.exists():
+        return
+    for player in (["pw-play"], ["paplay"], ["aplay", "-q"]):
+        try:
+            subprocess.Popen(player + [str(f)], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                             start_new_session=True)
+            return
+        except OSError:
+            continue
+
+
+# ----------------------------------------------------------------------------- diseño (compartido por dibujo y clics)
+
+
+def layout(w, h, anchor, page):
+    ax, ay = anchor
+    pad, head_h = 18, 64
+    modes_h = 92
+    row_h, gap = 46, 8
+    if page == "activity":
+        card_h = pad + head_h + 7 * 34 + pad
+    else:
+        card_h = pad + head_h + modes_h + len(ACTIONS) * (row_h + gap) - gap + pad
+    x = min(max(12, ax - CARD_W + 70), w - CARD_W - 12)
+    y = max(12, min(ay - 130 - card_h, h - card_h - 12))
+    items = [dict(id="mute", kind="mini", x=x + CARD_W - pad - 34, y=y + pad + 6, w=34, h=34, label="Silencio", icon="")]
+    if page == "activity":
+        items.append(dict(id="back", kind="mini", x=x + pad, y=y + pad + 6, w=34, h=34, label="Volver", icon=""))
+    else:
+        size, n = 56, len(MODES)
+        space = (CARD_W - 2 * pad - n * size) / (n - 1)
+        for i, (mid, label, icon) in enumerate(MODES):
+            items.append(dict(id="mode:" + mid, kind="mode", x=x + pad + i * (size + space), y=y + pad + head_h, w=size, h=size,
+                              label=label, icon=icon, order=i))
+        top = y + pad + head_h + modes_h
+        for j, (aid, label, icon) in enumerate(ACTIONS):
+            items.append(dict(id=aid, kind="row", x=x + pad, y=top + j * (row_h + gap), w=CARD_W - 2 * pad, h=row_h,
+                              label=label, icon=icon, order=5 + j))
+    return dict(x=x, y=y, w=CARD_W, h=card_h, items=items, origin=(min(max(ax, x + 20), x + CARD_W - 20), y + card_h))
+
+
+def rrect(cr, x, y, w, h, r):
+    r = min(r, w / 2, h / 2)
+    cr.new_sub_path()
+    cr.arc(x + w - r, y + r, r, -math.pi / 2, 0)
+    cr.arc(x + w - r, y + h - r, r, 0, math.pi / 2)
+    cr.arc(x + r, y + h - r, r, math.pi / 2, math.pi)
+    cr.arc(x + r, y + r, r, math.pi, 3 * math.pi / 2)
+    cr.close_path()
+
+
+def mix(a, b, t):
+    return tuple(a[i] + (b[i] - a[i]) * t for i in range(3))
+
+
+# ----------------------------------------------------------------------------- dibujo
+
+
+def draw_text(cr, s, x, y, size, color, alpha=1.0, bold=False, center=False, right=False):
+    import cairo
+    cr.select_font_face(FONT, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD if bold else cairo.FONT_WEIGHT_NORMAL)
+    cr.set_font_size(size)
+    ext = cr.text_extents(s)
+    if center:
+        x -= ext.x_advance / 2
+    elif right:
+        x -= ext.x_advance
+    cr.set_source_rgba(*color, alpha)
+    cr.move_to(x, y)
+    cr.show_text(s)
+
+
+def glow_rrect(cr, x, y, w, h, r, col, alpha, spread=10):
+    for k, a in ((spread, 0.05), (spread * 0.6, 0.09), (spread * 0.3, 0.16)):
+        rrect(cr, x - k, y - k, w + 2 * k, h + 2 * k, r + k)
+        cr.set_source_rgba(*col, alpha * a)
+        cr.fill()
+
+
+def draw_scene(cr, w, h, S, pal):
+    """S: t (s desde que abrió), closing (s desde que empezó a cerrar o None), hover (id), anchor, page, ptime, hov (dict id->0..1)."""
+    import cairo
+    A, A2, BG, SF, SF2, FG, DIM = (pal[k] for k in ("ACCENT", "ACCENT2", "BG", "SURFACE", "SURFACE2", "FG", "DIM"))
+    t = S["t"]
+    if S["closing"] is not None:
+        op = 1 - clamp(S["closing"] / CLOSE_T)
+        p = op
+        pop = op
+    else:
+        op = clamp(t / (OPEN_T * 0.5))
+        p = spring(t / OPEN_T) if BOUNCY else ease_out_strong(t / OPEN_T)
+        pop = clamp(t / (OPEN_T * (0.35 if BOUNCY else 0.6)))
+    # telón de fondo tenue
+    cr.set_source_rgba(0, 0, 0, 0.28 * op)
+    cr.paint()
+
+    lay = layout(w, h, S["anchor"], S["page"])
+    x, y, cw, ch = lay["x"], lay["y"], lay["w"], lay["h"]
+    ox, oy = lay["origin"]
+    s = 1.0 if REDUCE_MOTION else ((0.78 + 0.22 * p) if BOUNCY else (0.93 + 0.07 * p))      # nunca desde escala 0
+    cr.save()
+    cr.translate(ox, oy)
+    cr.scale(s, s)
+    cr.translate(-ox, -oy)
+
+    # profundidad 3D: la tarjeta se inclina hacia el mouse y las capas se desplazan distinto (paralaje)
+    nx = ny = 0.0
+    if DEPTH:
+        px, py = S.get("ptr", (x + cw / 2, y + ch / 2))
+        cxm, cym = x + cw / 2, y + ch / 2
+        nx = clamp((px - cxm) / (cw * 0.8), -1, 1)
+        ny = clamp((py - cym) / (ch * 0.8), -1, 1)
+        cr.translate(cxm, cym)
+        cr.transform(cairo.Matrix(1.0, 0.035 * nx, -0.035 * ny, 1.0, 0, 0))
+        cr.translate(-cxm, -cym)
+        # sombra de profundidad: se aleja de donde apunta el mouse
+        for k, al in ((26, 0.05), (18, 0.07), (11, 0.09), (5, 0.12)):
+            rrect(cr, x - nx * 10 + 4 - k * 0.2, y + 16 - ny * 10 + 4, cw + k * 0.4 - 8, ch, 26)
+            cr.set_source_rgba(0, 0, 0, al * pop)
+            cr.fill()
+
+    # tarjeta: resplandor, fondo de vidrio y borde con degradado
+    glow_rrect(cr, x, y, cw, ch, 24, A, pop, 14)
+    rrect(cr, x, y, cw, ch, 24)
+    cr.set_source_rgba(*BG, 0.86 * pop)
+    cr.fill_preserve()
+    g = cairo.LinearGradient(x, y, x + cw, y + ch)
+    g.add_color_stop_rgba(0, *A, 0.85 * pop)
+    g.add_color_stop_rgba(0.5, *A, 0.12 * pop)
+    g.add_color_stop_rgba(1, *A2, 0.75 * pop)
+    cr.set_source(g)
+    cr.set_line_width(1.6)
+    cr.stroke()
+    # brillo suave arriba
+    hl = cairo.LinearGradient(0, y, 0, y + 90)
+    hl.add_color_stop_rgba(0, 1, 1, 1, 0.07 * pop)
+    hl.add_color_stop_rgba(1, 1, 1, 1, 0.0)
+    rrect(cr, x + 1, y + 1, cw - 2, 90, 23)
+    cr.set_source(hl)
+    cr.fill()
+
+    pad = 18
+    # cabecera: carita del personaje + títulos (en 3D flota en una capa propia)
+    cr.save()
+    if DEPTH:
+        cr.translate(-nx * 4, -ny * 4 + math.sin(t * 1.7) * 1.2)
+    face_x, face_y = x + pad + (44 if S["page"] == "activity" else 0), y + pad + 4
+    bob = math.sin(t * 3.0) * 1.5
+    rrect(cr, face_x, face_y + bob, 40, 36, 12)
+    fg = cairo.LinearGradient(face_x, face_y, face_x, face_y + 36)
+    fg.add_color_stop_rgba(0, *A, 0.95 * pop)
+    fg.add_color_stop_rgba(1, A[0] * 0.55, A[1] * 0.55, A[2] * 0.55, 0.95 * pop)
+    cr.set_source(fg)
+    cr.fill()
+    for ex in (face_x + 12, face_x + 28):
+        cr.set_source_rgba(*BG, pop)
+        cr.arc(ex, face_y + 17 + bob, 3.6, 0, 2 * math.pi)
+        cr.fill()
+        cr.set_source_rgba(1, 1, 1, 0.9 * pop)
+        cr.arc(ex + 1, face_y + 15.8 + bob, 1.2, 0, 2 * math.pi)
+        cr.fill()
+    tx = face_x + 52
+    if S["page"] == "activity":
+        draw_text(cr, "Actividad reciente", tx, y + pad + 22, 15, FG, pop, bold=True)
+        draw_text(cr, "lo último que hicieron las IAs", tx, y + pad + 40, 10.5, DIM, pop)
+    else:
+        draw_text(cr, "¿Qué hacemos?", tx, y + pad + 22, 16, FG, pop, bold=True)
+        mode = S["mode"]
+        mname = dict((m[0], m[1]) for m in MODES).get(mode, "Normal")
+        draw_text(cr, f"{S['name']} · modo {mname.lower()}", tx, y + pad + 40, 10.5, DIM, pop)
+
+    cr.restore()                                      # fin de la capa de la cabecera
+
+    # elementos
+    def stagger(order):
+        a = clamp((t - 0.03 - order * STAGGER) / ITEM_T)
+        return spring(a) if BOUNCY else ease_out_strong(a)
+
+    for it in lay["items"]:
+        hv = S["hov"].get(it["id"], 0.0)
+        order = it.get("order", 0)
+        st = stagger(order) if S["closing"] is None else 1.0
+        a = clamp(st) * pop
+        lift = (1 - st) * (0 if REDUCE_MOTION else (26 if BOUNCY else 8)) if S["closing"] is None else 0
+        ix, iy, iw, ih = it["x"], it["y"] + lift, it["w"], it["h"]
+        kind = it["kind"]
+        if DEPTH:                                     # cada elemento flota en su capa: paralaje, vaivén y sombra propia
+            ix -= nx * 6
+            iy += -ny * 6 + math.sin(t * 1.6 + order * 0.7) * 1.6
+            for dy, al in ((9, 0.10), (5, 0.14), (2, 0.20)):
+                rrect(cr, ix - nx * 3, iy + dy + 3 * hv - ny * 3, iw, ih, min(ih / 2, 18))
+                cr.set_source_rgba(0, 0, 0, al * a)
+                cr.fill()
+        # rebote: el elemento crece al aparecer (se pasa un poco) y se agranda al pasar el mouse
+        sc = 1.0 if REDUCE_MOTION else ((0.55 + 0.45 * st) if BOUNCY else 1.0)
+        sc *= 1.0 + (0.07 if BOUNCY else 0.0) * hv
+        cr.save()
+        icx, icy = ix + iw / 2, iy + ih / 2
+        cr.translate(icx, icy)
+        cr.scale(sc, sc)
+        cr.translate(-icx, -icy)
+        if kind == "mode":
+            mid = it["id"].split(":")[1]
+            col = MODE_COL[mid] or A
+            active = (S["mode"] == mid)
+            up = -3 * hv
+            iy += up
+            if active or hv > 0.01:
+                glow_rrect(cr, ix, iy, iw, ih, 18, col, a * (1.0 if active else hv), 12)
+            rrect(cr, ix, iy, iw, ih, 18)
+            if active:
+                gg = cairo.LinearGradient(ix, iy, ix + iw, iy + ih)
+                gg.add_color_stop_rgba(0, *col, 0.95 * a)
+                gg.add_color_stop_rgba(1, *mix(col, A2, 0.55), 0.95 * a)
+                cr.set_source(gg)
+            else:
+                cr.set_source_rgba(*mix(SF, col, 0.22 * hv), a * 0.95)
+            cr.fill()
+            rrect(cr, ix, iy, iw, ih, 18)
+            cr.set_source_rgba(*col, a * (0.9 if active else 0.25 + 0.5 * hv))
+            cr.set_line_width(1.2)
+            cr.stroke()
+            draw_text(cr, it["icon"], ix + iw / 2, iy + ih / 2 + 9, 25, BG if active else mix(FG, col, 0.5 + 0.5 * hv), a, center=True)
+            draw_text(cr, it["label"], ix + iw / 2, it["y"] + lift + ih + 17, 10.5, FG if (active or hv > 0.1) else DIM, a, bold=active, center=True)
+        elif kind == "row":
+            primary = it["id"] == "chat"
+            up = -2 * hv
+            iy += up
+            if primary or hv > 0.01:
+                glow_rrect(cr, ix, iy, iw, ih, 14, A, a * (0.55 if primary else hv), 10)
+            rrect(cr, ix, iy, iw, ih, 14)
+            if primary:
+                gg = cairo.LinearGradient(ix, iy, ix + iw, iy)
+                gg.add_color_stop_rgba(0, *A, (0.80 + 0.2 * hv) * a)
+                gg.add_color_stop_rgba(1, *mix(A, A2, 0.5), (0.80 + 0.2 * hv) * a)
+                cr.set_source(gg)
+            else:
+                cr.set_source_rgba(*mix(SF, SF2, hv), a * 0.95)
+            cr.fill()
+            if not primary:
+                rrect(cr, ix, iy, iw, ih, 14)
+                cr.set_source_rgba(*A, a * (0.14 + 0.55 * hv))
+                cr.set_line_width(1.1)
+                cr.stroke()
+            tcol = BG if primary else (A if hv > 0.5 else FG)
+            draw_text(cr, it["icon"], ix + 24, iy + ih / 2 + 7, 19, tcol, a, center=True)
+            draw_text(cr, it["label"], ix + 48, iy + ih / 2 + 5, 13, tcol, a, bold=primary)
+            draw_text(cr, "", ix + iw - 18 + 3 * hv, iy + ih / 2 + 5, 11, tcol, a * (0.55 + 0.45 * hv), center=True)
+        else:                                          # botones chicos (silencio / volver)
+            if it["id"] == "mute":
+                on = is_muted()
+                col = A2 if on else A
+            else:
+                on, col = False, A
+            iy -= 2 * hv
+            if hv > 0.01 or on:
+                glow_rrect(cr, ix, iy, iw, ih, 17, col, a * (0.7 if on else hv), 8)
+            rrect(cr, ix, iy, iw, ih, 17)
+            cr.set_source_rgba(*mix(SF, col, 0.25 + 0.35 * hv if on else 0.18 * hv), a * 0.95)
+            cr.fill()
+            icon = "" if (it["id"] == "mute" and on) else ("" if it["id"] == "mute" else it["icon"])
+            draw_text(cr, icon, ix + iw / 2, iy + ih / 2 + 6, 15, col if (hv > 0.2 or on) else DIM, a, center=True)
+        cr.restore()
+
+    if S["page"] == "activity":
+        rows = S["activity"]
+        top = y + pad + 64
+        if not rows:
+            draw_text(cr, "Todavía no hay actividad.", x + cw / 2, top + 60, 12, DIM, pop, center=True)
+        for i, (hhmm, st, ic, text) in enumerate(rows):
+            a = clamp((S["ptime"] - i * 0.04) / 0.25) * pop
+            col = {"error": A2, "waiting": (1.0, 0.70, 0.0), "done": A}.get(st, FG)
+            ry = top + i * 34 + (1 - ease_out(a)) * 8
+            draw_text(cr, hhmm, x + pad, ry + 14, 10.5, DIM, a)
+            draw_text(cr, ic, x + pad + 52, ry + 14, 12, col, a, center=True)
+            tt = text if len(text) <= 34 else text[:33] + "…"
+            draw_text(cr, tt, x + pad + 68, ry + 14, 11.5, FG, a)
+    cr.restore()
+
+
+# ----------------------------------------------------------------------------- ejecución
+
+
+def child_env():
+    return {k: v for k, v in os.environ.items() if k not in ("LD_PRELOAD", "GSK_RENDERER")}
+
+
+def run_action(aid):
+    scripts = os.path.expanduser("~/.config/hypr/scripts/once.sh")
+    cmds = {
+        "chat": ["bash", scripts, "hyprarch-ai", "hyprarch-ai", "chat"],
+        "ia": ["bash", scripts, "hyprarch-ai", "hyprarch-ai", "setup"],
+        "colors": ["bash", scripts, "hyprarch-theme", "hyprarch-theme"],
+    }
+    if aid.startswith("mode:"):
+        mid = aid.split(":")[1]
+        cmds[aid] = ["hyprarch-mode", "normal"] if mid == "normal" else ["hyprarch-mode", "toggle", mid]
+    cmd = cmds.get(aid)
+    if cmd:
+        try:
+            subprocess.Popen(cmd, env=child_env(), start_new_session=True, stdin=subprocess.DEVNULL,
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except OSError:
+            pass
+
+
+def toggle_mute():
+    try:
+        CACHE.mkdir(parents=True, exist_ok=True)
+        f = CACHE / "mute"
+        if f.exists():
+            f.unlink()
+        else:
+            f.write_text("1")
+    except OSError:
+        pass
+
+
+def run(anchor):
+    import gi
+
+    gi.require_version("Gtk", "4.0")
+    gi.require_version("Gtk4LayerShell", "1.0")
+    from gi.repository import GLib, Gtk, Gtk4LayerShell as LS
+
+    pal = load_palette()
+    S = dict(t0=time.time(), t=0.0, closing=None, close_t0=None, hover=None, anchor=anchor, page="main", ptime=0.0, ptime0=None,
+             hov={}, mode=current_mode(), name=buddy_name(), activity=[], action=None, size=(1280, 800))
+    app = Gtk.Application(application_id="local.hyprarch.menu")
+
+    def on_activate(app):
+        win = Gtk.ApplicationWindow(application=app)
+        win.set_decorated(False)
+        LS.init_for_window(win)
+        LS.set_layer(win, LS.Layer.OVERLAY)
+        for edge in (LS.Edge.TOP, LS.Edge.BOTTOM, LS.Edge.LEFT, LS.Edge.RIGHT):
+            LS.set_anchor(win, edge, True)
+        LS.set_exclusive_zone(win, -1)
+        LS.set_namespace(win, "hyprarch-menu")
+        LS.set_keyboard_mode(win, LS.KeyboardMode.ON_DEMAND)
+        area = Gtk.DrawingArea()
+        win.set_child(area)
+        css = Gtk.CssProvider()
+        css.load_from_data(b"window, window.background { background: transparent; }")
+        Gtk.StyleContext.add_provider_for_display(win.get_display(), css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+        def close(action=None):
+            if S["closing"] is None:
+                S["closing"] = 0.0
+                S["close_t0"] = time.time()
+                S["action"] = action
+
+        def draw(_a, cr, w, h):
+            S["size"] = (w, h)
+            try:
+                import cairo
+                cr.set_operator(cairo.OPERATOR_CLEAR)
+                cr.paint()
+                cr.set_operator(cairo.OPERATOR_OVER)
+                draw_scene(cr, w, h, S, pal)
+            except Exception:
+                pass
+
+        area.set_draw_func(draw)
+
+        def item_at(px, py):
+            w, h = S["size"]
+            for it in layout(w, h, S["anchor"], S["page"])["items"]:
+                if it["x"] <= px <= it["x"] + it["w"] and it["y"] <= py <= it["y"] + it["h"] + (17 if it["kind"] == "mode" else 0):
+                    return it["id"]
+            return None
+
+        def on_motion(_c, px, py):
+            S["ptr"] = (px, py)
+            hv = item_at(px, py)
+            if hv != S["hover"]:
+                S["hover"] = hv
+                if hv:
+                    play("menu-hover")
+
+        def on_click(_g, _n, px, py):
+            if S["closing"] is not None:
+                return
+            w, h = S["size"]
+            lay = layout(w, h, S["anchor"], S["page"])
+            iid = item_at(px, py)
+            if iid is None:
+                if not (lay["x"] <= px <= lay["x"] + lay["w"] and lay["y"] <= py <= lay["y"] + lay["h"]):
+                    close()
+                return
+            play("menu-click")
+            if iid == "mute":
+                toggle_mute()
+            elif iid == "activity":
+                S["page"], S["activity"], S["ptime0"] = "activity", read_activity(), time.time()
+            elif iid == "back":
+                S["page"] = "main"
+            else:
+                close(iid)
+
+        mo = Gtk.EventControllerMotion()
+        mo.connect("motion", on_motion)
+        mo.connect("leave", lambda *_: S.update(hover=None))
+        area.add_controller(mo)
+        cl = Gtk.GestureClick()
+        cl.connect("pressed", on_click)
+        area.add_controller(cl)
+        keys = Gtk.EventControllerKey()
+        keys.connect("key-pressed", lambda _c, kv, *a: (close(), True)[1] if kv == 65307 else False)   # Esc
+        win.add_controller(keys)
+
+        def tick():
+            now = time.time()
+            S["t"] = now - S["t0"]
+            if S["close_t0"] is not None:
+                S["closing"] = now - S["close_t0"]
+                if S["closing"] > CLOSE_T:
+                    if S["action"]:
+                        run_action(S["action"])
+                    app.quit()
+                    return False
+            S["ptime"] = (now - S["ptime0"]) if S["ptime0"] else 0.0
+            # el brillo de cada botón sigue al mouse con suavidad
+            ids = {it["id"] for it in layout(*S["size"], S["anchor"], S["page"])["items"]}
+            for k in list(S["hov"]):
+                if k not in ids:
+                    del S["hov"][k]
+            for k in ids:
+                cur = S["hov"].get(k, 0.0)
+                S["hov"][k] = cur + ((1.0 if S["hover"] == k else 0.0) - cur) * 0.35
+            area.queue_draw()
+            return True
+
+        play("menu-open")
+        GLib.timeout_add(16, tick)
+        win.present()
+
+    app.connect("activate", on_activate)
+    app.run(None)
+    return 0
+
+
+def render_frames(outdir):
+    import cairo
+
+    out = Path(outdir)
+    out.mkdir(parents=True, exist_ok=True)
+    pal = load_palette()
+    base = dict(closing=None, hover=None, anchor=(1190, 740), page="main", ptime=0.0, hov={}, mode="gamer", name="Claudito",
+                activity=[("17:20", "working", "", "[codex] Revisando hyprarch-theme"),
+                          ("17:22", "done", "", "[claude] Subí las correcciones"),
+                          ("17:31", "error", "", "[claude] La compilación falló"),
+                          ("17:35", "waiting", "", "[codex] Esperando tu respuesta")])
+    for name, t, hover, page in (("m1-abriendo", 0.16, None, "main"), ("m2-hover-gamer", 0.9, "mode:cine", "main"),
+                                 ("m3-hover-chat", 0.9, "ia", "main"), ("m4-actividad", 1.4, None, "activity")):
+        S = dict(base, t=t, hover=hover, page=page, ptime=1.0 if page == "activity" else 0.0)
+        S["hov"] = {hover: 1.0} if hover else {}
+        surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, 1280, 800)
+        cr = cairo.Context(surf)
+        cr.set_source_rgb(0.03, 0.05, 0.04)
+        cr.paint()
+        cr.set_source_rgba(0.1, 0.9, 0.1, 0.12)
+        cr.arc(640, 500, 260, 0, 2 * math.pi)
+        cr.fill()
+        draw_scene(cr, 1280, 800, S, pal)
+        path = out / f"{name}.png"
+        surf.write_to_png(str(path))
+        print(path)
+    return 0
+
+
+if __name__ == "__main__":
+    args = sys.argv[1:]
+    if args and args[0] == "frames":
+        sys.exit(render_frames(args[1] if len(args) > 1 else "frames"))
+    anc = (1190.0, 740.0)
+    if "--anchor" in args:
+        try:
+            ax, ay = args[args.index("--anchor") + 1].split(",")
+            anc = (float(ax), float(ay))
+        except (IndexError, ValueError):
+            pass
+    sys.exit(run(anc))

@@ -620,21 +620,25 @@ def run_daemon():
             r = cairo.RectangleInt(x, y, 84, 104)
             surf.set_input_region(cairo.Region(r))
 
-        def open_chat():
-            """Abre (o enfoca) una ventana flotante con Claude Code para hablar con Claudito."""
-            env = {k: v for k, v in os.environ.items() if k not in ("LD_PRELOAD", "GSK_RENDERER")}
-            script = os.path.expanduser("~/.config/hypr/scripts/once.sh")
+        menu = {"p": None}
+
+        def open_menu():
+            """Abre el menú animado (hyprarch-menu) junto al personajito. Hereda el entorno: necesita layer-shell."""
+            p = menu["p"]
+            if p is not None and p.poll() is None:          # ya está abierto: se cierra
+                p.terminate()
+                menu["p"] = None
+                return
             try:
-                subprocess.Popen(["bash", script, "hyprarch-ai", "hyprarch-ai", "chat"], env=env, start_new_session=True,
-                                 stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                write_state("done", "¡Hola! Te escucho")
+                menu["p"] = subprocess.Popen(["hyprarch-menu", "--anchor", f"{S['x']:.0f},{S['y']:.0f}"], start_new_session=True,
+                                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             except Exception as e:
                 if debug:
-                    print("no se pudo abrir el chat:", repr(e), flush=True)
+                    print("no se pudo abrir el menú:", repr(e), flush=True)
 
         click = Gtk.GestureClick()
         click.set_button(1)
-        click.connect("released", lambda *_: open_chat())
+        click.connect("released", lambda *_: open_menu())
         area.add_controller(click)
         motion = Gtk.EventControllerMotion()
         motion.connect("enter", lambda *_: S.update(hover=True))
@@ -703,7 +707,7 @@ def run_daemon():
                 fresh = (now - raw["ts"]) < BUBBLE_SECONDS
                 want = 1.0 if (S["text"] and eff != "idle" and fresh) else 0.0
                 if S["hover"] and not want:
-                    S["text"], want = "Clic para hablar conmigo", 1.0
+                    S["text"], want = "Clic: ¿qué hacemos?", 1.0
                 S["bubble"] += (want - S["bubble"]) * 0.2
 
                 # --- la ventanita sigue al personajito con márgenes de layer-shell ---------
