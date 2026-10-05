@@ -152,11 +152,13 @@ window#waybar.empty #window {
 #memory.critical        { color: @alert; font-weight: bold; }
 
 #temperature            { color: @ok; }
+#temperature.warning    { color: @warn; }
 #temperature.critical   { color: @alert; font-weight: bold; }
 
 #network                { color: @ok; }
-#network.disconnected   { color: @alert; }
-#network.disabled       { color: @alert; }
+#network.linked,
+#network.disconnected   { color: @warn; }
+#network.disabled       { color: @dim; }
 
 #bluetooth              { color: @dim; }
 #bluetooth.on           { color: @ok; }

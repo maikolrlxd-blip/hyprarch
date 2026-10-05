@@ -315,7 +315,7 @@ custom_flow() {
   read -rp "Color de ACENTO en HEX (ej. 00ffaa)   [Enter = cancelar]: " a
   [[ -z $a ]] && return 0
   if ! hex_ok "$a"; then echo "HEX inválido (se esperan 6 dígitos)."; sleep 2; return 0; fi
-  read -rp "Color de ALERTA en HEX (ej. ff1f4b)   [Enter = ff1f4b]: " b
+  read -rp "ACENTO secundario en HEX (ej. ff1f4b) [Enter = ff1f4b]: " b
   b=${b:-ff1f4b}
   if ! hex_ok "$b"; then echo "HEX inválido (se esperan 6 dígitos)."; sleep 2; return 0; fi
   a=$(norm "$a"); b=$(norm "$b")
@@ -330,8 +330,8 @@ FG=${FG}
 DIM=${DIM}
 ACCENT=${a}
 ACCENT2=${b}
-OK=${a}
-ALERT=${b}
+OK=39ff14
+ALERT=ff1f4b
 WARN=${WARN:-ffb300}
 WALL=verde
 EOF

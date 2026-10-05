@@ -107,16 +107,21 @@ def render(accent, accent2, sky_top, sky_horizon, seed):
         np.clip(1.0 - dpx_z / 2.0, 0, 1),
     )
     fade = np.clip((yy - horizon) / (H * 0.07), 0, 1) ** 0.8
-    grid = (line * fade * below)[..., None] * (A * 0.95 + 0.05)
+    grid = (line * fade * below)[..., None] * (A * 0.95 + 0.05) * 0.86
 
     # ---- horizonte: línea fina carmesí + resplandor suave + reflejo del sol
     hline = np.exp(-(((yy - horizon) / 2.2) ** 2))[..., None] * (B * 1.0 + 0.1)
-    hz = np.exp(-(((yy - horizon) / (H * 0.014)) ** 2))[..., None] * (A * 0.5 + B * 0.2) * 0.55
+    hz = np.exp(-(((yy - horizon) / (H * 0.014)) ** 2))[..., None] * (A * 0.5 + B * 0.2) * 0.42
     refl = (np.exp(-(((xx - cx) / (W * 0.05)) ** 2)) * np.exp(-(yy - horizon) / (H * 0.10)) * below)[..., None] * A * 0.22
 
     bright = np.clip(grid * 1.1 + hline * 0.9 + (alpha[..., None] * sun_col) * 0.5 + rim * 0.5, 0, 1)
     bloom = blur(bright, 8) * 0.38 + blur(bright, 30) * 0.42 + blur(bright, 80) * 0.30
     img = img + grid + hline + hz + refl + bloom
+
+    # ---- zonas tranquilas: franja oscura arriba (detrás de la barra) y rincón inferior derecho (detrás de Claudito)
+    top = 1 - 0.55 * (1 - smoothstep(0.0, H * 0.075, yy))[..., None]
+    corner = 1 - 0.42 * np.exp(-(((xx - W * 0.97) / (W * 0.13)) ** 2 + ((yy - H * 0.97) / (H * 0.17)) ** 2))[..., None]
+    img *= top * corner
 
     # ---- líneas de escaneo, viñeta y grano
     img *= (1 - 0.055 * ((yy.astype(np.int32) % 3) == 0))[..., None]
