@@ -1,0 +1,282 @@
+#!/usr/bin/env bash
+# hyprarch-theme — cambia la paleta de colores de todo el escritorio.
+#
+# Uso:  hyprarch-theme [menu|verde|rojo|custom|toggle|actual]
+#   menu    (por defecto) menú interactivo con fzf
+#   verde   "Modo Verde Dominante"
+#   rojo    "Modo Rojo Dominante"
+#   custom  vuelve a aplicar tu paleta personalizada (HEX)
+#   toggle  alterna entre verde y rojo
+#   actual  vuelve a generar los archivos del tema actual
+#
+# Genera estos archivos a partir de la paleta (los demás archivos de
+# configuración solo los importan, así que no hace falta editarlos a mano):
+#   ~/.config/hypr/colors.lua   ~/.config/waybar/colors.css
+#   ~/.config/kitty/colors.conf ~/.config/fuzzel/fuzzel.ini
+#   ~/.config/mako/config       ~/.config/gtk-{3,4}.0/gtk.css
+set -u
+
+THEMES_DIR="${HYPRARCH_THEMES:-/usr/share/hyprarch/themes}"
+CFG="$HOME/.config"
+DATA="$CFG/hyprarch"
+CUSTOM="$DATA/custom.env"
+CURRENT="$DATA/current"
+
+mkdir -p "$DATA" "$CFG/hypr" "$CFG/waybar" "$CFG/kitty" "$CFG/fuzzel" \
+         "$CFG/mako" "$CFG/gtk-3.0" "$CFG/gtk-4.0"
+
+# ---------- utilidades ----------
+hex_ok() { [[ $1 =~ ^#?[0-9a-fA-F]{6}$ ]]; }
+norm()   { local h=${1#\#}; printf '%s' "${h,,}"; }
+rgb()    { printf '%d, %d, %d' "$((16#${1:0:2}))" "$((16#${1:2:2}))" "$((16#${1:4:2}))"; }
+
+load_theme() {
+  local f
+  case $1 in
+    custom) f=$CUSTOM ;;
+    *)      f="$THEMES_DIR/$1.env" ;;
+  esac
+  if [[ ! -f $f ]]; then echo "Tema no encontrado: $1" >&2; return 1; fi
+  # shellcheck disable=SC1090
+  . "$f"
+}
+
+# ---------- generadores ----------
+render_hypr() {
+  cat > "$CFG/hypr/colors.lua" <<EOF
+-- Generado por hyprarch-theme (${NAME}). No editar a mano.
+return {
+    accent   = "rgba(${ACCENT}ee)",
+    accent2  = "rgba(${ACCENT2}ee)",
+    inactive = "rgba(${SURFACE2}aa)",
+    glow     = "rgba(${ACCENT}55)",
+    shadow   = "rgba(000000b0)",
+}
+EOF
+}
+
+render_waybar() {
+  cat > "$CFG/waybar/colors.css" <<EOF
+/* Generado por hyprarch-theme (${NAME}). No editar a mano. */
+@define-color bg       rgba($(rgb "$BG"), 0.78);
+@define-color surface  rgba($(rgb "$SURFACE"), 0.92);
+@define-color surface2 #${SURFACE2};
+@define-color fg       #${FG};
+@define-color dim      #${DIM};
+@define-color accent   #${ACCENT};
+@define-color accent2  #${ACCENT2};
+@define-color ok       #${OK};
+@define-color alert    #${ALERT};
+EOF
+}
+
+render_kitty() {
+  cat > "$CFG/kitty/colors.conf" <<EOF
+# Generado por hyprarch-theme (${NAME}). No editar a mano.
+foreground            #${FG}
+background            #${BG}
+selection_foreground  #${BG}
+selection_background  #${ACCENT}
+cursor                #${ACCENT}
+cursor_text_color     #${BG}
+url_color             #${ACCENT}
+active_border_color   #${ACCENT}
+inactive_border_color #${SURFACE2}
+
+color0  #${SURFACE2}
+color8  #${DIM}
+color1  #${ALERT}
+color9  #${ALERT}
+color2  #${OK}
+color10 #${OK}
+color3  #f5e642
+color11 #f5e642
+color4  #5aa9ff
+color12 #5aa9ff
+color5  #d070ff
+color13 #d070ff
+color6  #2de2e6
+color14 #2de2e6
+color7  #${FG}
+color15 #ffffff
+EOF
+}
+
+render_fuzzel() {
+  cat > "$CFG/fuzzel/fuzzel.ini" <<EOF
+# Generado por hyprarch-theme (${NAME}). No editar a mano.
+[main]
+font=JetBrainsMono Nerd Font:size=12
+prompt="❯ "
+width=42
+lines=12
+horizontal-pad=22
+vertical-pad=16
+inner-pad=10
+
+[colors]
+background=${BG}e6
+text=${FG}ff
+prompt=${ACCENT}ff
+placeholder=${DIM}ff
+input=${FG}ff
+match=${ACCENT}ff
+selection=${SURFACE2}ff
+selection-text=${FG}ff
+selection-match=${ACCENT}ff
+border=${ACCENT}ff
+
+[border]
+width=2
+radius=14
+EOF
+}
+
+render_mako() {
+  cat > "$CFG/mako/config" <<EOF
+# Generado por hyprarch-theme (${NAME}). No editar a mano.
+font=JetBrainsMono Nerd Font 11
+background-color=#${BG}ee
+text-color=#${FG}
+border-color=#${ACCENT}
+progress-color=over #${ACCENT}55
+border-size=2
+border-radius=14
+padding=14
+margin=14
+width=360
+anchor=top-right
+default-timeout=5000
+
+[urgency=high]
+border-color=#${ALERT}
+default-timeout=0
+EOF
+}
+
+render_gtk() {
+  local css
+  css="/* Generado por hyprarch-theme (${NAME}). No editar a mano. */
+@define-color accent_color #${ACCENT};
+@define-color accent_bg_color #${ACCENT};
+@define-color accent_fg_color #${BG};
+@define-color window_bg_color #${BG};
+@define-color window_fg_color #${FG};
+@define-color view_bg_color #${SURFACE};
+@define-color view_fg_color #${FG};
+@define-color headerbar_bg_color #${SURFACE};
+@define-color headerbar_fg_color #${FG};
+@define-color sidebar_bg_color #${SURFACE};
+@define-color card_bg_color #${SURFACE2};
+@define-color popover_bg_color #${SURFACE};
+@define-color destructive_bg_color #${ALERT};
+@define-color success_bg_color #${OK};
+@define-color theme_bg_color #${BG};
+@define-color theme_fg_color #${FG};
+@define-color theme_base_color #${SURFACE};
+@define-color theme_text_color #${FG};
+@define-color theme_selected_bg_color #${ACCENT};
+@define-color theme_selected_fg_color #${BG};
+"
+  printf '%s' "$css" > "$CFG/gtk-3.0/gtk.css"
+  printf '%s' "$css" > "$CFG/gtk-4.0/gtk.css"
+}
+
+render_wallpaper() {
+  printf '/usr/share/backgrounds/hyprarch-%s.png\n' "${WALL:-verde}" > "$DATA/wallpaper"
+}
+
+reload_all() {
+  [[ -n ${HYPRARCH_NO_RELOAD:-} ]] && return 0
+  command -v hyprctl >/dev/null 2>&1 && hyprctl reload >/dev/null 2>&1
+  pkill -SIGUSR2 waybar 2>/dev/null
+  pkill -SIGUSR1 kitty 2>/dev/null
+  command -v makoctl >/dev/null 2>&1 && makoctl reload >/dev/null 2>&1
+  [[ -x $CFG/hypr/scripts/wallpaper.sh ]] && { "$CFG/hypr/scripts/wallpaper.sh" >/dev/null 2>&1 & }
+  command -v notify-send >/dev/null 2>&1 && notify-send -t 3000 "Tema aplicado" "$NAME"
+  return 0
+}
+
+apply() {
+  load_theme "$1" || return 1
+  printf '%s\n' "$1" > "$CURRENT"
+  render_hypr; render_waybar; render_kitty; render_fuzzel
+  render_mako; render_gtk; render_wallpaper
+  reload_all
+}
+
+# ---------- personalizado ----------
+custom_flow() {
+  local a b
+  echo
+  read -rp "Color de ACENTO en HEX (ej. 00ffaa)   [Enter = cancelar]: " a
+  [[ -z $a ]] && return 0
+  if ! hex_ok "$a"; then echo "HEX inválido (se esperan 6 dígitos)."; sleep 2; return 0; fi
+  read -rp "Color de ALERTA en HEX (ej. ff1f4b)   [Enter = ff1f4b]: " b
+  b=${b:-ff1f4b}
+  if ! hex_ok "$b"; then echo "HEX inválido (se esperan 6 dígitos)."; sleep 2; return 0; fi
+  a=$(norm "$a"); b=$(norm "$b")
+
+  load_theme verde || return 1
+  cat > "$CUSTOM" <<EOF
+NAME="Personalizado (#${a})"
+BG=${BG}
+SURFACE=${SURFACE}
+SURFACE2=${SURFACE2}
+FG=${FG}
+DIM=${DIM}
+ACCENT=${a}
+ACCENT2=${b}
+OK=${a}
+ALERT=${b}
+WALL=verde
+EOF
+  apply custom
+}
+
+# ---------- menú ----------
+menu() {
+  local cur sel
+  cur=$(cat "$CURRENT" 2>/dev/null || echo verde)
+  load_theme "$cur" >/dev/null 2>&1 || load_theme verde
+
+  sel=$(printf '%s\n' \
+      "Modo Verde Dominante" \
+      "Modo Rojo Dominante" \
+      "Acento personalizado (HEX)" \
+      "Alternar verde / rojo" \
+      "Ver colores actuales" \
+      "Salir" |
+    fzf --reverse --border=rounded --no-info --height=100% \
+        --prompt="Tema ❯ " --header="Tema actual: ${cur}   ·   Enter = aplicar" \
+        --color="bg:#${BG},fg:#${FG},hl:#${ACCENT},fg+:#${FG},bg+:#${SURFACE2},hl+:#${ACCENT},pointer:#${ACCENT},prompt:#${ACCENT},border:#${ACCENT},header:#${DIM}")
+
+  case $sel in
+    "Modo Verde Dominante")       apply verde ;;
+    "Modo Rojo Dominante")        apply rojo ;;
+    "Acento personalizado (HEX)") custom_flow ;;
+    "Alternar verde / rojo")      toggle ;;
+    "Ver colores actuales")
+        echo
+        for v in BG SURFACE SURFACE2 FG DIM ACCENT ACCENT2 OK ALERT; do
+          printf '  %-9s #%s\n' "$v" "${!v}"
+        done
+        echo; read -rsn1 -p "Pulsa una tecla para salir..." ;;
+    *) ;;
+  esac
+}
+
+toggle() {
+  local cur; cur=$(cat "$CURRENT" 2>/dev/null || echo verde)
+  if [[ $cur == verde ]]; then apply rojo; else apply verde; fi
+}
+
+case "${1:-menu}" in
+  menu)    menu ;;
+  verde)   apply verde ;;
+  rojo)    apply rojo ;;
+  custom)  apply custom ;;
+  toggle)  toggle ;;
+  actual)  apply "$(cat "$CURRENT" 2>/dev/null || echo verde)" ;;
+  *) echo "Uso: hyprarch-theme [menu|verde|rojo|custom|toggle|actual]" >&2; exit 1 ;;
+esac

@@ -56,6 +56,7 @@ zathura-pdf-mupdf
 ttf-jetbrains-mono-nerd
 noto-fonts
 noto-fonts-emoji
+inter-font
 gnome-themes-extra
 adwaita-icon-theme
 
@@ -68,6 +69,7 @@ ripgrep
 fd
 btop
 fastfetch
+jq
 neovim
 git
 unzip

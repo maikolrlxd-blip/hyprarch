@@ -4,5 +4,5 @@ case "$choice" in
   "Apagar")        systemctl poweroff ;;
   "Reiniciar")     systemctl reboot ;;
   "Suspender")     systemctl suspend ;;
-  "Cerrar sesión") hyprctl dispatch exit ;;
+  "Cerrar sesión") hyprctl dispatch 'hl.dsp.exit()' ;;
 esac

@@ -1,6 +1,8 @@
-/* Catppuccin Mocha */
+/* Los colores vienen de colors.css (lo genera hyprarch-theme, SUPER + T) */
+@import "colors.css";
+
 * {
-  font-family: "JetBrainsMono Nerd Font", "Noto Sans", sans-serif;
+  font-family: "JetBrainsMono Nerd Font", "Inter", sans-serif;
   font-size: 13px;
   border: none;
   border-radius: 0;
@@ -9,21 +11,23 @@
 
 window#waybar {
   background: transparent;
-  color: #cdd6f4;
+  color: @fg;
 }
 
 tooltip {
-  background: #1e1e2e;
-  border: 1px solid #89b4fa;
+  background: @surface;
+  border: 1px solid @accent;
   border-radius: 10px;
 }
 tooltip label {
-  color: #cdd6f4;
+  color: @fg;
 }
 
-/* Píldoras */
+/* ---------- Píldoras ---------- */
+#custom-launcher,
 #workspaces,
 #window,
+#custom-close,
 #clock,
 #tray,
 #language,
@@ -35,60 +39,133 @@ tooltip label {
 #pulseaudio,
 #backlight,
 #battery,
+#custom-theme,
+#custom-help,
 #custom-power {
-  background: rgba(30, 30, 46, 0.88);
+  background: @bg;
+  color: @fg;
   padding: 0 12px;
   margin: 0;
   border-radius: 12px;
+  border: 1px solid alpha(@accent, 0.22);
+}
+
+/* ---------- Izquierda ---------- */
+#custom-launcher {
+  color: @accent;
+  font-size: 16px;
+  padding: 0 14px;
+}
+#custom-launcher:hover {
+  background: @accent;
+  color: @surface;
 }
 
 #workspaces {
   padding: 0 4px;
 }
 #workspaces button {
-  padding: 0 8px;
+  padding: 0 9px;
   margin: 3px 2px;
-  color: #6c7086;
+  color: @dim;
   background: transparent;
   border-radius: 9px;
 }
 #workspaces button:hover {
-  background: #313244;
-  color: #cdd6f4;
+  background: @surface2;
+  color: @fg;
 }
 #workspaces button.active {
-  background: #89b4fa;
-  color: #11111b;
+  background: @accent;
+  color: @surface;
   font-weight: bold;
 }
 #workspaces button.urgent {
-  background: #f38ba8;
-  color: #11111b;
+  background: @alert;
+  color: @surface;
 }
 
 #window {
-  color: #a6adc8;
+  color: @dim;
 }
 
+/* Botón de cerrar ventana: rojo, para que se vea que es peligroso */
+#custom-close {
+  color: @alert;
+  padding: 0 13px;
+}
+#custom-close:hover {
+  background: @alert;
+  color: @surface;
+}
+
+/* ---------- Centro ---------- */
 #clock {
-  color: #cdd6f4;
+  color: @fg;
   font-weight: bold;
+  border-color: alpha(@accent, 0.5);
 }
 
-/* Colores por módulo */
-#language    { color: #b4befe; }
-#cpu         { color: #89b4fa; }
-#memory      { color: #cba6f7; }
-#temperature { color: #f9e2af; }
-#temperature.critical { color: #f38ba8; }
-#network     { color: #94e2d5; }
-#network.disconnected { color: #f38ba8; }
-#bluetooth   { color: #89b4fa; }
-#pulseaudio  { color: #fab387; }
-#pulseaudio.muted { color: #6c7086; }
-#backlight   { color: #f9e2af; }
-#battery     { color: #a6e3a1; }
-#battery.warning:not(.charging)  { color: #f9e2af; }
-#battery.critical:not(.charging) { color: #f38ba8; }
-#custom-power { color: #f38ba8; padding: 0 14px; }
-#custom-power:hover { background: #f38ba8; color: #11111b; }
+/* ---------- Derecha: verde = bien, rojo = problema ---------- */
+#language      { color: @accent; }
+#tray          { padding: 0 10px; }
+
+#cpu           { color: @ok; }
+#cpu.warning   { color: @alert; }
+#cpu.critical  { color: @surface; background: @alert; }
+
+#memory          { color: @ok; }
+#memory.warning  { color: @alert; }
+#memory.critical { color: @surface; background: @alert; }
+
+#temperature          { color: @ok; }
+#temperature.critical { color: @surface; background: @alert; }
+
+#network              { color: @ok; }
+#network.disconnected { color: @alert; }
+#network.disabled     { color: @alert; }
+
+#bluetooth            { color: @dim; }
+#bluetooth.on         { color: @ok; }
+#bluetooth.connected  { color: @ok; }
+
+#pulseaudio       { color: @ok; }
+#pulseaudio.muted { color: @alert; }
+
+#backlight { color: @accent; }
+
+#battery                          { color: @ok; }
+#battery.charging, #battery.plugged { color: @ok; }
+#battery.warning:not(.charging)   { color: @alert; }
+#battery.critical:not(.charging)  {
+  color: @surface;
+  background: @alert;
+  animation-name: blink;
+  animation-duration: 0.8s;
+  animation-timing-function: steps(2);
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+@keyframes blink {
+  to {
+    background: @surface;
+    color: @alert;
+  }
+}
+
+#custom-theme:hover,
+#custom-help:hover {
+  background: @surface2;
+}
+#custom-theme { color: @accent; }
+#custom-help  { color: @dim; }
+
+#custom-power {
+  color: @alert;
+  padding: 0 14px;
+}
+#custom-power:hover {
+  background: @alert;
+  color: @surface;
+}

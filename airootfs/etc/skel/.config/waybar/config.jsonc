@@ -1,13 +1,18 @@
 {
   "layer": "top",
   "position": "top",
-  "height": 32,
+  "height": 34,
   "margin-top": 6,
   "margin-left": 10,
   "margin-right": 10,
   "spacing": 6,
 
-  "modules-left": ["hyprland/workspaces", "hyprland/window"],
+  "modules-left": [
+    "custom/launcher",
+    "hyprland/workspaces",
+    "hyprland/window",
+    "custom/close"
+  ],
   "modules-center": ["clock"],
   "modules-right": [
     "tray",
@@ -20,8 +25,17 @@
     "pulseaudio",
     "backlight",
     "battery",
+    "custom/theme",
+    "custom/help",
     "custom/power"
   ],
+
+  "custom/launcher": {
+    "format": "",
+    "tooltip-format": "Aplicaciones (SUPER + D)",
+    "tooltip": true,
+    "on-click": "fuzzel"
+  },
 
   "hyprland/workspaces": {
     "format": "{id}",
@@ -31,8 +45,15 @@
 
   "hyprland/window": {
     "format": "{title}",
-    "max-length": 50,
+    "max-length": 48,
     "separate-outputs": true
+  },
+
+  "custom/close": {
+    "format": "",
+    "tooltip": true,
+    "tooltip-format": "Cerrar ventana activa (SUPER + Q)",
+    "on-click": "hyprctl dispatch 'hl.dsp.window.close()'"
   },
 
   "hyprland/language": {
@@ -44,7 +65,7 @@
     "tooltip-format": "<tt>{calendar}</tt>",
     "calendar": {
       "format": {
-        "today": "<span color='#89b4fa'><b>{}</b></span>"
+        "today": "<span color='#ffffff'><b>{}</b></span>"
       }
     }
   },
@@ -52,14 +73,17 @@
   "cpu": {
     "format": " {usage}%",
     "interval": 2,
-    "on-click": "kitty -e btop"
+    "states": { "warning": 70, "critical": 90 },
+    "tooltip": true,
+    "on-click": "$HOME/.config/hypr/scripts/once.sh hyprarch-btop btop"
   },
 
   "memory": {
     "format": " {percentage}%",
     "interval": 3,
+    "states": { "warning": 75, "critical": 90 },
     "tooltip-format": "{used:0.1f} GiB / {total:0.1f} GiB",
-    "on-click": "kitty -e btop"
+    "on-click": "$HOME/.config/hypr/scripts/once.sh hyprarch-btop btop"
   },
 
   "temperature": {
@@ -74,7 +98,7 @@
     "format-ethernet": " {ipaddr}",
     "format-disconnected": " sin red",
     "tooltip-format": "{ifname}  {ipaddr}\n↑ {bandwidthUpBytes}  ↓ {bandwidthDownBytes}",
-    "on-click": "kitty -e nmtui"
+    "on-click": "$HOME/.config/hypr/scripts/once.sh hyprarch-nmtui nmtui"
   },
 
   "bluetooth": {
@@ -116,9 +140,24 @@
     "spacing": 8
   },
 
+  "custom/theme": {
+    "format": "",
+    "tooltip": true,
+    "tooltip-format": "Cambiar colores (SUPER + T)",
+    "on-click": "$HOME/.config/hypr/scripts/once.sh hyprarch-theme hyprarch-theme"
+  },
+
+  "custom/help": {
+    "format": "",
+    "tooltip": true,
+    "tooltip-format": "Atajos de teclado (SUPER + F1)",
+    "on-click": "$HOME/.config/hypr/scripts/keybinds.sh"
+  },
+
   "custom/power": {
     "format": "",
-    "tooltip": false,
+    "tooltip": true,
+    "tooltip-format": "Energía (SUPER + Esc)",
     "on-click": "$HOME/.config/hypr/scripts/powermenu.sh"
   }
 }

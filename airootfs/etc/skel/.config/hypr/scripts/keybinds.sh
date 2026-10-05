@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Hoja de atajos (SUPER + F1)
-cat <<'EOF' | fuzzel --dmenu --prompt "Atajos > " --lines 20 --width 56 >/dev/null
+# Hoja de atajos (SUPER + F1). SUPER = tecla Windows.
+cat <<'EOF' | fuzzel --dmenu --prompt "Atajos > " --lines 22 --width 58 >/dev/null
 SUPER + Enter           Terminal
 SUPER + D               Lanzador de aplicaciones
 SUPER + B               Firefox
 SUPER + E               Archivos
-SUPER + N               Redes Wi-Fi (nmtui)
-SUPER + Q               Cerrar ventana
+SUPER + N               Redes Wi-Fi
+SUPER + T               Cambiar tema de colores
+SUPER + Q  /  ALT + F4  CERRAR ventana
 SUPER + F               Pantalla completa
 SUPER + V               Ventana flotante
 SUPER + J               Cambiar división

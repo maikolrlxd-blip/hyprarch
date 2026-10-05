@@ -77,9 +77,14 @@ ln -sf /usr/lib/systemd/user/pipewire.socket       "$AIR/etc/systemd/user/socket
 ln -sf /usr/lib/systemd/user/pipewire-pulse.socket "$AIR/etc/systemd/user/sockets.target.wants/pipewire-pulse.socket"
 ln -sf /usr/lib/systemd/user/wireplumber.service   "$AIR/etc/systemd/user/default.target.wants/wireplumber.service"
 
-echo "==> Fondo de pantalla"
+echo "==> Fondos de pantalla"
 mkdir -p "$AIR/usr/share/backgrounds"
-magick -size 2560x1440 radial-gradient:'#2a2b3c-#11111b' "$AIR/usr/share/backgrounds/hyprarch.png"
+magick -size 2560x1440 radial-gradient:'#0f3d1c-#050706' "$AIR/usr/share/backgrounds/hyprarch-verde.png"
+magick -size 2560x1440 radial-gradient:'#451019-#070506' "$AIR/usr/share/backgrounds/hyprarch-rojo.png"
+
+echo "==> Generando la paleta inicial (verde) en /etc/skel"
+HOME="$AIR/etc/skel" HYPRARCH_NO_RELOAD=1 HYPRARCH_THEMES="$REPO/airootfs/usr/share/hyprarch/themes" \
+  bash "$REPO/airootfs/usr/local/bin/hyprarch-theme" verde
 
 echo "==> Permisos"
 sed -i '/^file_permissions=(/a\
