@@ -42,6 +42,21 @@ sed -i \
   -e "s|^iso_publisher=.*|iso_publisher=\"Custom build\"|" \
   "$PROFILE/profiledef.sh"
 
+echo "==> Menú de arranque"
+# Títulos propios (en ASCII: syslinux no maneja bien Unicode)
+grep -rlE 'Arch Linux install medium' "$PROFILE/efiboot" "$PROFILE/syslinux" "$PROFILE/grub" 2>/dev/null \
+  | xargs -r sed -i 's/Arch Linux install medium/hyprarch - Hyprland live/g'
+# UEFI (systemd-boot): arranque rápido, sin pitido, sin entradas de accesibilidad ni memtest
+sed -i -e 's/^timeout .*/timeout 4/' -e '/^beep/d' "$PROFILE/efiboot/loader/loader.conf"
+rm -f "$PROFILE"/efiboot/loader/entries/02-* "$PROFILE"/efiboot/loader/entries/03-*
+ENTRY="$PROFILE/efiboot/loader/entries/01-archiso-linux.conf"
+# Entrada alternativa "detallada" (muestra los mensajes de arranque) para diagnosticar fallos
+sed -e 's/^title .*/title    hyprarch - modo detallado (UEFI)/' -e 's/^sort-key.*/sort-key 02/' "$ENTRY" \
+  > "$PROFILE/efiboot/loader/entries/02-hyprarch-verbose.conf"
+# La entrada normal arranca en silencio
+sed -i 's/^options  \(.*\)$/options  \1 quiet loglevel=3 systemd.show_status=0/' "$ENTRY"
+echo "--- entrada principal:"; cat "$ENTRY"
+
 echo "==> Paquetes"
 grep -vE '^\s*(#|$)' packages.extra >> "$PROFILE/packages.x86_64"
 
@@ -50,6 +65,14 @@ echo "==> Aplicando airootfs (configuración, dotfiles, scripts)"
 find airootfs -type f -exec sed -i 's/\r$//' {} +
 chmod +x airootfs/usr/local/bin/* airootfs/etc/skel/.config/hypr/scripts/*
 cp -a airootfs/. "$AIR/"
+
+echo "==> Ocultando del lanzador las entradas inútiles"
+mkdir -p "$AIR/etc/skel/.local/share/applications"
+for app in avahi-discover bssh bvnc blueman-adapters lftp qv4l2 qvidcap stoken-gui stoken-gui-small \
+           thunar-bulk-rename thunar-settings xfce4-about xgps xgpsspeed vim; do
+  printf '[Desktop Entry]\nType=Application\nName=%s\nHidden=true\n' "$app" \
+    > "$AIR/etc/skel/.local/share/applications/$app.desktop"
+done
 
 echo "==> Ajustes del sistema"
 echo "$HOSTNAME_" > "$AIR/etc/hostname"
