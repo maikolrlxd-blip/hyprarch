@@ -3,6 +3,8 @@ on:
   push:
     paths: ['phone/android/**', '.github/workflows/android.yml']
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -13,7 +15,15 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: '8.7' }
       - run: gradle -p phone/android assembleDebug --no-daemon
+      - run: cp phone/android/app/build/outputs/apk/debug/app-debug.apk PhoneMCP.apk
       - uses: actions/upload-artifact@v4
-        with:
-          name: phone-mcp-apk
-          path: phone/android/app/build/outputs/apk/debug/*.apk
+        with: { name: phone-mcp-apk, path: PhoneMCP.apk }
+      # Enlace de descarga directo y estable: Releases > "latest" > PhoneMCP.apk
+      - name: Publicar release "latest"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --cleanup-tag --yes || true
+          gh release create latest PhoneMCP.apk --target "$GITHUB_SHA" \
+            --title "Phone MCP (última versión)" \
+            --notes "Descarga **PhoneMCP.apk** en tu celular Android, ábrelo e instálalo. Guía: phone/README.md"

@@ -9,8 +9,8 @@ Hay dos modos:
 
 ## Sin PC (solo el celular)
 
-1. Instalá el APK (GitHub → Actions → *Build Android APK* → `phone-mcp-apk`).
-2. Abrila, activá la accesibilidad y pegá tu API key de Anthropic.
+1. **Instalar:** desde el celular abrí `https://github.com/maikolrlxd-blip/hyprarch/releases/latest/download/PhoneMCP.apk` (o Releases → *latest* → `PhoneMCP.apk`), abrí el archivo y aceptá "instalar apps de esta fuente".
+2. Abrila, tocá **Activar accesibilidad** y pegá tu API key de Anthropic.
 3. Escribí qué querés ("abre Spotify y pon música tranquila") y tocá **Ejecutar**.
 
 El asistente corre en el propio celular: ve la pantalla, toca y escribe en bucle (máx. 40 pasos por tarea), pide confirmación antes de enviar/pagar/borrar y se corta con **DETENER**. Cada paso envía capturas/texto de pantalla a la API de Anthropic y consume tu saldo. La API key se guarda en el almacenamiento privado de la app (sin cifrado adicional).
