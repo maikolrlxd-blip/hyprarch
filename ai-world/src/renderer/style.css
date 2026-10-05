@@ -1,5 +1,5 @@
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; background: #0b0b14; color: #e8e8f4; font: 14px/1.4 system-ui, sans-serif; overflow: hidden; }
+html, body { margin: 0; height: 100%; height: 100dvh; background: #0b0b14; color: #e8e8f4; font: 14px/1.4 system-ui, sans-serif; overflow: hidden; }
 #scene { position: fixed; inset: 0 340px 0 0; width: calc(100% - 340px); height: 100%; display: block; }
 #panel { position: fixed; top: 0; right: 0; bottom: 0; width: 340px; display: flex; flex-direction: column; background: #12121f; border-left: 1px solid #2a2a44; }
 header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid #2a2a44; }
@@ -30,3 +30,13 @@ dialog h2 { margin-top: 0; }
 .spacer { flex: 1; }
 .hint { color: #8a8aa8; font-size: 12px; }
 @media (max-width: 800px) { #panel { width: 100%; top: 55%; } #scene { inset: 0; width: 100%; height: 55%; } }
+#status { position: fixed; top: 10px; left: 10px; z-index: 5; background: #000b; border: 1px solid #ff8a8a; color: #ffb0b0; padding: 6px 10px; border-radius: 6px; font-size: 13px; }
+#status[hidden] { display: none; }
+code { word-break: break-all; font-size: 12px; }
+body.remote #roster li { font-size: 11px; }
+@media (max-width: 800px) {
+  #panel { padding-bottom: env(safe-area-inset-bottom); }
+  #chat input { font-size: 16px; } /* evita el zoom automatico de iOS/Android al enfocar */
+  header { padding: 8px 12px; }
+  #roster { padding: 6px 12px; max-height: 64px; overflow-y: auto; }
+}
