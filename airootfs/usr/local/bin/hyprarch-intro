@@ -271,19 +271,68 @@ class Scene:
             cr.fill()
 
     def mascot(self, cr, w, h, t):
+        """El robotito es el PROTAGONISTA: se materializa de pie sobre el suelo, frente al sol; escanea mientras aparece el
+        título, trabaja mientras se escribe el subtítulo, saluda con un globo y al final vuela a su rincón (donde vive)."""
+        import cairo
+
         if not self.buddy:
             return
-        p = ease_in_out(seg(t, 3.9, 5.3))
-        if p <= 0:
+        appear = ease_out(seg(t, 1.2, 2.2))
+        if appear <= 0:
             return
-        rest = (w - 90, h - 24)                          # donde vive el personajito
-        x = rest[0] + (1 - p) * w * 0.30
-        y = rest[1] - math.sin(p * math.pi) * h * 0.20   # llega en arco
+        fly = ease_in_out(seg(t, 5.0, 6.1))
+        home = (w - 90, h - 24)
+        stand = (w * 0.5, h * 0.885)
+        x = stand[0] + (home[0] - stand[0]) * fly
+        y = stand[1] + (home[1] - stand[1]) * fly - math.sin(fly * math.pi) * h * 0.14
+        sc = (2.2 + (1.0 - 2.2) * fly) * (0.40 + 0.60 * appear)
+        state = "thinking" if t < 2.7 else ("working" if t < 4.0 else "done")
+        look = (math.sin(t * 1.3) * 0.9 * (1 - fly), 0.15)
+        # destello de materialización al aparecer
+        k = seg(t, 1.2, 1.9)
+        if 0 < k < 1:
+            cr.set_source_rgba(*self.pal["ACCENT"], (1 - k) * 0.55)
+            cr.set_line_width(3.0 * (1 - k) + 0.5)
+            cr.new_sub_path()
+            cr.arc(x, y - 110 * sc, 30 + k * 260, 0, 2 * math.pi)
+            cr.stroke()
+        cr.push_group()
         try:
-            self.buddy.draw_mascot(cr, x, y, "done" if p >= 1 else "working", t, self.pal_full,
-                                   look=(-1.0 + p, 0.0), scale=1.0, facing=-1 if p < 1 else 1)
+            self.buddy.draw_mascot(cr, x, y, state, t, self.pal_full, look=look, scale=sc, facing=1)
         except Exception:
             pass
+        cr.pop_group_to_source()
+        cr.paint_with_alpha(appear)
+        # globo de saludo
+        hello = seg(t, 4.0, 4.4) * (1 - seg(t, 5.0, 5.3))
+        if hello > 0:
+            try:
+                name = self.buddy.buddy_name()
+            except Exception:
+                name = "Buddy"
+            msg = f"¡Hola! Soy {name}"
+            cr.select_font_face("JetBrainsMono Nerd Font", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+            size = h * 0.026
+            cr.set_font_size(size)
+            tw = cr.text_extents(msg).x_advance
+            bx_, by_ = x + 70 * sc / 2.2, y - 215 * sc / 2.2 * 1.05
+            pad = size * 0.9
+            self.rrect(cr, bx_, by_ - size * 1.6, tw + pad * 2, size * 2.3, size * 0.9)
+            cr.set_source_rgba(*self.pal["FG"], 0.94 * hello)
+            cr.fill()
+            cr.set_source_rgba(*self.pal["BG"], hello)
+            cr.move_to(bx_ + pad, by_ - size * 0.2)
+            cr.show_text(msg)
+
+    @staticmethod
+    def rrect(cr, x, y, w, h, r):
+        r = min(r, w / 2, h / 2)
+        cr.new_sub_path()
+        cr.arc(x + w - r, y + r, r, -math.pi / 2, 0)
+        cr.arc(x + w - r, y + h - r, r, 0, math.pi / 2)
+        cr.arc(x + r, y + h - r, r, math.pi / 2, math.pi)
+        cr.arc(x + r, y + r, r, math.pi, 3 * math.pi / 2)
+        cr.close_path()
 
     def overlay(self, cr, w, h, t):
         # líneas de escaneo y una banda de luz que baja despacio

@@ -503,6 +503,152 @@ def draw_buddy(cr, w, h, S, pal_full, x, y, scale):
         pass
 
 
+GAME_ROW = 66
+
+
+def game_pos(w, h, n):
+    """Posición (x, y) de cada opción del menú estilo videojuego: columna a la izquierda, centrada en vertical."""
+    top = h * 0.52 - (n * GAME_ROW) / 2 + 30
+    return [(w * 0.085, top + k * GAME_ROW) for k in range(n)]
+
+
+def keycap(cr, x, y, label, text, pal, a):
+    """Ayuda de teclas como en los juegos: tecla redondeada + acción."""
+    cr.select_font_face(U.FONT)
+    cr.set_font_size(11)
+    kw = cr.text_extents(label).x_advance + 18
+    rrect(cr, x, y - 17, kw, 24, 7)
+    cr.set_source_rgba(1, 1, 1, 0.09 * a)
+    cr.fill_preserve()
+    cr.set_source_rgba(1, 1, 1, 0.32 * a)
+    cr.set_line_width(1.0)
+    cr.stroke()
+    draw_text(cr, label, x + kw / 2, y, 11, pal["FG"], a, bold=True, center=True)
+    draw_text(cr, text, x + kw + 10, y, 12, pal["DIM"], a)
+    return kw + 18 + text_w(cr, text, 12) + 22
+
+
+def draw_game(cr, w, h, S, pal, pal_full, op, pop):
+    """Menú principal estilo videojuego, versión PC: opciones grandes a la izquierda, escena a la derecha."""
+    import cairo
+
+    A, A2, BG, FG, DIM = pal["ACCENT"], pal["ACCENT2"], pal["BG"], pal["FG"], pal["DIM"]
+    t = S["t"]
+    px, py = S["ptr"]
+    # fondo: oscuro a la izquierda (se lee el texto), el color del tema a la derecha
+    g = cairo.LinearGradient(0, 0, w, 0)
+    g.add_color_stop_rgba(0, *mix(BG, (0, 0, 0), 0.45), 0.95 * op)
+    g.add_color_stop_rgba(0.50, *BG, 0.84 * op)
+    g.add_color_stop_rgba(1, *mix(BG, A, 0.12), 0.66 * op)
+    cr.set_source(g)
+    cr.paint()
+    # suelo en perspectiva (el mundo del escritorio)
+    vx, vy = w * 0.70, h * 0.60
+    cr.set_line_width(1.0)
+    for i in range(-14, 15):
+        cr.set_source_rgba(*A, 0.15 * op * (1 - abs(i) / 16))
+        cr.move_to(vx + i * 6, vy)
+        cr.line_to(vx + i * w * 0.085, h)
+        cr.stroke()
+    for k in range(12):
+        f = (k + (t * 0.25) % 1) / 12
+        cr.set_source_rgba(*A, 0.17 * op * min(1.0, f * 5))
+        y = vy + (h - vy) * f ** 2.2
+        cr.move_to(w * 0.28, y)
+        cr.line_to(w, y)
+        cr.stroke()
+    # haz de luz detrás del robot
+    bx, by = w * 0.72, h * 0.80
+    rg = cairo.RadialGradient(bx, by - 210, 0, bx, by - 210, 400)
+    rg.add_color_stop_rgba(0, *A, 0.26 * op)
+    rg.add_color_stop_rgba(1, *A, 0.0)
+    cr.set_source(rg)
+    cr.rectangle(0, 0, w, h)
+    cr.fill()
+    # ventanas flotando (profundidad y paralaje con el mouse)
+    for (fx, fy, ww, hh, dp, ph, lines) in S["wins"]:
+        wx = w * fx - (px - w / 2) * 0.025 * dp + math.sin(t * 0.5 + ph) * 8 * dp
+        wy = h * fy - (py - h / 2) * 0.025 * dp + math.cos(t * 0.6 + ph) * 10 * dp
+        a = (0.30 + 0.45 * dp) * pop * 0.8
+        rrect(cr, wx + 3, wy + 12, ww, hh, 14)
+        cr.set_source_rgba(0, 0, 0, 0.30 * a)
+        cr.fill()
+        rrect(cr, wx, wy, ww, hh, 14)
+        cr.set_source_rgba(*mix(BG, (1, 1, 1), 0.08), 0.55 * a)
+        cr.fill_preserve()
+        cr.set_source_rgba(1, 1, 1, 0.16 * a)
+        cr.set_line_width(1.0)
+        cr.stroke()
+        for k, c_ in enumerate((A2, (1.0, 0.75, 0.2), A)):
+            cr.set_source_rgba(*c_, 0.85 * a)
+            cr.arc(wx + 14 + k * 10, wy + 13, 2.6, 0, 2 * math.pi)
+            cr.fill()
+        for k, frac in enumerate(lines):
+            cr.set_source_rgba(*(A if k % 3 == 0 else FG), (0.40 if k % 3 == 0 else 0.20) * a)
+            rrect(cr, wx + 14, wy + 34 + k * 13, (ww - 28) * frac, 5, 2.5)
+            cr.fill()
+    # el robot, protagonista
+    bob_s = 2.5 * (0.78 + 0.22 * pop)
+    cr.set_source_rgba(*A, 0.30 * op)                                   # anillo de escenario bajo sus pies
+    cr.set_line_width(1.2)
+    cr.save()
+    cr.translate(bx, by + 6)
+    cr.scale(1, 0.22)
+    cr.new_sub_path()
+    cr.arc(0, 0, 120, 0, 2 * math.pi)
+    cr.restore()
+    cr.stroke()
+    draw_buddy(cr, w, h, S, pal_full, bx, by, bob_s)
+    # logo y título
+    lx = w * 0.085
+    draw_text(cr, "H Y P R A R C H", lx, h * 0.14, 17, FG, pop, bold=True)
+    cr.set_source_rgba(*A, 0.9 * pop)
+    cr.rectangle(lx, h * 0.14 + 10, 54, 2)
+    cr.fill()
+    draw_text(cr, S["title"], lx, h * 0.14 + 38, 13, DIM, pop)
+    # opciones: una debajo de la otra
+    pos = game_pos(w, h, len(S["idx"]))
+    sel_y = None
+    for k, i in enumerate(S["idx"]):
+        it = S["items"][i]
+        x, y = pos[k]
+        stag = clamp((t - 0.05 - k * 0.07) / 0.45)
+        st = spring(stag) if U.BOUNCY else ease_out_strong(stag)
+        a = clamp(stag * 2.0) * pop if S["closing"] is None else pop
+        sel = (S["sel"] == i)
+        hv = S["hov"].get(i, 0.0)
+        xx = x + (1 - st) * -70 + hv * 14
+        if sel:
+            sel_y = y
+        col = FG if (sel or hv > 0.4) else mix(DIM, FG, 0.35)
+        if sel:                                           # resplandor suave del texto elegido
+            draw_text(cr, it["label"], xx + 1, y + 1, 34, A, a * 0.30, bold=True)
+            draw_text(cr, it["label"], xx - 1, y - 1, 34, A2, a * 0.20, bold=True)
+        draw_text(cr, it["label"], xx, y, 34 if sel else 30, col, a * (1.0 if sel else 0.78), bold=sel)
+        if sel and it["sub"]:
+            draw_text(cr, it["sub"], xx + 2, y + 24, 12.5, DIM, a)
+    # indicador que se desliza hacia lo elegido (barra + flecha)
+    if sel_y is not None:
+        S["ind"] += (sel_y - S["ind"]) * (1 - math.exp(-S["dt"] * 14)) if S["ind"] else (sel_y - S["ind"])
+        iy = S["ind"] if S["ind"] else sel_y
+        rrect(cr, lx - 28, iy - 30, 4, 38, 2)
+        cr.set_source_rgba(*A, 0.95 * pop)
+        cr.fill()
+        ax = lx - 20 + math.sin(t * 5) * 2                    # flecha dibujada (no depende de la tipografía)
+        cr.move_to(ax, iy - 19)
+        cr.line_to(ax + 11, iy - 10)
+        cr.line_to(ax, iy - 1)
+        cr.close_path()
+        cr.set_source_rgba(*A, 0.95 * pop)
+        cr.fill()
+    # ayudas de teclas, como en los juegos
+    kx, ky = lx - 28, h - 46
+    kx += keycap(cr, kx, ky, "↑ ↓", "Elegir", pal, pop * 0.9)
+    kx += keycap(cr, kx, ky, "Enter", "Aceptar", pal, pop * 0.9)
+    kx += keycap(cr, kx, ky, "Esc", "Volver", pal, pop * 0.9)
+    draw_text(cr, "hyprarch · una casa para IAs", w - 26, h - 30, 10.5, DIM, pop * 0.7, right=True)
+
+
 def draw_scene(cr, w, h, S, pal, pal_full):
     A, A2, BG, SF, FG, DIM = (pal[k] for k in ("ACCENT", "ACCENT2", "BG", "SURFACE", "FG", "DIM"))
     t = S["t"]
@@ -511,6 +657,20 @@ def draw_scene(cr, w, h, S, pal, pal_full):
     else:
         op = clamp(t / (U.OPEN_T * 0.5))
         pop = clamp(t / (U.OPEN_T * 0.4))
+    if S["layout"] == "game":
+        draw_game(cr, w, h, S, pal, pal_full, op, pop)
+        for rp in list(S["ripples"]):                       # ondas al hacer clic
+            age = t - rp[2]
+            if age > 0.6:
+                S["ripples"].remove(rp)
+                continue
+            k = age / 0.6
+            cr.set_source_rgba(*A, (1 - k) * 0.6)
+            cr.set_line_width(2.5 * (1 - k) + 0.5)
+            cr.new_sub_path()
+            cr.arc(rp[0], rp[1], 14 + 110 * ease_out_strong(k), 0, 2 * math.pi)
+            cr.stroke()
+        return
     cr.set_source_rgba(*mix(BG, (0, 0, 0), 0.5), (0.50 if U.FRESH else 0.72) * op)       # fresh: se ve más el escritorio detrás
     cr.paint()
     draw_life(cr, w, h, S, pal, op)
@@ -702,6 +862,12 @@ def draw_scene(cr, w, h, S, pal, pal_full):
 
 def hit_item(S, px, py):
     best, bd = None, 1e9
+    if S["layout"] == "game":                                  # opciones del menú de juego: una fila alta por opción
+        w, h = S["size"]
+        for (x, y), i in zip(game_pos(w, h, len(S["idx"])), S["idx"]):
+            if x - 34 <= px <= x + 460 and y - 34 <= py <= y + 30:
+                return i
+        return None
     for i, cur in S["pos"].items():
         x, y, sc = cur[0], cur[1], cur[2]
         if S["layout"] == "wheel":
@@ -745,17 +911,21 @@ def run(args):
         if not items:
             return 1
     layout = {"tiles": "orbit", "list": "wheel"}.get(layout, layout)
-    if U.FRESH:                          # estilo fresco: nada de bolas forzadas; fila de tarjetas y cuadrícula de íconos
-        layout = {"orbit": "row", "bubbles": "grid"}.get(layout, layout)
+    if U.FRESH:                          # estilo fresco: menú de juego (pocas opciones) y cuadrícula limpia de íconos
+        layout = {"orbit": "game", "row": "game", "bubbles": "grid"}.get(layout, layout)
     elif layout == "grid":
         layout = "bubbles"
-    if layout not in ("orbit", "wheel", "bubbles", "row", "grid", "input"):
+    if layout not in ("orbit", "wheel", "bubbles", "row", "grid", "game", "input"):
         layout = "wheel"
     pal = U.load_palette()
     pal_full = BUDDY.load_palette() if BUDDY else pal
     rnd = random.Random(7)
     S = dict(items=items, layout=layout, title=opt("--title", ""), placeholder=opt("--placeholder", "Escribí para buscar…"),
-             search=("--no-search" not in args and layout not in ("orbit", "row")), query="", scroll=0, idx=([] if layout == "input" else list(range(len(items)))), sel=(-1 if layout == "input" else 0),
+             ind=0.0, wins=[(fx, fy, ww, hh, dp, ph, [rnd.uniform(0.3, 1.0) for _ in range(int(hh / 13) - 2)])
+                            for fx, fy, ww, hh, dp, ph in ((0.50, 0.17, 240, 150, 1.0, 0.0), (0.79, 0.10, 210, 120, 0.7, 1.6),
+                                                           (0.58, 0.47, 190, 118, 0.6, 3.1), (0.85, 0.40, 220, 140, 1.2, 4.4),
+                                                           (0.46, 0.64, 170, 100, 0.5, 2.2), (0.90, 0.66, 170, 104, 0.85, 5.3))],
+             search=("--no-search" not in args and layout not in ("orbit", "row", "game")), query="", scroll=0, idx=([] if layout == "input" else list(range(len(items)))), sel=(-1 if layout == "input" else 0),
              selk=0.0, t0=time.time(), t=0.0, dt=0.016, last=time.time(), closing=None, close_t0=None, hov={}, hover=None,
              ptr=(640.0, 400.0), result=None, size=(1280, 800), pos={}, tg={}, ripples=[], drift=0.0,
              parts=[(rnd.random(), rnd.random(), rnd.uniform(0.6, 2.0), rnd.uniform(0.8, 2.2), rnd.random() * 6.28, rnd.uniform(0.5, 3)) for _ in range(46)])
@@ -895,7 +1065,7 @@ def run(args):
                 S["idx"] = filtered(items, S["query"])
                 S["scroll"] = 0
                 reselect()
-            elif layout in ("orbit", "row") and name.isdigit() and 1 <= int(name) <= len(S["idx"]):
+            elif layout in ("orbit", "row", "game") and name.isdigit() and 1 <= int(name) <= len(S["idx"]):
                 close(items[S["idx"][int(name) - 1]]["id"])
             elif S["search"] and not ctrl:
                 ch = Gdk.keyval_to_unicode(keyval)
@@ -980,12 +1150,21 @@ def render_frames(outdir):
     cases = (("q1-orbita", "orbit", power, 1.3, "", 1, (860, 330)), ("q2-rueda", "wheel", apps, 1.3, "", 3, (640, 420)),
              ("q3-burbujas", "bubbles", apps, 1.4, "", 5, (600, 380)), ("q4-busqueda", "wheel", apps, 1.3, "ar", 0, (640, 420)))
     for name, lay, items, t, q, sel, ptr in cases:
-        title0 = {"orbit": "Energía", "wheel": "Portapapeles", "bubbles": "Aplicaciones"}[lay]
+        title0 = {"orbit": "¿Qué querés hacer?", "wheel": "Portapapeles", "bubbles": "Aplicaciones"}[lay]
         if U.FRESH:
-            lay = {"orbit": "row", "bubbles": "grid"}.get(lay, lay)
+            lay = {"orbit": "game", "bubbles": "grid"}.get(lay, lay)
+            if lay == "game":
+                items = parse_items("continue\tContinuar\t\tvolver al escritorio\nlock\tBloquear\t\tla sesión queda protegida\n"
+                                    "suspend\tSuspender\t\tpausa rápida, ahorra energía\nreboot\tReiniciar\t\tapagar y volver a encender\n"
+                                    "poweroff\tApagar\t\thasta la próxima\nexit\tCerrar sesión\t\tvolver a la pantalla de inicio")
+                sel = 4
         S = dict(items=items, layout=lay, title=title0,
                  placeholder="Escribí para buscar…", search=(lay not in ("orbit", "row")), query=q, scroll=0, idx=[], sel=sel, selk=0.0, t=t, dt=0.05,
-                 closing=None, hov={sel: 1.0}, hover=sel, ptr=ptr, size=(1280, 800), pos={}, tg={}, ripples=[(500, 300, t - 0.2)], drift=0.0,
+                 closing=None, hov={sel: 1.0}, hover=sel, ptr=ptr, size=(1280, 800), pos={}, tg={}, ripples=[], drift=0.0, ind=0.0,
+                 wins=[(fx, fy, ww, hh, dp, ph, [random.Random(int(ph * 10) + k).uniform(0.3, 1.0) for k in range(int(hh / 13) - 2)])
+                       for fx, fy, ww, hh, dp, ph in ((0.50, 0.17, 240, 150, 1.0, 0.0), (0.79, 0.10, 210, 120, 0.7, 1.6),
+                                                      (0.58, 0.47, 190, 118, 0.6, 3.1), (0.85, 0.40, 220, 140, 1.2, 4.4),
+                                                      (0.46, 0.64, 170, 100, 0.5, 2.2), (0.90, 0.66, 170, 104, 0.85, 5.3))],
                  parts=[(random.Random(i).random(), random.Random(i + 9).random(), 1.0, 1.4, i * 0.7, 1.5) for i in range(40)])
         S["idx"] = filtered(items, q)
         if sel not in S["idx"]:

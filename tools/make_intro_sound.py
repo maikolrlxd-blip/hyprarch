@@ -149,6 +149,17 @@ for i in range(17):
     click += 0.8 * np.sin(2 * np.pi * (1500 + 400 * (i % 3)) * tt(0.03)) * np.exp(-np.arange(n) / (0.006 * SR))
     add(click, at, rng.uniform(0.05, 0.09), rng.uniform(-0.5, 0.5))
 
+# ---------------------------------------------------------------- 1.2-2.2 el robotito se materializa: barrido digital ascendente + destello
+mat = chirp(300, 2800, 0.9) * env(int(0.9 * SR), 0.03, 0.4, 1.4)
+add(mat, 1.2, 0.13, 0.15)
+glit = np.zeros(int(0.12 * SR), np.float32)
+add(tone(1568.0, 0.35, harmonics=(1.0, 0.4), attack=0.002, release=0.3), 1.95, 0.10, 0.1)
+
+# ---------------------------------------------------------------- 4.0 saludo del robotito: dos notas amables
+add(tone(784.0, 0.25, harmonics=(1.0, 0.3), attack=0.004, release=0.2), 4.0, 0.12, -0.1)
+add(tone(1046.5, 0.45, harmonics=(1.0, 0.3), attack=0.004, release=0.4), 4.12, 0.12, 0.1)
+del glit
+
 # ---------------------------------------------------------------- 3.9-5.3 entra Claudito: whoosh en arco + vuelo
 t = tt(1.4)
 who = lowpass_noise(1.4, lambda x: 0.15 + 0.8 * np.sin(np.pi * x))
