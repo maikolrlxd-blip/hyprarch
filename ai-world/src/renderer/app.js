@@ -14,13 +14,14 @@ const LOG_WINDOW = 12;
 function addLine(from, text, cls = '', color = '') {
   const el = document.createElement('div');
   el.className = 'line ' + cls;
-  const b = document.createElement('b'); b.textContent = from; if (color) b.style.color = color;
+  const b = document.createElement('b'); b.textContent = from; if (color) { b.style.color = color; el.style.setProperty('--c', color); }
   el.append(b, document.createTextNode(text));
   const box = $('log'); box.append(el); box.scrollTop = box.scrollHeight;
   while (box.children.length > 300) box.firstChild.remove();
 }
 
 function renderRoster() {
+  world.setThinking(thinking);
   $('roster').replaceChildren(...agents.map(a => {
     const li = document.createElement('li');
     if (thinking.has(a.id)) li.className = 'thinking';
@@ -219,4 +220,5 @@ function startRemote() {
   connect();
 }
 
-if (isHost) startHost(); else startRemote();
+const hideSplash = () => setTimeout(() => $('splash').classList.add('hide'), 700);
+(isHost ? startHost() : Promise.resolve(startRemote())).finally(hideSplash);

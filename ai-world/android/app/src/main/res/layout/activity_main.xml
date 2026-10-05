@@ -2,7 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0b0b14">
+    android:background="@drawable/bg_connect">
 
     <WebView
         android:id="@+id/web"
@@ -24,9 +24,10 @@
             android:padding="24dp">
 
             <ImageView
-                android:layout_width="96dp"
-                android:layout_height="96dp"
-                android:layout_marginTop="24dp"
+                android:id="@+id/logo"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_marginTop="32dp"
                 android:src="@mipmap/ic_launcher" />
 
             <TextView
@@ -34,8 +35,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="AI World"
-                android:textColor="#8affff"
-                android:textSize="26sp"
+                android:textColor="#B9A8FF"
+                android:textSize="28sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -51,6 +52,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
+                android:background="@drawable/btn_primary"
+                android:minHeight="52dp"
+                android:stateListAnimator="@null"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold"
                 android:text="Escanear QR" />
 
             <EditText
@@ -58,6 +66,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
+                android:background="@drawable/input_bg"
+                android:padding="14dp"
                 android:hint="http://192.168.x.x:8787/?t=..."
                 android:inputType="textUri"
                 android:textColor="#ffffff"
@@ -67,6 +77,13 @@
                 android:id="@+id/go"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/btn_secondary"
+                android:minHeight="52dp"
+                android:stateListAnimator="@null"
+                android:textAllCaps="false"
+                android:textColor="#8AFFFF"
+                android:textSize="16sp"
                 android:text="Conectar" />
 
             <TextView

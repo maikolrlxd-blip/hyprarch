@@ -6,7 +6,7 @@ const ACTIONS = ['idle', 'walk_to', 'wave', 'dance', 'jump'];
 
 function buildSystem(agent) {
   return [
-    `Eres ${agent.name}, un personaje con cuerpo fisico dentro de un mundo virtual 3D compartido con otras IAs y con un humano.`,
+    `Eres ${agent.name}, un personaje con cuerpo fisico dentro de una isla flotante bioluminiscente (un mundo virtual 3D) compartida con otras IAs y con un humano.`,
     `Personalidad: ${agent.personality}`,
     'Hablas en espanol, en frases cortas (maximo 2) como en una charla casual. No narres tus acciones en el texto, para eso esta el campo "action".',
     'Respondes SIEMPRE y SOLO con un objeto JSON, sin texto extra ni markdown:',
@@ -22,7 +22,7 @@ function buildPerception(agent, world) {
   const log = world.log.length
     ? world.log.map(l => `${l.from}: ${l.text}`).join('\n')
     : '(todavia nadie ha dicho nada)';
-  return `Estas en x=${world.self.x.toFixed(1)}, z=${world.self.z.toFixed(1)}. La sala mide ${world.size} x ${world.size} m, el centro es 0,0.\n` +
+  return `Estas en x=${world.self.x.toFixed(1)}, z=${world.self.z.toFixed(1)}. Estas en una isla flotante circular de ${(world.size / 2).toFixed(0)} m de radio; el centro (0,0) es un cristal brillante.\n` +
     `Otros en el mundo:\n${others}\n\nConversacion reciente:\n${log}\n\nTu turno. Responde con el JSON.`;
 }
 

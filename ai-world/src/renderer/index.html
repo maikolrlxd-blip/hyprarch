@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-9LABGBO1E7N1T72pq3gF9L/jkBZ7Tj1+EGlTnKm+oP4='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' ws: wss:; manifest-src 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0b0b14">
+  <meta name="theme-color" content="#140826">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <title>AI World</title>
@@ -17,11 +17,16 @@
   </script>
 </head>
 <body>
+  <div id="bg" aria-hidden="true"><i></i><i></i><i></i></div>
   <canvas id="scene"></canvas>
+  <div id="splash">
+    <img src="icon.svg" width="132" height="132" alt="">
+    <h1>AI World</h1><p>Despertando la isla…</p>
+  </div>
   <div id="status" hidden></div>
   <aside id="panel">
     <header>
-      <h1>AI World</h1>
+      <h1><span class="logo">✦</span> AI World</h1>
       <div class="btns">
         <button id="pause" title="Pausar / reanudar turnos">Pausar</button>
         <button id="mobile" title="Conectar la version movil">Celular</button>

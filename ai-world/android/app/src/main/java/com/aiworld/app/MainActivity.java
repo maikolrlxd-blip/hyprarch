@@ -5,7 +5,13 @@ import android.app.AlertDialog;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.animation.ObjectAnimator;
+import android.graphics.Outline;
 import android.view.View;
+import android.view.ViewOutlineProvider;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.animation.ValueAnimator;
+import android.widget.ImageView;
 import android.view.WindowManager;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -45,6 +51,7 @@ public class MainActivity extends Activity {
         urlInput = findViewById(R.id.url);
         error = findViewById(R.id.error);
 
+        floatLogo((ImageView) findViewById(R.id.logo));
         setupWebView();
         ((Button) findViewById(R.id.go)).setOnClickListener(v -> tryConnect(urlInput.getText().toString()));
         ((Button) findViewById(R.id.scan)).setOnClickListener(v -> scanQr());
@@ -54,6 +61,25 @@ public class MainActivity extends Activity {
             urlInput.setText(saved);
             tryConnect(saved);
         }
+    }
+
+    /** Logo redondeado que flota suavemente en la pantalla de conexion. */
+    private void floatLogo(ImageView logo) {
+        final float radius = 28 * getResources().getDisplayMetrics().density;
+        logo.setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View v, Outline o) {
+                o.setRoundRect(0, 0, v.getWidth(), v.getHeight(), radius);
+            }
+        });
+        logo.setClipToOutline(true);
+        float amp = 8 * getResources().getDisplayMetrics().density;
+        ObjectAnimator a = ObjectAnimator.ofFloat(logo, View.TRANSLATION_Y, -amp, amp);
+        a.setDuration(2200);
+        a.setRepeatMode(ValueAnimator.REVERSE);
+        a.setRepeatCount(ValueAnimator.INFINITE);
+        a.setInterpolator(new AccelerateDecelerateInterpolator());
+        a.start();
     }
 
     private SharedPreferences prefs() {
