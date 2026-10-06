@@ -47,6 +47,7 @@ CW, CH = 176, 36                                # pastilla fija: ocupa el hueco 
 GAP = 8                                           # separación entre la pastilla y el panel desplegado
 EW, EH = 520, 132                                 # panel desplegado (cae debajo de la barra): fila de iconos + tarjeta
 TOP = 0                                           # cuelga del borde superior de la pantalla (la barra de tareas está abajo)
+PANEL_PAD = 12                                    # margen sobre el panel para su sombra
 HEAD_H = 38                                       # alto de la fila de iconos
 
 ST = {"k": 0.0, "target": 0.0, "mood": "idle", "label": "Claudito", "look": 0.0, "hover": False,
@@ -231,14 +232,35 @@ tooltip { background: rgba(8,12,18,0.96); border-radius: 8px; color: #e6eef1; }
 """
 
 
+STATE_FILE = os.path.join(os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "hyprarch-buddy", "state.json")
+EXPIRE = {"done": 8.0, "error": 8.0, "working": 300.0, "thinking": 300.0, "waiting": 300.0}   # igual que claude-presence
+
+
 def status():
+    """Estado de la IA leyendo el archivo que escribe claude-presence: sin lanzar ningún programa (un archivo pequeño)."""
     try:
-        out = subprocess.run(["claude-presence", "status"], capture_output=True, text=True, timeout=2).stdout
-        cls = json.loads(out).get("class") or ""
-        cls = cls[0] if isinstance(cls, list) and cls else cls
-        return cls if cls in MOODS else "idle"
+        with open(STATE_FILE, encoding="utf-8") as fh:
+            s = json.load(fh)
+        st = s.get("state")
+        if st not in MOODS:
+            return "idle"
+        return "idle" if time.time() - float(s.get("ts") or 0) > EXPIRE.get(st, 1e9) else st
     except Exception:
         return "idle"
+
+
+def lite_profile():
+    """Perfil ligero de hyprarch (equipos modestos): menos cuadros por segundo y sin adornos caros."""
+    try:
+        cfg = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
+        return open(os.path.join(cfg, "hyprarch", "perf.effective")).read().strip() == "lite"
+    except OSError:
+        return False
+
+
+LITE = lite_profile()
+IDLE_MS = 200 if LITE else 100                     # reposo: 5 o ~12 cuadros por segundo (el parpadeo y el balanceo siguen suaves)
+OPEN_MS = 66 if LITE else 33                       # desplegada y quieta: ~15 o 30 cuadros por segundo
 
 
 def run(*cmd):
@@ -260,6 +282,9 @@ class App(Gtk.Application):
         self.say = None
         self.last_tick = time.monotonic()
         self.vel = 0.0
+        self.panel = None
+        self.cur_ms = 16
+        self.region_dirty = True
 
     def tick(self):
         now = time.monotonic()
@@ -272,8 +297,21 @@ class App(Gtk.Application):
         self.exp_box.set_opacity(max(0.0, (kk - 0.6) / 0.4))
         self.exp_box.set_sensitive(kk > 0.9)
         self.exp_box.set_visible(kk > 0.4)
+        busy = abs(tgt - ST["k"]) > 0.003 or abs(self.vel) > 0.02             # solo se anima a pleno ritmo mientras se mueve
         self.canvas.queue_draw()
-        self.update_region()
+        if kk > 0.01 or busy:
+            self.panel.set_visible(True)
+            self.panel.queue_draw()
+        elif self.panel.get_visible():
+            self.panel.set_visible(False)
+        if busy or self.region_dirty:
+            self.update_region()
+            self.region_dirty = busy
+        want = 16 if busy else (OPEN_MS if kk > 0.5 else IDLE_MS)
+        if want != self.cur_ms:
+            self.cur_ms = want
+            GLib.timeout_add(want, self.tick)
+            return False                                                       # este temporizador termina; sigue el nuevo
         return True
 
     def pill_rect(self, W):
@@ -301,8 +339,8 @@ class App(Gtk.Application):
         """Fondo de la isla: sombra con profundidad, negro con luz arriba, brillo de color abajo a la derecha y borde fino.
         flush=True: esquinas de arriba rectas (cuelga del borde de la pantalla)."""
         shape = brrect if flush else rrect
-        for i in range(6, 0, -1):
-            cr.set_source_rgba(0, 0, 0, 0.05)
+        for i in range(2 if LITE else 6, 0, -1):
+            cr.set_source_rgba(0, 0, 0, 0.05 if not LITE else 0.12)
             shape(cr, x - i * 1.1, y + (0 if flush else 2) + i * 0.0, w + i * 2.2, h + i * 1.1, radius + i)
             cr.fill()
         shape(cr, x, y, w, h, radius)
@@ -335,37 +373,45 @@ class App(Gtk.Application):
         cr.fill()
         draw_face(cr, fx, fy, r, t, ST["mood"], ST["look"], squash=max(-0.25, min(0.25, self.vel * 0.012)))
 
-    def draw(self, _a, cr, W, H):
+    def draw_pill(self, _a, cr, W, H):
+        """La pastilla (lienzo pequeño: es lo único que se repinta en reposo)."""
         t = time.monotonic() - ST["t0"]
         kk = max(0.0, min(1.0, ST["k"]))
         col = MOODS.get(ST["mood"], MOODS["idle"])[0]
-        # 1) pastilla fija en su hueco de la barra (Claudito pequeño + estado)
-        px, py, pw, ph = self.pill_rect(W)
-        self.body(cr, px, py, pw, ph, 18, col, 0.18, hover=ST["hover"] and kk < 0.5, flush=True)
-        # 2) panel que cae debajo al desplegarse
-        qx, qy, qw, qh = self.panel_rect(W)
-        if qh > 6:
-            self.body(cr, qx, qy, qw, qh, 26, col, 0.26)
-            if kk > 0.45:
-                ca = max(0.0, (kk - 0.45) / 0.55)
-                cx0, cy0, cw0, ch0 = qx + 12, qy + HEAD_H, qw - 24, qh - HEAD_H - 12
-                rrect(cr, cx0, cy0, cw0, ch0, 18)                       # tarjeta con borde fino, como en Coucou
-                cr.set_source_rgba(1, 1, 1, 0.045 * ca)
-                cr.fill_preserve()
-                cr.set_source_rgba(1, 1, 1, 0.07 * ca)
-                cr.set_line_width(1)
-                cr.stroke()
-                cr.save()
-                rrect(cr, cx0, cy0, cw0, ch0, 18)
-                cr.clip()
-                wg = cairo.RadialGradient(cx0 + cw0 * 0.5, cy0 + ch0 * 1.3, 4, cx0 + cw0 * 0.5, cy0 + ch0 * 1.3, 240)
-                wg.add_color_stop_rgba(0, col[0], col[1], col[2], 0.40 * ca)    # el «lavado» de color según el estado
-                wg.add_color_stop_rgba(1, col[0], col[1], col[2], 0)
-                cr.set_source(wg)
-                cr.paint()
-                cr.restore()
-                self.face_at(cr, cx0 + 46, cy0 + ch0 / 2, 27, t, col)           # Claudito grande en la tarjeta
-        self.face_at(cr, px + 22, py + ph / 2 + 1, 9, t, col)                   # y el pequeño siempre en la pastilla
+        px = (W - CW) / 2
+        self.body(cr, px, 0, CW, CH, 18, col, 0.18, hover=ST["hover"] and kk < 0.5, flush=True)
+        self.face_at(cr, px + 22, CH / 2 + 1, 9, t, col)
+
+    def draw_panel(self, _a, cr, W, H):
+        """El panel desplegado: solo se dibuja mientras está abierto o moviéndose."""
+        t = time.monotonic() - ST["t0"]
+        kk = max(0.0, min(1.0, ST["k"]))
+        col = MOODS.get(ST["mood"], MOODS["idle"])[0]
+        k = max(0.0, ST["k"])
+        w, h = lerp(CW, EW, k), lerp(0, EH, k)
+        if h <= 6:
+            return
+        qx, qy = (W - w) / 2, PANEL_PAD
+        self.body(cr, qx, qy, w, h, 26, col, 0.26)
+        if kk > 0.45:
+            ca = max(0.0, (kk - 0.45) / 0.55)
+            cx0, cy0, cw0, ch0 = qx + 12, qy + HEAD_H, w - 24, h - HEAD_H - 12
+            rrect(cr, cx0, cy0, cw0, ch0, 18)                       # tarjeta con borde fino, como en Coucou
+            cr.set_source_rgba(1, 1, 1, 0.045 * ca)
+            cr.fill_preserve()
+            cr.set_source_rgba(1, 1, 1, 0.07 * ca)
+            cr.set_line_width(1)
+            cr.stroke()
+            cr.save()
+            rrect(cr, cx0, cy0, cw0, ch0, 18)
+            cr.clip()
+            wg = cairo.RadialGradient(cx0 + cw0 * 0.5, cy0 + ch0 * 1.3, 4, cx0 + cw0 * 0.5, cy0 + ch0 * 1.3, 240)
+            wg.add_color_stop_rgba(0, col[0], col[1], col[2], 0.40 * ca)    # el lavado de color según el estado
+            wg.add_color_stop_rgba(1, col[0], col[1], col[2], 0)
+            cr.set_source(wg)
+            cr.paint()
+            cr.restore()
+            self.face_at(cr, cx0 + 46, cy0 + ch0 / 2, 27, t, col)           # Claudito grande en la tarjeta
 
     def expand(self):
         if ST["target"] < 0.5:
@@ -402,12 +448,29 @@ class App(Gtk.Application):
         LS.set_keyboard_mode(win, LS.KeyboardMode.NONE)
 
         ov = Gtk.Overlay()
+        base = Gtk.Box()                                   # fondo transparente del tamaño de la ventana
+        base.set_size_request(WIN_W, WIN_H)
+        ov.set_child(base)
+        # DOS lienzos: la pastilla (pequeña, siempre) y el panel (solo cuando está desplegado). En reposo solo se repinta la pastilla.
         canvas = Gtk.DrawingArea()
-        canvas.set_content_width(WIN_W)
-        canvas.set_content_height(WIN_H)
-        canvas.set_draw_func(self.draw)
+        canvas.set_content_width(CW + 28)
+        canvas.set_content_height(CH + 14)
+        canvas.set_halign(Gtk.Align.CENTER)
+        canvas.set_valign(Gtk.Align.START)
+        canvas.set_draw_func(self.draw_pill)
         self.canvas = canvas
-        ov.set_child(canvas)
+        panel = Gtk.DrawingArea()
+        panel.set_content_width(EW + 40)
+        panel.set_content_height(EH + PANEL_PAD + 30)
+        panel.set_halign(Gtk.Align.CENTER)
+        panel.set_valign(Gtk.Align.START)
+        panel.set_margin_top(CH + GAP - PANEL_PAD)
+        panel.set_draw_func(self.draw_panel)
+        panel.set_can_target(False)
+        panel.set_visible(False)
+        self.panel = panel
+        ov.add_overlay(panel)
+        ov.add_overlay(canvas)
 
         cmp_box = Gtk.Box()
         cmp_box.set_halign(Gtk.Align.CENTER)
@@ -510,7 +573,8 @@ class App(Gtk.Application):
         if os.environ.get("HYPRARCH_ISLAND_OPEN"):                      # solo para pruebas: arranca ya expandida
             GLib.timeout_add(600, lambda: (self.expand(), False)[1])
         GLib.timeout_add(16, self.tick)
-        GLib.timeout_add(700, self.poll_status)
+        self.region_dirty = True
+        GLib.timeout_add(1000, self.poll_status)
         GLib.timeout_add(1500, self.maybe_wink)
 
     def maybe_wink(self):
