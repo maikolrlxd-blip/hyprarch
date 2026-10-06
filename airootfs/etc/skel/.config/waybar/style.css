@@ -16,15 +16,6 @@ window#waybar {
   color: @fg;
 }
 
-/* Hueco reservado en el centro de la barra para la isla de Claudito (hyprarch-island): invisible, pero ocupa su sitio
-   para que ningún otro módulo se meta debajo de la isla. */
-#custom-island-slot {
-  min-width: 190px;
-  background: transparent;
-  padding: 0;
-  margin: 0;
-}
-
 tooltip {
   background: @surface;
   border: 1px solid @accent;
@@ -227,4 +218,52 @@ window#waybar.empty #window {
 #custom-theme:hover,
 #custom-help:hover {
   background: @surface2;
+}
+
+/* ============================================================================================================
+   Barra de tareas estilo Windows (abajo): una sola barra de cristal, apps centradas con la activa subrayada.
+   Familiar para quien viene de Windows, con nuestro acento y animaciones.
+   ============================================================================================================ */
+window#waybar {
+  background: alpha(@bg, 0.80);
+  border: 1px solid alpha(@fg, 0.10);
+  border-radius: 20px;
+}
+
+/* dentro de la barra los módulos van sin su propia píldora */
+#clock, #custom-sys, #tray, #language, #sistema, #conex, #battery, #custom-claude, #custom-theme,
+#custom-help, #custom-power, #custom-launcher, #custom-close {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+#clock:hover, #tray:hover, #language:hover, #sistema:hover, #conex:hover, #battery:hover,
+#custom-theme:hover, #custom-power:hover {
+  background: alpha(@fg, 0.08);
+  border-color: transparent;
+}
+
+/* botón de inicio */
+#custom-launcher {
+  font-size: 21px;
+  padding: 0 16px;
+  color: @accent;
+  transition: background 160ms ease, transform 160ms ease;
+}
+#custom-launcher:hover { background: alpha(@accent, 0.16); }
+
+/* apps abiertas */
+#taskbar { background: transparent; }
+#taskbar button {
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  padding: 4px 10px;
+  margin: 3px 2px;
+  transition: background 160ms ease, box-shadow 160ms ease;
+}
+#taskbar button:hover { background: alpha(@fg, 0.10); }
+#taskbar button.active {
+  background: alpha(@fg, 0.10);
+  box-shadow: inset 0 -3px 0 @accent;
 }

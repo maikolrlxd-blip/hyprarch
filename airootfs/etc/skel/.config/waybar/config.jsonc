@@ -1,28 +1,22 @@
 {
+  // Barra de tareas estilo Windows, abajo: espacios a la izquierda, inicio y apps abiertas CENTRADAS, bandeja y reloj a la derecha.
+  // Arriba queda libre para la isla de Claudito (hyprarch-island), que cuelga del borde superior.
   "layer": "top",
-  "position": "top",
-  "height": 36,
-  "margin-top": 10,
-  "margin-left": 16,
-  "margin-right": 16,
-  "spacing": 10,
+  "position": "bottom",
+  "height": 50,
+  "margin-bottom": 8,
+  "margin-left": 12,
+  "margin-right": 12,
+  "spacing": 6,
 
   "modules-left": [
-    "custom/launcher",
     "group/workspaces",
-    "hyprland/window",
-    "custom/close",
-    "custom/ws-events",
-    "clock"
+    "custom/ws-events"
   ],
-  "modules-center": ["custom/island-slot"],          // hueco reservado para la isla de Claudito (hyprarch-island)
-
-  "custom/island-slot": {
-    "exec": "echo ' '",
-    "interval": "once",
-    "format": "{}",
-    "tooltip": false
-  },
+  "modules-center": [
+    "custom/launcher",
+    "wlr/taskbar"
+  ],
   "modules-right": [
     "tray",
     "hyprland/language",
@@ -30,8 +24,19 @@
     "group/conex",
     "battery",
     "custom/theme",
+    "clock",
     "custom/power"
   ],
+
+  // Apps abiertas, como la barra de Windows: clic = abrir/traer, clic central = cerrar
+  "wlr/taskbar": {
+    "format": "{icon}",
+    "icon-size": 26,
+    "tooltip-format": "{title}",
+    "on-click": "activate",
+    "on-click-middle": "close",
+    "ignore-list": ["local.hyprarch.claudepresence"]
+  },
 
   "group/sistema": {
     "orientation": "horizontal",

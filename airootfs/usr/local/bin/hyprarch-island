@@ -46,7 +46,7 @@ WIN_W, WIN_H = 580, 206                           # ventana fija y transparente:
 CW, CH = 176, 36                                # pastilla fija: ocupa el hueco reservado en el centro de la barra
 GAP = 8                                           # separación entre la pastilla y el panel desplegado
 EW, EH = 520, 132                                 # panel desplegado (cae debajo de la barra): fila de iconos + tarjeta
-TOP = 10                                          # a la altura de la barra (su margen superior)
+TOP = 0                                           # cuelga del borde superior de la pantalla (la barra de tareas está abajo)
 HEAD_H = 38                                       # alto de la fila de iconos
 
 ST = {"k": 0.0, "target": 0.0, "mood": "idle", "label": "Claudito", "look": 0.0, "hover": False,
@@ -297,13 +297,15 @@ class App(Gtk.Application):
             reg.union(cairo.RectangleInt(int(qx) - 3, int(qy) - 2, int(qw) + 6, int(qh) + 6))
         surf.set_input_region(reg)
 
-    def body(self, cr, x, y, w, h, radius, col, wash, hover=False):
-        """Fondo de la isla: sombra con profundidad, negro con luz arriba, brillo de color abajo a la derecha y borde fino."""
+    def body(self, cr, x, y, w, h, radius, col, wash, hover=False, flush=False):
+        """Fondo de la isla: sombra con profundidad, negro con luz arriba, brillo de color abajo a la derecha y borde fino.
+        flush=True: esquinas de arriba rectas (cuelga del borde de la pantalla)."""
+        shape = brrect if flush else rrect
         for i in range(6, 0, -1):
             cr.set_source_rgba(0, 0, 0, 0.05)
-            rrect(cr, x - i * 1.1, y + 2 + i * 0.9, w + i * 2.2, h + i * 1.1, radius + i)
+            shape(cr, x - i * 1.1, y + (0 if flush else 2) + i * 0.0, w + i * 2.2, h + i * 1.1, radius + i)
             cr.fill()
-        rrect(cr, x, y, w, h, radius)
+        shape(cr, x, y, w, h, radius)
         cr.set_source_rgba(0.03, 0.045, 0.068, 0.985)
         cr.fill_preserve()
         cr.save()
@@ -319,7 +321,7 @@ class App(Gtk.Application):
         cr.set_source(lg)
         cr.paint()
         cr.restore()
-        rrect(cr, x + 0.5, y + 0.5, w - 1, h - 1, radius)
+        shape(cr, x + 0.5, y - 1 if flush else y + 0.5, w - 1, h - 0.5 if flush else h - 1, radius)
         cr.set_source_rgba(1, 1, 1, 0.11 + (0.10 if hover else 0))
         cr.set_line_width(1)
         cr.stroke()
@@ -339,7 +341,7 @@ class App(Gtk.Application):
         col = MOODS.get(ST["mood"], MOODS["idle"])[0]
         # 1) pastilla fija en su hueco de la barra (Claudito pequeño + estado)
         px, py, pw, ph = self.pill_rect(W)
-        self.body(cr, px, py, pw, ph, ph / 2, col, 0.18, hover=ST["hover"] and kk < 0.5)
+        self.body(cr, px, py, pw, ph, 18, col, 0.18, hover=ST["hover"] and kk < 0.5, flush=True)
         # 2) panel que cae debajo al desplegarse
         qx, qy, qw, qh = self.panel_rect(W)
         if qh > 6:
