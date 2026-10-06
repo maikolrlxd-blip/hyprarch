@@ -402,7 +402,11 @@ hl.window_rule({
     center = true,
 })
 
--- Blur detrás de la barra, el lanzador y las notificaciones
-hl.layer_rule({ name = "blur-waybar",        match = { namespace = "waybar" },         blur = true, ignore_alpha = 0.2 })
-hl.layer_rule({ name = "blur-launcher",      match = { namespace = "launcher" },       blur = true, ignore_alpha = 0.2 })
-hl.layer_rule({ name = "blur-notifications", match = { namespace = "notifications" },  blur = true, ignore_alpha = 0.2 })
+-- Blur detrás de la barra, el lanzador y las notificaciones.
+-- Solo si el perfil lo permite (P.blur): en equipos modestos es lo que MÁS CPU gasta (se recalcula con cada
+-- actualización de la barra, incluso en reposo) y ahí la barra se ve igual de bien con el fondo translúcido.
+if P.blur then
+    hl.layer_rule({ name = "blur-waybar",        match = { namespace = "waybar" },         blur = true, ignore_alpha = 0.2 })
+    hl.layer_rule({ name = "blur-launcher",      match = { namespace = "launcher" },       blur = true, ignore_alpha = 0.2 })
+    hl.layer_rule({ name = "blur-notifications", match = { namespace = "notifications" },  blur = true, ignore_alpha = 0.2 })
+end
