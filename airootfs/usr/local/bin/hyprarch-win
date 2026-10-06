@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# hyprarch-win — ventanas al estilo Windows, sin plugins ni procesos residentes (cada llamada hace su trabajo y termina).
+#
+#   hyprarch-win left | right      ajusta la ventana a la mitad izquierda / derecha de la pantalla (Super + ← / →)
+#   hyprarch-win max               maximiza (Super + ↑)
+#   hyprarch-win down              restaura si estaba maximizada o ajustada; si no, la minimiza (Super + ↓)
+#   hyprarch-win minimize          la manda al espacio «minimizadas» (se ve en la barra; Super + M)
+#   hyprarch-win restore           trae de vuelta la última minimizada (Super + Shift + M)
+#   hyprarch-win restore-all       trae de vuelta todas las minimizadas
+#
+# Al ajustar o maximizar se guarda cómo estaba la ventana (en mosaico o flotante, su tamaño y sitio) para poder restaurarla.
+set -u
+ST="${XDG_RUNTIME_DIR:-/tmp}/hyprarch-win"
+mkdir -p "$ST"
+GAP=8
+
+ev() { hyprctl eval "$1" >/dev/null 2>&1; }
+note() { command -v notify-send >/dev/null 2>&1 && notify-send -t 2500 "$1" "${2:-}"; }
+dsp() { ev "hl.dispatch(hl.dsp.window.$1)"; }       # dsp 'float({ action = "enable", window = "..." })'
+
+win=$(hyprctl activewindow -j 2>/dev/null)
+addr=$(jq -r '.address // empty' <<<"$win" 2>/dev/null)
+[[ $addr =~ ^0x[0-9a-fA-F]+$ ]] || exit 0                       # sin ventana activa: nada que hacer
+W="window = \"address:$addr\""
+STATE="$ST/$addr"
+
+save_state() {  # guarda cómo estaba la ventana la primera vez que se toca
+  [[ -e $STATE ]] && return 0
+  jq -c '{floating, at, size}' <<<"$win" > "$STATE"
+}
+
+workarea() {  # x y ancho alto del área útil del monitor de la ventana (descontando la barra)
+  local mon; mon=$(jq -r '.monitor // 0' <<<"$win")
+  hyprctl monitors -j | jq -r --argjson id "$mon" \
+    '.[] | select(.id == $id) | "\(.x + .reserved[0]) \(.y + .reserved[1]) \((.width / .scale | floor) - .reserved[0] - .reserved[2]) \((.height / .scale | floor) - .reserved[1] - .reserved[3])"'
+}
+
+snap() {  # left | right
+  local wx wy ww wh x w h
+  read -r wx wy ww wh < <(workarea)
+  [[ -n ${ww:-} ]] || exit 0
+  save_state
+  [[ $(jq -r '.fullscreen' <<<"$win") != 0 ]] && dsp "fullscreen({ mode = \"maximized\", action = \"toggle\", $W })"
+  w=$(( (ww - GAP * 3) / 2 )); h=$(( wh - GAP * 2 ))
+  if [[ $1 == left ]]; then x=$(( wx + GAP )); else x=$(( wx + GAP * 2 + w )); fi
+  dsp "float({ action = \"enable\", $W })"
+  dsp "resize({ x = $w, y = $h, exact = true, $W })"
+  dsp "move({ x = $x, y = $(( wy + GAP )), $W })"
+}
+
+maximize() {
+  save_state
+  [[ $(jq -r '.fullscreen' <<<"$win") == 0 ]] && dsp "fullscreen({ mode = \"maximized\", action = \"toggle\", $W })"
+}
+
+restore() {  # devuelve 0 si había algo que restaurar
+  local fs; fs=$(jq -r '.fullscreen' <<<"$win")
+  [[ $fs != 0 || -e $STATE ]] || return 1
+  [[ $fs != 0 ]] && dsp "fullscreen({ mode = \"maximized\", action = \"toggle\", $W })"
+  if [[ -e $STATE ]]; then
+    local fl x y w h
+    fl=$(jq -r '.floating' "$STATE"); x=$(jq -r '.at[0]' "$STATE"); y=$(jq -r '.at[1]' "$STATE")
+    w=$(jq -r '.size[0]' "$STATE"); h=$(jq -r '.size[1]' "$STATE")
+    if [[ $fl == true ]]; then
+      dsp "resize({ x = $w, y = $h, exact = true, $W })"
+      dsp "move({ x = $x, y = $y, $W })"
+    else
+      dsp "float({ action = \"disable\", $W })"                  # vuelve al mosaico
+    fi
+    rm -f -- "$STATE"
+  fi
+  return 0
+}
+
+minimize() {
+  save_state
+  printf '%s\n' "$addr" >> "$ST/minimized"
+  dsp "move({ workspace = \"special:minimizadas\", silent = true, $W })"
+  note "Ventana minimizada" "Super + Shift + M la trae de vuelta"
+}
+
+restore_one() {
+  [[ -s $ST/minimized ]] || { note "No hay ventanas minimizadas"; return 0; }
+  local last ws
+  last=$(tail -n1 "$ST/minimized")
+  sed -i '$d' "$ST/minimized"
+  [[ $last =~ ^0x[0-9a-fA-F]+$ ]] || return 0
+  hyprctl clients -j | jq -e --arg a "$last" 'any(.[]; .address == $a)' >/dev/null 2>&1 || { restore_one; return; }
+  ws=$(hyprctl activeworkspace -j | jq -r '.id')
+  ev "hl.dispatch(hl.dsp.window.move({ workspace = \"$ws\", window = \"address:$last\" }))"
+  ev "hl.dispatch(hl.dsp.focus({ window = \"address:$last\" }))"
+  rm -f -- "$ST/$last"
+}
+
+case ${1:-} in
+  left|right) snap "$1" ;;
+  max)        maximize ;;
+  down)       restore || minimize ;;
+  minimize)   minimize ;;
+  restore)    restore_one ;;
+  restore-all) while [[ -s $ST/minimized ]]; do restore_one; done ;;
+  *) echo "Uso: hyprarch-win {left|right|max|down|minimize|restore|restore-all}" >&2; exit 2 ;;
+esac

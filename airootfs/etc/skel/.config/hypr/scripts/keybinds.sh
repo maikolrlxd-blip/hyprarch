@@ -14,7 +14,11 @@ i	CERRAR ventana		SUPER + Q  /  ALT + F4
 j	Pantalla completa		SUPER + F
 k	Ventana flotante / en mosaico		SUPER + SHIFT + F
 l	Cambiar división		SUPER + J
-m	Mover foco		SUPER + flechas
+m	Ajustar ventana a un lado (como en Windows)		SUPER + ← / →
+ma	Maximizar		SUPER + ↑
+mb	Restaurar o minimizar		SUPER + ↓
+mc	Minimizar / traer la última minimizada		SUPER + M  /  SUPER + SHIFT + M
+md	Mover el foco entre ventanas		SUPER + ALT + flechas
 n	Mover ventana		SUPER + SHIFT + flechas
 o	Redimensionar		SUPER + CTRL + flechas
 p	Ir al espacio de trabajo		SUPER + 1..9

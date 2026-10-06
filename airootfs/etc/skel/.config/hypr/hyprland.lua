@@ -339,11 +339,19 @@ hl.bind("Print",         hl.dsp.exec_cmd(scripts .. "/screenshot.sh area"))
 hl.bind("SHIFT + Print", hl.dsp.exec_cmd(scripts .. "/screenshot.sh full"))
 hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(scripts .. "/screenshot.sh area"))   -- recorte de pantalla (como en Windows)
 
--- Foco
-hl.bind(mod .. " + left",  hl.dsp.focus({ direction = "left" }))
-hl.bind(mod .. " + right", hl.dsp.focus({ direction = "right" }))
-hl.bind(mod .. " + up",    hl.dsp.focus({ direction = "up" }))
-hl.bind(mod .. " + down",  hl.dsp.focus({ direction = "down" }))
+-- Ventanas al estilo Windows (hyprarch-win): ajustar a un lado, maximizar, restaurar / minimizar
+hl.bind(mod .. " + left",  hl.dsp.exec_cmd("hyprarch-win left"))
+hl.bind(mod .. " + right", hl.dsp.exec_cmd("hyprarch-win right"))
+hl.bind(mod .. " + up",    hl.dsp.exec_cmd("hyprarch-win max"))
+hl.bind(mod .. " + down",  hl.dsp.exec_cmd("hyprarch-win down"))
+hl.bind(mod .. " + M",          hl.dsp.exec_cmd("hyprarch-win minimize"))
+hl.bind(mod .. " + SHIFT + M",  hl.dsp.exec_cmd("hyprarch-win restore"))
+
+-- Foco entre ventanas (con Alt, porque Super + flechas ajusta la ventana)
+hl.bind(mod .. " + ALT + left",  hl.dsp.focus({ direction = "left" }))
+hl.bind(mod .. " + ALT + right", hl.dsp.focus({ direction = "right" }))
+hl.bind(mod .. " + ALT + up",    hl.dsp.focus({ direction = "up" }))
+hl.bind(mod .. " + ALT + down",  hl.dsp.focus({ direction = "down" }))
 
 -- Mover ventana
 hl.bind(mod .. " + SHIFT + left",  hl.dsp.window.move({ direction = "left" }))
