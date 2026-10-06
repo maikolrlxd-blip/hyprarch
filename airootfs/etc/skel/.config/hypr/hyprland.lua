@@ -120,6 +120,9 @@ hl.on("hyprland.start", function()
     -- Claudito: la presencia de Claude en pantalla (necesita gtk4-layer-shell precargado)
     -- (GSK_RENDERER=cairo: la ventanita es chica y así se redibuja bien también en máquinas virtuales)
     hl.exec_cmd("env GSK_RENDERER=cairo LD_PRELOAD=/usr/lib/libgtk4-layer-shell.so claude-presence daemon")
+    -- Botones de la ventana activa (minimizar, maximizar, cerrar). En C (~6 MB); si faltara, la versión de respaldo en Python.
+    -- Con el perfil lite no arranca (se decide antes de cargar nada); ~/.config/hyprarch/wbar = on/off lo fuerza.
+    hl.exec_cmd("sh -c 'hyprarch-wbar || hyprarch-wbar-py'")
     -- La isla de Claudito: un botón arriba, centrado, que se despliega con una animación (esconde al de la esquina)
     hl.exec_cmd("env GSK_RENDERER=cairo LD_PRELOAD=/usr/lib/libgtk4-layer-shell.so hyprarch-island")
 end)

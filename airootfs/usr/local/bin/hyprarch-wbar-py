@@ -1,0 +1,235 @@
+#!/usr/bin/env python3
+"""hyprarch-wbar — botones de ventana (minimizar, maximizar, cerrar) para la ventana ACTIVA.
+
+En vez de una barra de título en cada ventana (caro), una sola pastilla pequeña se pega sobre la esquina superior
+derecha de la ventana activa y la sigue. Se mueve con los eventos de Hyprland (no con sondeo constante); solo
+consulta la geometría con un temporizador lento mientras hay una ventana visible, y lo hace por el socket de Hyprland
+(sin lanzar procesos).
+
+  · «–» minimiza (hyprarch-win)   · «□» maximiza / restaura   · «×» cierra la ventana
+Se esconde en pantalla completa, en el escritorio vacío y en las ventanas que ya traen su propia barra.
+"""
+import json
+import os
+import socket
+import subprocess
+import sys
+
+
+def _wanted():
+    """Decide si arrancar ANTES de cargar GTK: si no hace falta, no se gasta ni un MB.
+    Archivo ~/.config/hyprarch/wbar:  on = siempre · off = nunca · (ausente) = solo en equipos que no son modestos."""
+    cfg = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
+    try:
+        v = open(os.path.join(cfg, "hyprarch", "wbar")).read().strip().lower()
+        if v in ("on", "off"):
+            return v == "on"
+    except OSError:
+        pass
+    try:
+        return open(os.path.join(cfg, "hyprarch", "perf.effective")).read().strip() != "lite"
+    except OSError:
+        return True
+
+
+if not _wanted():
+    sys.exit(0)
+
+if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza solo con el entorno correcto
+    env = dict(os.environ)
+    env["LD_PRELOAD"] = (env.get("LD_PRELOAD", "") + " /usr/lib/libgtk4-layer-shell.so").strip()
+    env["GSK_RENDERER"] = "cairo"
+    os.execvpe(sys.executable, [sys.executable] + sys.argv, env)
+
+import fcntl
+
+RUN = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+lock = open(os.path.join(RUN, "hyprarch-wbar.lock"), "w")
+try:
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except OSError:
+    sys.exit(0)                                   # ya hay uno
+
+import gi
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
+gi.require_version("Gtk4LayerShell", "1.0")
+from gi.repository import Gdk, GLib, Gtk, Gtk4LayerShell as LS  # noqa: E402
+
+SIG = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "")
+HYPR = os.path.join(RUN, "hypr", SIG)
+BAR_W, BAR_H = 112, 26
+CFG = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
+# ventanas que ya traen sus propios botones o no deben llevarlos
+SKIP = ("hyprarch-ai-float", "hyprarch-ai-full", "hyprarch-ai-answer", "local.hyprarch.claudepresence")
+
+
+def lite():
+    try:
+        return open(os.path.join(CFG, "hyprarch", "perf.effective")).read().strip() == "lite"
+    except OSError:
+        return False
+
+
+POLL_MS = 1500 if lite() else 700
+
+
+def hypr_cmd(cmd):
+    """Pregunta a Hyprland por su socket de órdenes (sin lanzar procesos)."""
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.settimeout(1.0)
+        s.connect(os.path.join(HYPR, ".socket.sock"))
+        s.sendall(cmd.encode())
+        out = b""
+        while True:
+            chunk = s.recv(65536)
+            if not chunk:
+                break
+            out += chunk
+        s.close()
+        return out.decode("utf-8", "replace")
+    except (OSError, ValueError):
+        return ""
+
+
+def active():
+    try:
+        return json.loads(hypr_cmd("j/activewindow") or "{}")
+    except ValueError:
+        return {}
+
+
+CSS = b"""
+window { background: transparent; }
+.bar { background: rgba(10, 16, 24, 0.90); border: 1px solid rgba(255,255,255,0.12); border-radius: 13px; padding: 1px 3px; }
+button { background: transparent; border: none; border-radius: 999px; min-width: 30px; min-height: 22px; padding: 0;
+         color: #cfdbe0; font-family: "JetBrainsMono Nerd Font", monospace; font-size: 11px;
+         transition: background 120ms ease-out, color 120ms ease-out; }
+button:hover { background: rgba(255,255,255,0.16); color: #ffffff; }
+button.x:hover { background: #ff5a6e; color: #ffffff; }
+"""
+
+
+class App(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id=None)
+        self.win = None
+        self.addr = ""
+        self.fs = 0
+        self.geo = None
+        self.shown = False
+        self.pending = 0
+        self.floating = False
+        self.tick = 0
+
+    def act(self, what):
+        if not self.addr:
+            return
+        if what == "close":
+            subprocess.Popen(["hyprctl", "eval", f'hl.dispatch(hl.dsp.window.close({{ window = "address:{self.addr}" }}))'],
+                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:
+            sub = {"min": "minimize", "max": "down" if self.fs == 1 else "max"}[what]
+            subprocess.Popen(["hyprarch-win", sub], start_new_session=True,
+                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    def do_activate(self):
+        prov = Gtk.CssProvider()
+        prov.load_from_data(CSS)
+        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), prov, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        win = Gtk.ApplicationWindow(application=self)
+        self.win = win
+        win.set_default_size(BAR_W, BAR_H)
+        LS.init_for_window(win)
+        LS.set_layer(win, LS.Layer.TOP)                   # encima de las ventanas, debajo de los menús y paneles
+        LS.set_anchor(win, LS.Edge.TOP, True)
+        LS.set_anchor(win, LS.Edge.LEFT, True)
+        LS.set_exclusive_zone(win, -1)
+        LS.set_namespace(win, "hyprarch-wbar")
+        LS.set_keyboard_mode(win, LS.KeyboardMode.NONE)
+        row = Gtk.Box(spacing=0)
+        row.add_css_class("bar")
+        for glyph, what, tip in (("", "min", "Minimizar"), ("", "max", "Maximizar / restaurar"), ("", "close", "Cerrar")):
+            b = Gtk.Button(label=glyph)
+            if what == "close":
+                b.add_css_class("x")
+            b.set_tooltip_text(tip)
+            b.connect("clicked", lambda _b, w=what: self.act(w))
+            row.append(b)
+        win.set_child(row)
+        LS.set_margin(win, LS.Edge.LEFT, 0)
+        LS.set_margin(win, LS.Edge.TOP, 0)
+        win.set_visible(False)
+        win.present()
+        win.set_visible(False)
+        self.hold()                                          # la aplicación sigue viva aunque la ventana esté oculta
+        self.listen()
+        GLib.timeout_add(POLL_MS, self.poll)
+        self.refresh()
+
+    # ---- eventos de Hyprland (socket2): se despierta solo cuando pasa algo ----
+    def listen(self):
+        try:
+            s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            s.connect(os.path.join(HYPR, ".socket2.sock"))
+            s.setblocking(False)
+        except OSError:
+            return
+        self.ev = s
+        GLib.io_add_watch(s.fileno(), GLib.IO_IN | GLib.IO_HUP, self.on_event)
+
+    def on_event(self, _fd, cond):
+        if cond & GLib.IO_HUP:
+            return False
+        try:
+            data = self.ev.recv(65536)
+        except OSError:
+            return True
+        if not data:
+            return False
+        if not self.pending:                                 # varios eventos seguidos = un solo refresco
+            self.pending = GLib.timeout_add(40, self.deferred)
+        return True
+
+    def deferred(self):
+        self.pending = 0
+        self.refresh()
+        return False
+
+    def poll(self):
+        """Ventana flotante: se mira su sitio con frecuencia (arrastrarla no genera eventos). En mosaico, solo de vez en cuando."""
+        self.tick += 1
+        if self.shown and (self.floating or self.tick % 4 == 0):
+            self.refresh()
+        return True
+
+    def refresh(self):
+        w = active()
+        cls = w.get("class") or ""
+        ws = (w.get("workspace") or {}).get("name", "")
+        hide = (not w.get("address") or not w.get("mapped", True) or w.get("hidden") or w.get("fullscreen") == 2
+                or ws.startswith("special") or cls in SKIP)
+        if hide:
+            if self.shown:
+                self.win.set_visible(False)
+                self.shown = False
+            self.addr = ""
+            return
+        self.addr, self.fs = w["address"], w.get("fullscreen", 0)
+        self.floating = bool(w.get("floating"))
+        x, y = w["at"]
+        width = w["size"][0]
+        geo = (x, y, width)
+        if geo != self.geo:
+            self.geo = geo
+            LS.set_margin(self.win, LS.Edge.LEFT, max(0, x + width - BAR_W - 10))
+            LS.set_margin(self.win, LS.Edge.TOP, max(2, y - BAR_H - 2))   # en el hueco sobre la ventana
+        if not self.shown:
+            self.win.set_visible(True)
+            self.shown = True
+
+
+if __name__ == "__main__":
+    App().run([])

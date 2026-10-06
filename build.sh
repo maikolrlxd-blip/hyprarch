@@ -39,7 +39,8 @@ if pacman --help 2>&1 | grep -q -- '--disable-sandbox'; then
 fi
 
 echo "==> Instalando herramientas de compilación"
-pacman -Syu --noconfirm --needed "${SANDBOX_OFF[@]}" archiso nodejs npm
+# gcc, pkgconf, wayland(-protocols), wlr-protocols y cairo: SOLO para compilar hyprarch-wbar aquí; no van en la ISO.
+pacman -Syu --noconfirm --needed "${SANDBOX_OFF[@]}" archiso nodejs npm gcc pkgconf wayland wayland-protocols wlr-protocols cairo
 
 echo "==> Copiando perfil base releng"
 rm -rf "$PROFILE" "$WORK"
@@ -89,6 +90,14 @@ echo "==> Aplicando airootfs (configuración, dotfiles, scripts)"
 find airootfs -type f ! -name '*.jpg' ! -name '*.png' -exec sed -i 's/\r$//' {} +
 chmod +x airootfs/usr/local/bin/* airootfs/etc/skel/.config/hypr/scripts/*
 cp -a airootfs/. "$AIR/"
+
+echo "==> Compilando hyprarch-wbar (botones de ventana, en C: ~6 MB de memoria en vez de ~78 MB de la versión Python)"
+# Si la compilación falla no se rompe la ISO: queda hyprarch-wbar-py (Python), que el arranque usa como respaldo.
+if bash tools/wbar/build.sh "$AIR/usr/local/bin"; then
+  chmod 755 "$AIR/usr/local/bin/hyprarch-wbar"
+else
+  echo "AVISO: no se pudo compilar hyprarch-wbar; se usará la versión de respaldo en Python"
+fi
 
 echo "==> Archivos propios de la edición '$EDITION'"
 if [[ -d "editions/$EDITION/airootfs" ]]; then
@@ -186,6 +195,8 @@ PERMS="$TMPD/perms.txt"
   for f in "$REPO"/airootfs/usr/local/bin/* "$REPO"/airootfs/etc/skel/.config/hypr/scripts/*; do
     echo "  [\"/${f#"$REPO/airootfs/"}\"]=\"0:0:0755\""
   done
+  # hyprarch-wbar se compila durante la construcción (no está en el repo): hay que declarar su permiso
+  [[ -f "$AIR/usr/local/bin/hyprarch-wbar" ]] && echo '  ["/usr/local/bin/hyprarch-wbar"]="0:0:0755"'
   # Ejecutables instalados por npm (Claude Code): mkarchiso tampoco conserva su bit +x
   if [[ -d "$AIR/usr/local/lib/node_modules" ]]; then
     while IFS= read -r f; do
