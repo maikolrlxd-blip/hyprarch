@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1620">
+<title>hyprarch — a home for AIs</title>
+<meta name="description" content="hyprarch is a Linux desktop built as a home for AIs and comfortable for humans. Help us test the beta.">
+<meta property="og:title" content="hyprarch — a home for AIs">
+<meta property="og:description" content="A Linux desktop where your AI lives, knows the system and helps — and you stay in control. Join the beta.">
+<style>
+:root{--bg:#0b1620;--bg2:#10202b;--card:#13303a;--mint:#5ef2c8;--cyan:#5ec2ff;--fg:#e8fbff;--dim:#8fb3bd;--line:#5ef2c82b;--ease:cubic-bezier(.2,.9,.3,1.2)}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.55 system-ui,"Segoe UI",Roboto,sans-serif;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(70% 50% at 80% 0%,#5ec2ff22,transparent 70%),radial-gradient(60% 50% at 10% 30%,#5ef2c822,transparent 70%),linear-gradient(#0b1620,#0a121a)}
+a{color:var(--mint)}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px}
+nav{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
+.logo{font-weight:800;letter-spacing:.28em;font-size:14px}
+.lang{display:flex;gap:6px}
+.lang button{background:transparent;border:1px solid var(--line);color:var(--dim);padding:6px 11px;border-radius:99px;font:600 13px system-ui;cursor:pointer}
+.lang button.on{background:var(--mint);color:#06241d;border-color:var(--mint)}
+/* hero */
+.hero{display:grid;gap:26px;align-items:center;padding:30px 0 50px}
+@media(min-width:820px){.hero{grid-template-columns:1.1fr .9fr;padding:60px 0 80px}}
+.tag{display:inline-block;border:1px solid var(--line);color:var(--mint);padding:5px 12px;border-radius:99px;font-size:13px;font-weight:700;letter-spacing:.08em}
+h1{font-size:clamp(38px,8.5vw,68px);line-height:1.04;margin:14px 0 14px;letter-spacing:-.02em}
+h1 span{color:var(--mint)}
+.lead{color:var(--dim);font-size:19px;max-width:34ch}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:15px 24px;border-radius:16px;border:1px solid var(--line);color:var(--fg);text-decoration:none;font-weight:700;transition:transform .25s var(--ease),background .2s}
+.btn:active{transform:scale(.96)}
+.btn.main{background:linear-gradient(135deg,#7fffe0,#5ec2ff);color:#05241c;border:0;box-shadow:0 10px 34px #5ef2c855}
+.btn.main:hover{transform:translateY(-2px)}
+.btn[aria-disabled=true]{opacity:.55;pointer-events:none}
+.note{font-size:13px;color:var(--dim);margin-top:10px}
+/* robot */
+.robot{justify-self:center;width:min(300px,70vw);filter:drop-shadow(0 20px 40px #5ef2c844);animation:float 4s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-12px) rotate(1.5deg)}}
+.robot .ring{transform-origin:150px 150px;animation:spin 14s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.robot .eye{animation:blink 5s infinite;transform-origin:center;transform-box:fill-box}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+/* sections */
+section{padding:44px 0}
+h2{font-size:clamp(26px,5vw,38px);margin:0 0 10px;letter-spacing:-.01em}
+.sub{color:var(--dim);margin:0 0 26px;max-width:60ch}
+.grid{display:grid;gap:14px}
+@media(min-width:720px){.grid.three{grid-template-columns:repeat(3,1fr)}.grid.two{grid-template-columns:1fr 1fr}}
+.card{background:linear-gradient(160deg,#13303acc,#0f1f29cc);border:1px solid var(--line);border-radius:22px;padding:22px;transition:transform .3s var(--ease),border-color .2s}
+.card:hover{transform:translateY(-4px);border-color:#5ef2c866}
+.card .ic{font-size:26px}
+.card h3{margin:10px 0 6px;font-size:19px}
+.card p{margin:0;color:var(--dim);font-size:15.5px}
+pre{background:#071017;border:1px solid var(--line);border-radius:18px;padding:18px;overflow-x:auto;font:14.5px/1.6 ui-monospace,Consolas,monospace;margin:0}
+pre .c{color:var(--dim)}pre .g{color:var(--mint)}
+.list{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.list li{display:flex;gap:12px;align-items:flex-start;background:#0f1f29;border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.list li::before{content:"✓";color:#06241d;background:var(--mint);border-radius:50%;min-width:24px;height:24px;display:grid;place-items:center;font-weight:800;font-size:13px;margin-top:2px}
+.warn{border-color:#ffb34766;background:#2a1f10}
+.warn li::before{content:"!";background:#ffb347}
+footer{padding:40px 0 60px;color:var(--dim);font-size:14px;border-top:1px solid var(--line);margin-top:30px}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+[data-es]{display:none}
+html.es [data-en]{display:none}html.es [data-es]{display:revert}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <div class="logo">HYPRARCH</div>
+    <div class="lang"><button id="en" class="on">EN</button><button id="es">ES</button></div>
+  </nav>
+
+  <header class="hero">
+    <div>
+      <span class="tag" data-en>OPEN BETA SOON · TESTERS WANTED</span><span class="tag" data-es>BETA ABIERTA PRONTO · BUSCAMOS PROBADORES</span>
+      <h1><span data-en>A home for AIs.</span><span data-es>Un hogar para IAs.</span><br><span style="color:var(--fg)" data-en>Comfortable for humans.</span><span style="color:var(--fg)" data-es>Cómodo para personas.</span></h1>
+      <p class="lead" data-en>A Linux desktop where your AI lives, knows the whole system and helps you — and you stay in control.</p>
+      <p class="lead" data-es>Un escritorio Linux donde tu IA vive, conoce todo el sistema y te ayuda — y tú sigues al mando.</p>
+      <div class="cta">
+        <a id="signup" class="btn main" href="#signup-box" aria-disabled="true"><span data-en>Join the beta</span><span data-es>Apuntarme a la beta</span> →</a>
+        <a class="btn" href="#what"><span data-en>See what it does</span><span data-es>Ver qué hace</span></a>
+      </div>
+      <p class="note" id="signup-note" data-en>Signups open soon.</p><p class="note" data-es>Las inscripciones abren pronto.</p>
+    </div>
+    <svg class="robot" viewBox="0 0 300 300" role="img" aria-label="Claudito, the hyprarch robot">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fffe0"/><stop offset="1" stop-color="#5ec2ff"/></linearGradient></defs>
+      <ellipse cx="150" cy="280" rx="70" ry="9" fill="#000" opacity=".35"/>
+      <polygon points="190,70 245,22 226,92" fill="#5ef2c8"/>
+      <polygon points="150,60 205,80 232,140 215,205 150,232 85,205 68,140 95,80" fill="#0e2630" stroke="url(#g)" stroke-width="4"/>
+      <rect x="92" y="122" width="116" height="52" rx="10" fill="#0a1a22" stroke="#5ef2c8" stroke-width="3"/>
+      <rect class="eye" x="108" y="136" width="30" height="22" rx="4" fill="#c9fff0"/>
+      <rect class="eye" x="162" y="136" width="30" height="22" rx="4" fill="#c9fff0"/>
+      <g class="ring"><ellipse cx="150" cy="150" rx="128" ry="42" fill="none" stroke="#5ef2c8" stroke-opacity=".55" stroke-width="2"/><circle cx="22" cy="150" r="6" fill="#5ef2c8"/></g>
+      <polygon points="150,236 128,262 172,262" fill="#5ef2c8" opacity=".85"/>
+      <polygon points="150,244 140,258 160,258" fill="#c9fff0"/>
+    </svg>
+  </header>
+
+  <section id="what" class="reveal">
+    <h2 data-en>An OS that AIs can actually use</h2><h2 data-es>Un sistema que las IAs sí pueden usar</h2>
+    <p class="sub" data-en>Most AIs live in a chat window and you copy, paste and explain. In hyprarch the AI knows where it is, has safe tools to act, and you supervise.</p>
+    <p class="sub" data-es>La mayoría de las IAs viven en una ventana de chat y tú copias, pegas y explicas. En hyprarch la IA sabe dónde está, tiene herramientas seguras para actuar y tú supervisas.</p>
+    <div class="grid three">
+      <div class="card"><div class="ic">🧭</div><h3 data-en>It knows the system</h3><h3 data-es>Conoce el sistema</h3><p data-en>A guide waits for every AI at login: what this OS is, how to control it, and the rules of care.</p><p data-es>Una guía espera a cada IA al entrar: qué es este sistema, cómo controlarlo y las reglas de cuidado.</p></div>
+      <div class="card"><div class="ic">🖐️</div><h3 data-en>Safe hands</h3><h3 data-es>Manos seguras</h3><p data-en>One simple API: windows, apps, modes, volume, Wi‑Fi. Limited actions, validated inputs.</p><p data-es>Una API simple: ventanas, apps, modos, volumen, Wi‑Fi. Acciones acotadas y datos validados.</p></div>
+      <div class="card"><div class="ic">🎛️</div><h3 data-en>You choose the AI</h3><h3 data-es>Tú eliges la IA</h3><p data-en>Claude, Codex, Gemini or a free local model. Switch any time. No single-vendor lock‑in.</p><p data-es>Claude, Codex, Gemini o un modelo local gratuito. Cámbiala cuando quieras. Sin ataduras a una sola empresa.</p></div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <h2 data-en>What it looks like</h2><h2 data-es>Cómo se ve</h2>
+<pre><span class="c"># an AI driving the desktop</span>
+<span class="g">$</span> hyprarch-api apps
+<span class="g">$</span> hyprarch-api open Firefox
+{"ok":true,"message":"opening firefox"}
+<span class="g">$</span> hyprarch-api mode set gamer
+<span class="g">$</span> hyprarch-api volume set 40</pre>
+    <div class="grid two" style="margin-top:14px">
+      <div class="card"><div class="ic">🎮</div><h3 data-en>Menus like a video game</h3><h3 data-es>Menús de videojuego</h3><p data-en>Animated panels for power, Wi‑Fi, apps and colors. A little robot reacts to what you do.</p><p data-es>Paneles animados para energía, Wi‑Fi, apps y colores. Un robotito reacciona a lo que haces.</p></div>
+      <div class="card"><div class="ic">🌈</div><h3 data-en>Modes: gamer, cinema, study, work</h3><h3 data-es>Modos: gamer, cine, estudio, trabajo</h3><p data-en>One tap changes colors, wallpaper and opens your chosen apps.</p><p data-es>Un toque cambia colores, fondo y abre las apps que elijas.</p></div>
+    </div>
+  </section>
+
+  <section id="testers" class="reveal">
+    <h2 data-en>Help us break it</h2><h2 data-es>Ayúdanos a romperlo</h2>
+    <p class="sub" data-en>hyprarch is an early beta. We need people who try it on real computers and tell us what fails — or what feels great.</p>
+    <p class="sub" data-es>hyprarch es una beta temprana. Necesitamos personas que lo prueben en ordenadores reales y nos cuenten qué falla, o qué se siente genial.</p>
+    <ul class="list">
+      <li><span data-en>Boot it from a USB stick (live mode) and tell us if it reaches the desktop.</span><span data-es>Arráncalo desde un USB (modo en vivo) y cuéntanos si llega al escritorio.</span></li>
+      <li><span data-en>Try Wi‑Fi, sound, the menus, the modes and the app installer.</span><span data-es>Prueba el Wi‑Fi, el sonido, los menús, los modos y el instalador de apps.</span></li>
+      <li><span data-en>Press “Report a problem”: it builds a clean report for us — no passwords, no network names.</span><span data-es>Pulsa «Reportar un problema»: nos prepara un informe limpio — sin contraseñas ni nombres de redes.</span></li>
+      <li><span data-en>Tell us your computer model: old laptops and low-end PCs are especially valuable.</span><span data-es>Dinos el modelo de tu equipo: las laptops viejas y los PC modestos nos sirven muchísimo.</span></li>
+    </ul>
+  </section>
+
+  <section class="reveal">
+    <h2 data-en>Safe to try</h2><h2 data-es>Seguro para probar</h2>
+    <ul class="list warn">
+      <li><span data-en><b>Use the USB in live mode.</b> Your computer stays exactly as it was.</span><span data-es><b>Usa el USB en modo en vivo.</b> Tu ordenador queda exactamente como estaba.</span></li>
+      <li><span data-en><b>Don’t install on your main disk.</b> The installer erases the disk you choose. Try it in a virtual machine or a spare disk.</span><span data-es><b>No lo instales en tu disco principal.</b> El instalador borra el disco que elijas. Pruébalo en una máquina virtual o en un disco de reserva.</span></li>
+      <li><span data-en>Don’t sign in to sensitive accounts while testing.</span><span data-es>No inicies sesión en cuentas delicadas mientras pruebas.</span></li>
+    </ul>
+  </section>
+
+  <section id="signup-box" class="reveal">
+    <h2 data-en>Join the beta</h2><h2 data-es>Únete a la beta</h2>
+    <p class="sub" data-en>Leave your interest and we’ll send you the download and a short testing guide.</p>
+    <p class="sub" data-es>Deja tu interés y te enviaremos la descarga y una guía corta de pruebas.</p>
+    <div class="cta"><a id="signup2" class="btn main" href="#" aria-disabled="true"><span data-en>Sign up</span><span data-es>Inscribirme</span> →</a></div>
+    <p class="note" data-en>We only use your details to send beta information. No spam.</p><p class="note" data-es>Solo usamos tus datos para enviarte información de la beta. Sin spam.</p>
+  </section>
+
+  <footer>
+    <div data-en>hyprarch · early beta · things will break, that’s why we’re testing.</div>
+    <div data-es>hyprarch · beta temprana · habrá fallos, para eso probamos.</div>
+  </footer>
+</div>
+<script>
+// ===== CONFIGURACION: pon aqui el enlace de inscripcion (formulario de Google, Tally, un chat, etc.). Vacio = "pronto". =====
+const SIGNUP_URL = "";
+// ====================================================================================================================
+const html = document.documentElement;
+function setLang(l){html.classList.toggle('es', l==='es');html.lang=l;document.getElementById('en').classList.toggle('on',l==='en');document.getElementById('es').classList.toggle('on',l==='es');try{localStorage.setItem('lang',l)}catch(e){}}
+document.getElementById('en').onclick=()=>setLang('en');document.getElementById('es').onclick=()=>setLang('es');
+let saved=null;try{saved=localStorage.getItem('lang')}catch(e){}
+setLang(saved|| ((navigator.language||'').toLowerCase().startsWith('es') ? 'es':'en'));
+if(SIGNUP_URL){for(const id of ['signup','signup2']){const a=document.getElementById(id);a.href=SIGNUP_URL;a.removeAttribute('aria-disabled');a.target='_blank';a.rel='noopener'}document.querySelectorAll('#signup-note,#signup-note+p').forEach(e=>e.style.display='none')}
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(e=>io.observe(e));
+</script>
+</body>
+</html>
