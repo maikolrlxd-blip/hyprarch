@@ -300,6 +300,7 @@ hl.bind(mod .. " + B",      hl.dsp.exec_cmd(browser))
 hl.bind(mod .. " + E",      hl.dsp.exec_cmd(files))
 hl.bind(mod .. " + N",      hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-nmtui nmtui"))
 hl.bind(mod .. " + A",      hl.dsp.exec_cmd(scripts .. "/once.sh hyprarch-ai hyprarch-ai chat"))            -- hablar con la IA elegida
+hl.bind(mod .. " + I", hl.dsp.exec_cmd("hyprarch-apps"))                                              -- instalar apps y juegos (menú)
 hl.bind(mod .. " + SHIFT + A", hl.dsp.exec_cmd("hyprarch-ai pick"))                                     -- cambiar de IA (órbita animada)
 -- Modos (cada atajo alterna entre ese modo y el normal)
 hl.bind(mod .. " + SHIFT + G", hl.dsp.exec_cmd("hyprarch-mode toggle gamer"))

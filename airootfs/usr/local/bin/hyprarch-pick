@@ -715,6 +715,36 @@ def draw_game(cr, w, h, S, pal, pal_full, op, pop):
     draw_text(cr, "hyprarch · " + U.tr("ui.tagline", "una casa para IAs"), w - 26, h - 30, 10.5, DIM, pop * 0.7, right=True)
 
 
+def close_btn_pos(S):
+    w = S["size"][0]
+    return w - 46, 78, 19
+
+
+def draw_close_btn(cr, w, h, S, pal):
+    """Botón X de cerrar, siempre arriba a la derecha (todos los menús)."""
+    A, FG, BG = pal["ACCENT"], pal["FG"], pal["BG"]
+    x, y, r = close_btn_pos(S)
+    px, py = S.get("ptr", (-99, -99))
+    hov = math.hypot(px - x, py - y) <= r + 4
+    k = S["closing"]
+    a = (1 - clamp(k / U.CLOSE_T)) if k is not None else clamp((S["t"] - 0.15) / 0.25)
+    cr.new_sub_path()
+    cr.arc(x, y, r, 0, 2 * math.pi)
+    cr.set_source_rgba(*(mix(BG, A, 0.35) if hov else mix(BG, FG, 0.10)), (0.95 if hov else 0.70) * a)
+    cr.fill_preserve()
+    cr.set_source_rgba(*(A if hov else FG), (0.9 if hov else 0.28) * a)
+    cr.set_line_width(1.2)
+    cr.stroke()
+    d = 6.5 + (1.0 if hov else 0)
+    cr.set_source_rgba(*(FG if hov else mix(FG, BG, 0.2)), a)
+    cr.set_line_width(2.0)
+    cr.set_line_cap(1)
+    for sx in (-1, 1):
+        cr.move_to(x - d, y - sx * d)
+        cr.line_to(x + d, y + sx * d)
+    cr.stroke()
+
+
 def draw_scene(cr, w, h, S, pal, pal_full):
     A, A2, BG, SF, FG, DIM = (pal[k] for k in ("ACCENT", "ACCENT2", "BG", "SURFACE", "FG", "DIM"))
     t = S["t"]
@@ -1044,6 +1074,7 @@ def run(args):
                 cr.paint()
                 cr.set_operator(cairo.OPERATOR_OVER)
                 draw_scene(cr, w, h, S, pal, pal_full)
+                draw_close_btn(cr, w, h, S, pal)
             except Exception as e:
                 if os.environ.get("HYPRARCH_DEBUG"):
                     import traceback
@@ -1066,6 +1097,10 @@ def run(args):
 
         def on_click(_g, _n, px, py):
             if S["closing"] is not None:
+                return
+            bx, by, br = close_btn_pos(S)
+            if math.hypot(px - bx, py - by) <= br + 4:
+                close()
                 return
             S["ripples"].append((px, py, S["t"]))
             iid = hit_item(S, px, py)

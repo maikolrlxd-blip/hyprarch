@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# hyprarch-apps — instala "paquetes de apps" con un menú de juego, sin saber nada de terminal.
+#
+#   hyprarch-apps            abre el menú (SUPER+I)
+#   hyprarch-apps <pack>     instala un pack directamente: juegos | oficina | multimedia | tienda | comunicacion
+#
+# La ISO se mantiene liviana (también para equipos modestos); lo pesado se instala cuando lo pides.
+# Necesita internet. Los juegos de Steam necesitan el repositorio [multilib], que se activa solo.
+set -u
+
+T() { command -v hyprarch-i18n >/dev/null 2>&1 && hyprarch-i18n "$1" "${2:-$1}" || printf '%s' "${2:-$1}"; }
+note() { command -v notify-send >/dev/null 2>&1 && notify-send -t 7000 "$1" "${2:-}"; }
+
+# ---------- packs: nombre|paquetes
+pack_pkgs() {
+  case $1 in
+    juegos)      echo "steam gamemode lib32-gamemode mangohud lib32-mangohud lib32-mesa lib32-vulkan-icd-loader vulkan-icd-loader $(gpu_extra)" ;;
+    oficina)     echo "libreoffice-fresh libreoffice-fresh-es hunspell-es_any evince" ;;
+    multimedia)  echo "vlc gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav ffmpeg" ;;
+    tienda)      echo "flatpak" ;;
+    comunicacion) echo "discord telegram-desktop" ;;
+    *) return 1 ;;
+  esac
+}
+
+# controladores de Vulkan según la tarjeta gráfica (la ISO ya trae Intel)
+gpu_extra() {
+  local g; g=$(lspci 2>/dev/null | grep -Ei 'vga|3d' | tr 'A-Z' 'a-z')
+  [[ $g == *amd* || $g == *radeon* ]] && echo "vulkan-radeon lib32-vulkan-radeon"
+  [[ $g == *intel* ]] && echo "vulkan-intel lib32-vulkan-intel"
+  [[ $g == *nvidia* ]] && echo "vulkan-nouveau lib32-vulkan-nouveau"
+  return 0
+}
+
+enable_multilib() {
+  grep -q '^\[multilib\]' /etc/pacman.conf && return 0
+  sudo sed -i '/^#\[multilib\]/,/^#Include/ s/^#//' /etc/pacman.conf
+}
+
+install_pack() {
+  local pack=$1 pkgs; pkgs=$(pack_pkgs "$pack") || { echo "Pack desconocido: $pack" >&2; return 2; }
+  curl -fsS --max-time 6 https://archlinux.org >/dev/null 2>&1 || { note "$(T apps.nonet 'Sin internet')" "$(T apps.nonet.d 'Conéctate a una red y vuelve a intentarlo')"; return 1; }
+  # sesión en vivo: poco espacio. Avisar antes de llenar la memoria
+  local free_mb; free_mb=$(df -Pm / | awk 'NR==2{print $4}')
+  if (( free_mb < 2500 )) && [[ -d /run/archiso ]]; then
+    note "$(T apps.live 'Estás en la sesión de prueba')" "$(T apps.live.d 'Hay poco espacio: instala hyprarch en el disco para instalar apps pesadas')"
+    return 1
+  fi
+  [[ $pack == juegos ]] && enable_multilib
+  echo ">> Instalando: $pkgs"
+  # shellcheck disable=SC2086
+  sudo pacman -Sy --needed --noconfirm $pkgs || { note "$(T apps.fail 'No se pudo instalar')" "$pack"; return 1; }
+  if [[ $pack == tienda ]]; then
+    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null
+  fi
+  note "$(T apps.ok 'Listo')" "$(T apps.ok.d 'Ya puedes abrirlo desde el lanzador (SUPER+D)')"
+}
+
+run_in_terminal() {   # se ve el progreso y la contraseña (si la pide)
+  if command -v kitty >/dev/null 2>&1; then
+    kitty --title "hyprarch · apps" bash -c "\"$0\" --run $1; echo; read -rn1 -p '$(T apps.close 'Pulsa una tecla para cerrar')'"
+  else
+    install_pack "$1"
+  fi
+}
+
+menu() {
+  local sel
+  sel=$(printf '%s\n' \
+    $'juegos\tJuegos\t\tSteam, Proton y herramientas para jugar mejor\thappy' \
+    $'oficina\tOficina\t\tLibreOffice en español y lector de PDF\twink' \
+    $'multimedia\tMúsica y vídeo\t\tReproductor y códecs para todo\thappy' \
+    $'tienda\tTienda de apps\t\tFlatpak + Flathub: miles de apps más\tsurprised' \
+    $'comunicacion\tComunicación\t\tDiscord y Telegram\twink' |
+    hyprarch-pick --layout orbit --title "$(T apps.title '¿Qué quieres instalar?')") || return 0
+  [[ -n $sel ]] && run_in_terminal "$sel"
+}
+
+case "${1:-menu}" in
+  menu)  menu ;;
+  --run) install_pack "${2:?pack}" ;;
+  juegos|oficina|multimedia|tienda|comunicacion) run_in_terminal "$1" ;;
+  *) echo "Uso: hyprarch-apps [juegos|oficina|multimedia|tienda|comunicacion]" >&2; exit 2 ;;
+esac

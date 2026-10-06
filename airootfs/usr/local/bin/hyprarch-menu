@@ -23,7 +23,7 @@ MODES = [("normal", "Normal", ""), ("gamer", "Gamer", ""), ("cine", "Cine"
 MODE_COL = {"normal": None, "gamer": (0.0, 0.90, 1.0), "cine": (1.0, 0.70, 0.28),
             "estudio": (0.31, 0.82, 0.77), "trabajo": (0.37, 0.76, 1.0)}
 ACTIONS = [("chat", "Hablar con la IA", ""), ("ia", "Cambiar de IA", ""),
-           ("modes", "Modos y sus apps", ""), ("activity", "Actividad reciente", ""), ("colors", "Colores del sistema", "")]
+           ("activity", "Actividad reciente", ""), ("colors", "Colores del sistema", "")]
 FONT = "JetBrainsMono Nerd Font"
 CARD_W = 344
 # ESTILOS (se elige en ~/.config/hyprarch/style):
@@ -236,10 +236,46 @@ def play(name):
 # ----------------------------------------------------------------------------- diseño (compartido por dibujo y clics)
 
 
+_THUMBS = {}
+
+
+def mode_thumb(mid, w, h):
+    """Miniatura recortada del fondo del modo (se calcula una vez)."""
+    key = (mid, int(w), int(h))
+    if key in _THUMBS:
+        return _THUMBS[key]
+    pb = None
+    try:
+        import gi
+        gi.require_version("GdkPixbuf", "2.0")
+        from gi.repository import GdkPixbuf
+        name = {"normal": "fresco"}.get(mid, mid)
+        src = GdkPixbuf.Pixbuf.new_from_file(f"/usr/share/backgrounds/hyprarch-{name}.jpg")
+        k = max(w / src.get_width(), h / src.get_height())
+        sw, sh = int(src.get_width() * k) + 1, int(src.get_height() * k) + 1
+        big = src.scale_simple(sw, sh, GdkPixbuf.InterpType.BILINEAR)
+        pb = big.new_subpixbuf((sw - int(w)) // 2, (sh - int(h)) // 2, int(w), int(h))
+    except Exception:
+        pb = None
+    _THUMBS[key] = pb
+    return pb
+
+
+def mode_apps_text(mid):
+    """'3 apps' o 'sin apps' según el archivo del modo."""
+    if mid == "normal":
+        return "tu escritorio"
+    try:
+        lines = [l for l in (CFG_DIR / "modes" / f"{mid}.conf").read_text().splitlines() if l.strip() and not l.lstrip().startswith("#")]
+    except OSError:
+        lines = []
+    return f"{len(lines)} apps" if lines else "sin apps"
+
+
 def layout(w, h, anchor, page):
     ax, ay = anchor
     pad, head_h = 18, 64
-    modes_h = 92
+    modes_h = 3 * 66 + 12
     row_h, gap = 46, 8
     if page == "activity":
         card_h = pad + head_h + 7 * 34 + pad
@@ -248,14 +284,15 @@ def layout(w, h, anchor, page):
     x = min(max(12, ax - CARD_W + 70), w - CARD_W - 12)
     y = max(12, min(ay - 130 - card_h, h - card_h - 12))
     items = [dict(id="mute", kind="mini", x=x + CARD_W - pad - 34, y=y + pad + 6, w=34, h=34, label="Silencio", icon="")]
+    items.append(dict(id="xclose", kind="mini", x=x + CARD_W - pad - 76, y=y + pad + 6, w=34, h=34, label="Cerrar", icon=""))
     if page == "activity":
         items.append(dict(id="back", kind="mini", x=x + pad, y=y + pad + 6, w=34, h=34, label="Volver", icon=""))
     else:
-        size, n = 56, len(MODES)
-        space = (CARD_W - 2 * pad - n * size) / (n - 1)
-        for i, (mid, label, icon) in enumerate(MODES):
-            items.append(dict(id="mode:" + mid, kind="mode", x=x + pad + i * (size + space), y=y + pad + head_h, w=size, h=size,
-                              label=label, icon=icon, order=i))
+        cw_, ch_ = (CARD_W - 2 * pad - 8) / 2, 58
+        cells = [("mode:" + m[0], m[1], m[2]) for m in MODES] + [("modes", "Elegir apps", "\uf085")]
+        for i, (cid, label, icon) in enumerate(cells):
+            items.append(dict(id=cid, kind="mode", x=x + pad + (i % 2) * (cw_ + 8), y=y + pad + head_h + (i // 2) * (ch_ + 8),
+                              w=cw_, h=ch_, label=label, icon=icon, order=i))
         top = y + pad + head_h + modes_h
         for j, (aid, label, icon) in enumerate(ACTIONS):
             items.append(dict(id=aid, kind="row", x=x + pad, y=top + j * (row_h + gap), w=CARD_W - 2 * pad, h=row_h,
@@ -724,31 +761,41 @@ def draw_scene(cr, w, h, S, pal):
         cr.scale(sc, sc)
         cr.translate(-icx, -icy)
         if kind == "mode":
-            mid = it["id"].split(":")[1]
-            col = MODE_COL[mid] or A
-            active = (S["mode"] == mid)
-            up = -3 * hv
-            iy += up
+            mid = it["id"].split(":")[1] if it["id"].startswith("mode:") else None
+            col = (MODE_COL.get(mid) or A) if mid else A2
+            active = (mid is not None and S["mode"] == mid)
+            iy -= 3 * hv
+            r = 16
             if active or hv > 0.01:
-                glow_rrect(cr, ix, iy, iw, ih, 18, col, a * (1.0 if active else hv), 12)
-            rrect(cr, ix, iy, iw, ih, 18)
-            if active:
-                gg = cairo.LinearGradient(ix, iy, ix + iw, iy + ih)
-                gg.add_color_stop_rgba(0, *col, 0.95 * a)
-                gg.add_color_stop_rgba(1, *mix(col, A2, 0.55), 0.95 * a)
-                cr.set_source(gg)
-            else:
-                cr.set_source_rgba(*mix(SF, col, 0.22 * hv), a * 0.95)
-            cr.fill()
-            rrect(cr, ix, iy, iw, ih, 18)
-            cr.set_source_rgba(*col, a * (0.9 if active else 0.25 + 0.5 * hv))
-            cr.set_line_width(1.2)
+                glow_rrect(cr, ix, iy, iw, ih, r, col, a * (0.9 if active else hv * 0.8), 12)
+            cr.save()
+            rrect(cr, ix, iy, iw, ih, r)
+            cr.clip()
+            cr.set_source_rgba(*mix(SF, BG, 0.3), a)                      # base
+            cr.paint()
+            pb = mode_thumb(mid, iw, ih) if mid else None
+            if pb is not None:                                              # miniatura del fondo de ese modo
+                from gi.repository import Gdk
+                Gdk.cairo_set_source_pixbuf(cr, pb, ix, iy)
+                cr.paint_with_alpha(a * (0.95 if (active or hv > 0.1) else 0.7))
+            sh = cairo.LinearGradient(ix, iy, ix + iw, iy + ih)             # velo para que el texto se lea
+            sh.add_color_stop_rgba(0, *BG, 0.86 * a)
+            sh.add_color_stop_rgba(0.62, *BG, 0.42 * a)
+            sh.add_color_stop_rgba(1, *col, (0.30 if active else 0.12 + 0.2 * hv) * a)
+            cr.set_source(sh)
+            cr.paint()
+            cr.restore()
+            rrect(cr, ix, iy, iw, ih, r)
+            cr.set_source_rgba(*col, a * (1.0 if active else 0.22 + 0.55 * hv))
+            cr.set_line_width(2.0 if active else 1.1)
             cr.stroke()
-            draw_text(cr, it["icon"], ix + iw / 2, iy + ih / 2 + 9, 25, BG if active else mix(FG, col, 0.5 + 0.5 * hv), a, center=True)
-            draw_text(cr, it["label"], ix + iw / 2, it["y"] + lift + ih + 17, 10.5, FG if (active or hv > 0.1) else DIM, a, bold=active, center=True)
-            if active:                                # punto vivo bajo el modo activo (late suave)
+            draw_text(cr, it["icon"], ix + 22, iy + ih / 2 + 7, 20, col if not active else mix(col, FG, 0.35), a, center=True)
+            draw_text(cr, it["label"], ix + 42, iy + ih / 2 - 1, 13, FG, a, bold=active)
+            sub = (mode_apps_text(mid) if mid else "tocar para editar")
+            draw_text(cr, sub, ix + 42, iy + ih / 2 + 15, 9.5, mix(FG, DIM, 0.45), a)
+            if active:                                                      # punto vivo: este es el modo activo
                 cr.new_sub_path()
-                cr.arc(ix + iw / 2, it["y"] + lift + ih + 26, 2.2 + 0.5 * math.sin(t * 3.0), 0, 2 * math.pi)
+                cr.arc(ix + iw - 14, iy + 14, 3.0 + 0.7 * math.sin(t * 3.0), 0, 2 * math.pi)
                 cr.set_source_rgba(*col, a)
                 cr.fill()
         elif kind == "row":
@@ -924,7 +971,9 @@ def run(anchor):
                     close()
                 return
             play("menu-click")
-            if iid == "mute":
+            if iid == "xclose":
+                close()
+            elif iid == "mute":
                 toggle_mute()
             elif iid == "activity":
                 S["page"], S["activity"], S["ptime0"] = "activity", read_activity(), time.time()
