@@ -66,22 +66,25 @@ launch_apps() {
 set_mode() {
   local m=$1 cur; cur=$(current)
   valid "$m" || { echo "Modo desconocido: $m" >&2; return 1; }
+  # un solo cambio de modo a la vez (atajo + IA + menú a la vez dejarían el tema y las apps mezclados)
+  if command -v flock >/dev/null 2>&1; then exec 8>"$CFG/.mode.lock" && flock -w 15 8 || return 1; fi
+  cur=$(current)
   init
   if [[ $cur == normal && $m != normal ]]; then
     cat "$CFG/current" 2>/dev/null > "$CFG/theme.before"  # recuerda tu tema para volver a él
   fi
   printf '%s\n' "$m" > "$CFG/mode"
   if [[ $m == normal ]]; then
-    hyprarch-theme "$(cat "$CFG/theme.before" 2>/dev/null || echo fresco)" >/dev/null 2>&1 \
+    hyprarch-theme "$(cat "$CFG/theme.before" 2>/dev/null || echo fresco)" >/dev/null 2>&1 8>&- \
       || hyprctl reload >/dev/null 2>&1
     note "$(T mode.normal 'Modo normal')" "$(T mode.normal.d 'Todo vuelve a como lo dejaste')"
   else
-    hyprarch-theme "$m" >/dev/null 2>&1 || hyprctl reload >/dev/null 2>&1
+    hyprarch-theme "$m" >/dev/null 2>&1 8>&- || hyprctl reload >/dev/null 2>&1
     note "$(label "$m")" "$(T mode.opening 'Abriendo tus apps…')"
     launch_apps "$m"
   fi
   # el personajito toma el aire del modo
-  command -v hyprarch-sysstate >/dev/null 2>&1 && hyprarch-sysstate >/dev/null 2>&1 || :
+  command -v hyprarch-sysstate >/dev/null 2>&1 && hyprarch-sysstate >/dev/null 2>&1 8>&- || :
 }
 
 # ---------- editor ----------
