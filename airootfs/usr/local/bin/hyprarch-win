@@ -10,19 +10,26 @@
 #
 # Al ajustar o maximizar se guarda cómo estaba la ventana (en mosaico o flotante, su tamaño y sitio) para poder restaurarla.
 set -u
-ST="${XDG_RUNTIME_DIR:-/tmp}/hyprarch-win"
-mkdir -p "$ST"
+RUN=${XDG_RUNTIME_DIR:-}
+[[ -n $RUN && -d $RUN ]] || { echo "hyprarch-win: falta el directorio de sesion (XDG_RUNTIME_DIR)" >&2; exit 1; }
+ST="$RUN/hyprarch-win"
+mkdir -p "$ST" && chmod 700 "$ST"
 GAP=8
+# una sola ejecucion a la vez: dos restauraciones simultaneas leian la misma ultima ventana y perdian entradas de la lista
+exec 9>"$ST/.lock" && flock -w 5 9 || exit 1
 
 ev() { hyprctl eval "$1" >/dev/null 2>&1; }
 note() { command -v notify-send >/dev/null 2>&1 && notify-send -t 2500 "$1" "${2:-}"; }
 dsp() { ev "hl.dispatch(hl.dsp.window.$1)"; }       # dsp 'float({ action = "enable", window = "..." })'
 
-win=$(hyprctl activewindow -j 2>/dev/null)
-addr=$(jq -r '.address // empty' <<<"$win" 2>/dev/null)
-[[ $addr =~ ^0x[0-9a-fA-F]+$ ]] || exit 0                       # sin ventana activa: nada que hacer
-W="window = \"address:$addr\""
-STATE="$ST/$addr"
+load_active() {
+  win=$(hyprctl activewindow -j 2>/dev/null)
+  addr=$(jq -r '.address // empty' <<<"$win" 2>/dev/null)
+  [[ $addr =~ ^0x[0-9a-fA-F]+$ ]] || return 1                   # sin ventana activa: nada que hacer
+  W="window = \"address:$addr\""
+  STATE="$ST/$addr"
+}
+win="" addr="" W="" STATE=""
 
 save_state() {  # guarda cómo estaba la ventana la primera vez que se toca
   [[ -e $STATE ]] && return 0
@@ -61,6 +68,7 @@ restore() {  # devuelve 0 si había algo que restaurar
     local fl x y w h
     fl=$(jq -r '.floating' "$STATE"); x=$(jq -r '.at[0]' "$STATE"); y=$(jq -r '.at[1]' "$STATE")
     w=$(jq -r '.size[0]' "$STATE"); h=$(jq -r '.size[1]' "$STATE")
+    for v in "$x" "$y" "$w" "$h"; do [[ $v =~ ^-?[0-9]+$ ]] || { rm -f -- "$STATE"; return 0; }; done
     if [[ $fl == true ]]; then
       dsp "resize({ x = $w, y = $h, exact = true, $W })"
       dsp "move({ x = $x, y = $y, $W })"
@@ -75,7 +83,7 @@ restore() {  # devuelve 0 si había algo que restaurar
 minimize() {
   save_state
   printf '%s\n' "$addr" >> "$ST/minimized"
-  dsp "move({ workspace = \"special:minimizadas\", silent = true, $W })"
+  dsp "move({ workspace = \"special:minimizadas\", follow = false, $W })"
   note "Ventana minimizada" "Super + Shift + M la trae de vuelta"
 }
 
@@ -87,16 +95,17 @@ restore_one() {
   [[ $last =~ ^0x[0-9a-fA-F]+$ ]] || return 0
   hyprctl clients -j | jq -e --arg a "$last" 'any(.[]; .address == $a)' >/dev/null 2>&1 || { restore_one; return; }
   ws=$(hyprctl activeworkspace -j | jq -r '.id')
+  [[ $ws =~ ^[0-9]+$ ]] || return 1
   ev "hl.dispatch(hl.dsp.window.move({ workspace = \"$ws\", window = \"address:$last\" }))"
   ev "hl.dispatch(hl.dsp.focus({ window = \"address:$last\" }))"
   rm -f -- "$ST/$last"
 }
 
 case ${1:-} in
-  left|right) snap "$1" ;;
-  max)        maximize ;;
-  down)       restore || minimize ;;
-  minimize)   minimize ;;
+  left|right) load_active || exit 0; snap "$1" ;;
+  max)        load_active || exit 0; maximize ;;
+  down)       load_active || exit 0; restore || minimize ;;
+  minimize)   load_active || exit 0; minimize ;;
   restore)    restore_one ;;
   restore-all) while [[ -s $ST/minimized ]]; do restore_one; done ;;
   *) echo "Uso: hyprarch-win {left|right|max|down|minimize|restore|restore-all}" >&2; exit 2 ;;

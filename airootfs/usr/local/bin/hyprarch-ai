@@ -178,7 +178,15 @@ focus_or_launch() {  # clase [opciones de kitty...] -- comando...
 
 start_bar() { command -v hyprarch-ai-bar >/dev/null 2>&1 && setsid -f hyprarch-ai-bar "$1" >/dev/null 2>&1 </dev/null; }
 
-close_class() { [[ -n ${1:-} ]] && hyprctl eval "hl.dispatch(hl.dsp.window.close({ window = \"class:^($1)\$\" }))" >/dev/null 2>&1; }
+# Solo se cierran las ventanas propias del chat: el nombre de la clase entra en código Lua, así que se valida contra una lista
+# fija (un argumento manipulado no puede cerrar la cadena de texto y ejecutar otra instrucción).
+close_class() {
+  case ${1:-} in
+    hyprarch-ai|hyprarch-ai-float|hyprarch-ai-full|hyprarch-ai-answer) ;;
+    *) return 2 ;;
+  esac
+  hyprctl eval "hl.dispatch(hl.dsp.window.close({ window = \"class:^($1)\$\" }))" >/dev/null 2>&1
+}
 
 # cambia de IA (desde la tira de modelos del chat) y reabre el chat en la misma forma
 use_ai() {  # <id> [clase de la ventana actual]
@@ -281,7 +289,9 @@ quick_ask() {
     # sin IA lista o sin modo de una pasada: se abre la conversación normal
     open_ai float; return
   fi
-  out="${XDG_RUNTIME_DIR:-/tmp}/hyprarch-ai-answer.txt"
+  # un archivo propio por pregunta, en el directorio privado de la sesión (nunca /tmp: ahí otro usuario podría precrearlo)
+  [[ -n ${XDG_RUNTIME_DIR:-} && -d $XDG_RUNTIME_DIR ]] || { echo "falta el directorio de sesión (XDG_RUNTIME_DIR)" >&2; return 1; }
+  out=$(mktemp "$XDG_RUNTIME_DIR/hyprarch-ai-answer.XXXXXX") || return 1
   buddy working "Pensando…"
   note "IA" "Trabajando en: $q" 4000
   cd "$HOME" || return 1
@@ -293,7 +303,8 @@ quick_ask() {
   esac
   buddy 'done' "Listo"
   note "La IA terminó" "$(head -c 160 "$out" | tr '\n' ' ')" 8000
-  focus_or_launch hyprarch-ai-answer -- bash -c "printf '\n  \033[1m%s\033[0m\n\n' \"\$1\"; cat \"\$2\"; printf '\n  (Enter para cerrar)'; read -r _" _ "$q" "$out"
+  # una ventanita NUEVA por respuesta (si se reutilizara una abierta, mostraría la respuesta de otra pregunta); al cerrarla borra su archivo
+  setsid -f kitty --class hyprarch-ai-answer bash -c "printf '\n  \033[1m%s\033[0m\n\n' \"\$1\"; cat \"\$2\"; printf '\n  (Enter para cerrar)'; read -r _; rm -f -- \"\$2\"" _ "$q" "$out" >/dev/null 2>&1 </dev/null
 }
 
 open_ai() {

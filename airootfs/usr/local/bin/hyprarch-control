@@ -27,7 +27,7 @@ if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza
 
 import fcntl
 
-RUN = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+RUN = (os.environ.get("XDG_RUNTIME_DIR") or sys.exit("falta XDG_RUNTIME_DIR"))
 PIDFILE = os.path.join(RUN, "hyprarch-control.pid")
 lock = open(os.path.join(RUN, "hyprarch-control.lock"), "w")
 try:

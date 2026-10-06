@@ -34,7 +34,7 @@ gi.require_version("Gdk", "4.0")
 gi.require_version("Gtk4LayerShell", "1.0")
 from gi.repository import Gdk, GLib, Gtk, Gtk4LayerShell as LS  # noqa: E402
 
-RUN = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+RUN = (os.environ.get("XDG_RUNTIME_DIR") or sys.exit("falta XDG_RUNTIME_DIR"))
 lock = open(os.path.join(RUN, "hyprarch-island.lock"), "w")
 try:
     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
