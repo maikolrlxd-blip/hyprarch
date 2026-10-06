@@ -813,6 +813,15 @@ def palette_signature():
 
 def run_daemon():
     """Superposición liviana: una ventanita (440x270) que se desplaza con los márgenes de layer-shell."""
+    # UNA sola presencia a la vez: si ya hay un personajito vivo, esta copia se retira (así nunca se ven dos Clauditos,
+    # aunque se lance el demonio dos veces). El bloqueo lo suelta el sistema solo cuando el proceso termina.
+    import fcntl
+    lock = open(os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "claude-presence.lock"), "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        return
+    run_daemon._lock = lock
     import threading
 
     import gi

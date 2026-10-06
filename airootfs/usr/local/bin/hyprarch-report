@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# hyprarch-report — reúne la información útil para reportar un problema y la deja en UN archivo (en tu carpeta personal).
+#
+#   hyprarch-report          pregunta qué pasó (con el menú animado), reúne los datos del equipo y te dice dónde quedó el archivo
+#
+# Qué incluye: tu descripción, versión del sistema, procesador/memoria/gráfica/sonido/red (tipos de dispositivo, SIN nombres de
+# redes Wi-Fi), rendimiento, el registro de Hyprland y los avisos del sistema. NO incluye contraseñas, archivos tuyos ni capturas
+# salvo que tú lo aceptes. Puedes abrir el archivo y leerlo antes de enviarlo.
+set -u
+T() { command -v hyprarch-i18n >/dev/null 2>&1 && hyprarch-i18n "$1" "${2:-$1}" || printf '%s' "${2:-$1}"; }
+note() { command -v notify-send >/dev/null 2>&1 && notify-send -t 9000 "$1" "${2:-}"; }
+STAMP=$(date +%Y%m%d-%H%M)
+OUT="$HOME/hyprarch-reporte-$STAMP.txt"
+SHOT="$HOME/hyprarch-reporte-$STAMP.png"
+
+# la captura (si la aceptas) se toma ANTES de abrir el menú, para que muestre el problema y no el menú
+TMPSHOT=$(mktemp --suffix=.png)
+command -v grim >/dev/null 2>&1 && grim "$TMPSHOT" 2>/dev/null
+
+desc=$(hyprarch-pick --input --title "$(T rep.title '¿Qué pasó?')" --placeholder "$(T rep.ph 'Cuéntalo en una frase y pulsa Enter')" 2>/dev/null) || desc=""
+[[ -n $desc ]] || desc="(sin descripción)"
+
+withshot=$(printf '%s\n' \
+  $'si\tSí, incluir la captura\t\tMuestra lo que veías cuando falló\thappy' \
+  $'no\tNo, solo los datos\t\tLa captura puede mostrar cosas personales\twink' |
+  hyprarch-pick --layout orbit --title "$(T rep.shot '¿Incluyo una captura de pantalla?')" 2>/dev/null) || withshot=no
+[[ $withshot == si && -s $TMPSHOT ]] && cp "$TMPSHOT" "$SHOT"
+rm -f "$TMPSHOT"
+
+sec() { printf '\n## %s\n' "$1"; }
+{
+  echo "# Reporte de hyprarch  ($(date -Is))"
+  sec "Qué pasó"; echo "$desc"
+  sec "Sistema"
+  . /etc/os-release 2>/dev/null; echo "${PRETTY_NAME:-?}  | kernel $(uname -r)"
+  [[ -d /run/archiso ]] && echo "Sesión: EN VIVO (USB/ISO)" || echo "Sesión: INSTALADO en disco"
+  echo "Idioma: ${LANG:-?}  | Teclado: $(cat "$HOME/.config/hyprarch/keyboard" 2>/dev/null || echo ?)"
+  pacman -Q hyprland waybar mesa linux 2>/dev/null | tr '\n' ' '; echo
+  sec "Equipo"
+  lscpu 2>/dev/null | grep -E 'Model name|^CPU\(s\)' | sed 's/  */ /g'
+  free -m | sed -n 2p
+  lspci 2>/dev/null | grep -Ei 'vga|3d|display|audio|network|wireless|ethernet' | cut -d' ' -f2-
+  [[ -d /sys/class/power_supply ]] && ls /sys/class/power_supply | tr '\n' ' ' && echo
+  sec "Rendimiento"
+  hyprarch-perf status 2>&1 | head -4
+  command -v hyprarch-api >/dev/null && hyprarch-api system 2>&1
+  uptime -p 2>/dev/null; systemd-analyze 2>/dev/null | head -1
+  sec "Pantalla y gráficos"
+  hyprctl monitors 2>/dev/null | grep -E '^Monitor|@' | head -4
+  command -v glxinfo >/dev/null && glxinfo -B 2>/dev/null | grep -E 'OpenGL renderer|OpenGL version' | head -2
+  sec "Sonido"
+  wpctl status 2>/dev/null | head -24
+  sec "Red (tipos de conexión; sin nombres de redes)"
+  nmcli -t -f DEVICE,TYPE,STATE dev 2>/dev/null
+  sec "Registro de Hyprland (últimas 60 líneas)"
+  tail -n 60 "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/hypr/*/hyprland.log 2>/dev/null | tail -60
+  sec "Avisos y errores del sistema (este arranque)"
+  journalctl -b -p warning --no-pager 2>/dev/null | tail -60
+} > "$OUT" 2>&1
+
+msg="$OUT"
+[[ -s $SHOT ]] && msg="$OUT  +  $(basename "$SHOT")"
+note "$(T rep.done 'Reporte listo')" "$msg"
+echo "$OUT"
+[[ -s $SHOT ]] && echo "$SHOT"
+exit 0

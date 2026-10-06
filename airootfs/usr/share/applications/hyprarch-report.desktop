@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Reportar un problema
+Name[en]=Report a problem
+Comment=Reúne los datos del equipo en un archivo para enviarlo a quien te ayuda a mejorar hyprarch
+Exec=hyprarch-report
+Icon=dialog-warning
+Categories=System;
+Terminal=false
