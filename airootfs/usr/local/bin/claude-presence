@@ -956,7 +956,9 @@ def run_daemon():
 
         def open_chat(mode):
             try:
-                subprocess.Popen(["hyprarch-ai", "open", mode], start_new_session=True,
+                # el chat sale encima del personajito: se le pasa dónde está ahora
+                env = dict(os.environ, HYPRARCH_ANCHOR=f"{max(0, S['x']):.0f},{max(0, S['y']):.0f}")
+                subprocess.Popen(["hyprarch-ai", "open", mode], start_new_session=True, env=env,
                                  stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             except Exception as e:
                 if debug:

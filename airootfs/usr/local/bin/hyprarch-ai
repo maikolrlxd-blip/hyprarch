@@ -244,7 +244,15 @@ place_float() {
   w=$(jq -r '.[0].width / .[0].scale | floor' <<<"$mon"); h=$(jq -r '.[0].height / .[0].scale | floor' <<<"$mon")
   read -r cw ch < <(hyprctl clients -j | jq -r '.[] | select(.class=="hyprarch-ai-float") | "\(.size[0]) \(.size[1])"' | head -1)
   [[ -n ${cw:-} && -n ${w:-} ]] || return 0
-  hyprctl eval "hl.dispatch(hl.dsp.window.move({ x = $((w - cw - 24)), y = $((h - ch - 24)), window = \"class:^(hyprarch-ai-float)\$\" }))" >/dev/null 2>&1
+  local x=$((w - cw - 24)) y=$((h - ch - 24)) ax ay
+  # si viene de un clic en Claudito, el chat sale justo encima de él (como un globo); si no, abajo a la derecha
+  if [[ ${HYPRARCH_ANCHOR:-} =~ ^([0-9]+),([0-9]+)$ ]]; then
+    ax=${BASH_REMATCH[1]}; ay=${BASH_REMATCH[2]}
+    x=$((ax - cw / 2)); y=$((ay - ch - 70))
+    (( x > w - cw - 8 )) && x=$((w - cw - 8)); (( x < 8 )) && x=8
+    (( y > h - ch - 8 )) && y=$((h - ch - 8)); (( y < 90 )) && y=90     # deja sitio a la barra superior y a la tira del chat
+  fi
+  hyprctl eval "hl.dispatch(hl.dsp.window.move({ x = $x, y = $y, window = \"class:^(hyprarch-ai-float)\$\" }))" >/dev/null 2>&1
 }
 
 choose_mode() {
