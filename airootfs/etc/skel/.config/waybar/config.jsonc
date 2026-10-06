@@ -24,9 +24,18 @@
     "group/conex",
     "battery",
     "custom/theme",
+    "custom/control",
     "clock",
     "custom/power"
   ],
+
+  // Centro de control (Wi-Fi, volumen, brillo, modos, notificaciones): se abre aquí o con SUPER + X
+  "custom/control": {
+    "format": "",
+    "tooltip-format": "Centro de control (SUPER + X)",
+    "tooltip": true,
+    "on-click": "hyprarch-control"
+  },
 
   // Apps abiertas, como la barra de Windows: clic = abrir/traer, clic central = cerrar
   "wlr/taskbar": {

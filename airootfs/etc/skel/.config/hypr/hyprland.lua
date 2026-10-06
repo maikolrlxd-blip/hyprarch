@@ -302,6 +302,7 @@ hl.bind(mod .. " + Return", hl.dsp.exec_cmd(terminal))
 hl.bind(mod .. " + Super_L", hl.dsp.exec_cmd(menu), { release = true })
 hl.bind(mod .. " + B",      hl.dsp.exec_cmd(browser))
 hl.bind(mod .. " + E",      hl.dsp.exec_cmd(files))
+hl.bind(mod .. " + X",      hl.dsp.exec_cmd("hyprarch-control"))                                    -- centro de control (volumen, Wi-Fi, modos…)
 hl.bind(mod .. " + N",      hl.dsp.exec_cmd("hyprarch-wifi"))                                       -- redes Wi-Fi (panel animado, sin terminal)
 hl.bind(mod .. " + A",      hl.dsp.exec_cmd("hyprarch-ai ask"))             -- caja rápida: una pregunta suelta, sin guardar nada
 hl.bind(mod .. " + I", hl.dsp.exec_cmd("hyprarch-apps"))                                              -- instalar apps y juegos (menú)

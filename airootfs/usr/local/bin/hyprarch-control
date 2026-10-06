@@ -1,0 +1,437 @@
+#!/usr/bin/env python3
+"""hyprarch-control — el centro de control (como el de Windows, a nuestro estilo).
+
+Se abre desde el icono de la barra o con SUPER+X y se CIERRA del todo al terminar: no queda ningún proceso residente.
+Una segunda llamada lo cierra.
+
+  · Atajos rápidos: Wi-Fi (clic derecho = elegir red), Bluetooth, No molestar, Ahorro (perfil ligero), Colores, Bloquear.
+  · Volumen y brillo con deslizadores (el brillo solo si el equipo tiene pantalla regulable).
+  · Modos: gamer, cine, estudio, trabajo y normal (uno a la vez).
+  · Notificaciones recientes.
+Esc, un clic fuera o elegir algo lo cierran.
+
+Todas las consultas al sistema llevan límite de tiempo: nada puede colgar el panel (p. ej. Bluetooth sin controlador).
+"""
+import os
+import re
+import signal
+import subprocess
+import sys
+import time
+
+if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza solo con el entorno correcto
+    env = dict(os.environ)
+    env["LD_PRELOAD"] = (env.get("LD_PRELOAD", "") + " /usr/lib/libgtk4-layer-shell.so").strip()
+    env["GSK_RENDERER"] = "cairo"
+    os.execvpe(sys.executable, [sys.executable] + sys.argv, env)
+
+import fcntl
+
+RUN = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+PIDFILE = os.path.join(RUN, "hyprarch-control.pid")
+lock = open(os.path.join(RUN, "hyprarch-control.lock"), "w")
+try:
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except OSError:                                       # ya hay uno abierto: esta llamada lo cierra
+    try:
+        os.kill(int(open(PIDFILE).read().strip()), signal.SIGTERM)
+    except (OSError, ValueError):
+        pass
+    sys.exit(0)
+open(PIDFILE, "w").write(str(os.getpid()))
+
+import gi
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
+gi.require_version("Gtk4LayerShell", "1.0")
+from gi.repository import Gdk, GLib, Gtk, Gtk4LayerShell as LS  # noqa: E402
+
+CFG = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
+SOUNDS = "/usr/share/hyprarch/sounds"
+PANEL_W = 392
+BAR_SPACE = 76
+MODES = (("gamer", "Gamer"), ("cine", "Cine"), ("estudio", "Estudio"), ("trabajo", "Trabajo"), ("normal", "Normal"))
+
+
+def sh(*cmd, t=1.5):
+    """Ejecuta una consulta con límite de tiempo; nunca lanza excepciones ni cuelga."""
+    try:
+        return subprocess.run(list(cmd), capture_output=True, text=True, timeout=t, stdin=subprocess.DEVNULL).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+def bg(*cmd):
+    try:
+        subprocess.Popen(list(cmd), start_new_session=True, stdin=subprocess.DEVNULL,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except OSError:
+        pass
+
+
+def play(name):
+    path = os.path.join(SOUNDS, name)
+    if os.path.exists(path):
+        for cmd in (["pw-play", "--volume", "0.5", path], ["paplay", path]):
+            try:
+                subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return
+            except OSError:
+                continue
+
+
+def read_first(path):
+    try:
+        return open(path, encoding="utf-8").read().strip()
+    except OSError:
+        return ""
+
+
+# ---- estado del sistema (cada función es rápida y acotada) ----
+def wifi_on():
+    return sh("nmcli", "radio", "wifi") == "enabled"
+
+
+def bt_state():
+    """None si el equipo no tiene Bluetooth (no se muestra); True/False si está encendido."""
+    try:
+        if not os.listdir("/sys/class/bluetooth"):
+            return None
+    except OSError:
+        return None
+    return "Powered: yes" in sh("bluetoothctl", "show", t=1.2)
+
+
+def dnd_on():
+    return "do-not-disturb" in sh("makoctl", "mode").split()
+
+
+def volume():
+    m = re.search(r"Volume:\s*([0-9.]+)(.*)", sh("wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@"))
+    if not m:
+        return None, False
+    return int(round(float(m.group(1)) * 100)), "MUTED" in m.group(2)
+
+
+def brightness():
+    out = sh("brightnessctl", "-c", "backlight", "-m")
+    m = re.search(r",(\d+)%,", out)
+    return int(m.group(1)) if m else None
+
+
+def perf():
+    return read_first(os.path.join(CFG, "hyprarch", "perf.effective")) or "full"
+
+
+def current_mode():
+    return read_first(os.path.join(CFG, "hyprarch", "mode")) or "normal"
+
+
+def recent_notifications(n=4):
+    """Resúmenes de las últimas notificaciones (makoctl history)."""
+    out, items = sh("makoctl", "history"), []
+    for line in out.splitlines():
+        m = re.match(r"Notification \d+: (.*)", line)
+        if m:
+            items.append(m.group(1).strip())
+        if len(items) >= n:
+            break
+    return items
+
+
+CSS = b"""
+window { background: transparent; }
+.panel { background-color: rgba(9, 14, 21, 0.95);
+         background-image: radial-gradient(circle at 12% 120%, rgba(94, 242, 200, 0.12), rgba(94, 242, 200, 0.0) 60%),
+                           linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.0) 30%);
+         border: 1px solid rgba(255,255,255,0.10); border-radius: 26px; padding: 18px;
+         box-shadow: 0 18px 50px rgba(0,0,0,0.65), 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.10); }
+.sec { color: #93a4ad; font-size: 11px; font-weight: 700; letter-spacing: 0.6px; }
+.tile { background: rgba(255,255,255,0.075); border: none; border-radius: 16px; padding: 10px 12px; min-height: 0;
+        transition: background 160ms ease-out, box-shadow 160ms ease-out; }
+.tile:hover { background: rgba(255,255,255,0.13); }
+.tile.on { background: #5ef2c8; box-shadow: 0 4px 18px rgba(94,242,200,0.30); }
+.tile .g { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 17px; color: #e8f0f3; }
+.tile .n { font-size: 12px; font-weight: 700; color: #e8f0f3; }
+.tile .s { font-size: 10.5px; color: #93a4ad; }
+.tile.on .g, .tile.on .n { color: #07140f; }
+.tile.on .s { color: rgba(7, 20, 15, 0.70); }
+.sg { font-family: "JetBrainsMono Nerd Font", monospace; font-size: 15px; color: #cfdbe0; background: transparent; border: none;
+      min-width: 28px; min-height: 0; padding: 0; }
+.sg:hover { color: #ffffff; }
+scale trough { background: rgba(255,255,255,0.10); border-radius: 999px; min-height: 8px; }
+scale highlight { background: #5ef2c8; border-radius: 999px; }
+scale slider { background: #ffffff; border-radius: 999px; min-width: 18px; min-height: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+.pv { color: #93a4ad; font-size: 11px; min-width: 34px; }
+.mode { background: rgba(255,255,255,0.075); color: #dfe9ed; border: none; border-radius: 999px; padding: 5px 12px; min-height: 0;
+        font-size: 11.5px; font-weight: 600; transition: background 140ms ease-out, color 140ms ease-out; }
+.mode:hover { background: rgba(255,255,255,0.15); }
+.mode.on { background: #ffffff; color: #0a0f14; }
+.note { color: #cfdbe0; font-size: 12px; }
+.none { color: #6f8590; font-size: 12px; }
+"""
+
+
+def ease_out_back(x):
+    c1, c3 = 1.2, 2.2
+    return 1 + c3 * (x - 1) ** 3 + c1 * (x - 1) ** 2
+
+
+class App(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id=None)
+        self.panel = None
+        self.closing = False
+        self.tiles = {}
+        self.mode_btns = {}
+        self.vol_scale = None
+        self.vol_label = None
+        self.vol_glyph = None
+        self.pending = {}
+
+    # ---- apertura / cierre con animación corta ----
+    def close_panel(self, sound=True):
+        if self.closing:
+            return
+        self.closing = True
+        if sound:
+            play("menu-back.wav")
+        t0 = time.monotonic()
+
+        def step():
+            k = min(1.0, (time.monotonic() - t0) / 0.14)
+            self.panel.set_opacity(1.0 - k)
+            self.panel.set_margin_bottom(BAR_SPACE - int(18 * k))
+            if k >= 1.0:
+                self.quit()
+                return False
+            return True
+        GLib.timeout_add(16, step)
+
+    def animate_in(self):
+        t0 = time.monotonic()
+
+        def step():
+            k = min(1.0, (time.monotonic() - t0) / 0.28)
+            self.panel.set_opacity(min(1.0, k * 2.5))
+            self.panel.set_margin_bottom(BAR_SPACE - 26 + int(26 * ease_out_back(k)))
+            return k < 1.0
+        GLib.timeout_add(16, step)
+
+    # ---- piezas ----
+    def make_tile(self, key, glyph, name, state_text, on, on_click, on_right=None):
+        b = Gtk.Button()
+        b.add_css_class("tile")
+        col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        g = Gtk.Label(label=glyph, xalign=0.0)
+        g.add_css_class("g")
+        n = Gtk.Label(label=name, xalign=0.0)
+        n.add_css_class("n")
+        s = Gtk.Label(label=state_text, xalign=0.0)
+        s.add_css_class("s")
+        for w in (g, n, s):
+            col.append(w)
+        b.set_child(col)
+        if on:
+            b.add_css_class("on")
+        b.connect("clicked", lambda _b: on_click())
+        if on_right:
+            rc = Gtk.GestureClick()
+            rc.set_button(3)
+            rc.connect("released", lambda *_a: on_right())
+            b.add_controller(rc)
+        self.tiles[key] = (b, s)
+        return b
+
+    def set_tile(self, key, on, text):
+        b, s = self.tiles[key]
+        (b.add_css_class if on else b.remove_css_class)("on")
+        s.set_text(text)
+
+    def slider(self, glyph, value, on_change, on_glyph=None):
+        row = Gtk.Box(spacing=8)
+        gl = Gtk.Button(label=glyph)
+        gl.add_css_class("sg")
+        if on_glyph:
+            gl.connect("clicked", lambda _b: on_glyph())
+        sc = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0, 100, 1)
+        sc.set_draw_value(False)
+        sc.set_hexpand(True)
+        sc.set_value(value)
+        pv = Gtk.Label(label=f"{value}%", xalign=1.0)
+        pv.add_css_class("pv")
+        sc.connect("value-changed", lambda s: (pv.set_text(f"{int(s.get_value())}%"), on_change(int(s.get_value()))))
+        row.append(gl)
+        row.append(sc)
+        row.append(pv)
+        return row, sc, pv, gl
+
+    def debounced(self, key, fn, ms=70):
+        """Agrupa los cambios rápidos de un deslizador (así no se lanzan decenas de comandos)."""
+        if key in self.pending:
+            GLib.source_remove(self.pending[key])
+        self.pending[key] = GLib.timeout_add(ms, lambda: (self.pending.pop(key, None), fn(), False)[2])
+
+    # ---- acciones ----
+    def toggle_wifi(self):
+        want = not wifi_on()
+        sh("nmcli", "radio", "wifi", "on" if want else "off")
+        self.set_tile("wifi", want, "Conectado" if want else "Apagado")
+
+    def toggle_bt(self):
+        want = not bt_state()
+        sh("bluetoothctl", "power", "on" if want else "off", t=2.0)
+        self.set_tile("bt", want, "Encendido" if want else "Apagado")
+
+    def toggle_dnd(self):
+        sh("makoctl", "mode", "-t", "do-not-disturb")
+        on = dnd_on()
+        self.set_tile("dnd", on, "Silencio" if on else "Avisos activos")
+
+    def toggle_perf(self):
+        want = "full" if perf() == "lite" else "lite"
+        bg("hyprarch-perf", want)
+        self.set_tile("perf", want == "lite", "Ligero" if want == "lite" else "Completo")
+
+    def set_volume(self, v):
+        self.debounced("vol", lambda: sh("wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", f"{v}%"))
+
+    def toggle_mute(self):
+        sh("wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle")
+        _v, muted = volume()
+        self.vol_glyph.set_label("" if muted else "")
+
+    def pick_mode(self, mode):
+        bg("hyprarch-mode", "set", mode)
+        for k, b in self.mode_btns.items():
+            (b.add_css_class if k == mode else b.remove_css_class)("on")
+        play("menu-select.wav")
+
+    def run_and_close(self, *cmd):
+        bg(*cmd)
+        self.close_panel(sound=False)
+
+    def do_activate(self):
+        prov = Gtk.CssProvider()
+        prov.load_from_data(CSS)
+        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), prov, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        win = Gtk.ApplicationWindow(application=self)
+        LS.init_for_window(win)
+        LS.set_layer(win, LS.Layer.OVERLAY)
+        for edge in (LS.Edge.TOP, LS.Edge.BOTTOM, LS.Edge.LEFT, LS.Edge.RIGHT):      # toda la pantalla, transparente: un clic fuera cierra
+            LS.set_anchor(win, edge, True)
+        LS.set_exclusive_zone(win, -1)
+        LS.set_namespace(win, "hyprarch-control")
+        LS.set_keyboard_mode(win, LS.KeyboardMode.EXCLUSIVE)
+
+        root = Gtk.Box()
+        root.set_hexpand(True)
+        root.set_vexpand(True)
+        out = Gtk.GestureClick()
+        out.connect("pressed", lambda *_a: self.close_panel())
+        root.add_controller(out)
+
+        panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        panel.add_css_class("panel")
+        panel.set_size_request(PANEL_W, -1)
+        panel.set_halign(Gtk.Align.END)
+        panel.set_valign(Gtk.Align.END)
+        panel.set_margin_end(14)
+        panel.set_margin_bottom(BAR_SPACE - 26)
+        panel.set_opacity(0.0)
+        self.panel = panel
+        stop = Gtk.GestureClick()                        # un clic dentro del panel no lo cierra
+        stop.connect("pressed", lambda g, *_a: g.set_state(Gtk.EventSequenceState.CLAIMED))
+        panel.add_controller(stop)
+
+        # --- atajos rápidos ---
+        wifi = wifi_on()
+        bt = bt_state()
+        dnd = dnd_on()
+        lite = perf() == "lite"
+        grid = Gtk.Grid()
+        grid.set_column_homogeneous(True)
+        grid.set_row_homogeneous(True)
+        grid.set_column_spacing(8)
+        grid.set_row_spacing(8)
+        tiles = [
+            self.make_tile("wifi", "", "Wi-Fi", "Conectado" if wifi else "Apagado", wifi, self.toggle_wifi,
+                           lambda: self.run_and_close("hyprarch-wifi")),
+        ]
+        if bt is not None:
+            tiles.append(self.make_tile("bt", "", "Bluetooth", "Encendido" if bt else "Apagado", bt, self.toggle_bt))
+        tiles.append(self.make_tile("dnd", "", "No molestar", "Silencio" if dnd else "Avisos activos", dnd, self.toggle_dnd))
+        tiles.append(self.make_tile("perf", "", "Ahorro", "Ligero" if lite else "Completo", lite, self.toggle_perf))
+        tiles.append(self.make_tile("theme", "", "Colores", "Cambiar tema", False,
+                                    lambda: self.run_and_close("hyprarch-theme")))
+        tiles.append(self.make_tile("lock", "", "Bloquear", "Pantalla", False,
+                                    lambda: self.run_and_close("hyprlock")))
+        for i, t in enumerate(tiles):
+            grid.attach(t, i % 3, i // 3, 1, 1)
+        panel.append(grid)
+
+        # --- volumen y brillo ---
+        v, muted = volume()
+        if v is not None:
+            row, sc, pv, gl = self.slider("" if muted else "", v, self.set_volume, self.toggle_mute)
+            self.vol_scale, self.vol_label, self.vol_glyph = sc, pv, gl
+            panel.append(row)
+        b = brightness()
+        if b is not None:
+            row, *_ = self.slider("", b, lambda x: self.debounced("br", lambda: sh("brightnessctl", "-c", "backlight", "set", f"{max(1, x)}%")))
+            panel.append(row)
+
+        # --- modos ---
+        sec = Gtk.Label(label="MODOS", xalign=0.0)
+        sec.add_css_class("sec")
+        panel.append(sec)
+        modes = Gtk.Box(spacing=6)
+        cur = current_mode()
+        for key, label in MODES:
+            mb = Gtk.Button(label=label)
+            mb.add_css_class("mode")
+            if key == cur:
+                mb.add_css_class("on")
+            mb.connect("clicked", lambda _b, k=key: self.pick_mode(k))
+            self.mode_btns[key] = mb
+            modes.append(mb)
+        panel.append(modes)
+
+        # --- notificaciones recientes ---
+        sec2 = Gtk.Label(label="NOTIFICACIONES", xalign=0.0)
+        sec2.add_css_class("sec")
+        panel.append(sec2)
+        notes = recent_notifications()
+        if notes:
+            for text in notes:
+                lab = Gtk.Label(label="•  " + text, xalign=0.0)
+                lab.add_css_class("note")
+                lab.set_ellipsize(3)
+                lab.set_max_width_chars(44)
+                panel.append(lab)
+        else:
+            none = Gtk.Label(label="Sin notificaciones", xalign=0.0)
+            none.add_css_class("none")
+            panel.append(none)
+
+        root.append(panel)
+        win.set_child(root)
+        keys = Gtk.EventControllerKey()
+        keys.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        keys.connect("key-pressed", lambda _c, kv, *_a: (self.close_panel(), True)[1] if kv == Gdk.KEY_Escape else False)
+        win.add_controller(keys)
+        win.present()
+        play("menu-open.wav")
+        self.animate_in()
+
+
+if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, lambda *_a: os._exit(0))
+    try:
+        App().run([])
+    finally:
+        try:
+            os.remove(PIDFILE)
+        except OSError:
+            pass

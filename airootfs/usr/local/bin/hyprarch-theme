@@ -176,6 +176,10 @@ default-timeout=3000
 [urgency=critical]
 border-color=#${ALERT}cc
 default-timeout=0
+
+# «No molestar» (lo activa el centro de control con: makoctl mode -t do-not-disturb)
+[mode=do-not-disturb]
+invisible=1
 EOF
 }
 
