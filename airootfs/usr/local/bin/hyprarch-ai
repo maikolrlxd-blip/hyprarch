@@ -246,7 +246,7 @@ place_float() {
   [[ -n ${cw:-} && -n ${w:-} ]] || return 0
   # por defecto el chat cae de la isla: centrado y justo debajo (si se pidió un ancla, sale encima de ese punto)
   local x=$(((w - cw) / 2)) y=140 ax ay
-  # si viene de un clic en Claudito, el chat sale justo encima de él (como un globo); si no, abajo a la derecha
+  # si viene de un clic en Hyro, el chat sale justo encima de él (como un globo); si no, abajo a la derecha
   if [[ ${HYPRARCH_ANCHOR:-} =~ ^([0-9]+),([0-9]+)$ ]]; then
     ax=${BASH_REMATCH[1]}; ay=${BASH_REMATCH[2]}
     x=$((ax - cw / 2)); y=$((ay - ch - 165))

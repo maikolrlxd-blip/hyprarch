@@ -118,7 +118,7 @@ def render(accent, accent2, sky_top, sky_horizon, seed):
     bloom = blur(bright, 8) * 0.38 + blur(bright, 30) * 0.42 + blur(bright, 80) * 0.30
     img = img + grid + hline + hz + refl + bloom
 
-    # ---- zonas tranquilas: franja oscura arriba (detrás de la barra) y rincón inferior derecho (detrás de Claudito)
+    # ---- zonas tranquilas: franja oscura arriba (detrás de la barra) y rincón inferior derecho (detrás de Hyro)
     top = 1 - 0.55 * (1 - smoothstep(0.0, H * 0.075, yy))[..., None]
     corner = 1 - 0.42 * np.exp(-(((xx - W * 0.97) / (W * 0.13)) ** 2 + ((yy - H * 0.97) / (H * 0.17)) ** 2))[..., None]
     img *= top * corner
@@ -165,7 +165,7 @@ def render_cine(seed=5):
     dust = blur(np.repeat(dust[..., None], 3, axis=2), 1.2)[..., 0]
     img += (dust * cone)[..., None] * warm * 1.1
 
-    # zonas tranquilas: franja superior (barra) y rincón inferior derecho (Claudito)
+    # zonas tranquilas: franja superior (barra) y rincón inferior derecho (Hyro)
     top = 1 - 0.55 * (1 - smoothstep(0.0, H * 0.075, yy))[..., None]
     corner = 1 - 0.42 * np.exp(-(((xx - W * 0.97) / (W * 0.13)) ** 2 + ((yy - H * 0.97) / (H * 0.17)) ** 2))[..., None]
     img *= top * corner

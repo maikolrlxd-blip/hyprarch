@@ -48,6 +48,11 @@ La ISO queda en `out/`.
 ## Grabar en la USB
 [Rufus](https://rufus.ie) o Ventoy. Se borra todo el contenido de la USB.
 
+## Licencia
+Gratis para uso personal y sin ánimo de lucro ([PolyForm Noncommercial 1.0.0](LICENSE)); el uso comercial requiere un acuerdo
+con el autor. El software de terceros (Arch Linux, Hyprland, etc.) conserva su propia licencia. Detalles en
+[LICENSING.md](LICENSING.md).
+
 ## Personalizar
 - Paquetes: `packages.extra`
 - Idioma, zona horaria, teclado de consola, hostname: variables al inicio de `build.sh`

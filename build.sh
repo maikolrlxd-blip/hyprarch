@@ -12,7 +12,7 @@ LOCALE="es_AR.UTF-8"
 CONSOLE_KEYMAP="la-latin1"
 # ---------------------------------------------------------------------------
 
-# Edición:  personal = la del dueño (Claude Code preinstalado, "Claudito").
+# Edición:  personal = la del dueño (Claude Code preinstalado, "Hyro").
 #           public   = para compartir: NINGUNA IA incluida; cada persona elige la suya con hyprarch-ai.
 EDITION="${HYPRARCH_EDITION:-personal}"
 case "$EDITION" in

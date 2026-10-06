@@ -2,7 +2,7 @@
 # hyprarch-welcome — asistente de PRIMER INICIO: te pregunta tus preferencias con los menús animados de hyprarch.
 #
 #   hyprarch-welcome           corre solo la primera vez (si ya lo hiciste, no hace nada)
-#   hyprarch-welcome --force   lo vuelve a abrir cuando quieras (también desde el menú de Claudito)
+#   hyprarch-welcome --force   lo vuelve a abrir cuando quieras (también desde el menú de Hyro)
 #
 # Pregunta, en este orden: IDIOMA (más de 80, se aplica en el momento y el resto del asistente ya sale en ese idioma) ·
 # colores · estilo visual · robotito (aspecto y nombre) · IA · animación de entrada y sonido · rendimiento.
@@ -53,7 +53,7 @@ if [[ $mode == mi-gusto ]]; then
       $'elite\tElite\t\tangular helmet, light visor\thappy' \
       $'cute\tClassic\t\tfriendly and round\twink' |
     ask_game "$(T w.robot)") && printf '%s\n' "$m" > "$CFG/mascot"
-  n=$(hyprarch-pick --input --title "$(T w.name)" --placeholder "Claudito") && printf 'NAME=%s\n' "$n" > "$CFG/buddy.conf"
+  n=$(hyprarch-pick --input --title "$(T w.name)" --placeholder "Hyro") && printf 'NAME=%s\n' "$n" > "$CFG/buddy.conf"
 
   # 4) la IA
   command -v hyprarch-ai >/dev/null 2>&1 && hyprarch-ai setup-only >/dev/null 2>&1

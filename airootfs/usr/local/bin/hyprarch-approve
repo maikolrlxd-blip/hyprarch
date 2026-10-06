@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""hyprarch-approve — la isla de Claudito: te pregunta antes de que la IA haga algo.
+"""hyprarch-approve — la isla de Hyro: te pregunta antes de que la IA haga algo.
 
 Lo llama Claude Code como «hook» PermissionRequest: recibe por la entrada estándar qué quiere hacer la IA,
-muestra una isla animada arriba, centrada, con Claudito, y devuelve tu decisión.
+muestra una isla animada arriba, centrada, con Hyro, y devuelve tu decisión.
 
 Reglas de seguridad (no se negocian):
   · NUNCA aprueba solo: permitir exige un CLIC tuyo (ninguna tecla permite; Esc rechaza).
@@ -111,7 +111,7 @@ def play(name):
 
 
 def draw_face(_area, cr, w, h):
-    """Claudito vivo: flota, parpadea, la antena se mueve y los ojos miran el botón que tocas."""
+    """Hyro vivo: flota, parpadea, la antena se mueve y los ojos miran el botón que tocas."""
     t = time.monotonic() - ST["t0"]
     cx, cy = w / 2, h / 2 + 4
     r = min(w, h) * 0.30
@@ -244,7 +244,7 @@ class App(Gtk.Application):
             say("allow")
             play("menu-select.wav")
         elif behavior == "deny":
-            say("deny", "La persona rechazó esta acción desde Claudito.")
+            say("deny", "La persona rechazó esta acción desde Hyro.")
             play("menu-select.wav")
         self.animate_out()
 
@@ -330,7 +330,7 @@ class App(Gtk.Application):
         allow = Gtk.Button(label="Permitir")
         allow.add_css_class("allow")
         allow.connect("clicked", lambda _b: self.decide("allow"))
-        # los ojos de Claudito miran el botón sobre el que está el ratón
+        # los ojos de Hyro miran el botón sobre el que está el ratón
         for btn, look, mood in ((deny, -1.0, "deny"), (allow, 1.0, "allow")):
             m = Gtk.EventControllerMotion()
             m.connect("enter", lambda *_a, lk=look, md=mood: ST.update(look=lk, mood=md))

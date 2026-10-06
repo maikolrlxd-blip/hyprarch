@@ -7,7 +7,7 @@ b	Menú de inicio (apps y búsqueda)		SUPER (sola)
 c	Firefox		SUPER + B
 d	Archivos		SUPER + E
 e	Preguntar algo rápido a la IA (no se guarda)		SUPER + A
-f	Chat flotante con la IA (o clic en Claudito)		SUPER + SHIFT + A
+f	Chat flotante con la IA (o clic en Hyro)		SUPER + SHIFT + A
 g	Redes Wi-Fi		SUPER + N
 h	Colores del sistema		SUPER + T
 i	CERRAR ventana		SUPER + Q  /  ALT + F4

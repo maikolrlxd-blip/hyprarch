@@ -21,7 +21,7 @@ buscamos fallos, cosas que confundan y cosas que no se vean o suenen bien.
 - [ ] **Sonido:** ¿suena la animación de entrada y los menús? ¿Hay chasquidos o ruidos raros? ¿Funcionan las teclas de volumen y se ve el aviso?
 - [ ] **Menús:** **SUPER+D** (aplicaciones), **SUPER+ESC** (apagar/bloquear), **SUPER+T** (colores), **SUPER+I** (instalar apps), **SUPER+F1** (todos los atajos). ¿Van fluidos?
 - [ ] **Teclado y ratón/trackpad:** ¿funcionan bien? ¿Las teclas especiales (brillo, volumen)?
-- [ ] **Modos** (gamer, cine, estudio, trabajo): desde el menú de Claudito (clic en el robot). ¿Cambian el fondo y abren sus apps?
+- [ ] **Modos** (gamer, cine, estudio, trabajo): desde el menú de Hyro (clic en el robot). ¿Cambian el fondo y abren sus apps?
 - [ ] **Navegador y archivos:** abre Firefox y una web; abre la carpeta de archivos.
 - [ ] **Rendimiento:** ¿se siente rápido o se arrastra? ¿Se calienta el equipo? ¿Cuánto dura la batería (portátiles)?
 - [ ] **Suspender y bloquear** la pantalla, y volver.

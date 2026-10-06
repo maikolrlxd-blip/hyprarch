@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""hyprarch-menu — el menú animado del personajito (Buddy / Claudito).
+"""hyprarch-menu — el menú animado del personajito (Buddy / Hyro).
 
 Aparece junto al personaje con un efecto de resorte: botones redondos para los modos, tarjetas con brillo
 al pasar el mouse y la actividad reciente de las IAs dentro del mismo panel.
@@ -1030,7 +1030,7 @@ def render_frames(outdir):
     out = Path(outdir)
     out.mkdir(parents=True, exist_ok=True)
     pal = load_palette()
-    base = dict(closing=None, hover=None, anchor=(1190, 740), page="main", ptime=0.0, hov={}, mode="gamer", name="Claudito",
+    base = dict(closing=None, hover=None, anchor=(1190, 740), page="main", ptime=0.0, hov={}, mode="gamer", name="Hyro",
                 activity=[("17:20", "working", "", "[codex] Revisando hyprarch-theme"),
                           ("17:22", "done", "", "[claude] Subí las correcciones"),
                           ("17:31", "error", "", "[claude] La compilación falló"),

@@ -1,6 +1,6 @@
 {
   // Barra de tareas estilo Windows, abajo: espacios a la izquierda, inicio y apps abiertas CENTRADAS, bandeja y reloj a la derecha.
-  // Arriba queda libre para la isla de Claudito (hyprarch-island), que cuelga del borde superior.
+  // Arriba queda libre para la isla de Hyro (hyprarch-island), que cuelga del borde superior.
   "layer": "top",
   "position": "bottom",
   "height": 50,

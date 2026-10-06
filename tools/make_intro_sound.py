@@ -8,7 +8,7 @@ oscura y corta (no hay siseo).
 Está sincronizado con hyprarch-intro (los tiempos son los mismos):
   0.05 línea de horizonte  ·  0.55 zumbido grave de la rejilla  ·  0.9-2.5 sale el sol
   1.2-1.9 el robotito se materializa (arpegio)  ·  1.9-2.9 título (una nota por letra)  ·  3.0-4.0 subtítulo (toquecitos)
-  3.1 destello suave  ·  3.9-5.3 entra Claudito (arco)  ·  5.3 campanita  ·  5.6 golpe grave final  ·  6.4 fin
+  3.1 destello suave  ·  3.9-5.3 entra Hyro (arco)  ·  5.3 campanita  ·  5.6 golpe grave final  ·  6.4 fin
 
 Uso:  python tools/make_intro_sound.py [salida.wav]
 Requiere numpy. Genera un WAV estéreo de 44,1 kHz (~1,2 MB).
@@ -106,7 +106,7 @@ for f, at, pan in ((1567.98, 3.10, -0.2), (2093.00, 3.22, 0.2)):
 add(marimba(784.0, 0.5, 6.0), 4.0, 0.12, -0.1)
 add(marimba(1046.5, 0.7, 5.0), 4.12, 0.12, 0.1)
 
-# ---------------------------------------------------------------- 3.9-5.3 entra Claudito: arco suave de tono que sube y baja (viaja de derecha a centro)
+# ---------------------------------------------------------------- 3.9-5.3 entra Hyro: arco suave de tono que sube y baja (viaja de derecha a centro)
 arc = np.concatenate([glide(220, 660, 0.7), glide(660, 440, 0.7)])
 n = len(arc)
 arc = arc * np.sin(np.pi * np.linspace(0, 1, n)) ** 2

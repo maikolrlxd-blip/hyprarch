@@ -6,7 +6,7 @@ proceso residente, así que en reposo no gasta nada. Si ya está abierto, una se
 
   · Buscador arriba (escribe y Enter abre la primera coincidencia).
   · Apps ancladas en rejilla (~/.config/hyprarch/pinned, un id .desktop por línea; si no existe se eligen las instaladas).
-  · «Todas las apps» y atajo a Claudito (hablar con la IA).
+  · «Todas las apps» y atajo a Hyro (hablar con la IA).
   · Pie con tu usuario y el botón de apagar.
 Esc, un clic fuera o elegir algo lo cierran.
 """
@@ -51,6 +51,19 @@ BAR_SPACE = 76                                        # sitio que ocupa la barra
 COLS = 6
 DEFAULT_PINNED = ["firefox", "thunar", "kitty", "org.xfce.mousepad", "org.pulseaudio.pavucontrol", "mpv",
                   "org.pwmt.zathura", "nm-connection-editor", "blueman-manager", "btop", "nvim", "hyprarch-report"]
+
+
+def buddy_name():
+    """Nombre de la mascota que eligió la persona (buddy.conf, NAME=...). Por defecto «Hyro»."""
+    import re
+    try:
+        for line in open(os.path.join(CFG, "hyprarch", "buddy.conf"), encoding="utf-8").read().splitlines():
+            m = re.match(r"""^\s*NAME\s*=\s*['"]?([^'"#\n]{1,24}?)['"]?\s*$""", line)
+            if m and m.group(1).strip():
+                return m.group(1).strip()
+    except OSError:
+        pass
+    return "Hyro"
 
 
 def play(name):
@@ -312,7 +325,7 @@ class App(Gtk.Application):
         user = Gtk.Label(label=GLib.get_real_name() if GLib.get_real_name() not in ("", "Unknown") else GLib.get_user_name(), xalign=0.0)
         user.add_css_class("user")
         user.set_hexpand(True)
-        ia = Gtk.Button(label="Hablar con Claudito")
+        ia = Gtk.Button(label=f"Hablar con {buddy_name()}")
         ia.add_css_class("ia")
         ia.connect("clicked", lambda _b: (subprocess.Popen(["hyprarch-ai", "open", "float"], start_new_session=True,
                                                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
