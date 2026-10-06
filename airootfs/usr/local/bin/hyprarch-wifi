@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+# hyprarch-wifi — panel de Wi-Fi con el menú animado (SUPER+N o clic en la red de la barra). Sin terminal.
+#
+#   hyprarch-wifi            abre el panel: redes cercanas ordenadas por señal; elige una para conectarte
+#   hyprarch-wifi status     dice a qué red estás conectado (texto simple, para scripts y para las IAs)
+#   hyprarch-wifi list       redes cercanas en JSON (para scripts y para las IAs)
+#   hyprarch-wifi connect SSID [CONTRASEÑA]
+#
+# Usa NetworkManager (nmcli). HYPRARCH_WIFI_FAKE=1 muestra redes de ejemplo (para probar el diseño sin tarjeta Wi-Fi).
+set -u
+
+T()    { command -v hyprarch-i18n >/dev/null 2>&1 && hyprarch-i18n "$1" "${2:-$1}" || printf '%s' "${2:-$1}"; }
+note() { command -v notify-send >/dev/null 2>&1 && notify-send -t 5000 "$1" "${2:-}"; }
+FAKE=${HYPRARCH_WIFI_FAKE:-}
+
+command -v nmcli >/dev/null 2>&1 || [[ -n $FAKE ]] || { echo "falta NetworkManager (nmcli)" >&2; exit 1; }
+
+# ---------- redes cercanas: una línea por red "activa<TAB>ssid<TAB>señal<TAB>seguridad", sin repetidas, la mejor señal primero
+scan() {
+  if [[ -n $FAKE ]]; then
+    local U=$'\037'
+    printf '%s\n' "*${U}Casa-Maikol${U}88${U}WPA2" "${U}Movistar_5G${U}74${U}WPA2" "${U}Cafeteria Libre${U}61${U}" \
+      "${U}Vecino_2.4${U}42${U}WPA2" "${U}Red con ñ y acentos${U}30${U}WPA3" "${U}DIRECT-TV${U}18${U}WPA2"
+    return 0
+  fi
+  nmcli dev wifi rescan >/dev/null 2>&1 || true
+  nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY dev wifi list 2>/dev/null | awk -F: '
+    { gsub(/\\:/, "\001"); n = split($0, f, ":")
+      for (i = 1; i <= 4; i++) gsub(/\001/, ":", f[i])
+      ssid = f[2]; if (ssid == "") next
+      act = (f[1] == "*") ? "*" : ""; sec = (f[4] == "--") ? "" : f[4]
+      if (!(ssid in best) || f[3] + 0 > sig[ssid] + 0 || act == "*") { best[ssid] = 1; sig[ssid] = f[3]; a[ssid] = act; s[ssid] = sec }
+    }
+    END { for (k in best) printf "%s\037%s\037%s\037%s\n", a[k], k, sig[k], s[k] }' | sort -t$'\037' -k1,1r -k3,3nr
+}
+
+json_escape() { local s=${1//\\/\\\\}; s=${s//\"/\\\"}; printf '%s' "$s"; }
+
+cmd_list() {
+  local first=1 act ssid sig sec
+  printf '['
+  while IFS=$'\037' read -r act ssid sig sec; do
+    (( first )) || printf ','; first=0
+    printf '{"ssid":"%s","signal":%s,"secure":%s,"connected":%s}' "$(json_escape "$ssid")" "${sig:-0}" \
+      "$([[ -n $sec ]] && echo true || echo false)" "$([[ $act == '*' ]] && echo true || echo false)"
+  done < <(scan)
+  printf ']\n'
+}
+
+cmd_status() {
+  local s
+  if [[ -n $FAKE ]]; then echo "conectado: Casa-Maikol"; return 0; fi
+  s=$(nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | awk -F: '$1=="yes"{print $2; exit}')
+  if [[ -n $s ]]; then echo "conectado: $s"; else
+    case $(nmcli radio wifi 2>/dev/null) in enabled) echo "sin conexión (Wi-Fi encendido)" ;; *) echo "Wi-Fi apagado" ;; esac
+  fi
+}
+
+# ---------- conectar
+connect_to() {  # ssid [contraseña]
+  local ssid=$1 pw=${2:-}
+  if [[ -n $FAKE ]]; then note "$(T wifi.connected 'Conectado')" "$ssid (modo de ejemplo)"; return 0; fi
+  note "$(T wifi.connecting 'Conectando…')" "$ssid"
+  if [[ -n $pw ]]; then
+    nmcli dev wifi connect "$ssid" password "$pw" >/dev/null 2>&1
+  elif nmcli -t -f NAME con show 2>/dev/null | grep -Fxq -- "$ssid"; then
+    nmcli con up id "$ssid" >/dev/null 2>&1
+  else
+    nmcli dev wifi connect "$ssid" >/dev/null 2>&1
+  fi
+  local rc=$?
+  if (( rc == 0 )); then note "$(T wifi.connected 'Conectado')" "$ssid"; else note "$(T wifi.failed 'No se pudo conectar')" "$(T wifi.failed.d 'Revisa la contraseña e inténtalo otra vez')"; fi
+  return $rc
+}
+
+ask_password() {  # ssid
+  hyprarch-pick --input --title "$(T wifi.pass 'Contraseña de') $1" --placeholder "$(T wifi.pass.ph 'Escríbela y pulsa Enter')"
+}
+
+# ---------- panel
+signal_color() { local s=$1; [[ $s =~ ^[0-9]+$ ]] || s=0; if (( s >= 66 )); then echo '#5ef2c8'; elif (( s >= 40 )); then echo '#ffb347'; else echo '#ff6b81'; fi; }
+signal_mood()  { local s=$1; [[ $s =~ ^[0-9]+$ ]] || s=0; if (( s >= 66 )); then echo happy; elif (( s >= 40 )); then echo wink; else echo surprised; fi; }
+
+panel() {
+  local items act ssid sig sec desc state
+  if [[ -z $FAKE ]] && [[ $(nmcli radio wifi 2>/dev/null) != enabled ]]; then
+    sel=$(printf '%s\n' $'on\tEncender el Wi-Fi\t#5ef2c8\tNo hay conexión inalámbrica ahora mismo\tsleepy' |
+      hyprarch-pick --layout orbit --title "$(T wifi.title 'Redes Wi-Fi')") || return 0
+    [[ $sel == on ]] && { nmcli radio wifi on; sleep 2; panel; }
+    return 0
+  fi
+  items=""
+  while IFS=$'\037' read -r act ssid sig sec; do
+    [[ -n $ssid ]] || continue
+    state=""
+    [[ $act == '*' ]] && state="$(T wifi.current 'Conectada') · "
+    desc="${state}${sig} % · $([[ -n $sec ]] && echo "$(T wifi.secure 'con clave')" || echo "$(T wifi.open 'abierta')")"
+    items+="net:$ssid"$'\t'"${act:+● }$ssid"$'\t'"$(signal_color "${sig:-0}")"$'\t'"$desc"$'\t'"$(signal_mood "${sig:-0}")"$'\n'
+  done < <(scan)
+  items+=$'rescan\t↻  Buscar de nuevo\t\tActualiza la lista de redes\thappy\n'
+  items+=$'off\t⏻  Apagar el Wi-Fi\t\tÚtil en modo avión\tsleepy\n'
+  items+=$'adv\t⚙  Ajustes avanzados\t\tIP fija, redes ocultas, VPN\tserious\n'
+  local sel
+  sel=$(printf '%s' "$items" | hyprarch-pick --layout wheel --title "$(T wifi.title 'Redes Wi-Fi')" \
+        --placeholder "$(T ui.search 'Buscar')") || return 0
+  case $sel in
+    net:*)
+      ssid=${sel#net:}
+      # ¿es la red actual? → ofrecer desconectar u olvidar
+      if scan | awk -F$'\037' -v s="$ssid" '$1=="*" && $2==s {f=1} END{exit !f}'; then
+        local a
+        a=$(printf '%s\n' $'down\tDesconectar\t\tSales de esta red\tsleepy' $'forget\tOlvidar esta red\t\tBorra la contraseña guardada\tsurprised' $'back\tVolver\t\t\thappy' |
+            hyprarch-pick --layout orbit --title "$ssid") || return 0
+        case $a in
+          down)   [[ -n $FAKE ]] || nmcli con down id "$ssid" >/dev/null 2>&1; note "$(T wifi.down 'Desconectado')" "$ssid" ;;
+          forget) [[ -n $FAKE ]] || nmcli con delete id "$ssid" >/dev/null 2>&1; note "$(T wifi.forgot 'Red olvidada')" "$ssid" ;;
+        esac
+        return 0
+      fi
+      sec=$(scan | awk -F$'\037' -v s="$ssid" '$2==s {print $4; exit}')
+      local known=0
+      [[ -z $FAKE ]] && nmcli -t -f NAME con show 2>/dev/null | grep -Fxq -- "$ssid" && known=1
+      if [[ -z $sec || $known == 1 ]]; then
+        connect_to "$ssid" &
+      else
+        local pw; pw=$(ask_password "$ssid") || return 0
+        [[ -n $pw ]] && connect_to "$ssid" "$pw" &
+      fi
+      ;;
+    rescan) panel ;;
+    off)    nmcli radio wifi off; note "$(T wifi.off 'Wi-Fi apagado')" ;;
+    adv)    command -v nm-connection-editor >/dev/null && setsid -f nm-connection-editor >/dev/null 2>&1 ;;
+  esac
+}
+
+case "${1:-panel}" in
+  panel)   panel ;;
+  status)  cmd_status ;;
+  list)    cmd_list ;;
+  connect) connect_to "${2:?SSID}" "${3:-}" ;;
+  *) echo "Uso: hyprarch-wifi [panel|status|list|connect SSID [CONTRASEÑA]]" >&2; exit 2 ;;
+esac

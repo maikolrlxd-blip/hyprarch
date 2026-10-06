@@ -132,7 +132,7 @@
     "format-linked": "sin IP",
     "format-disabled": "red desactivada",
     "tooltip-format": "{ifname}  {ipaddr}\n↑ {bandwidthUpBytes}  ↓ {bandwidthDownBytes}",
-    "on-click": "$HOME/.config/hypr/scripts/once.sh hyprarch-nmtui nmtui"
+    "on-click": "hyprarch-wifi"
   },
 
   "bluetooth": {
