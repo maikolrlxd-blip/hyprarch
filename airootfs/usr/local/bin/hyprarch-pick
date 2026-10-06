@@ -832,8 +832,9 @@ def draw_scene(cr, w, h, S, pal, pal_full):
             cr.stroke()
         draw_text(cr, "", sx + 22, sy + sh / 2 + 6, 15, A, pop, center=True)
         if S["query"]:
-            draw_text(cr, S["query"], sx + 44, sy + sh / 2 + 6, 15, FG, pop)
-            ew = text_w(cr, S["query"], 15)
+            shown = "•" * len(S["query"]) if S.get("mask") else S["query"]      # --password: puntos en vez de las letras
+            draw_text(cr, shown, sx + 44, sy + sh / 2 + 6, 15, FG, pop)
+            ew = text_w(cr, shown, 15)
         else:
             draw_text(cr, S["placeholder"], sx + 44, sy + sh / 2 + 6, 14, DIM, pop)
             ew = 0
@@ -1022,6 +1023,7 @@ def run(args):
                                                            (0.58, 0.47, 190, 118, 0.6, 3.1), (0.85, 0.40, 220, 140, 1.2, 4.4),
                                                            (0.46, 0.64, 170, 100, 0.5, 2.2), (0.90, 0.66, 170, 104, 0.85, 5.3))],
              search=("--no-search" not in args and layout not in ("orbit", "row", "game")), query="", scroll=0, idx=([] if layout == "input" else list(range(len(items)))), sel=(-1 if layout == "input" else 0),
+             mask=("--password" in args),
              selk=0.0, t0=time.time(), t=0.0, dt=0.016, last=time.time(), closing=None, close_t0=None, hov={}, hover=None,
              ptr=(640.0, 400.0), result=None, size=(1280, 800), pos={}, tg={}, ripples=[], drift=0.0,
              parts=[(rnd.random(), rnd.random(), rnd.uniform(0.6, 2.0), rnd.uniform(0.8, 2.2), rnd.random() * 6.28, rnd.uniform(0.5, 3)) for _ in range(46)])

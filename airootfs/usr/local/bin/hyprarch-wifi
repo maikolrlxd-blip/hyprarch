@@ -74,7 +74,7 @@ connect_to() {  # ssid [contraseña]
 }
 
 ask_password() {  # ssid
-  hyprarch-pick --input --title "$(T wifi.pass 'Contraseña de') $1" --placeholder "$(T wifi.pass.ph 'Escríbela y pulsa Enter')"
+  hyprarch-pick --input --password --title "$(T wifi.pass 'Contraseña de') $1" --placeholder "$(T wifi.pass.ph 'Escríbela y pulsa Enter')"
 }
 
 # ---------- panel
