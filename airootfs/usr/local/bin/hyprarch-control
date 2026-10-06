@@ -360,7 +360,13 @@ class App(Gtk.Application):
         root.set_hexpand(True)
         root.set_vexpand(True)
         out = Gtk.GestureClick()
-        out.connect("pressed", lambda *_a: self.close_panel())
+
+        def on_outside(_g, _n, x, y):
+            # solo cierra un clic FUERA del panel (reclamar el clic dentro dejaba sin efecto a los botones)
+            ok, r = self.panel.compute_bounds(root)
+            if not ok or not (r.get_x() <= x <= r.get_x() + r.get_width() and r.get_y() <= y <= r.get_y() + r.get_height()):
+                self.close_panel()
+        out.connect("released", on_outside)
         root.add_controller(out)
 
         panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
@@ -372,9 +378,6 @@ class App(Gtk.Application):
         panel.set_margin_bottom(BAR_SPACE - 26)
         panel.set_opacity(0.0)
         self.panel = panel
-        stop = Gtk.GestureClick()                        # un clic dentro del panel no lo cierra
-        stop.connect("pressed", lambda g, *_a: g.set_state(Gtk.EventSequenceState.CLAIMED))
-        panel.add_controller(stop)
 
         # --- atajos rápidos ---
         S = gather()                                    # todas las consultas A LA VEZ: tarda lo que la más lenta, no la suma

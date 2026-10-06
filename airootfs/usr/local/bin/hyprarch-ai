@@ -153,6 +153,8 @@ chat() {
     pause; exit 1
   fi
   provider_extras
+  TRUSTHINT=0
+  [[ $AI == claude && -z ${HYPRARCH_AI_RESUME:-} ]] && ! claude_trusted && TRUSTHINT=1
   intro
   buddy 'done' "¡Listo, hablemos!"
   # El comando lo escribe el usuario: Bash interpreta sus comillas y argumentos.
@@ -227,7 +229,22 @@ intro() {
   printf '%*s' "$pad" ""
   for ((i = 0; i < 20; i++)); do printf '%s━%s' "$M" "$X"; sleep 0.03; done
   sleep 0.2
+  # Primera vez en esta carpeta: Claude pregunta si confías en ella y trae marcado «No, exit». Aquí se explica qué elegir
+  # (la decisión sigue siendo de la persona; hyprarch no la toma por ella). Solo se muestra mientras la carpeta no esté confiada.
+  if (( ${TRUSTHINT:-0} )); then
+    local O=$'\e[38;2;255;179;71m' T=$'\e[1;37m' D2=$'\e[38;2;150;170;180m'
+    printf '\n\n%s  Claude te preguntará si confías en esta carpeta.%s\n' "$O" "$X"
+    printf '%s  Elige %s«Yes, I trust this folder»%s\n' "$D2" "$T" "$X"
+    printf '%s  (flecha ↓ y luego Enter). Solo lo pregunta una vez.%s\n' "$D2" "$X"
+    sleep 4.5
+  fi
   printf '\e[?25h\e[2J\e[H'
+}
+
+# ¿Ya aceptó la persona la confianza de Claude para esta carpeta? (lo guarda Claude en ~/.claude.json)
+claude_trusted() {
+  command -v jq >/dev/null 2>&1 || return 0
+  jq -e --arg h "$HOME" '.projects[$h].hasTrustDialogAccepted == true' "$HOME/.claude.json" >/dev/null 2>&1
 }
 
 # reabre una conversación guardada de un modelo (la elige hyprarch-history)

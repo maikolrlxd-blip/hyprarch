@@ -260,7 +260,14 @@ class App(Gtk.Application):
         root.set_hexpand(True)
         root.set_vexpand(True)
         click_out = Gtk.GestureClick()
-        click_out.connect("pressed", lambda *_a: self.close_menu())
+
+        def on_outside(_g, _n, x, y):
+            # solo cierra un clic FUERA del panel. (Antes el panel «reclamaba» el clic para no cerrarse, y eso dejaba sin
+            # efecto a los botones: se veían iluminarse, pero al hacer clic en una app no pasaba nada.)
+            ok, r = self.panel.compute_bounds(root)
+            if not ok or not (r.get_x() <= x <= r.get_x() + r.get_width() and r.get_y() <= y <= r.get_y() + r.get_height()):
+                self.close_menu()
+        click_out.connect("released", on_outside)
         root.add_controller(click_out)
 
         panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
@@ -271,9 +278,6 @@ class App(Gtk.Application):
         panel.set_margin_bottom(BAR_SPACE - 26)
         panel.set_opacity(0.0)
         self.panel = panel
-        stop = Gtk.GestureClick()                        # un clic dentro del panel no lo cierra
-        stop.connect("pressed", lambda g, *_a: g.set_state(Gtk.EventSequenceState.CLAIMED))
-        panel.add_controller(stop)
 
         entry = Gtk.SearchEntry()
         entry.add_css_class("search")
