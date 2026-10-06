@@ -179,7 +179,7 @@
     "return-type": "json",
     "interval": 1,
     "tooltip": true,
-    "on-click": "bash \"$HOME/.config/hypr/scripts/once.sh\" hyprarch-ai hyprarch-ai chat"
+    "on-click": "hyprarch-ai open"
   },
 
   "custom/theme": {

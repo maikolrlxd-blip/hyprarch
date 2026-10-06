@@ -864,8 +864,8 @@ def child_env():
 def run_action(aid):
     scripts = os.path.expanduser("~/.config/hypr/scripts/once.sh")
     cmds = {
-        "chat": ["bash", scripts, "hyprarch-ai", "hyprarch-ai", "chat"],
-        "ia": ["hyprarch-ai", "pick"],
+        "chat": ["hyprarch-ai", "open"],
+        "ia": ["hyprarch-ai", "how"],
         "colors": ["hyprarch-theme"],
         "modes": ["hyprarch-mode", "edit"],
     }
