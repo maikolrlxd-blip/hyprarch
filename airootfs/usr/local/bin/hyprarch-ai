@@ -295,9 +295,15 @@ choose_mode() {
   echo "$m"
 }
 
+# Si la isla está viva, el chat es ella misma (un cuadro para escribir justo debajo de la pastilla): se le avisa y listo.
+island_chat() {
+  pkill -USR1 -f 'bin/hyprarch-islan[d]' 2>/dev/null
+}
+
 # pregunta de una sola vez (sin abrir el chat); la respuesta se muestra en una ventanita
 quick_ask() {
   [[ -n $AI ]] || { setup || return 1; }
+  island_chat && return 0
   local q out bin
   q=$(hyprarch-pick --input --title "Pedile algo a la IA" --placeholder "ej. abrí mis archivos · poné el volumen al 40") || return 0
   [[ -n $q ]] || return 0
@@ -328,6 +334,9 @@ open_ai() {
   local m=${1:-$(get_mode)}
   [[ " ${AI_MODES[*]} " == *" $m "* ]] || m=float
   [[ -n $AI ]] || { setup || return 0; }
+  case $m in
+    float|quick) [[ -z ${HYPRARCH_AI_NOISLAND:-} ]] && island_chat && return 0 ;;
+  esac
   case $m in
     float)  focus_or_launch hyprarch-ai-float -o font_size=10 -o background_opacity=0.92 -o window_padding_width=10 -e hyprarch-ai chat
             place_float; start_bar hyprarch-ai-float ;;

@@ -14,8 +14,10 @@ import json
 import math
 import os
 import random
+import signal
 import subprocess
 import sys
+import threading
 import time
 
 if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza solo con el entorno correcto
@@ -57,15 +59,17 @@ def buddy_name():
 
 NAME = buddy_name()
 SOUNDS = "/usr/share/hyprarch/sounds"
-WIN_W, WIN_H = 580, 206                           # ventana fija y transparente: la isla se dibuja dentro
+WIN_W, WIN_H = 580, 450                           # ventana fija y transparente: la isla se dibuja dentro (solo lo dibujado recibe clics)
 CW, CH = 176, 36                                # pastilla fija: ocupa el hueco reservado en el centro de la barra
 GAP = 8                                           # separación entre la pastilla y el panel desplegado
-EW, EH = 520, 132                                 # panel desplegado (cae debajo de la barra): fila de iconos + tarjeta
+EW, EH = 520, 176                                 # panel desplegado en reposo: encabezado + saludo + cuadro para escribir
+EH_CHAT = 380                                     # el mismo panel crece así cuando hay conversación
+INPUT_H = 54                                      # alto de la fila del cuadro de texto
 TOP = 0                                           # cuelga del borde superior de la pantalla (la barra de tareas está abajo)
 PANEL_PAD = 12                                    # margen sobre el panel para su sombra
-HEAD_H = 38                                       # alto de la fila de iconos
+HEAD_H = 40                                       # alto del encabezado
 
-ST = {"k": 0.0, "target": 0.0, "mood": "idle", "label": NAME, "look": 0.0, "hover": False,
+ST = {"k": 0.0, "target": 0.0, "eh": float(EH), "eh_t": float(EH), "mood": "idle", "label": NAME, "look": 0.0, "hover": False,
       "t0": time.monotonic(), "last_act": time.monotonic(), "phrase": "¿Qué hacemos?", "wink_t": -99.0, "done_t": -99.0}
 
 MOODS = {  # color del brillo y texto corto según lo que hace la IA
@@ -243,6 +247,20 @@ window { background: transparent; }
 .pill { background: rgba(255,255,255,0.08); color: #cfdbe0; border: none; border-radius: 999px; padding: 2px 11px;
         font-size: 11px; font-weight: 600; min-height: 0; transition: background 140ms ease-out, color 140ms ease-out; }
 .pill:hover { background: #ffffff; color: #0a0f14; }
+.pill.sel { background: #5ef2c8; color: #0a0f14; }
+entry.in { background: rgba(255,255,255,0.075); color: #f1f6f8; border: 1px solid rgba(255,255,255,0.12); border-radius: 999px;
+           padding: 0 18px; min-height: 36px; font-size: 13.5px; caret-color: #5ef2c8; box-shadow: none;
+           transition: border-color 140ms ease-out, background 140ms ease-out; }
+entry.in:focus-within { border-color: #5ef2c8; background: rgba(255,255,255,0.10); }
+entry.in text { color: #f1f6f8; }
+entry.in placeholder { color: #7f929b; }
+.send { background: #5ef2c8; color: #0a0f14; border: none; border-radius: 999px; padding: 0; min-width: 36px; min-height: 36px;
+        font-size: 17px; font-weight: 700; transition: background 140ms ease-out, box-shadow 140ms ease-out; }
+.send:hover { background: #ffffff; box-shadow: 0 3px 14px rgba(94,242,200,0.4); }
+.send:disabled { background: rgba(255,255,255,0.10); color: #5d6f78; }
+scrolledwindow.reply, textview.chat, textview.chat text { background: transparent; }
+textview.chat { color: #dfe9ed; font-size: 13.5px; }
+scrolledwindow.reply scrollbar slider { background: rgba(255,255,255,0.22); border-radius: 999px; min-width: 4px; }
 tooltip { background: rgba(8,12,18,0.96); border-radius: 8px; color: #e6eef1; }
 """
 
@@ -286,6 +304,35 @@ def run(*cmd):
         pass
 
 
+AI_CONF = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "hyprarch", "ai.conf")
+PROV_NAMES = {"claude": "Claude", "codex": "Codex", "gemini": "Gemini", "ollama": "Ollama"}
+
+
+def ai_conf():
+    """(IA elegida, su comando) tal como los guarda hyprarch-ai en ai.conf (líneas AI=... y AI_CMD=...)."""
+    import shlex
+    pid, cmd = "claude", ""
+    try:
+        for line in open(AI_CONF, encoding="utf-8").read().splitlines():
+            k, _, v = line.partition("=")
+            v = " ".join(shlex.split(v)) if v.strip() else ""
+            if k == "AI":
+                pid = v or pid
+            elif k == "AI_CMD":
+                cmd = v
+    except (OSError, ValueError):
+        pass
+    return pid, cmd
+
+
+def set_ai(pid):
+    import shlex
+    cmd = "ollama run llama3.2" if pid == "ollama" else ""
+    os.makedirs(os.path.dirname(AI_CONF), exist_ok=True)
+    with open(AI_CONF, "w", encoding="utf-8") as fh:
+        fh.write("AI=%s\nAI_CMD=%s\n" % (shlex.quote(pid), shlex.quote(cmd)))
+
+
 class App(Gtk.Application):
     def __init__(self):
         super().__init__(application_id=None)
@@ -300,11 +347,28 @@ class App(Gtk.Application):
         self.panel = None
         self.cur_ms = 16
         self.region_dirty = True
+        self.chatting = False          # ¿hay conversación a la vista?
+        self.working = False           # ¿la IA está respondiendo?
+        self.proc = None
+        self.sid = None                # sesión de Claude para seguir la conversación
+        self.entry = self.view = self.buf = self.greet = self.scroll = self.send_btn = self.exp_size = None
+        self.provider = ai_conf()[0]
 
     def tick(self):
         now = time.monotonic()
         dt = min(0.05, now - self.last_tick)
         self.last_tick = now
+        deh = ST["eh_t"] - ST["eh"]
+        if abs(deh) > 0.4:                                                    # el panel crece/encoge suave al empezar la charla
+            ST["eh"] += deh * min(1.0, dt * 13.0)
+            if int(ST["eh"]) != self.exp_size:
+                self.exp_size = int(ST["eh"])
+                self.exp_box.set_size_request(EW, self.exp_size)
+            self.region_dirty = True
+        elif deh:
+            ST["eh"] = ST["eh_t"]
+            self.exp_size = int(ST["eh"])
+            self.exp_box.set_size_request(EW, self.exp_size)
         k, tgt = ST["k"], ST["target"]
         self.vel += (300.0 * (tgt - k) - 21.0 * self.vel) * dt          # muelle amortiguado: rebota un poco
         ST["k"] = max(-0.06, min(1.12, k + self.vel * dt))
@@ -312,7 +376,7 @@ class App(Gtk.Application):
         self.exp_box.set_opacity(max(0.0, (kk - 0.6) / 0.4))
         self.exp_box.set_sensitive(kk > 0.9)
         self.exp_box.set_visible(kk > 0.4)
-        busy = abs(tgt - ST["k"]) > 0.003 or abs(self.vel) > 0.02             # solo se anima a pleno ritmo mientras se mueve
+        busy = abs(tgt - ST["k"]) > 0.003 or abs(self.vel) > 0.02 or abs(deh) > 0.4   # solo se anima a pleno ritmo mientras se mueve
         self.canvas.queue_draw()
         if kk > 0.01 or busy:
             self.panel.set_visible(True)
@@ -336,7 +400,7 @@ class App(Gtk.Application):
     def panel_rect(self, W):
         """El panel desplegado: cae justo debajo de la barra, centrado."""
         k = max(0.0, ST["k"])
-        w, h = lerp(CW, EW, k), lerp(0, EH, k)
+        w, h = lerp(CW, EW, k), lerp(0, ST["eh"], k)
         return (W - w) / 2, CH + GAP, w, h
 
     def update_region(self):
@@ -403,14 +467,16 @@ class App(Gtk.Application):
         kk = max(0.0, min(1.0, ST["k"]))
         col = MOODS.get(ST["mood"], MOODS["idle"])[0]
         k = max(0.0, ST["k"])
-        w, h = lerp(CW, EW, k), lerp(0, EH, k)
+        w, h = lerp(CW, EW, k), lerp(0, ST["eh"], k)
         if h <= 6:
             return
         qx, qy = (W - w) / 2, PANEL_PAD
         self.body(cr, qx, qy, w, h, 26, col, 0.26)
         if kk > 0.45:
             ca = max(0.0, (kk - 0.45) / 0.55)
-            cx0, cy0, cw0, ch0 = qx + 12, qy + HEAD_H, w - 24, h - HEAD_H - 12
+            cx0, cy0, cw0, ch0 = qx + 12, qy + HEAD_H, w - 24, h - HEAD_H - INPUT_H - 4
+            if self.chatting:
+                self.face_at(cr, qx + 30, qy + HEAD_H / 2 + 1, 10, t, col)      # en conversación: Hyro pequeño en el encabezado
             rrect(cr, cx0, cy0, cw0, ch0, 18)                       # tarjeta con borde fino, como en Coucou
             cr.set_source_rgba(1, 1, 1, 0.045 * ca)
             cr.fill_preserve()
@@ -421,12 +487,13 @@ class App(Gtk.Application):
             rrect(cr, cx0, cy0, cw0, ch0, 18)
             cr.clip()
             wg = cairo.RadialGradient(cx0 + cw0 * 0.5, cy0 + ch0 * 1.3, 4, cx0 + cw0 * 0.5, cy0 + ch0 * 1.3, 240)
-            wg.add_color_stop_rgba(0, col[0], col[1], col[2], 0.40 * ca)    # el lavado de color según el estado
+            wg.add_color_stop_rgba(0, col[0], col[1], col[2], (0.14 if self.chatting else 0.40) * ca)   # lavado de color según el estado
             wg.add_color_stop_rgba(1, col[0], col[1], col[2], 0)
             cr.set_source(wg)
             cr.paint()
             cr.restore()
-            self.face_at(cr, cx0 + 46, cy0 + ch0 / 2, 27, t, col)           # Hyro grande en la tarjeta
+            if not self.chatting:
+                self.face_at(cr, cx0 + 46, cy0 + ch0 / 2, 27, t, col)       # Hyro grande en la tarjeta (solo sin conversación)
 
     def expand(self):
         if ST["target"] < 0.5:
@@ -435,13 +502,141 @@ class App(Gtk.Application):
             ST["target"] = 1.0
             ST["last_act"] = time.monotonic()
             play("menu-open.wav")
-            LS.set_keyboard_mode(self.win, LS.KeyboardMode.ON_DEMAND)
+            LS.set_keyboard_mode(self.win, LS.KeyboardMode.EXCLUSIVE)      # mientras está abierta, el teclado es suyo (Esc la cierra)
+            GLib.timeout_add(160, lambda: (self.entry.grab_focus(), False)[1])
+        else:
+            self.entry.grab_focus()
 
     def collapse(self):
         if ST["target"] > 0.5:
             ST["target"] = 0.0
             play("menu-select.wav")
             LS.set_keyboard_mode(self.win, LS.KeyboardMode.NONE)
+
+    def toggle(self):                                                          # atajo de teclado (SIGUSR1)
+        self.collapse() if ST["target"] > 0.5 else self.expand()
+        return True
+
+    # ---------- la conversación vive dentro de la isla ----------
+    def show_chat(self, on):
+        self.chatting = on
+        ST["eh_t"] = float(EH_CHAT if on else EH)
+        self.greet.set_visible(not on)
+        self.scroll.set_visible(on)
+
+    def append(self, text, tag):
+        end = self.buf.get_end_iter()
+        self.buf.insert_with_tags_by_name(end, text, tag)
+        GLib.idle_add(lambda: (self.view.scroll_mark_onscreen(self.buf.get_mark("fin")), False)[1])
+        return False
+
+    def send(self, *_a):
+        q = self.entry.get_text().strip()
+        if not q or self.working:
+            return
+        self.entry.set_text("")
+        self.show_chat(True)
+        if self.buf.get_char_count():
+            self.append("\n", "ai")
+        self.append(q + "\n", "me")
+        self.working = True
+        self.send_btn.set_sensitive(False)
+        ST.update(mood="thinking", label=MOODS["thinking"][1], last_act=time.monotonic())
+        self.cmp_label.set_text(ST["label"])
+        threading.Thread(target=self.worker, args=(q,), daemon=True).start()
+
+    def worker(self, q):
+        """Pregunta a la IA elegida y pasa su respuesta a la isla a medida que llega (Claude: palabra a palabra)."""
+        pid, acmd = ai_conf()
+        env = dict(os.environ)
+        env["PATH"] = os.path.expanduser("~/.local/bin") + os.pathsep + env.get("PATH", "")
+        if pid == "claude":
+            cmd = ["claude", "-p", q, "--output-format", "stream-json", "--include-partial-messages", "--verbose"]
+            if self.sid:
+                cmd += ["--resume", self.sid]
+        elif pid == "codex":
+            cmd = ["codex", "exec", "--skip-git-repo-check", q]
+        elif pid == "gemini":
+            cmd = ["gemini", "-p", q]
+        elif pid == "ollama":
+            cmd = ["ollama", "run", (acmd.split() or ["", "", "llama3.2"])[-1], q]
+        else:
+            GLib.idle_add(self.append, "Esta IA no tiene modo de una pasada. Elige Claude, Codex, Gemini u Ollama arriba.\n", "err")
+            GLib.idle_add(self.finish, 1)
+            return
+        gotten = False
+        sep = False
+        try:
+            self.proc = subprocess.Popen(cmd, cwd=os.path.expanduser("~"), env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                         stderr=subprocess.STDOUT, text=True, bufsize=1, start_new_session=True)
+            for line in self.proc.stdout:
+                if pid != "claude":
+                    gotten = True
+                    GLib.idle_add(self.append, line, "ai")
+                    continue
+                try:
+                    ev = json.loads(line)
+                except ValueError:
+                    continue
+                if ev.get("session_id"):
+                    self.sid = ev["session_id"]
+                t = ev.get("type")
+                if t == "stream_event":
+                    e = ev.get("event", {})
+                    et = e.get("type")
+                    if et == "content_block_start" and e.get("content_block", {}).get("type") == "tool_use":
+                        GLib.idle_add(self.append, "· " + str(e["content_block"].get("name", "herramienta")) + "…\n", "dim")
+                        sep = True
+                    elif et == "content_block_delta" and e.get("delta", {}).get("type") == "text_delta":
+                        txt = e["delta"].get("text", "")
+                        if sep and txt:
+                            sep = False
+                        gotten = gotten or bool(txt)
+                        GLib.idle_add(self.append, txt, "ai")
+                elif t == "result":
+                    if ev.get("is_error") or not gotten:
+                        GLib.idle_add(self.append, str(ev.get("result") or "Sin respuesta."), "err" if ev.get("is_error") else "ai")
+            rc = self.proc.wait()
+        except OSError as exc:
+            GLib.idle_add(self.append, "No pude lanzar la IA (%s).\n" % exc, "err")
+            rc = 1
+        GLib.idle_add(self.finish, rc)
+
+    def finish(self, rc):
+        self.proc = None
+        self.working = False
+        self.send_btn.set_sensitive(True)
+        self.append("\n", "ai")
+        m = "done" if rc == 0 else "error"
+        ST.update(mood=m, label=MOODS[m][1], last_act=time.monotonic())
+        if m == "done":
+            ST["done_t"] = time.monotonic() - ST["t0"]
+        self.cmp_label.set_text(ST["label"])
+        if ST["target"] > 0.5:
+            self.entry.grab_focus()
+        return False
+
+    def new_chat(self, *_a):
+        if self.proc:
+            try:
+                os.killpg(self.proc.pid, 15)
+            except OSError:
+                pass
+        self.sid = None
+        self.buf.set_text("")
+        self.buf.move_mark(self.buf.get_mark("fin"), self.buf.get_end_iter())
+        self.show_chat(False)
+        self.entry.grab_focus()
+
+    def pick_provider(self, pid):
+        """Cambia la IA con la que hablas desde la isla (se guarda igual que lo hace hyprarch-ai)."""
+        set_ai(pid)
+        self.provider = pid
+        self.sid = None
+        for p, b in self.pbtns.items():
+            (b.add_css_class if p == pid else b.remove_css_class)("sel")
+        self.entry.set_placeholder_text("Escríbele a %s…" % PROV_NAMES.get(pid, pid))
+        self.entry.grab_focus()
 
     def act(self, *cmd):
         self.collapse()
@@ -476,7 +671,7 @@ class App(Gtk.Application):
         self.canvas = canvas
         panel = Gtk.DrawingArea()
         panel.set_content_width(EW + 40)
-        panel.set_content_height(EH + PANEL_PAD + 30)
+        panel.set_content_height(EH_CHAT + PANEL_PAD + 30)
         panel.set_halign(Gtk.Align.CENTER)
         panel.set_valign(Gtk.Align.START)
         panel.set_margin_top(CH + GAP - PANEL_PAD)
@@ -505,66 +700,106 @@ class App(Gtk.Application):
         exp.set_valign(Gtk.Align.START)
         exp.set_margin_top(CH + GAP)                   # debajo de la pastilla
         exp.set_size_request(EW, EH)
-        head = Gtk.Box(spacing=6)                      # fila de iconos arriba (como el encabezado de Coucou)
+        self.exp_size = EH
+        head = Gtk.Box(spacing=6)                      # encabezado: las IAs a elegir (pastillas) y acciones discretas
         head.set_size_request(-1, HEAD_H)
-        head.set_margin_start(16)
+        head.set_margin_start(52)                      # a la izquierda queda sitio para Hyro pequeño
         head.set_margin_end(14)
-        card = Gtk.Box(spacing=8)                      # tarjeta: Hyro a la izquierda, saludo y las IAs a la derecha
-        card.set_margin_start(12)
-        card.set_margin_end(12)
-        card.set_margin_bottom(12)
-        card.set_vexpand(True)
+        self.pbtns = {}
+        import shutil
+        extra = os.path.expanduser("~/.local/bin") + os.pathsep + os.environ.get("PATH", "")
+        for pid, pname in PROV_NAMES.items():
+            if shutil.which(pid, path=extra):
+                pb = Gtk.Button(label=pname)
+                pb.add_css_class("pill")
+                if pid == self.provider:
+                    pb.add_css_class("sel")
+                pb.set_valign(Gtk.Align.CENTER)
+                pb.connect("clicked", lambda _b, p=pid: self.pick_provider(p))
+                self.pbtns[pid] = pb
+                head.append(pb)
+        spacer = Gtk.Box()
+        spacer.set_hexpand(True)
+        head.append(spacer)
+        for label, tip, handler in (("Nueva", "Empezar una conversación nueva", self.new_chat),
+                                    ("Historial", "Conversaciones anteriores", lambda *_a: self.act("hyprarch-ai", "history")),
+                                    ("Grande", "Abrir en pantalla completa", lambda *_a: self.act("hyprarch-ai", "open", "full"))):
+            b = Gtk.Button(label=label)
+            b.add_css_class("pill")
+            b.set_valign(Gtk.Align.CENTER)
+            b.set_tooltip_text(tip)
+            b.connect("clicked", handler)
+            head.append(b)
+        xb = Gtk.Button(label="×")
+        xb.add_css_class("x")
+        xb.set_valign(Gtk.Align.CENTER)
+        xb.set_margin_start(2)
+        xb.connect("clicked", lambda _b: self.collapse())
+        head.append(xb)
+        exp.append(head)
+
+        body = Gtk.Overlay()                           # cuerpo: saludo (sin conversación) o respuesta (con conversación)
+        body.set_vexpand(True)
+        body.set_margin_start(12)
+        body.set_margin_end(12)
+        body.set_child(Gtk.Box())
         titles = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         titles.set_margin_start(92)
         titles.set_valign(Gtk.Align.CENTER)
-        titles.set_hexpand(True)
         nm = Gtk.Label(label=NAME.upper(), xalign=0.0)
         nm.add_css_class("name")
         self.say = Gtk.Label(label=ST["phrase"], xalign=0.0)
         self.say.add_css_class("say")
         titles.append(nm)
         titles.append(self.say)
-        # las IAs que tienes instaladas, como pastillas con un puntito de estado (clic = hablar con esa)
-        pills = Gtk.Box(spacing=6)
-        pills.set_margin_top(5)
-        import shutil
-        extra = os.path.expanduser("~/.local/bin") + os.pathsep + os.environ.get("PATH", "")
-        for pid, pname in (("claude", "Claude"), ("codex", "Codex"), ("gemini", "Gemini"), ("ollama", "Ollama")):
-            if shutil.which(pid, path=extra):
-                pb = Gtk.Button(label="●  " + pname)
-                pb.add_css_class("pill")
-                pb.connect("clicked", lambda _b, p=pid: self.act("hyprarch-ai", "use", p))
-                pills.append(pb)
-        titles.append(pills)
-        card.append(titles)
-        for glyph, tip, cmd, main in (("", "Chat flotante", ("hyprarch-ai", "open", "float"), True),
-                                      ("", "Pantalla completa", ("hyprarch-ai", "open", "full"), False),
-                                      ("", "Preguntar algo rápido", ("hyprarch-ai", "ask"), False),
-                                      ("", "Historial de conversaciones", ("hyprarch-ai", "history"), False)):
-            b = Gtk.Button(label=glyph)
-            b.add_css_class("ib")
-            if main:
-                b.add_css_class("main")
-            b.set_valign(Gtk.Align.CENTER)
-            b.set_tooltip_text(tip)
-            b.connect("clicked", lambda _b, c=cmd: self.act(*c))
-            m = Gtk.EventControllerMotion()                            # los ojos miran el botón al que te acercas
-            m.connect("enter", lambda *_a: ST.update(look=1.0))
-            m.connect("leave", lambda *_a: ST.update(look=0.0))
-            b.add_controller(m)
-            head.append(b)
-        spacer = Gtk.Box()
-        spacer.set_hexpand(True)
-        head.append(spacer)
-        xb = Gtk.Button(label="×")
-        xb.add_css_class("x")
-        xb.set_valign(Gtk.Align.CENTER)
-        xb.set_margin_end(10)
-        xb.set_margin_start(2)
-        xb.connect("clicked", lambda _b: self.collapse())
-        head.append(xb)
-        exp.append(head)
-        exp.append(card)
+        self.greet = titles
+        body.add_overlay(titles)
+        view = Gtk.TextView()
+        view.add_css_class("chat")
+        view.set_editable(False)
+        view.set_cursor_visible(False)
+        view.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        view.set_left_margin(16)
+        view.set_right_margin(16)
+        view.set_top_margin(12)
+        view.set_bottom_margin(12)
+        self.view = view
+        self.buf = view.get_buffer()
+        self.buf.create_mark("fin", self.buf.get_end_iter(), False)
+        self.buf.create_tag("me", foreground="#5ef2c8", weight=700)
+        self.buf.create_tag("ai", foreground="#dfe9ed")
+        self.buf.create_tag("dim", foreground="#7f929b", scale=0.9)
+        self.buf.create_tag("err", foreground="#ff7a8a")
+        sw = Gtk.ScrolledWindow()
+        sw.add_css_class("reply")
+        sw.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        sw.set_child(view)
+        sw.set_visible(False)
+        self.scroll = sw
+        body.add_overlay(sw)
+        exp.append(body)
+
+        row = Gtk.Box(spacing=8)                       # el cuadro para escribir (siempre visible, abajo)
+        row.set_size_request(-1, INPUT_H)
+        row.set_margin_start(14)
+        row.set_margin_end(14)
+        row.set_margin_bottom(12)
+        row.set_valign(Gtk.Align.END)
+        entry = Gtk.Entry()
+        entry.add_css_class("in")
+        entry.set_hexpand(True)
+        entry.set_placeholder_text("Escríbele a %s…" % PROV_NAMES.get(self.provider, self.provider))
+        entry.connect("activate", self.send)
+        self.entry = entry
+        sb = Gtk.Button(label="↑")
+        sb.add_css_class("send")
+        sb.set_valign(Gtk.Align.CENTER)
+        sb.set_tooltip_text("Enviar")
+        sb.connect("clicked", self.send)
+        self.send_btn = sb
+        row.append(entry)
+        row.append(sb)
+        exp.append(row)
         exp.set_opacity(0.0)
         exp.set_visible(False)
         self.exp_box = exp
@@ -589,6 +824,7 @@ class App(Gtk.Application):
             GLib.timeout_add(600, lambda: (self.expand(), False)[1])
         GLib.timeout_add(16, self.tick)
         self.region_dirty = True
+        GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGUSR1, self.toggle)    # atajo: pkill -USR1 -f hyprarch-island abre/cierra
         GLib.timeout_add(1000, self.poll_status)
         GLib.timeout_add(1500, self.maybe_wink)
 
@@ -598,6 +834,8 @@ class App(Gtk.Application):
         return True
 
     def poll_status(self):
+        if self.working:                                  # mientras responde desde la isla, el ánimo lo manda ella
+            return True
         m = status()
         if m != ST["mood"]:
             if m == "done":
