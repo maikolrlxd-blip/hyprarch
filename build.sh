@@ -78,6 +78,11 @@ echo "--- entrada principal:"; cat "$ENTRY"
 
 echo "==> Paquetes"
 grep -vE '^\s*(#|$)' packages.extra >> "$PROFILE/packages.x86_64"
+# Lista de paquetes para el INSTALADOR (hyprarch-install los pasa a pacstrap junto con base y linux).
+# Solo los de hyprarch: nada de lo propio del medio live (archiso, syslinux, grub...).
+mkdir -p "$AIR/usr/share/hyprarch"
+{ grep -vE '^\s*(#|$)' packages.extra; echo openssh; echo pciutils; } | sort -u > "$AIR/usr/share/hyprarch/packages.txt"
+echo "--- packages.txt: $(wc -l < "$AIR/usr/share/hyprarch/packages.txt") paquetes"
 
 echo "==> Aplicando airootfs (configuración, dotfiles, scripts)"
 # Quitar finales de línea CRLF por si el repo se editó en Windows, sin alterar imágenes.
