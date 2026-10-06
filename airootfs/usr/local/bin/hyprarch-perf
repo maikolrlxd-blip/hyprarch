@@ -9,7 +9,7 @@
 #   · 4 GB de RAM o menos      · 2 núcleos o menos      · procesador de gama baja (Celeron, Atom, Pentium, N/J de baja potencia)
 #   · sin aceleración gráfica (no hay /dev/dri/renderD*) o render por software (llvmpipe)
 # En perfil lite: sin desenfoque, sombras ni brillos, animaciones cortas, menús a menos cuadros por segundo y menos partículas,
-# y estilo visual "sutil". Los equipos buenos no pierden nada.
+# y estilo "fresh" con menos adornos (el menu de juego se mantiene). Los equipos buenos no pierden nada.
 CFG="${XDG_CONFIG_HOME:-$HOME/.config}/hyprarch"
 mkdir -p "$CFG"
 
@@ -36,7 +36,7 @@ case ${1:-auto} in
     esac
     printf '%s\n' "$eff" > "$CFG/perf.effective"
     # sin elección explícita de estilo, el perfil lite usa el más liviano
-    if [[ $eff == lite && ! -e $CFG/style ]]; then printf 'sutil\n' > "$CFG/style.auto"; else rm -f "$CFG/style.auto"; fi
+    if [[ $eff == lite && ! -e $CFG/style ]]; then printf 'fresh\n' > "$CFG/style.auto"; else rm -f "$CFG/style.auto"; fi
     echo "$eff" ;;
   status)
     d=$(detect)
