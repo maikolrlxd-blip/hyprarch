@@ -1,0 +1,389 @@
+#!/usr/bin/env python3
+"""hyprarch-island — la isla de Claudito: un botón arriba, centrado, que se despliega con una animación.
+
+  · Quieta es una pastilla pequeña (Claudito en miniatura + su estado).
+  · Un clic la expande con un rebote: sale Claudito y las formas de hablar con la IA
+    (Chat flotante, Pantalla completa, Preguntar, Historial).
+  · Esc, la × o elegir una opción la vuelven a recoger.
+
+Reemplaza al Claudito de la esquina (se activa con el archivo ~/.config/hyprarch/island).
+"""
+import json
+import math
+import os
+import subprocess
+import sys
+import time
+
+if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza solo con el entorno correcto
+    env = dict(os.environ)
+    env["LD_PRELOAD"] = (env.get("LD_PRELOAD", "") + " /usr/lib/libgtk4-layer-shell.so").strip()
+    env["GSK_RENDERER"] = "cairo"
+    os.execvpe(sys.executable, [sys.executable] + sys.argv, env)
+
+import fcntl
+
+import cairo
+import gi
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
+gi.require_version("Gtk4LayerShell", "1.0")
+from gi.repository import Gdk, GLib, Gtk, Gtk4LayerShell as LS  # noqa: E402
+
+RUN = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+lock = open(os.path.join(RUN, "hyprarch-island.lock"), "w")
+try:
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except OSError:
+    sys.exit(0)                                   # ya hay una isla
+
+SOUNDS = "/usr/share/hyprarch/sounds"
+WIN_W, WIN_H = 640, 190                           # ventana fija y transparente: la isla se dibuja dentro, pegada arriba
+CW, CH = 168, 30                                  # compacta
+EW, EH = 560, 124                                 # expandida
+TOP = 50                                          # justo bajo la barra
+
+ST = {"k": 0.0, "target": 0.0, "mood": "idle", "label": "Claudito", "look": 0.0, "t0": time.monotonic(), "hover": False}
+
+MOODS = {  # color del brillo y texto corto según lo que hace la IA
+    "idle": ((0.37, 0.95, 0.78), "Claudito"),
+    "thinking": ((0.65, 0.55, 0.98), "Pensando…"),
+    "working": ((0.23, 0.62, 1.0), "Trabajando…"),
+    "waiting": ((1.0, 0.68, 0.26), "Te necesito"),
+    "done": ((0.20, 0.83, 0.60), "¡Listo!"),
+    "error": ((0.96, 0.31, 0.37), "Algo falló"),
+}
+
+
+def play(name):
+    path = os.path.join(SOUNDS, name)
+    if not os.path.exists(path):
+        return
+    for cmd in (["pw-play", "--volume", "0.6", path], ["paplay", path]):
+        try:
+            subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return
+        except OSError:
+            continue
+
+
+def ease_out_back(x):
+    c1, c3 = 1.35, 2.35
+    return 1 + c3 * (x - 1) ** 3 + c1 * (x - 1) ** 2
+
+
+def lerp(a, b, k):
+    return a + (b - a) * k
+
+
+def rrect(cr, x, y, w, h, r):
+    r = max(0, min(r, w / 2, h / 2))
+    cr.new_sub_path()
+    cr.arc(x + w - r, y + r, r, -math.pi / 2, 0)
+    cr.arc(x + w - r, y + h - r, r, 0, math.pi / 2)
+    cr.arc(x + r, y + h - r, r, math.pi / 2, math.pi)
+    cr.arc(x + r, y + r, r, math.pi, 3 * math.pi / 2)
+    cr.close_path()
+
+
+def draw_face(cr, cx, cy, r, t, mood, look=0.0, bob=True):
+    """Claudito: casco octogonal con visor; flota, parpadea, la antena se mece."""
+    col = MOODS.get(mood, MOODS["idle"])[0]
+    b = 2.0 * math.sin(t * 2.4) * (r / 26) if bob else 0.0
+    cr.save()
+    cr.translate(cx, cy + b)
+    cr.rotate(math.radians(2.5 * math.sin(t * 1.7)))
+    sway = math.radians(8 * math.sin(t * 3.1))
+    cr.save()
+    cr.translate(r * 0.30, -r * 0.88)
+    cr.rotate(sway)
+    cr.set_source_rgb(*col)
+    cr.move_to(-r * 0.05, 0)
+    cr.line_to(r * 0.60, -r * 0.62)
+    cr.line_to(r * 0.52, r * 0.16)
+    cr.close_path()
+    cr.fill()
+    cr.restore()
+    cr.new_path()
+    for i in range(8):
+        a = math.radians(22.5 + 45 * i)
+        (cr.move_to if i == 0 else cr.line_to)(r * math.cos(a), r * math.sin(a))
+    cr.close_path()
+    lg = cairo.LinearGradient(0, -r, 0, r)
+    lg.add_color_stop_rgb(0, 0.10, 0.16, 0.22)
+    lg.add_color_stop_rgb(1, 0.03, 0.06, 0.09)
+    cr.set_source(lg)
+    cr.fill_preserve()
+    cr.set_source_rgb(*col)
+    cr.set_line_width(max(1.4, r * 0.085))
+    cr.set_line_join(1)
+    cr.stroke()
+    vw, vh = r * 1.30, r * 0.58
+    cr.set_source_rgb(0.015, 0.03, 0.05)
+    rrect(cr, -vw / 2, -vh / 2 + 1, vw, vh, vh * 0.28)
+    cr.fill()
+    blink = 0.12 if (t % 3.3) > 3.18 else 1.0
+    ew, eh = r * 0.20, r * 0.24 * blink
+    cr.set_source_rgb(min(1, col[0] + 0.45), min(1, col[1] + 0.45), min(1, col[2] + 0.45))
+    for dx in (-r * 0.30, r * 0.30):
+        cr.rectangle(dx + look * r * 0.16 - ew / 2, 1 - eh / 2, ew, eh)
+        cr.fill()
+    cr.restore()
+
+
+CSS = b"""
+window { background: transparent; }
+.exp { color: #ffffff; }
+.name { font-size: 15px; font-weight: 700; color: #ffffff; }
+.sub { font-size: 12px; color: #93a4ad; }
+.opt { background: rgba(255,255,255,0.08); color: #e6eef1; border: none; border-radius: 999px; padding: 7px 15px;
+       font-weight: 600; font-size: 12.5px; min-height: 0;
+       transition: background 140ms ease-out, color 140ms ease-out, box-shadow 140ms ease-out; }
+.opt:hover { background: #ffffff; color: #0a0f14; box-shadow: 0 4px 16px rgba(255,255,255,0.22); }
+.opt.main { background: #5ef2c8; color: #0a0f14; }
+.opt.main:hover { background: #ffffff; }
+.x { background: transparent; color: #8a9aa3; border: none; border-radius: 999px; padding: 0 9px; font-size: 16px; min-height: 0; }
+.x:hover { background: rgba(255, 90, 110, 0.9); color: #ffffff; }
+.cmp { font-size: 12px; font-weight: 600; color: #d8e3e7; }
+"""
+
+
+def status():
+    try:
+        out = subprocess.run(["claude-presence", "status"], capture_output=True, text=True, timeout=2).stdout
+        d = json.loads(out)
+        cls = d.get("class") or ""
+        cls = cls[0] if isinstance(cls, list) and cls else cls
+        return cls if cls in MOODS else "idle"
+    except Exception:
+        return "idle"
+
+
+def run(*cmd, env=None):
+    try:
+        subprocess.Popen(list(cmd), start_new_session=True, env=env, stdin=subprocess.DEVNULL,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except OSError:
+        pass
+
+
+class App(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id=None)
+        self.win = None
+        self.canvas = None
+        self.exp_box = None
+        self.cmp_box = None
+        self.last_tick = time.monotonic()
+        self.vel = 0.0
+
+    # ----- animación (muelle con rebote suave) -----
+    def tick(self):
+        now = time.monotonic()
+        dt = min(0.05, now - self.last_tick)
+        self.last_tick = now
+        k, tgt = ST["k"], ST["target"]
+        # muelle amortiguado: rebota un poco al abrir
+        acc = 260.0 * (tgt - k) - 20.0 * self.vel
+        self.vel += acc * dt
+        k += self.vel * dt
+        ST["k"] = max(-0.05, min(1.08, k))
+        kk = max(0.0, min(1.0, ST["k"]))
+        self.exp_box.set_opacity(max(0.0, (kk - 0.55) / 0.45))
+        self.cmp_box.set_opacity(max(0.0, 1.0 - kk * 2.2))
+        self.exp_box.set_sensitive(kk > 0.9)
+        self.exp_box.set_visible(kk > 0.35)
+        self.canvas.queue_draw()
+        self.update_region()
+        return True
+
+    def pill_size(self):
+        k = ST["k"]
+        return lerp(CW, EW, k), lerp(CH, EH, k)
+
+    def update_region(self):
+        surf = self.win.get_surface()
+        if surf is None:
+            return
+        w, h = self.pill_size()
+        x = int((WIN_W - w) / 2) - 4
+        surf.set_input_region(cairo.Region(cairo.RectangleInt(max(0, x), 0, int(w) + 8, int(h) + 10)))
+
+    def draw(self, _a, cr, W, H):
+        t = time.monotonic() - ST["t0"]
+        kk = ST["k"]
+        w, h = self.pill_size()
+        x, y = (W - w) / 2, 2
+        col = MOODS.get(ST["mood"], MOODS["idle"])[0]
+        radius = lerp(15, 28, max(0, min(1, kk)))
+        # sombra con profundidad
+        for i in range(7, 0, -1):
+            cr.set_source_rgba(0, 0, 0, 0.055)
+            rrect(cr, x - i * 1.4, y + 5 + i * 1.5, w + i * 2.8, h + i * 0.8, radius + i)
+            cr.fill()
+        # cuerpo: negro con luz arriba y brillo del color del estado abajo a la derecha
+        rrect(cr, x, y, w, h, radius)
+        cr.set_source_rgba(0.032, 0.047, 0.07, 0.985)
+        cr.fill_preserve()
+        cr.save()
+        cr.clip()
+        g = cairo.RadialGradient(x + w * 0.9, y + h * 1.25, 4, x + w * 0.9, y + h * 1.25, max(w, h) * 0.8)
+        g.add_color_stop_rgba(0, col[0], col[1], col[2], 0.30 * (0.5 + 0.5 * kk))
+        g.add_color_stop_rgba(1, col[0], col[1], col[2], 0)
+        cr.set_source(g)
+        cr.paint()
+        lg = cairo.LinearGradient(0, y, 0, y + h * 0.5)
+        lg.add_color_stop_rgba(0, 1, 1, 1, 0.07)
+        lg.add_color_stop_rgba(1, 1, 1, 1, 0)
+        cr.set_source(lg)
+        cr.paint()
+        cr.restore()
+        rrect(cr, x + 0.5, y + 0.5, w - 1, h - 1, radius)
+        cr.set_source_rgba(1, 1, 1, 0.12 + (0.10 if ST["hover"] and kk < 0.5 else 0))
+        cr.set_line_width(1)
+        cr.stroke()
+        # Claudito: pequeño a la izquierda cuando está compacta, grande al expandir
+        r = lerp(9, 34, max(0, min(1, kk)))
+        fx = lerp(x + 20, x + 62, max(0, min(1, kk)))
+        fy = lerp(y + h / 2 + 1, y + h / 2, max(0, min(1, kk)))
+        # luz detrás
+        gl = cairo.RadialGradient(fx, fy, r * 0.3, fx, fy, r * 1.9)
+        gl.add_color_stop_rgba(0, col[0], col[1], col[2], 0.22 + 0.08 * math.sin(t * 2))
+        gl.add_color_stop_rgba(1, col[0], col[1], col[2], 0)
+        cr.set_source(gl)
+        cr.arc(fx, fy, r * 1.9, 0, 2 * math.pi)
+        cr.fill()
+        draw_face(cr, fx, fy, r, t, ST["mood"], ST["look"], bob=kk > 0.3)
+
+    # ----- interacción -----
+    def expand(self):
+        if ST["target"] < 0.5:
+            ST["target"] = 1.0
+            play("menu-open.wav")
+            LS.set_keyboard_mode(self.win, LS.KeyboardMode.ON_DEMAND)
+
+    def collapse(self):
+        if ST["target"] > 0.5:
+            ST["target"] = 0.0
+            play("menu-select.wav")
+            LS.set_keyboard_mode(self.win, LS.KeyboardMode.NONE)
+
+    def act(self, *cmd):
+        self.collapse()
+        GLib.timeout_add(180, lambda: (run(*cmd), False)[1])      # primero se recoge, luego sale lo elegido
+
+    def do_activate(self):
+        prov = Gtk.CssProvider()
+        prov.load_from_data(CSS)
+        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), prov, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        win = Gtk.ApplicationWindow(application=self)
+        self.win = win
+        win.set_default_size(WIN_W, WIN_H)
+        LS.init_for_window(win)
+        LS.set_layer(win, LS.Layer.OVERLAY)
+        LS.set_anchor(win, LS.Edge.TOP, True)
+        LS.set_margin(win, LS.Edge.TOP, TOP)
+        LS.set_exclusive_zone(win, -1)
+        LS.set_namespace(win, "hyprarch-island")
+        LS.set_keyboard_mode(win, LS.KeyboardMode.NONE)
+
+        ov = Gtk.Overlay()
+        canvas = Gtk.DrawingArea()
+        canvas.set_content_width(WIN_W)
+        canvas.set_content_height(WIN_H)
+        canvas.set_draw_func(self.draw)
+        self.canvas = canvas
+        ov.set_child(canvas)
+
+        # contenido compacto: solo el texto de estado, a la derecha de la carita
+        cmp_box = Gtk.Box()
+        cmp_box.set_halign(Gtk.Align.CENTER)
+        cmp_box.set_valign(Gtk.Align.START)
+        cmp_box.set_margin_top(2)
+        cmp_box.set_size_request(CW, CH)
+        self.cmp_label = Gtk.Label(label=ST["label"], xalign=0.0)
+        self.cmp_label.add_css_class("cmp")
+        self.cmp_label.set_margin_start(40)
+        self.cmp_label.set_hexpand(True)
+        cmp_box.append(self.cmp_label)
+        cmp_box.set_can_target(False)
+        self.cmp_box = cmp_box
+        ov.add_overlay(cmp_box)
+
+        # contenido expandido
+        exp = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=9)
+        exp.set_halign(Gtk.Align.CENTER)
+        exp.set_valign(Gtk.Align.START)
+        exp.set_margin_top(2)
+        exp.set_size_request(EW, EH)
+        exp.set_margin_start(0)
+        head = Gtk.Box(spacing=8)
+        head.set_margin_start(112)
+        head.set_margin_top(16)
+        head.set_margin_end(12)
+        titles = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+        titles.set_hexpand(True)
+        nm = Gtk.Label(label="Claudito", xalign=0.0)
+        nm.add_css_class("name")
+        self.sub = Gtk.Label(label="¿Qué hacemos?", xalign=0.0)
+        self.sub.add_css_class("sub")
+        titles.append(nm)
+        titles.append(self.sub)
+        xb = Gtk.Button(label="×")
+        xb.add_css_class("x")
+        xb.set_valign(Gtk.Align.START)
+        xb.connect("clicked", lambda _b: self.collapse())
+        head.append(titles)
+        head.append(xb)
+        row = Gtk.Box(spacing=7)
+        row.set_margin_start(112)
+        row.set_margin_top(6)
+        for label, cmd, main in (("Chat", ("hyprarch-ai", "open", "float"), True),
+                                 ("Pantalla completa", ("hyprarch-ai", "open", "full"), False),
+                                 ("Preguntar", ("hyprarch-ai", "ask"), False),
+                                 ("Historial", ("hyprarch-ai", "history"), False)):
+            b = Gtk.Button(label=label)
+            b.add_css_class("opt")
+            if main:
+                b.add_css_class("main")
+            b.connect("clicked", lambda _b, c=cmd: self.act(*c))
+            row.append(b)
+        exp.append(head)
+        exp.append(row)
+        exp.set_opacity(0.0)
+        exp.set_visible(False)
+        self.exp_box = exp
+        ov.add_overlay(exp)
+        win.set_child(ov)
+
+        # clic en la pastilla compacta = expandir
+        click = Gtk.GestureClick()
+        click.set_button(1)
+        click.connect("released", lambda *_a: self.expand() if ST["target"] < 0.5 else None)
+        canvas.add_controller(click)
+        mo = Gtk.EventControllerMotion()
+        mo.connect("enter", lambda *_a: ST.update(hover=True))
+        mo.connect("leave", lambda *_a: ST.update(hover=False))
+        canvas.add_controller(mo)
+        keys = Gtk.EventControllerKey()
+        keys.connect("key-pressed", lambda _c, kv, *_a: (self.collapse(), True)[1] if kv == Gdk.KEY_Escape else False)
+        win.add_controller(keys)
+
+        win.present()
+        if os.environ.get("HYPRARCH_ISLAND_OPEN"):            # solo para pruebas: arranca ya expandida
+            GLib.timeout_add(600, lambda: (self.expand(), False)[1])
+        GLib.timeout_add(16, self.tick)
+        GLib.timeout_add(700, self.poll_status)
+
+    def poll_status(self):
+        m = status()
+        if m != ST["mood"]:
+            ST["mood"] = m
+            ST["label"] = MOODS[m][1]
+            self.cmp_label.set_text(ST["label"])
+        return True
+
+
+if __name__ == "__main__":
+    App().run([])

@@ -1004,7 +1004,11 @@ def run_daemon():
             try:
                 now = time.time()
                 # --- ¿hay un menú a pantalla completa con su propio personajito? entonces este se desvanece (y vuelve al cerrar)
-                S["vis"] += ((0.0 if overlay_active() else 1.0) - S["vis"]) * 0.35
+                # con la isla activa (~/.config/hyprarch/island), Claudito vive arriba y el de la esquina se esconde
+                if now - S.get("island_t", 0) > 2.0:
+                    S["island_t"] = now
+                    S["island"] = os.path.exists(os.path.join(os.path.expanduser("~"), ".config", "hyprarch", "island"))
+                S["vis"] += ((0.0 if (overlay_active() or S.get("island")) else 1.0) - S["vis"]) * 0.35
                 if S["vis"] > 0.995:
                     S["vis"] = 1.0
                 # --- estado (archivo) -------------------------------------------------
