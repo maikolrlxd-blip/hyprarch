@@ -148,6 +148,11 @@ class App(Gtk.Application):
             b.connect("clicked", lambda _b, p=pid: (pop.popdown(), run_ai("use", p, CLASS)))
             box.append(b)
             self.items[pid] = b
+        hb = Gtk.Button(label="Historial")
+        hb.add_css_class("item")
+        hb.set_halign(Gtk.Align.FILL)
+        hb.connect("clicked", lambda _b: (pop.popdown(), run_ai("history")))
+        box.append(hb)
         pop.set_child(box)
         self.model_btn.set_popover(pop)
         row.append(self.model_btn)

@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+"""hyprarch-history — todas tus conversaciones con las IAs, en un solo sitio.
+
+  hyprarch-history          lista animada (hyprarch-pick); al elegir una se reabre y sigues donde la dejaste
+  hyprarch-history list     las mismas filas en texto (para scripts)
+
+Lee lo que cada IA ya guarda por su cuenta en tu carpeta personal (nada se copia ni se envía a ningún sitio):
+  Claude Code  ~/.claude/projects/*/<sesión>.jsonl     Codex  ~/.codex/sessions/**/rollout-*.jsonl
+La caja rápida (SUPER+A) no guarda nada, así que no aparece aquí.
+"""
+import datetime
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+HOME = Path.home()
+LIMIT = 60
+
+
+def first_text(content):
+    """Texto del primer mensaje: puede venir como cadena o como lista de bloques."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        for b in content:
+            if isinstance(b, dict) and b.get("type") in ("text", "input_text") and b.get("text"):
+                return b["text"]
+    return ""
+
+
+def clean(s):
+    s = " ".join((s or "").split())
+    if s.startswith("<") or s.lower().startswith("caveat"):      # mensajes internos, no de la persona
+        return ""
+    return s[:70]
+
+
+def claude_sessions():
+    out = []
+    for f in (HOME / ".claude" / "projects").glob("*/*.jsonl"):
+        title = ""
+        try:
+            with open(f, encoding="utf-8", errors="replace") as fh:
+                for i, line in enumerate(fh):
+                    if i > 80:
+                        break
+                    try:
+                        d = json.loads(line)
+                    except ValueError:
+                        continue
+                    if d.get("type") == "user":
+                        title = clean(first_text(d.get("message", {}).get("content")))
+                        if title:
+                            break
+            out.append(("claude", f.stem, title or "(sin título)", f.stat().st_mtime))
+        except OSError:
+            continue
+    return out
+
+
+def codex_sessions():
+    out = []
+    for f in (HOME / ".codex" / "sessions").glob("**/rollout-*.jsonl"):
+        sid, title = "", ""
+        try:
+            with open(f, encoding="utf-8", errors="replace") as fh:
+                for i, line in enumerate(fh):
+                    if i > 80:
+                        break
+                    try:
+                        d = json.loads(line)
+                    except ValueError:
+                        continue
+                    p = d.get("payload", d)
+                    sid = sid or p.get("id", "") if d.get("type") == "session_meta" else sid
+                    if not title and p.get("role") == "user":
+                        title = clean(first_text(p.get("content")))
+                    if sid and title:
+                        break
+            if sid:
+                out.append(("codex", sid, title or "(sin título)", f.stat().st_mtime))
+        except OSError:
+            continue
+    return out
+
+
+def rows():
+    items = claude_sessions() + codex_sessions()
+    items.sort(key=lambda r: r[3], reverse=True)
+    return items[:LIMIT]
+
+
+def when(ts):
+    d = datetime.datetime.fromtimestamp(ts)
+    today = datetime.date.today()
+    if d.date() == today:
+        return d.strftime("hoy %H:%M")
+    if (today - d.date()).days == 1:
+        return d.strftime("ayer %H:%M")
+    return d.strftime("%d/%m %H:%M")
+
+
+LABEL = {"claude": "Claude", "codex": "Codex"}
+MOOD = {"claude": "happy", "codex": "wink"}
+
+
+def main():
+    items = rows()
+    if len(sys.argv) > 1 and sys.argv[1] == "list":
+        for ai, sid, title, ts in items:
+            print(f"{ai}\t{sid}\t{when(ts)}\t{title}")
+        return
+    if not items:
+        subprocess.run(["notify-send", "Historial", "Todavía no hay conversaciones guardadas."])
+        return
+    lines = "\n".join(f"{ai}:{sid}\t{title}\t\t{LABEL[ai]} · {when(ts)}\t{MOOD[ai]}" for ai, sid, title, ts in items)
+    try:
+        r = subprocess.run(["hyprarch-pick", "--layout", "wheel", "--title", "Tus conversaciones", "--placeholder", "Buscar"],
+                           input=lines, capture_output=True, text=True)
+    except OSError:
+        print(lines)
+        return
+    sel = r.stdout.strip()
+    if r.returncode == 0 and ":" in sel:
+        ai, sid = sel.split(":", 1)
+        os.execvp("hyprarch-ai", ["hyprarch-ai", "resume", ai, sid])
+
+
+if __name__ == "__main__":
+    main()

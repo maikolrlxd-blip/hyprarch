@@ -129,6 +129,13 @@ chat() {
   else
     cmd=$(field "$AI" 3)
   fi
+  if [[ -n ${HYPRARCH_AI_RESUME:-} && ${HYPRARCH_AI_RESUME} =~ ^[A-Za-z0-9-]+$ ]]; then
+    AI=${HYPRARCH_AI_PROVIDER:-$AI}
+    case $AI in
+      claude) cmd="claude --resume $HYPRARCH_AI_RESUME" ;;
+      codex)  cmd="codex resume $HYPRARCH_AI_RESUME" ;;
+    esac
+  fi
   [[ -n $cmd ]] || { echo "Configuración de IA inválida. Corré: hyprarch-ai setup"; pause; exit 1; }
 
   local bin
@@ -213,6 +220,17 @@ intro() {
   for ((i = 0; i < 20; i++)); do printf '%s━%s' "$M" "$X"; sleep 0.03; done
   sleep 0.2
   printf '\e[?25h\e[2J\e[H'
+}
+
+# reabre una conversación guardada de un modelo (la elige hyprarch-history)
+resume_ai() {  # <claude|codex> <id de la sesión>
+  local ai=${1:-} id=${2:-}
+  [[ $ai == claude || $ai == codex ]] || { echo "modelo no compatible para reabrir: $ai" >&2; return 1; }
+  [[ $id =~ ^[A-Za-z0-9-]+$ ]] || { echo "id de sesión no válido" >&2; return 1; }
+  close_class hyprarch-ai-float; sleep 0.5
+  setsid -f kitty --class hyprarch-ai-float -o font_size=10 -o background_opacity=0.92 -o window_padding_width=10 \
+    -e env HYPRARCH_AI_RESUME="$id" HYPRARCH_AI_PROVIDER="$ai" hyprarch-ai chat >/dev/null 2>&1 </dev/null
+  place_float; start_bar hyprarch-ai-float
 }
 
 # deja el chat flotante abajo a la derecha (la regla de posición de Hyprland no gana a "center" de las ventanas hyprarch-*)
@@ -317,6 +335,8 @@ login_flow() {
 case ${1:-chat} in
   chat)   chat ;;
   open)   [[ -n ${3:-} ]] && close_class "$3"; open_ai "${2:-}" ;;      # abre según el modo guardado (o el que pidas)
+  resume) resume_ai "${2:-}" "${3:-}" ;;                  # reabre una conversación guardada
+  history) exec hyprarch-history ;;                          # lista de tus conversaciones con las IAs
   use)    use_ai "${2:-}" "${3:-}" ;;                       # cambia de IA y reabre el chat
   how)    m=$(choose_mode) && open_ai "$m" ;;       # elegir cómo hablar y abrir
   ask)    quick_ask ;;
@@ -327,5 +347,5 @@ case ${1:-chat} in
   pick)   # solo el selector (sin terminal); si se eligió una IA, abre su conversación en una ventana flotante
           setup && open_ai ;;
   status) printf 'IA: %s\n' "${AI:-ninguna elegida}"; [[ -n $AI_CMD ]] && printf 'Comando: %s\n' "$AI_CMD" ;;
-  *)      printf 'Uso: hyprarch-ai {open|use|ask|login|mode|chat|setup|status}\n'; exit 2 ;;
+  *)      printf 'Uso: hyprarch-ai {open|use|ask|history|resume|login|mode|chat|setup|status}\n'; exit 2 ;;
 esac
