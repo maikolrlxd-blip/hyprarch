@@ -17,7 +17,9 @@ import re
 import signal
 import subprocess
 import sys
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza solo con el entorno correcto
     env = dict(os.environ)
@@ -100,7 +102,7 @@ def bt_state():
             return None
     except OSError:
         return None
-    return "Powered: yes" in sh("bluetoothctl", "show", t=1.2)
+    return "Powered: yes" in sh("bluetoothctl", "show", t=0.8)
 
 
 def dnd_on():
@@ -138,6 +140,27 @@ def recent_notifications(n=4):
         if len(items) >= n:
             break
     return items
+
+
+def gather():
+    """Todas las consultas del panel A LA VEZ (cada una con su propio límite de tiempo): abrir tarda lo que la más lenta,
+    no la suma de todas (antes, con Bluetooth sin controlador, podía pasar de 8 segundos)."""
+    jobs = (("wifi", wifi_on), ("bt", bt_state), ("dnd", dnd_on), ("perf", perf), ("vol", volume),
+            ("br", brightness), ("mode", current_mode), ("notes", recent_notifications))
+    with ThreadPoolExecutor(max_workers=len(jobs)) as ex:
+        futs = {k: ex.submit(fn) for k, fn in jobs}
+        out = {}
+        for k, f in futs.items():
+            try:
+                out[k] = f.result(timeout=3)
+            except Exception:                         # una consulta que falla no impide abrir el panel
+                out[k] = {"vol": (None, False), "notes": [], "mode": "normal", "perf": "full"}.get(k, False if k in ("wifi", "dnd") else None)
+    return out
+
+
+def run_async(fn, *args, **kw):
+    """Ejecuta una orden del sistema en un hilo aparte: la interfaz no espera por ella."""
+    threading.Thread(target=lambda: fn(*args, **kw), daemon=True).start()
 
 
 CSS = b"""
@@ -189,6 +212,7 @@ class App(Gtk.Application):
         self.vol_label = None
         self.vol_glyph = None
         self.pending = {}
+        self.state = {}
 
     # ---- apertura / cierre con animación corta ----
     def close_panel(self, sound=True):
@@ -274,32 +298,39 @@ class App(Gtk.Application):
         self.pending[key] = GLib.timeout_add(ms, lambda: (self.pending.pop(key, None), fn(), False)[2])
 
     # ---- acciones ----
+    # Las acciones NUNCA bloquean la interfaz: el azulejo cambia al instante (con el estado que ya se conocía) y el comando
+    # corre en un hilo aparte; así Esc, el clic fuera y las animaciones siguen funcionando aunque el comando tarde.
     def toggle_wifi(self):
-        want = not wifi_on()
-        sh("nmcli", "radio", "wifi", "on" if want else "off")
+        want = not self.state.get("wifi", False)
+        self.state["wifi"] = want
         self.set_tile("wifi", want, "Conectado" if want else "Apagado")
+        run_async(sh, "nmcli", "radio", "wifi", "on" if want else "off")
 
     def toggle_bt(self):
-        want = not bt_state()
-        sh("bluetoothctl", "power", "on" if want else "off", t=2.0)
+        want = not self.state.get("bt", False)
+        self.state["bt"] = want
         self.set_tile("bt", want, "Encendido" if want else "Apagado")
+        run_async(sh, "bluetoothctl", "power", "on" if want else "off", t=2.0)
 
     def toggle_dnd(self):
-        sh("makoctl", "mode", "-t", "do-not-disturb")
-        on = dnd_on()
-        self.set_tile("dnd", on, "Silencio" if on else "Avisos activos")
+        want = not self.state.get("dnd", False)
+        self.state["dnd"] = want
+        self.set_tile("dnd", want, "Silencio" if want else "Avisos activos")
+        run_async(sh, "makoctl", "mode", "-a" if want else "-r", "do-not-disturb")
 
     def toggle_perf(self):
-        want = "full" if perf() == "lite" else "lite"
+        want = "full" if self.state.get("perf") == "lite" else "lite"
+        self.state["perf"] = want
         bg("hyprarch-perf", want)
         self.set_tile("perf", want == "lite", "Ligero" if want == "lite" else "Completo")
 
     def set_volume(self, v):
-        self.debounced("vol", lambda: sh("wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", f"{v}%"))
+        self.debounced("vol", lambda: run_async(sh, "wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", f"{v}%"))
 
     def toggle_mute(self):
-        sh("wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle")
-        _v, muted = volume()
+        muted = not self.state.get("muted", False)
+        self.state["muted"] = muted
+        run_async(sh, "wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle")
         self.vol_glyph.set_label("" if muted else "")
 
     def pick_mode(self, mode):
@@ -346,10 +377,9 @@ class App(Gtk.Application):
         panel.add_controller(stop)
 
         # --- atajos rápidos ---
-        wifi = wifi_on()
-        bt = bt_state()
-        dnd = dnd_on()
-        lite = perf() == "lite"
+        S = gather()                                    # todas las consultas A LA VEZ: tarda lo que la más lenta, no la suma
+        wifi, bt, dnd, lite = S["wifi"], S["bt"], S["dnd"], S["perf"] == "lite"
+        self.state.update(wifi=wifi, bt=bool(bt), dnd=dnd, perf=S["perf"], muted=S["vol"][1])
         grid = Gtk.Grid()
         grid.set_column_homogeneous(True)
         grid.set_row_homogeneous(True)
@@ -372,12 +402,12 @@ class App(Gtk.Application):
         panel.append(grid)
 
         # --- volumen y brillo ---
-        v, muted = volume()
+        v, muted = S["vol"]
         if v is not None:
             row, sc, pv, gl = self.slider("" if muted else "", v, self.set_volume, self.toggle_mute)
             self.vol_scale, self.vol_label, self.vol_glyph = sc, pv, gl
             panel.append(row)
-        b = brightness()
+        b = S["br"]
         if b is not None:
             row, *_ = self.slider("", b, lambda x: self.debounced("br", lambda: sh("brightnessctl", "-c", "backlight", "set", f"{max(1, x)}%")))
             panel.append(row)
@@ -387,7 +417,7 @@ class App(Gtk.Application):
         sec.add_css_class("sec")
         panel.append(sec)
         modes = Gtk.Box(spacing=6)
-        cur = current_mode()
+        cur = S["mode"]
         for key, label in MODES:
             mb = Gtk.Button(label=label)
             mb.add_css_class("mode")
@@ -402,7 +432,7 @@ class App(Gtk.Application):
         sec2 = Gtk.Label(label="NOTIFICACIONES", xalign=0.0)
         sec2.add_css_class("sec")
         panel.append(sec2)
-        notes = recent_notifications()
+        notes = S["notes"]
         if notes:
             for text in notes:
                 lab = Gtk.Label(label="•  " + text, xalign=0.0)
