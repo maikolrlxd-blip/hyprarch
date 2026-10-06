@@ -1,4 +1,7 @@
 {
+  "permissions": {
+    "allow": ["Bash(hyprarch-api:*)"]
+  },
   "hooks": {
     "UserPromptSubmit": [
       { "hooks": [ { "type": "command", "command": "claude-presence set thinking 'Pensando…'" } ] }
