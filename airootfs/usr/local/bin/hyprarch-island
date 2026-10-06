@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
-"""hyprarch-island — la isla de Claudito: un botón arriba, centrado, que se despliega con una animación.
+"""hyprarch-island — la isla de Claudito: una pastillita arriba, centrada, que se despliega con un rebote.
 
-  · Quieta es una pastilla pequeña (Claudito en miniatura + su estado).
-  · Un clic la expande con un rebote: sale Claudito y las formas de hablar con la IA
-    (Chat flotante, Pantalla completa, Preguntar, Historial).
-  · Esc, la × o elegir una opción la vuelven a recoger.
+  · Quieta: pastilla diminuta con Claudito y su estado.
+  · Un clic: se estira con un rebote suave; sale Claudito con un saludo y cuatro botones redondos
+    (chat flotante, pantalla completa, preguntar, historial).
+  · Esc, la × o elegir una opción la recogen.
 
-Reemplaza al Claudito de la esquina (se activa con el archivo ~/.config/hyprarch/island).
+Claudito tiene carácter: mira a los lados, parpadea, guiña, se adormila si lo dejas quieto, y su cara cambia según
+lo que hace la IA (pensando, trabajando, «¡listo!» con chispas, avisa cuando te necesita).
+Se activa con el archivo ~/.config/hyprarch/island (esconde al Claudito de la esquina).
 """
 import json
 import math
 import os
+import random
 import subprocess
 import sys
 import time
@@ -39,12 +42,14 @@ except OSError:
     sys.exit(0)                                   # ya hay una isla
 
 SOUNDS = "/usr/share/hyprarch/sounds"
-WIN_W, WIN_H = 640, 190                           # ventana fija y transparente: la isla se dibuja dentro, pegada arriba
-CW, CH = 168, 30                                  # compacta
-EW, EH = 560, 124                                 # expandida
-TOP = 50                                          # justo bajo la barra
+WIN_W, WIN_H = 580, 176                           # ventana fija y transparente: la isla se dibuja dentro, pegada arriba
+CW, CH = 214, 30                                  # compacta (como la de Coucou: una pestaña colgando del borde)
+EW, EH = 520, 132                                 # expandida: fila de iconos arriba + tarjeta con Claudito
+TOP = 0                                           # pegada al borde superior de la pantalla
+HEAD_H = 38                                       # alto de la fila de iconos
 
-ST = {"k": 0.0, "target": 0.0, "mood": "idle", "label": "Claudito", "look": 0.0, "t0": time.monotonic(), "hover": False}
+ST = {"k": 0.0, "target": 0.0, "mood": "idle", "label": "Claudito", "look": 0.0, "hover": False,
+      "t0": time.monotonic(), "last_act": time.monotonic(), "phrase": "¿Qué hacemos?", "wink_t": -99.0, "done_t": -99.0}
 
 MOODS = {  # color del brillo y texto corto según lo que hace la IA
     "idle": ((0.37, 0.95, 0.78), "Claudito"),
@@ -54,23 +59,19 @@ MOODS = {  # color del brillo y texto corto según lo que hace la IA
     "done": ((0.20, 0.83, 0.60), "¡Listo!"),
     "error": ((0.96, 0.31, 0.37), "Algo falló"),
 }
+PHRASES = ["¿Qué hacemos?", "Dime, jefe", "Aquí estoy", "¿Una pregunta rápida?", "Cuéntame", "¿En qué te ayudo?", "Listo para lo que sea"]
 
 
 def play(name):
     path = os.path.join(SOUNDS, name)
     if not os.path.exists(path):
         return
-    for cmd in (["pw-play", "--volume", "0.6", path], ["paplay", path]):
+    for cmd in (["pw-play", "--volume", "0.55", path], ["paplay", path]):
         try:
             subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return
         except OSError:
             continue
-
-
-def ease_out_back(x):
-    c1, c3 = 1.35, 2.35
-    return 1 + c3 * (x - 1) ** 3 + c1 * (x - 1) ** 2
 
 
 def lerp(a, b, k):
@@ -87,14 +88,31 @@ def rrect(cr, x, y, w, h, r):
     cr.close_path()
 
 
-def draw_face(cr, cx, cy, r, t, mood, look=0.0, bob=True):
-    """Claudito: casco octogonal con visor; flota, parpadea, la antena se mece."""
+def brrect(cr, x, y, w, h, r):
+    """Rectángulo con las esquinas de ABAJO redondas y las de arriba rectas: la isla cuelga del borde de la pantalla."""
+    r = max(0, min(r, w / 2, h))
+    cr.new_path()
+    cr.move_to(x, y)
+    cr.line_to(x + w, y)
+    cr.line_to(x + w, y + h - r)
+    cr.arc(x + w - r, y + h - r, r, 0, math.pi / 2)
+    cr.line_to(x + r, y + h)
+    cr.arc(x + r, y + h - r, r, math.pi / 2, math.pi)
+    cr.close_path()
+
+
+def draw_face(cr, cx, cy, r, t, mood, look=0.0, squash=0.0, awake=True):
+    """Claudito con carácter: casco octogonal con visor, antena que se mece, ojos con vida propia."""
     col = MOODS.get(mood, MOODS["idle"])[0]
-    b = 2.0 * math.sin(t * 2.4) * (r / 26) if bob else 0.0
+    sleepy = (time.monotonic() - ST["last_act"]) > 45 and mood == "idle"
+    b = (1.0 if not sleepy else 0.5) * 2.0 * math.sin(t * (2.4 if not sleepy else 1.1)) * (r / 24)
     cr.save()
     cr.translate(cx, cy + b)
-    cr.rotate(math.radians(2.5 * math.sin(t * 1.7)))
-    sway = math.radians(8 * math.sin(t * 3.1))
+    cr.scale(1 + squash * 0.5, 1 - squash * 0.5)                 # aplastarse/estirarse con el muelle
+    tilt = 2.5 * math.sin(t * 1.7) + (-8 if sleepy else 0) + (5 * math.sin(t * 9) if mood == "waiting" else 0)
+    cr.rotate(math.radians(tilt))
+    # antena (se mece; se agita cuando te necesita)
+    sway = math.radians((9 if mood != "waiting" else 22) * math.sin(t * (3.1 if mood != "waiting" else 11)))
     cr.save()
     cr.translate(r * 0.30, -r * 0.88)
     cr.rotate(sway)
@@ -105,64 +123,126 @@ def draw_face(cr, cx, cy, r, t, mood, look=0.0, bob=True):
     cr.close_path()
     cr.fill()
     cr.restore()
+    # casco
     cr.new_path()
     for i in range(8):
         a = math.radians(22.5 + 45 * i)
         (cr.move_to if i == 0 else cr.line_to)(r * math.cos(a), r * math.sin(a))
     cr.close_path()
     lg = cairo.LinearGradient(0, -r, 0, r)
-    lg.add_color_stop_rgb(0, 0.10, 0.16, 0.22)
+    lg.add_color_stop_rgb(0, 0.11, 0.17, 0.23)
     lg.add_color_stop_rgb(1, 0.03, 0.06, 0.09)
     cr.set_source(lg)
     cr.fill_preserve()
     cr.set_source_rgb(*col)
-    cr.set_line_width(max(1.4, r * 0.085))
+    cr.set_line_width(max(1.3, r * 0.085))
     cr.set_line_join(1)
     cr.stroke()
-    vw, vh = r * 1.30, r * 0.58
+    cr.set_source_rgba(1, 1, 1, 0.14)                              # reflejo
+    cr.set_line_width(max(1.0, r * 0.06))
+    cr.move_to(-r * 0.62, -r * 0.55)
+    cr.line_to(-r * 0.25, -r * 0.84)
+    cr.stroke()
+    # visor
+    vw, vh = r * 1.32, r * 0.60
     cr.set_source_rgb(0.015, 0.03, 0.05)
-    rrect(cr, -vw / 2, -vh / 2 + 1, vw, vh, vh * 0.28)
+    rrect(cr, -vw / 2, -vh / 2 + 1, vw, vh, vh * 0.3)
     cr.fill()
-    blink = 0.12 if (t % 3.3) > 3.18 else 1.0
-    ew, eh = r * 0.20, r * 0.24 * blink
-    cr.set_source_rgb(min(1, col[0] + 0.45), min(1, col[1] + 0.45), min(1, col[2] + 0.45))
-    for dx in (-r * 0.30, r * 0.30):
-        cr.rectangle(dx + look * r * 0.16 - ew / 2, 1 - eh / 2, ew, eh)
-        cr.fill()
+    # ojos: parpadean, miran alrededor y, según el estado, cambian de cara
+    bright = (min(1, col[0] + 0.45), min(1, col[1] + 0.45), min(1, col[2] + 0.45))
+    cr.set_source_rgb(*bright)
+    glance = 0.55 * math.sin(t * 0.9) * math.sin(t * 0.23)
+    gx = (look * 0.9 + glance) * r * 0.16
+    gy = 0.0
+    if mood == "thinking":
+        gx, gy = r * 0.12 * math.sin(t * 1.3), -r * 0.10
+    elif mood == "working":
+        gx = r * 0.17 * math.sin(t * 5.5)
+    ew, eh = r * 0.20, r * 0.26
+    blink = 0.10 if (t % 3.4) > 3.27 else 1.0
+    wink = (t - ST["wink_t"]) < 0.28
+    if sleepy:
+        eh *= 0.30
+    if mood == "done" or (t - ST["done_t"]) < 1.6:                 # ojos felices ^ ^
+        cr.set_line_width(max(1.4, r * 0.1))
+        cr.set_line_cap(1)
+        for dx in (-r * 0.30, r * 0.30):
+            cr.new_sub_path()
+            cr.arc(dx, r * 0.07, r * 0.13, math.pi * 1.08, math.pi * 1.92)
+            cr.stroke()
+    else:
+        for i, dx in enumerate((-r * 0.30, r * 0.30)):
+            h = eh * blink
+            if wink and i == 0:
+                h = r * 0.05
+            cr.rectangle(dx + gx - ew / 2, 1 + gy - h / 2, ew, max(1.0, h))
+            cr.fill()
     cr.restore()
+    # chispas al terminar, zzz si duerme, puntitos si piensa
+    if mood == "done" or (t - ST["done_t"]) < 1.6:
+        for i in range(4):
+            a = t * 1.8 + i * math.pi / 2
+            sx, sy = cx + math.cos(a) * r * 1.35, cy + math.sin(a) * r * 1.05 - 2
+            s = r * (0.13 + 0.05 * math.sin(t * 6 + i))
+            cr.set_source_rgba(1, 0.93, 0.55, 0.9)
+            cr.move_to(sx, sy - s * 1.6)
+            cr.line_to(sx + s * 0.5, sy - s * 0.5)
+            cr.line_to(sx + s * 1.6, sy)
+            cr.line_to(sx + s * 0.5, sy + s * 0.5)
+            cr.line_to(sx, sy + s * 1.6)
+            cr.line_to(sx - s * 0.5, sy + s * 0.5)
+            cr.line_to(sx - s * 1.6, sy)
+            cr.line_to(sx - s * 0.5, sy - s * 0.5)
+            cr.close_path()
+            cr.fill()
+    if sleepy:
+        cr.set_source_rgba(0.75, 0.9, 1, 0.7)
+        cr.select_font_face("sans", 0, 1)
+        for i in range(3):
+            cr.set_font_size(r * (0.38 + 0.12 * i))
+            cr.move_to(cx + r * (0.9 + 0.42 * i), cy - r * (0.55 + 0.55 * i) - ((t * 6) % 6))
+            cr.show_text("z")
+    if mood == "thinking":
+        for i in range(3):
+            cr.set_source_rgba(0.75, 0.68, 1, 0.35 + 0.65 * max(0, math.sin(t * 5 - i * 0.9)))
+            cr.arc(cx + r * (0.95 + 0.34 * i), cy - r * 0.95, r * 0.09, 0, 2 * math.pi)
+            cr.fill()
 
 
 CSS = b"""
 window { background: transparent; }
-.exp { color: #ffffff; }
-.name { font-size: 15px; font-weight: 700; color: #ffffff; }
-.sub { font-size: 12px; color: #93a4ad; }
-.opt { background: rgba(255,255,255,0.08); color: #e6eef1; border: none; border-radius: 999px; padding: 7px 15px;
-       font-weight: 600; font-size: 12.5px; min-height: 0;
-       transition: background 140ms ease-out, color 140ms ease-out, box-shadow 140ms ease-out; }
-.opt:hover { background: #ffffff; color: #0a0f14; box-shadow: 0 4px 16px rgba(255,255,255,0.22); }
-.opt.main { background: #5ef2c8; color: #0a0f14; }
-.opt.main:hover { background: #ffffff; }
-.x { background: transparent; color: #8a9aa3; border: none; border-radius: 999px; padding: 0 9px; font-size: 16px; min-height: 0; }
-.x:hover { background: rgba(255, 90, 110, 0.9); color: #ffffff; }
-.cmp { font-size: 12px; font-weight: 600; color: #d8e3e7; }
+.name { font-size: 10.5px; font-weight: 600; color: #7f929b; letter-spacing: 0.5px; }
+.say { font-size: 13px; font-weight: 700; color: #ffffff; }
+.ib { background: rgba(255,255,255,0.075); color: #dce7ec; border: none; border-radius: 999px; padding: 0;
+      min-width: 28px; min-height: 28px; font-family: "JetBrainsMono Nerd Font", monospace; font-size: 12px;
+      transition: background 140ms ease-out, color 140ms ease-out, box-shadow 140ms ease-out; }
+.ib:hover { background: #ffffff; color: #0a0f14; box-shadow: 0 3px 14px rgba(255,255,255,0.28); }
+.ib.main { background: #5ef2c8; color: #0a0f14; }
+.ib.main:hover { background: #ffffff; }
+.x { background: transparent; color: #7f929b; border: none; border-radius: 999px; padding: 0; min-width: 22px; min-height: 22px;
+     font-size: 15px; }
+.x:hover { background: rgba(255, 90, 110, 0.92); color: #ffffff; }
+.cmp { font-size: 11.5px; font-weight: 600; color: #d8e3e7; }
+.pill { background: rgba(255,255,255,0.08); color: #cfdbe0; border: none; border-radius: 999px; padding: 2px 11px;
+        font-size: 11px; font-weight: 600; min-height: 0; transition: background 140ms ease-out, color 140ms ease-out; }
+.pill:hover { background: #ffffff; color: #0a0f14; }
+tooltip { background: rgba(8,12,18,0.96); border-radius: 8px; color: #e6eef1; }
 """
 
 
 def status():
     try:
         out = subprocess.run(["claude-presence", "status"], capture_output=True, text=True, timeout=2).stdout
-        d = json.loads(out)
-        cls = d.get("class") or ""
+        cls = json.loads(out).get("class") or ""
         cls = cls[0] if isinstance(cls, list) and cls else cls
         return cls if cls in MOODS else "idle"
     except Exception:
         return "idle"
 
 
-def run(*cmd, env=None):
+def run(*cmd):
     try:
-        subprocess.Popen(list(cmd), start_new_session=True, env=env, stdin=subprocess.DEVNULL,
+        subprocess.Popen(list(cmd), start_new_session=True, stdin=subprocess.DEVNULL,
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except OSError:
         pass
@@ -175,25 +255,23 @@ class App(Gtk.Application):
         self.canvas = None
         self.exp_box = None
         self.cmp_box = None
+        self.cmp_label = None
+        self.say = None
         self.last_tick = time.monotonic()
         self.vel = 0.0
 
-    # ----- animación (muelle con rebote suave) -----
     def tick(self):
         now = time.monotonic()
         dt = min(0.05, now - self.last_tick)
         self.last_tick = now
         k, tgt = ST["k"], ST["target"]
-        # muelle amortiguado: rebota un poco al abrir
-        acc = 260.0 * (tgt - k) - 20.0 * self.vel
-        self.vel += acc * dt
-        k += self.vel * dt
-        ST["k"] = max(-0.05, min(1.08, k))
+        self.vel += (300.0 * (tgt - k) - 21.0 * self.vel) * dt          # muelle amortiguado: rebota un poco
+        ST["k"] = max(-0.06, min(1.12, k + self.vel * dt))
         kk = max(0.0, min(1.0, ST["k"]))
-        self.exp_box.set_opacity(max(0.0, (kk - 0.55) / 0.45))
-        self.cmp_box.set_opacity(max(0.0, 1.0 - kk * 2.2))
+        self.exp_box.set_opacity(max(0.0, (kk - 0.6) / 0.4))
+        self.cmp_box.set_opacity(max(0.0, 1.0 - kk * 2.6))
         self.exp_box.set_sensitive(kk > 0.9)
-        self.exp_box.set_visible(kk > 0.35)
+        self.exp_box.set_visible(kk > 0.4)
         self.canvas.queue_draw()
         self.update_region()
         return True
@@ -207,59 +285,76 @@ class App(Gtk.Application):
         if surf is None:
             return
         w, h = self.pill_size()
-        x = int((WIN_W - w) / 2) - 4
-        surf.set_input_region(cairo.Region(cairo.RectangleInt(max(0, x), 0, int(w) + 8, int(h) + 10)))
+        x = int((WIN_W - w) / 2) - 3
+        surf.set_input_region(cairo.Region(cairo.RectangleInt(max(0, x), 0, int(w) + 6, int(h) + 8)))
 
     def draw(self, _a, cr, W, H):
         t = time.monotonic() - ST["t0"]
-        kk = ST["k"]
+        kk = max(0.0, min(1.0, ST["k"]))
         w, h = self.pill_size()
-        x, y = (W - w) / 2, 2
+        x, y = (W - w) / 2, 0
         col = MOODS.get(ST["mood"], MOODS["idle"])[0]
-        radius = lerp(15, 28, max(0, min(1, kk)))
-        # sombra con profundidad
-        for i in range(7, 0, -1):
-            cr.set_source_rgba(0, 0, 0, 0.055)
-            rrect(cr, x - i * 1.4, y + 5 + i * 1.5, w + i * 2.8, h + i * 0.8, radius + i)
+        radius = lerp(15, 26, kk)
+        for i in range(6, 0, -1):                                      # sombra suave con profundidad
+            cr.set_source_rgba(0, 0, 0, 0.05)
+            brrect(cr, x - i * 1.1, y, w + i * 2.2, h + 3 + i * 1.6, radius + i)
             cr.fill()
-        # cuerpo: negro con luz arriba y brillo del color del estado abajo a la derecha
-        rrect(cr, x, y, w, h, radius)
-        cr.set_source_rgba(0.032, 0.047, 0.07, 0.985)
+        brrect(cr, x, y, w, h, radius)
+        cr.set_source_rgba(0.03, 0.045, 0.068, 0.985)
         cr.fill_preserve()
         cr.save()
         cr.clip()
-        g = cairo.RadialGradient(x + w * 0.9, y + h * 1.25, 4, x + w * 0.9, y + h * 1.25, max(w, h) * 0.8)
-        g.add_color_stop_rgba(0, col[0], col[1], col[2], 0.30 * (0.5 + 0.5 * kk))
+        g = cairo.RadialGradient(x + w * 0.88, y + h * 1.3, 3, x + w * 0.88, y + h * 1.3, max(w, h) * 0.75)
+        g.add_color_stop_rgba(0, col[0], col[1], col[2], 0.26)
         g.add_color_stop_rgba(1, col[0], col[1], col[2], 0)
         cr.set_source(g)
         cr.paint()
-        lg = cairo.LinearGradient(0, y, 0, y + h * 0.5)
-        lg.add_color_stop_rgba(0, 1, 1, 1, 0.07)
+        lg = cairo.LinearGradient(0, y, 0, y + h * 0.55)
+        lg.add_color_stop_rgba(0, 1, 1, 1, 0.075)
         lg.add_color_stop_rgba(1, 1, 1, 1, 0)
         cr.set_source(lg)
         cr.paint()
         cr.restore()
-        rrect(cr, x + 0.5, y + 0.5, w - 1, h - 1, radius)
-        cr.set_source_rgba(1, 1, 1, 0.12 + (0.10 if ST["hover"] and kk < 0.5 else 0))
+        brrect(cr, x + 0.5, y - 1, w - 1, h - 0.5, radius)
+        cr.set_source_rgba(1, 1, 1, 0.11 + (0.10 if ST["hover"] and kk < 0.5 else 0))
         cr.set_line_width(1)
         cr.stroke()
-        # Claudito: pequeño a la izquierda cuando está compacta, grande al expandir
-        r = lerp(9, 34, max(0, min(1, kk)))
-        fx = lerp(x + 20, x + 62, max(0, min(1, kk)))
-        fy = lerp(y + h / 2 + 1, y + h / 2, max(0, min(1, kk)))
-        # luz detrás
-        gl = cairo.RadialGradient(fx, fy, r * 0.3, fx, fy, r * 1.9)
-        gl.add_color_stop_rgba(0, col[0], col[1], col[2], 0.22 + 0.08 * math.sin(t * 2))
+        # tarjeta (solo expandida): rectángulo redondeado oscuro bajo la fila de iconos, como en Coucou
+        if kk > 0.45:
+            ca = max(0.0, (kk - 0.45) / 0.55)
+            cx0, cy0, cw0, ch0 = x + 12, y + HEAD_H, w - 24, h - HEAD_H - 12
+            rrect(cr, cx0, cy0, cw0, ch0, 18)
+            cr.set_source_rgba(1, 1, 1, 0.045 * ca)
+            cr.fill_preserve()
+            cr.set_source_rgba(1, 1, 1, 0.07 * ca)
+            cr.set_line_width(1)
+            cr.stroke()
+            cr.save()
+            rrect(cr, cx0, cy0, cw0, ch0, 18)
+            cr.clip()
+            wg = cairo.RadialGradient(cx0 + cw0 * 0.5, cy0 + ch0 * 1.3, 4, cx0 + cw0 * 0.5, cy0 + ch0 * 1.3, 240)
+            wg.add_color_stop_rgba(0, col[0], col[1], col[2], 0.40 * ca)       # el «lavado» de color según el estado
+            wg.add_color_stop_rgba(1, col[0], col[1], col[2], 0)
+            cr.set_source(wg)
+            cr.paint()
+            cr.restore()
+        r = lerp(8.5, 27, kk)
+        fx = lerp(x + 22, x + 58, kk)
+        fy = lerp(y + h / 2 + 1, y + HEAD_H + (h - HEAD_H - 12) / 2, kk)
+        gl = cairo.RadialGradient(fx, fy, r * 0.3, fx, fy, r * 1.8)
+        gl.add_color_stop_rgba(0, col[0], col[1], col[2], 0.20 + 0.07 * math.sin(t * 2))
         gl.add_color_stop_rgba(1, col[0], col[1], col[2], 0)
         cr.set_source(gl)
-        cr.arc(fx, fy, r * 1.9, 0, 2 * math.pi)
+        cr.arc(fx, fy, r * 1.8, 0, 2 * math.pi)
         cr.fill()
-        draw_face(cr, fx, fy, r, t, ST["mood"], ST["look"], bob=kk > 0.3)
+        draw_face(cr, fx, fy, r, t, ST["mood"], ST["look"], squash=max(-0.25, min(0.25, self.vel * 0.012)))
 
-    # ----- interacción -----
     def expand(self):
         if ST["target"] < 0.5:
+            ST["phrase"] = random.choice(PHRASES)
+            self.say.set_text(ST["phrase"])
             ST["target"] = 1.0
+            ST["last_act"] = time.monotonic()
             play("menu-open.wav")
             LS.set_keyboard_mode(self.win, LS.KeyboardMode.ON_DEMAND)
 
@@ -271,7 +366,7 @@ class App(Gtk.Application):
 
     def act(self, *cmd):
         self.collapse()
-        GLib.timeout_add(180, lambda: (run(*cmd), False)[1])      # primero se recoge, luego sale lo elegido
+        GLib.timeout_add(190, lambda: (run(*cmd), False)[1])          # primero se recoge, luego sale lo elegido
 
     def do_activate(self):
         prov = Gtk.CssProvider()
@@ -296,11 +391,9 @@ class App(Gtk.Application):
         self.canvas = canvas
         ov.set_child(canvas)
 
-        # contenido compacto: solo el texto de estado, a la derecha de la carita
         cmp_box = Gtk.Box()
         cmp_box.set_halign(Gtk.Align.CENTER)
         cmp_box.set_valign(Gtk.Align.START)
-        cmp_box.set_margin_top(2)
         cmp_box.set_size_request(CW, CH)
         self.cmp_label = Gtk.Label(label=ST["label"], xalign=0.0)
         self.cmp_label.add_css_class("cmp")
@@ -311,59 +404,82 @@ class App(Gtk.Application):
         self.cmp_box = cmp_box
         ov.add_overlay(cmp_box)
 
-        # contenido expandido
-        exp = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=9)
+        exp = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         exp.set_halign(Gtk.Align.CENTER)
         exp.set_valign(Gtk.Align.START)
-        exp.set_margin_top(2)
         exp.set_size_request(EW, EH)
-        exp.set_margin_start(0)
-        head = Gtk.Box(spacing=8)
-        head.set_margin_start(112)
-        head.set_margin_top(16)
-        head.set_margin_end(12)
-        titles = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+        head = Gtk.Box(spacing=6)                      # fila de iconos arriba (como el encabezado de Coucou)
+        head.set_size_request(-1, HEAD_H)
+        head.set_margin_start(16)
+        head.set_margin_end(14)
+        card = Gtk.Box(spacing=8)                      # tarjeta: Claudito a la izquierda, saludo y las IAs a la derecha
+        card.set_margin_start(12)
+        card.set_margin_end(12)
+        card.set_margin_bottom(12)
+        card.set_vexpand(True)
+        titles = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        titles.set_margin_start(92)
+        titles.set_valign(Gtk.Align.CENTER)
         titles.set_hexpand(True)
-        nm = Gtk.Label(label="Claudito", xalign=0.0)
+        nm = Gtk.Label(label="CLAUDITO", xalign=0.0)
         nm.add_css_class("name")
-        self.sub = Gtk.Label(label="¿Qué hacemos?", xalign=0.0)
-        self.sub.add_css_class("sub")
+        self.say = Gtk.Label(label=ST["phrase"], xalign=0.0)
+        self.say.add_css_class("say")
         titles.append(nm)
-        titles.append(self.sub)
-        xb = Gtk.Button(label="×")
-        xb.add_css_class("x")
-        xb.set_valign(Gtk.Align.START)
-        xb.connect("clicked", lambda _b: self.collapse())
-        head.append(titles)
-        head.append(xb)
-        row = Gtk.Box(spacing=7)
-        row.set_margin_start(112)
-        row.set_margin_top(6)
-        for label, cmd, main in (("Chat", ("hyprarch-ai", "open", "float"), True),
-                                 ("Pantalla completa", ("hyprarch-ai", "open", "full"), False),
-                                 ("Preguntar", ("hyprarch-ai", "ask"), False),
-                                 ("Historial", ("hyprarch-ai", "history"), False)):
-            b = Gtk.Button(label=label)
-            b.add_css_class("opt")
+        titles.append(self.say)
+        # las IAs que tienes instaladas, como pastillas con un puntito de estado (clic = hablar con esa)
+        pills = Gtk.Box(spacing=6)
+        pills.set_margin_top(5)
+        import shutil
+        extra = os.path.expanduser("~/.local/bin") + os.pathsep + os.environ.get("PATH", "")
+        for pid, pname in (("claude", "Claude"), ("codex", "Codex"), ("gemini", "Gemini"), ("ollama", "Ollama")):
+            if shutil.which(pid, path=extra):
+                pb = Gtk.Button(label="●  " + pname)
+                pb.add_css_class("pill")
+                pb.connect("clicked", lambda _b, p=pid: self.act("hyprarch-ai", "use", p))
+                pills.append(pb)
+        titles.append(pills)
+        card.append(titles)
+        for glyph, tip, cmd, main in (("", "Chat flotante", ("hyprarch-ai", "open", "float"), True),
+                                      ("", "Pantalla completa", ("hyprarch-ai", "open", "full"), False),
+                                      ("", "Preguntar algo rápido", ("hyprarch-ai", "ask"), False),
+                                      ("", "Historial de conversaciones", ("hyprarch-ai", "history"), False)):
+            b = Gtk.Button(label=glyph)
+            b.add_css_class("ib")
             if main:
                 b.add_css_class("main")
+            b.set_valign(Gtk.Align.CENTER)
+            b.set_tooltip_text(tip)
             b.connect("clicked", lambda _b, c=cmd: self.act(*c))
-            row.append(b)
+            m = Gtk.EventControllerMotion()                            # los ojos miran el botón al que te acercas
+            m.connect("enter", lambda *_a: ST.update(look=1.0))
+            m.connect("leave", lambda *_a: ST.update(look=0.0))
+            b.add_controller(m)
+            head.append(b)
+        spacer = Gtk.Box()
+        spacer.set_hexpand(True)
+        head.append(spacer)
+        xb = Gtk.Button(label="×")
+        xb.add_css_class("x")
+        xb.set_valign(Gtk.Align.CENTER)
+        xb.set_margin_end(10)
+        xb.set_margin_start(2)
+        xb.connect("clicked", lambda _b: self.collapse())
+        head.append(xb)
         exp.append(head)
-        exp.append(row)
+        exp.append(card)
         exp.set_opacity(0.0)
         exp.set_visible(False)
         self.exp_box = exp
         ov.add_overlay(exp)
         win.set_child(ov)
 
-        # clic en la pastilla compacta = expandir
         click = Gtk.GestureClick()
         click.set_button(1)
         click.connect("released", lambda *_a: self.expand() if ST["target"] < 0.5 else None)
         canvas.add_controller(click)
         mo = Gtk.EventControllerMotion()
-        mo.connect("enter", lambda *_a: ST.update(hover=True))
+        mo.connect("enter", lambda *_a: ST.update(hover=True, last_act=time.monotonic()))
         mo.connect("leave", lambda *_a: ST.update(hover=False))
         canvas.add_controller(mo)
         keys = Gtk.EventControllerKey()
@@ -371,17 +487,27 @@ class App(Gtk.Application):
         win.add_controller(keys)
 
         win.present()
-        if os.environ.get("HYPRARCH_ISLAND_OPEN"):            # solo para pruebas: arranca ya expandida
+        if os.environ.get("HYPRARCH_ISLAND_OPEN"):                      # solo para pruebas: arranca ya expandida
             GLib.timeout_add(600, lambda: (self.expand(), False)[1])
         GLib.timeout_add(16, self.tick)
         GLib.timeout_add(700, self.poll_status)
+        GLib.timeout_add(1500, self.maybe_wink)
+
+    def maybe_wink(self):
+        if random.random() < 0.28 and ST["mood"] == "idle":
+            ST["wink_t"] = time.monotonic() - ST["t0"]
+        return True
 
     def poll_status(self):
         m = status()
         if m != ST["mood"]:
+            if m == "done":
+                ST["done_t"] = time.monotonic() - ST["t0"]
             ST["mood"] = m
             ST["label"] = MOODS[m][1]
             self.cmp_label.set_text(ST["label"])
+            if m != "idle":
+                ST["last_act"] = time.monotonic()
         return True
 
 

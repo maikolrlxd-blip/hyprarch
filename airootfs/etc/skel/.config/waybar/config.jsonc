@@ -12,11 +12,11 @@
     "group/workspaces",
     "hyprland/window",
     "custom/close",
-    "custom/ws-events"
+    "custom/ws-events",
+    "clock"
   ],
-  "modules-center": ["clock", "custom/sys"],
+  "modules-center": [],          // el centro queda libre para la isla de Claudito (hyprarch-island)
   "modules-right": [
-    "custom/claude",
     "tray",
     "hyprland/language",
     "group/sistema",
