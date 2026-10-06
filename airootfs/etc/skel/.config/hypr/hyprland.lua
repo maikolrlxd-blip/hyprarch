@@ -299,9 +299,9 @@ hl.bind(mod .. " + D",      hl.dsp.exec_cmd(menu))
 hl.bind(mod .. " + B",      hl.dsp.exec_cmd(browser))
 hl.bind(mod .. " + E",      hl.dsp.exec_cmd(files))
 hl.bind(mod .. " + N",      hl.dsp.exec_cmd("hyprarch-wifi"))                                       -- redes Wi-Fi (panel animado, sin terminal)
-hl.bind(mod .. " + A",      hl.dsp.exec_cmd("hyprarch-ai open"))            -- hablar con la IA (según tu forma preferida)
+hl.bind(mod .. " + A",      hl.dsp.exec_cmd("hyprarch-ai ask"))             -- caja rápida: una pregunta suelta, sin guardar nada
 hl.bind(mod .. " + I", hl.dsp.exec_cmd("hyprarch-apps"))                                              -- instalar apps y juegos (menú)
-hl.bind(mod .. " + SHIFT + A", hl.dsp.exec_cmd("hyprarch-ai how"))                                      -- elegir cómo hablar con la IA (órbita animada)
+hl.bind(mod .. " + SHIFT + A", hl.dsp.exec_cmd("hyprarch-ai open float"))                               -- chat flotante
 -- Modos (cada atajo alterna entre ese modo y el normal)
 hl.bind(mod .. " + SHIFT + G", hl.dsp.exec_cmd("hyprarch-mode toggle gamer"))
 hl.bind(mod .. " + SHIFT + C", hl.dsp.exec_cmd("hyprarch-mode toggle cine"))
@@ -407,7 +407,7 @@ hl.window_rule({
     name  = "hyprarch-ai-float",
     match = { class = "^(hyprarch-ai-float)$" },
     float = true,
-    size  = { 480, 640 },
+    size  = { 340, 440 },
     move  = { "monitor_w-window_w-24", "monitor_h-window_h-24" },
 })
 hl.window_rule({

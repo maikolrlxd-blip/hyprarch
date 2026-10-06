@@ -146,6 +146,7 @@ chat() {
     pause; exit 1
   fi
   provider_extras
+  intro
   buddy 'done' "¡Listo, hablemos!"
   # El comando lo escribe el usuario: Bash interpreta sus comillas y argumentos.
   exec bash -c "exec $cmd"
@@ -166,6 +167,52 @@ focus_or_launch() {  # clase [opciones de kitty...] -- comando...
   else
     setsid -f kitty --class "$class" "$@" >/dev/null 2>&1 </dev/null
   fi
+}
+
+start_bar() { command -v hyprarch-ai-bar >/dev/null 2>&1 && setsid -f hyprarch-ai-bar "$1" >/dev/null 2>&1 </dev/null; }
+
+close_class() { [[ -n ${1:-} ]] && hyprctl eval "hl.dispatch(hl.dsp.window.close({ window = \"class:^($1)\$\" }))" >/dev/null 2>&1; }
+
+# cambia de IA (desde la tira de modelos del chat) y reabre el chat en la misma forma
+use_ai() {  # <id> [clase de la ventana actual]
+  local id=${1:-} cls=${2:-} p found=0 m
+  for p in "${PROVIDERS[@]}"; do [[ ${p%%|*} == "$id" ]] && found=1; done
+  (( found )) || { echo "IA desconocida: $id" >&2; return 1; }
+  AI=$id; AI_CMD=""
+  [[ $id == ollama ]] && AI_CMD='ollama run llama3.2'
+  save || return 1
+  case $cls in hyprarch-ai-full) m=full ;; hyprarch-ai-float) m=float ;; hyprarch-ai) m=direct ;; *) m=$(get_mode) ;; esac
+  close_class "$cls"; sleep 0.6
+  open_ai "$m"
+}
+
+# pantalla de entrada: se arma letra a letra con degradado, sin ser larga (unos 1,5 s)
+intro() {
+  [[ -t 1 && -z ${HYPRARCH_AI_NOINTRO:-} ]] || return 0
+  local cols name word="hyprarch" i r g b n pad
+  cols=$(tput cols 2>/dev/null || echo 40); name=$(field "$AI" 2 2>/dev/null || echo "IA")
+  name=${name%% (*}
+  local M=$'\e[38;2;94;242;200m' D=$'\e[38;2;120;150;160m' O=$'\e[38;2;255;179;71m' X=$'\e[0m'
+  printf '\e[?25l\e[2J\e[H'
+  pad=$(( (cols - 9) / 2 )); (( pad < 0 )) && pad=0
+  printf '\n\n%*s%s  ▄▄▄▄▄\n%*s  █ ■ ■ █\n%*s  █ ▀▀▀ █\n%*s   ▀▀▀▀▀%s\n\n' "$pad" "" "$M" "$pad" "" "$pad" "" "$pad" "" "$X"
+  pad=$(( (cols - ${#word}) / 2 )); (( pad < 0 )) && pad=0
+  printf '%*s' "$pad" ""
+  n=${#word}
+  for ((i = 0; i < n; i++)); do
+    r=$(( 94 + (160 - 94) * i / (n - 1) )); g=$(( 242 + (130 - 242) * i / (n - 1) )); b=$(( 200 + (255 - 200) * i / (n - 1) ))
+    printf '\e[1;38;2;%d;%d;%dm%s' "$r" "$g" "$b" "${word:i:1}"; sleep 0.04
+  done
+  printf '%s\n' "$X"
+  pad=$(( (cols - 24) / 2 )); (( pad < 0 )) && pad=0
+  printf '%*s%stu IA, en tu escritorio%s\n\n' "$pad" "" "$D" "$X"
+  pad=$(( (cols - ${#name} - 4) / 2 )); (( pad < 0 )) && pad=0
+  printf '%*s%s[ %s ]%s\n\n' "$pad" "" "$O" "$name" "$X"
+  pad=$(( (cols - 20) / 2 )); (( pad < 0 )) && pad=0
+  printf '%*s' "$pad" ""
+  for ((i = 0; i < 20; i++)); do printf '%s━%s' "$M" "$X"; sleep 0.03; done
+  sleep 0.2
+  printf '\e[?25h\e[2J\e[H'
 }
 
 # deja el chat flotante abajo a la derecha (la regla de posición de Hyprland no gana a "center" de las ventanas hyprarch-*)
@@ -212,8 +259,8 @@ quick_ask() {
   note "IA" "Trabajando en: $q" 4000
   cd "$HOME" || return 1
   case $AI in
-    claude) claude -p "$q" --allowedTools "Bash(hyprarch-api:*)" >"$out" 2>&1 ;;
-    codex)  codex exec --skip-git-repo-check "$q" >"$out" 2>&1 ;;
+    claude) claude -p "$q" --no-session-persistence --tools "" >"$out" 2>&1 ;;
+    codex)  codex exec --ephemeral --skip-git-repo-check "$q" >"$out" 2>&1 ;;
     gemini) gemini -p "$q" >"$out" 2>&1 ;;
     ollama) ollama run "$(awk '{print $NF}' <<<"$AI_CMD")" "$q" >"$out" 2>&1 ;;
   esac
@@ -227,9 +274,10 @@ open_ai() {
   [[ " ${AI_MODES[*]} " == *" $m "* ]] || m=float
   [[ -n $AI ]] || { setup || return 0; }
   case $m in
-    float)  focus_or_launch hyprarch-ai-float -o font_size=11 -o background_opacity=0.92 -o window_padding_width=14 -e hyprarch-ai chat
-            place_float ;;
-    full)   focus_or_launch hyprarch-ai-full --start-as=fullscreen -o font_size=15 -o window_padding_width=60 -e hyprarch-ai chat ;;
+    float)  focus_or_launch hyprarch-ai-float -o font_size=10 -o background_opacity=0.92 -o window_padding_width=10 -e hyprarch-ai chat
+            place_float; start_bar hyprarch-ai-float ;;
+    full)   focus_or_launch hyprarch-ai-full --start-as=fullscreen -o font_size=15 -o window_padding_width=60 -e hyprarch-ai chat
+            start_bar hyprarch-ai-full ;;
     direct) focus_or_launch hyprarch-ai -e hyprarch-ai chat ;;
     quick)  quick_ask ;;
   esac
@@ -268,7 +316,8 @@ login_flow() {
 
 case ${1:-chat} in
   chat)   chat ;;
-  open)   open_ai "${2:-}" ;;                       # abre según el modo guardado (o el que pidas)
+  open)   [[ -n ${3:-} ]] && close_class "$3"; open_ai "${2:-}" ;;      # abre según el modo guardado (o el que pidas)
+  use)    use_ai "${2:-}" "${3:-}" ;;                       # cambia de IA y reabre el chat
   how)    m=$(choose_mode) && open_ai "$m" ;;       # elegir cómo hablar y abrir
   ask)    quick_ask ;;
   login)  login_flow ;;
@@ -278,5 +327,5 @@ case ${1:-chat} in
   pick)   # solo el selector (sin terminal); si se eligió una IA, abre su conversación en una ventana flotante
           setup && open_ai ;;
   status) printf 'IA: %s\n' "${AI:-ninguna elegida}"; [[ -n $AI_CMD ]] && printf 'Comando: %s\n' "$AI_CMD" ;;
-  *)      printf 'Uso: hyprarch-ai {open|how|ask|login|mode|chat|setup|status}\n'; exit 2 ;;
+  *)      printf 'Uso: hyprarch-ai {open|use|ask|login|mode|chat|setup|status}\n'; exit 2 ;;
 esac

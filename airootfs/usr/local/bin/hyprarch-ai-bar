@@ -1,0 +1,149 @@
+#!/usr/bin/env python3
+"""hyprarch-ai-bar — la tira de modelos pegada al chat de la IA.
+
+Se ve encima del chat flotante o de pantalla completa. Un clic en el nombre de una IA cambia de modelo
+(el chat se reabre con ella); «Directo» abre el modelo tal cual, en una ventana normal, sin adornos.
+Sigue a la ventana del chat si la mueves y se cierra sola cuando el chat se cierra.
+
+Uso (lo lanza hyprarch-ai): hyprarch-ai-bar <clase-de-la-ventana>
+"""
+import fcntl
+import json
+import os
+import subprocess
+import sys
+
+if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza solo con el entorno correcto
+    env = dict(os.environ)
+    env["LD_PRELOAD"] = (env.get("LD_PRELOAD", "") + " /usr/lib/libgtk4-layer-shell.so").strip()
+    env["GSK_RENDERER"] = "cairo"
+    os.execvpe(sys.executable, [sys.executable] + sys.argv, env)
+
+import gi
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
+gi.require_version("Gtk4LayerShell", "1.0")
+from gi.repository import Gdk, GLib, Gtk, Gtk4LayerShell as LS  # noqa: E402
+
+CLASS = sys.argv[1] if len(sys.argv) > 1 else "hyprarch-ai-float"
+RUN = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+CONF = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "hyprarch", "ai.conf")
+PROVIDERS = [("claude", "Claude"), ("codex", "Codex"), ("gemini", "Gemini"), ("ollama", "Ollama")]
+BAR_H = 38
+
+lock = open(os.path.join(RUN, f"hyprarch-ai-bar-{CLASS}.lock"), "w")
+try:
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except OSError:
+    sys.exit(0)                                   # ya hay una tira para esta ventana
+
+
+def current_ai():
+    try:
+        for line in open(CONF, encoding="utf-8"):
+            if line.startswith("AI="):
+                return line.split("=", 1)[1].strip().strip("'\"")
+    except OSError:
+        pass
+    return ""
+
+
+def client():
+    try:
+        out = subprocess.run(["hyprctl", "clients", "-j"], capture_output=True, text=True, timeout=2).stdout
+        for c in json.loads(out):
+            if c.get("class") == CLASS:
+                return c
+    except Exception:
+        pass
+    return None
+
+
+CSS = b"""
+window { background: transparent; }
+.bar { background: rgba(10, 20, 30, 0.94); border: 1px solid rgba(94, 242, 200, 0.55);
+       border-radius: 14px; padding: 4px 6px; }
+button { background: transparent; color: #8fb3bd; border: none; border-radius: 10px;
+         padding: 3px 12px; min-height: 0; font-weight: 600; }
+button:hover { background: rgba(94, 242, 200, 0.16); color: #ffffff; }
+button.on { background: #5ef2c8; color: #0b1620; }
+button.direct { color: #ffb347; }
+label.sep { color: rgba(143, 179, 189, 0.5); padding: 0 4px; }
+"""
+
+
+def run_ai(*args):
+    subprocess.Popen(["hyprarch-ai", *args], start_new_session=True,
+                     stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+class App(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id=None)
+        self.buttons = {}
+        self.win = None
+        self.misses = 0
+
+    def do_activate(self):
+        prov = Gtk.CssProvider()
+        prov.load_from_data(CSS)
+        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), prov,
+                                                  Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        win = Gtk.ApplicationWindow(application=self)
+        self.win = win
+        LS.init_for_window(win)
+        LS.set_layer(win, LS.Layer.OVERLAY)
+        LS.set_anchor(win, LS.Edge.TOP, True)
+        LS.set_anchor(win, LS.Edge.LEFT, True)
+        LS.set_exclusive_zone(win, -1)
+        LS.set_namespace(win, "hyprarch-ai-bar")
+        LS.set_keyboard_mode(win, LS.KeyboardMode.NONE)
+
+        row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
+        row.add_css_class("bar")
+        for pid, name in PROVIDERS:
+            b = Gtk.Button(label=name)
+            b.connect("clicked", lambda _b, p=pid: run_ai("use", p, CLASS))
+            row.append(b)
+            self.buttons[pid] = b
+        sep = Gtk.Label(label="|")
+        sep.add_css_class("sep")
+        row.append(sep)
+        d = Gtk.Button(label="Directo")
+        d.add_css_class("direct")
+        d.set_tooltip_text("Hablar con el modelo tal cual, en una ventana normal")
+        d.connect("clicked", lambda _b: run_ai("open", "direct", CLASS))
+        row.append(d)
+        win.set_child(row)
+        win.present()
+        self.refresh()
+        GLib.timeout_add(300, self.tick)
+
+    def refresh(self):
+        cur = current_ai()
+        for pid, b in self.buttons.items():
+            (b.add_css_class if pid == cur else b.remove_css_class)("on")
+
+    def tick(self):
+        c = client()
+        if c is None:
+            self.misses += 1
+            if self.misses > 15:                   # el chat se cerró
+                self.quit()
+                return False
+            return True
+        self.misses = 0
+        x, y = c["at"]
+        w = c["size"][0]
+        # encima de la ventana; si no hay sitio (pantalla completa o pegada arriba) va dentro, arriba
+        top = y - BAR_H - 4 if y > BAR_H + 10 else y + 8
+        bw = self.win.get_width() or 330
+        LS.set_margin(self.win, LS.Edge.LEFT, max(0, int(x + w - bw)))     # alineada al borde derecho del chat
+        LS.set_margin(self.win, LS.Edge.TOP, max(0, int(top)))
+        self.refresh()
+        return True
+
+
+if __name__ == "__main__":
+    App().run([])

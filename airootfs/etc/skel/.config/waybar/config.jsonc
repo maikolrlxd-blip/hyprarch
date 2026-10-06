@@ -179,7 +179,8 @@
     "return-type": "json",
     "interval": 1,
     "tooltip": true,
-    "on-click": "hyprarch-ai open"
+    "on-click": "hyprarch-ai open float",
+    "on-click-right": "hyprarch-ai open full"
   },
 
   "custom/theme": {

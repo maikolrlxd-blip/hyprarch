@@ -951,10 +951,39 @@ def run_daemon():
                 if debug:
                     print("no se pudo abrir el menú:", repr(e), flush=True)
 
+        # clic = chat flotante · doble clic = pantalla completa · clic derecho = el menú del sistema
+        pending = {"id": 0}
+
+        def open_chat(mode):
+            try:
+                subprocess.Popen(["hyprarch-ai", "open", mode], start_new_session=True,
+                                 stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception as e:
+                if debug:
+                    print("no se pudo abrir el chat:", repr(e), flush=True)
+
+        def left_released(_g, n_press, _x, _y):
+            if pending["id"]:                       # un clic previo esperaba a ver si venía otro
+                GLib.source_remove(pending["id"])
+                pending["id"] = 0
+            if n_press >= 2:
+                open_chat("full")
+                return
+
+            def single():
+                pending["id"] = 0
+                open_chat("float")
+                return False
+            pending["id"] = GLib.timeout_add(280, single)
+
         click = Gtk.GestureClick()
         click.set_button(1)
-        click.connect("released", lambda *_: open_menu())
+        click.connect("released", left_released)
         area.add_controller(click)
+        rclick = Gtk.GestureClick()
+        rclick.set_button(3)
+        rclick.connect("released", lambda *_: open_menu())
+        area.add_controller(rclick)
         motion = Gtk.EventControllerMotion()
         motion.connect("enter", lambda *_: S.update(hover=True))
         motion.connect("leave", lambda *_: S.update(hover=False))
