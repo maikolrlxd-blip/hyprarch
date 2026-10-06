@@ -41,17 +41,18 @@ apps_of() { grep -v '^[[:space:]]*\(#\|$\)' "$MD/$1.conf" 2>/dev/null; }
 
 running() { pgrep -f -- "$(printf '%s' "$1" | awk '{print $1}')" >/dev/null 2>&1; }
 
-# Hyprland 0.56 usa Lua: `hyprctl dispatch exec ...` ya no existe; se abre con hl.exec_cmd (y el espacio como regla)
-lua_exec() {  # comando [espacio]
-  local c=${1//\\/\\\\}; c=${c//\"/\\\"}
-  if [[ ${2:-0} =~ ^[1-9][0-9]?$ ]]; then
-    hyprarch-ctl hyprctl eval "hl.exec_cmd(\"$c\", { workspace = \"$2 silent\" })" >/dev/null 2>&1
-  else
-    hyprarch-ctl hyprctl eval "hl.exec_cmd(\"$c\")" >/dev/null 2>&1
-  fi
+# Hyprland 0.56 usa Lua: `hyprctl dispatch exec ...` ya no existe; se abre con hl.exec_cmd. Cada app del modo se lanza con una
+# ETIQUETA propia de esa activación (y el espacio de trabajo como regla): así, al pasar a otro modo, solo se cierran las ventanas
+# que el propio modo lanzó. Nunca las que abriste tú, ni siquiera de la misma aplicación.
+lua_exec() {  # comando espacio etiqueta
+  local c=${1//\\/\\\\} opts
+  c=${c//\"/\\\"}
+  opts="tag = \"$3\""
+  [[ ${2:-0} =~ ^[1-9][0-9]?$ ]] && opts="workspace = \"$2 silent\", $opts"
+  hyprarch-ctl hyprctl eval "hl.exec_cmd(\"$c\", { $opts })" >/dev/null 2>&1
 }
 
-launch_apps() {
+launch_apps() {  # modo etiqueta
   local line ws cmd bin
   while IFS= read -r line; do
     ws=${line%%|*}; cmd=${line#*|}
@@ -59,48 +60,37 @@ launch_apps() {
     bin=${cmd%% *}
     safe_cmd "$cmd" || { echo "se ignora una línea no permitida en $1.conf" >&2; continue; }
     command -v "$bin" >/dev/null 2>&1 || continue          # app no instalada: se salta sin ruido
-    lua_exec "$cmd" "$ws"
+    lua_exec "$cmd" "$ws" "$2"
   done < <(apps_of "$1")
 }
 
-# Un solo modo a la vez: se recuerdan las ventanas que abrió el modo activo para cerrarlas al pasar a OTRO modo
-# (si no, las apps de dos modos se mezclan y el escritorio queda patas arriba).
-MODE_WINS="$CFG/mode-windows"
-clients_addrs() { hyprarch-ctl hyprctl clients -j 2>/dev/null | jq -r '.[].address' 2>/dev/null | sort; }
+# Un solo modo a la vez. La etiqueta de la activación actual se guarda aquí; Hyprland la marca con «*» al final
+# (etiqueta aplicada por regla), por eso se acepta con y sin asterisco.
+MODE_TOKEN="$CFG/mode-token"
 
-close_mode_windows() {
-  # si el modo anterior aún está anotando sus ventanas (tarda unos segundos tras abrirlas), se espera a que termine
-  local i=0
-  while [[ -e $CFG/.mode-rec ]] && (( i < 120 )); do sleep 0.1; i=$((i + 1)); done
-  [[ -s $MODE_WINS ]] || return 0
+close_tagged() {  # etiqueta: cierra las ventanas que la llevan
   local a
   while IFS= read -r a; do
     [[ $a =~ ^0x[0-9a-fA-F]+$ ]] || continue
     hyprarch-ctl hyprctl eval "hl.dispatch(hl.dsp.window.close({ window = \"address:$a\" }))" >/dev/null 2>&1
-  done < "$MODE_WINS"
-  : > "$MODE_WINS"
+  done < <(hyprarch-ctl hyprctl clients -j 2>/dev/null \
+             | jq -r --arg t "$1" '.[] | select((.tags // []) | any(. == $t or . == ($t + "*"))) | .address' 2>/dev/null)
 }
 
-# tras abrir las apps del modo, anota (en segundo plano) las ventanas NUEVAS que son de esas apps
-record_mode_windows() {  # <modo> <direcciones de antes>
-  local m=$1 before=$2 re
-  re=$(apps_of "$m" | sed 's/^[0-9]*|//' | awk '{print tolower($1)}' | sed 's#.*/##' | paste -sd'|')
-  [[ -n $re ]] || return 0
-  : > "$CFG/.mode-rec"                                   # marca «anotando»: otro cambio de modo espera a que termine
-  (
-    trap 'rm -f "$CFG/.mode-rec"' EXIT
-    sleep 6
-    new=$(comm -13 <(printf '%s\n' "$before") <(clients_addrs))
-    [[ -n $new ]] || exit 0
-    hyprarch-ctl hyprctl clients -j 2>/dev/null \
-      | jq -r --arg re "$re" '.[] | select(.class | ascii_downcase | test($re)) | .address' 2>/dev/null \
-      | grep -Fxf <(printf '%s\n' "$new") > "$MODE_WINS.tmp" && mv -f "$MODE_WINS.tmp" "$MODE_WINS"
-  ) 8>&- >/dev/null 2>&1 &
+close_mode_windows() {
+  local tok
+  tok=$(head -n1 "$MODE_TOKEN" 2>/dev/null | tr -d '[:space:]')
+  [[ $tok =~ ^hyprarch-mode-[0-9a-f]{12}$ ]] || return 0
+  close_tagged "$tok"
+  : > "$MODE_TOKEN"
+  # las apps tardan unos segundos en abrir su ventana: si el cambio de modo llegó antes, esas ventanas aún no existían.
+  # Un barrido corto (12 s, una vez por segundo) cierra las que aparezcan después con la etiqueta ya retirada.
+  ( for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do sleep 1; close_tagged "$tok"; done ) 8>&- >/dev/null 2>&1 &
   disown 2>/dev/null || :
 }
 
 set_mode() {
-  local m=$1 cur; cur=$(current)
+  local m=$1 cur tok; cur=$(current)
   valid "$m" || { echo "Modo desconocido: $m" >&2; return 1; }
   # un solo cambio de modo a la vez (atajo + IA + menú a la vez dejarían el tema y las apps mezclados)
   if command -v flock >/dev/null 2>&1; then exec 8>"$CFG/.mode.lock" && flock -w 15 8 || return 1; fi
@@ -114,15 +104,15 @@ set_mode() {
   if [[ $m == normal ]]; then
     hyprarch-theme "$(cat "$CFG/theme.before" 2>/dev/null || echo fresco)" >/dev/null 2>&1 8>&- \
       || hyprctl reload >/dev/null 2>&1
-    : > "$MODE_WINS" 2>/dev/null                          # a normal no se cierra nada: solo se olvida qué abrió el modo
+    : > "$MODE_TOKEN" 2>/dev/null                         # a normal no se cierra nada: solo se olvida qué lanzó el modo
     note "$(T mode.normal 'Modo normal')" "$(T mode.normal.d 'Todo vuelve a como lo dejaste')"
   else
     close_mode_windows                                  # las del modo anterior (si lo había)
     hyprarch-theme "$m" >/dev/null 2>&1 8>&- || hyprctl reload >/dev/null 2>&1
     note "$(label "$m")" "$(T mode.opening 'Abriendo tus apps…')"
-    local before; before=$(clients_addrs)
-    launch_apps "$m"
-    record_mode_windows "$m" "$before"
+    tok="hyprarch-mode-$(head -c 6 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+    printf '%s\n' "$tok" > "$MODE_TOKEN"
+    launch_apps "$m" "$tok"
   fi
   # el personajito toma el aire del modo
   command -v hyprarch-sysstate >/dev/null 2>&1 && hyprarch-sysstate >/dev/null 2>&1 8>&- || :

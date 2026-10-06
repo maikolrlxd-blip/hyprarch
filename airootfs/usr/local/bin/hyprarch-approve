@@ -55,12 +55,26 @@ SOUNDS = "/usr/share/hyprarch/sounds"
 
 TOOL = str(payload.get("tool_name") or "una acción")
 INP = payload.get("tool_input") or {}
+def _chars(v):
+    return len(v) if isinstance(v, str) else 0
+
+
 if isinstance(INP, dict):
-    DETAIL = (INP.get("command") or INP.get("file_path") or INP.get("path") or INP.get("url")
-              or INP.get("pattern") or json.dumps(INP, ensure_ascii=False))
+    if TOOL == "Bash" and INP.get("command"):
+        # los saltos de línea NO se esconden: cada uno se ve como « ¶ » (un comando de varias líneas no puede parecer uno solo)
+        DETAIL = str(INP["command"]).strip().replace("\r", "").replace("\n", " ¶ ")
+    elif TOOL == "Write" and INP.get("file_path"):
+        DETAIL = f"{INP['file_path']}  ({_chars(INP.get('content'))} caracteres)"
+    elif TOOL == "Edit" and INP.get("file_path"):
+        DETAIL = f"{INP['file_path']}  (cambia {_chars(INP.get('old_string'))} por {_chars(INP.get('new_string'))} caracteres)"
+    else:
+        DETAIL = (INP.get("command") or INP.get("file_path") or INP.get("path") or INP.get("url")
+                  or INP.get("pattern") or json.dumps(INP, ensure_ascii=False))
 else:
     DETAIL = str(INP)
-DETAIL = " ".join(str(DETAIL).split())
+DETAIL = str(DETAIL)
+# al pasar el ratón se ve la petición COMPLETA, con los caracteres de control escapados (nada queda oculto)
+FULL = json.dumps(INP, ensure_ascii=True, indent=1)[:1800]
 
 VERBS = {"Bash": "ejecutar un comando", "Write": "crear un archivo", "Edit": "modificar un archivo",
          "Read": "leer un archivo", "WebFetch": "abrir una página", "WebSearch": "buscar en internet"}
@@ -83,8 +97,9 @@ button { border: none; border-radius: 999px; padding: 6px 16px; font-weight: 600
          transition: background 140ms ease-out, color 140ms ease-out, box-shadow 140ms ease-out; }
 button.deny { background: rgba(255, 255, 255, 0.075); color: #d3dce0; }
 button.deny:hover { background: rgba(255, 90, 110, 0.88); color: #ffffff; box-shadow: 0 4px 14px rgba(255, 90, 110, 0.45); }
-button.allow { background: #ffffff; color: #0a0f14; padding: 6px 22px; box-shadow: 0 3px 12px rgba(255, 255, 255, 0.18); }
-button.allow:hover { background: #5ef2c8; box-shadow: 0 5px 18px rgba(94, 242, 200, 0.55); }
+.allow { background: #ffffff; color: #0a0f14; padding: 6px 22px; border-radius: 999px; font-weight: 600; font-size: 12.5px;
+         box-shadow: 0 3px 12px rgba(255, 255, 255, 0.18); transition: background 140ms ease-out, box-shadow 140ms ease-out; }
+.allow:hover { background: #5ef2c8; box-shadow: 0 5px 18px rgba(94, 242, 200, 0.55); }
 button:active { background: #cfd8dc; }
 """
 
@@ -321,15 +336,25 @@ class App(Gtk.Application):
 
         d = Gtk.Label(label=DETAIL, xalign=0.0, ellipsize=3)            # una sola línea con «…» al final
         d.add_css_class("detail")
-        d.set_tooltip_text(DETAIL)
+        d.set_tooltip_text(FULL)
 
         row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=7)
         deny = Gtk.Button(label="Rechazar")
         deny.add_css_class("deny")
         deny.connect("clicked", lambda _b: self.decide("deny"))
-        allow = Gtk.Button(label="Permitir")
+        # «Permitir» NO es un botón: un botón se activa también con el teclado (Espacio o Enter con el foco). Esto es una etiqueta
+        # que solo reacciona a un clic del puntero dentro de su área: ninguna tecla puede aprobar.
+        allow = Gtk.Label(label="Permitir")
         allow.add_css_class("allow")
-        allow.connect("clicked", lambda _b: self.decide("allow"))
+        tap = Gtk.GestureClick()
+        tap.set_button(1)
+
+        def on_tap(_g, _n, x, y):
+            inside = 0 <= x < allow.get_width() and 0 <= y < allow.get_height()
+            if inside and time.monotonic() - self.shown_at > 0.45:        # ignora un clic justo al aparecer la tarjeta
+                self.decide("allow")
+        tap.connect("released", on_tap)
+        allow.add_controller(tap)
         # los ojos de Hyro miran el botón sobre el que está el ratón
         for btn, look, mood in ((deny, -1.0, "deny"), (allow, 1.0, "allow")):
             m = Gtk.EventControllerMotion()
@@ -353,8 +378,10 @@ class App(Gtk.Application):
         win.set_child(wrap)
 
         keys = Gtk.EventControllerKey()
+        keys.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)          # antes que los botones
         keys.connect("key-pressed", self.on_key)
         win.add_controller(keys)
+        self.shown_at = time.monotonic()
         win.present()
         play("menu-open.wav")
         self.animate_in()
