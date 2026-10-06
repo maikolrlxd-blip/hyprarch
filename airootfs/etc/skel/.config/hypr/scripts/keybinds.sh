@@ -12,7 +12,7 @@ g	Redes Wi-Fi		SUPER + N
 h	Colores del sistema		SUPER + T
 i	CERRAR ventana		SUPER + Q  /  ALT + F4
 j	Pantalla completa		SUPER + F
-k	Ventana flotante		SUPER + V
+k	Ventana flotante / en mosaico		SUPER + SHIFT + F
 l	Cambiar división		SUPER + J
 m	Mover foco		SUPER + flechas
 n	Mover ventana		SUPER + SHIFT + flechas
@@ -21,7 +21,8 @@ p	Ir al espacio de trabajo		SUPER + 1..9
 q	Enviar ventana al espacio		SUPER + SHIFT + 1..9
 r	Espacio anterior		SUPER + Tab
 s	Siguiente ventana		ALT + Tab
-t	Historial del portapapeles		SUPER + SHIFT + V
+t	Historial del portapapeles		SUPER + V
+ta	Recorte de pantalla		SUPER + SHIFT + S  (o Impr Pant)
 u	Captura de área		Impr
 v	Captura de pantalla		SHIFT + Impr
 w	Cambiar distribución de teclado		ALT + SHIFT

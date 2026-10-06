@@ -317,13 +317,13 @@ hl.bind(mod .. " + S",      hl.dsp.exec_cmd("bash " .. scripts .. "/toggle-shade
 hl.bind(mod .. " + F1",     hl.dsp.exec_cmd(scripts .. "/keybinds.sh"))
 hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(scripts .. "/powermenu.sh"))
 hl.bind(mod .. " + L",      hl.dsp.exec_cmd("hyprlock"))
-hl.bind(mod .. " + SHIFT + V", hl.dsp.exec_cmd(scripts .. "/clipboard.sh"))
+hl.bind(mod .. " + V",         hl.dsp.exec_cmd(scripts .. "/clipboard.sh"))   -- historial del portapapeles (como en Windows)
 
 -- Ventanas
 hl.bind(mod .. " + Q",       hl.dsp.window.close())
 hl.bind(mod .. " + C",       hl.dsp.window.close())
 hl.bind("ALT + F4",          hl.dsp.window.close())
-hl.bind(mod .. " + V",       hl.dsp.window.float({ action = "toggle" }))
+hl.bind(mod .. " + SHIFT + F", hl.dsp.window.float({ action = "toggle" }))      -- ventana flotante / en mosaico
 hl.bind(mod .. " + F",       hl.dsp.window.fullscreen({ mode = "fullscreen", action = "toggle" }))
 hl.bind(mod .. " + J",       hl.dsp.layout("togglesplit"))
 hl.bind("ALT + Tab",         hl.dsp.window.cycle_next({}))
@@ -336,6 +336,7 @@ hl.bind(mod .. " + SHIFT + E", hl.dsp.exit())
 -- Capturas
 hl.bind("Print",         hl.dsp.exec_cmd(scripts .. "/screenshot.sh area"))
 hl.bind("SHIFT + Print", hl.dsp.exec_cmd(scripts .. "/screenshot.sh full"))
+hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(scripts .. "/screenshot.sh area"))   -- recorte de pantalla (como en Windows)
 
 -- Foco
 hl.bind(mod .. " + left",  hl.dsp.focus({ direction = "left" }))
