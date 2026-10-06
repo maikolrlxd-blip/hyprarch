@@ -3,6 +3,9 @@
     "allow": ["Bash(hyprarch-api:*)"]
   },
   "hooks": {
+    "PermissionRequest": [
+      { "hooks": [ { "type": "command", "command": "hyprarch-approve", "timeout": 130 } ] }
+    ],
     "UserPromptSubmit": [
       { "hooks": [ { "type": "command", "command": "claude-presence set thinking 'Pensando…'" } ] }
     ],

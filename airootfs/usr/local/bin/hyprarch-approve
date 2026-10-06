@@ -1,0 +1,194 @@
+#!/usr/bin/env python3
+"""hyprarch-approve — Claudito te pregunta antes de que la IA haga algo.
+
+Lo llama Claude Code como «hook» PermissionRequest: recibe por la entrada estándar qué quiere hacer la IA,
+muestra una pastilla compacta encima de Claudito con «Rechazar» y «Permitir», y devuelve tu decisión.
+
+Reglas de seguridad (no se negocian):
+  · NUNCA aprueba solo: permitir exige un CLIC tuyo (ninguna tecla permite; Esc rechaza).
+  · Si algo falla, no hay pantalla o pasa el tiempo (2 min), sale sin decidir y Claude pregunta como siempre.
+  · No guarda ni envía nada a ningún sitio.
+
+Prueba a mano:  echo '{"tool_name":"Bash","tool_input":{"command":"ls"}}' | hyprarch-approve
+"""
+import json
+import os
+import sys
+
+TIMEOUT_S = 120
+
+if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza solo con el entorno correcto
+    env = dict(os.environ)
+    env["LD_PRELOAD"] = (env.get("LD_PRELOAD", "") + " /usr/lib/libgtk4-layer-shell.so").strip()
+    env["GSK_RENDERER"] = "cairo"
+    try:
+        os.execvpe(sys.executable, [sys.executable] + sys.argv, env)
+    except OSError:
+        sys.exit(0)
+
+try:
+    payload = json.loads(sys.stdin.read() or "{}")
+except ValueError:
+    payload = {}
+
+try:
+    import gi
+
+    gi.require_version("Gtk", "4.0")
+    gi.require_version("Gdk", "4.0")
+    gi.require_version("Gtk4LayerShell", "1.0")
+    from gi.repository import Gdk, GLib, Gtk, Gtk4LayerShell as LS
+except Exception:
+    sys.exit(0)                                   # sin pantalla: Claude pregunta como siempre
+
+if not os.environ.get("WAYLAND_DISPLAY"):
+    sys.exit(0)
+
+RUN = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+CARD_W, CARD_H = 420, 108
+
+TOOL = str(payload.get("tool_name") or "una acción")
+INP = payload.get("tool_input") or {}
+if isinstance(INP, dict):
+    DETAIL = (INP.get("command") or INP.get("file_path") or INP.get("path") or INP.get("url")
+              or INP.get("pattern") or json.dumps(INP, ensure_ascii=False))
+else:
+    DETAIL = str(INP)
+DETAIL = " ".join(str(DETAIL).split())
+
+VERBS = {"Bash": "ejecutar un comando", "Write": "crear un archivo", "Edit": "modificar un archivo",
+         "Read": "leer un archivo", "WebFetch": "abrir una página", "WebSearch": "buscar en internet"}
+TITLE = VERBS.get(TOOL, f"usar {TOOL}")
+
+CSS = b"""
+window { background: transparent; }
+.pill { background: rgba(11, 18, 26, 0.94); border: 1px solid rgba(255, 255, 255, 0.10); border-radius: 18px;
+        padding: 11px 14px 12px 14px; }
+.dot { color: #ffb347; font-size: 10px; }
+.title { color: #8fa3ad; font-size: 12px; }
+.title b { color: #ffffff; }
+.detail { color: #e6f1f4; font-family: monospace; font-size: 12px; background: rgba(255,255,255,0.07);
+          border-radius: 9px; padding: 5px 9px; }
+.key { color: #6f8d97; font-size: 10px; background: rgba(255,255,255,0.07); border-radius: 5px; padding: 0 5px; }
+button { border: none; border-radius: 11px; padding: 4px 14px; font-weight: 600; font-size: 12px; min-height: 0; }
+button.deny { background: rgba(255, 255, 255, 0.07); color: #cfd8dc; }
+button.deny:hover { background: rgba(255, 90, 110, 0.85); color: #ffffff; }
+button.allow { background: #f2f7f8; color: #0b121a; }
+button.allow:hover { background: #5ef2c8; }
+"""
+
+
+def anchor():
+    """Pies de Claudito (los guarda claude-presence); si no se sabe, abajo a la derecha."""
+    try:
+        a = open(os.path.join(RUN, "claude-presence.pos")).read().strip().split(",")
+        return int(a[0]), int(a[1])
+    except (OSError, ValueError, IndexError):
+        return None
+
+
+def say(behavior, message=None):
+    d = {"behavior": behavior}
+    if message:
+        d["message"] = message
+    print(json.dumps({"hookSpecificOutput": {"hookEventName": "PermissionRequest", "decision": d}}), flush=True)
+
+
+class App(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id=None)
+        self.decided = False
+
+    def decide(self, behavior):
+        if self.decided:
+            return
+        self.decided = True
+        if behavior == "allow":
+            say("allow")
+        elif behavior == "deny":
+            say("deny", "La persona rechazó esta acción desde Claudito.")
+        self.quit()
+
+    def do_activate(self):
+        prov = Gtk.CssProvider()
+        prov.load_from_data(CSS)
+        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), prov, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        win = Gtk.ApplicationWindow(application=self)
+        win.set_default_size(CARD_W, CARD_H)
+        LS.init_for_window(win)
+        LS.set_layer(win, LS.Layer.OVERLAY)
+        LS.set_anchor(win, LS.Edge.TOP, True)
+        LS.set_anchor(win, LS.Edge.LEFT, True)
+        LS.set_exclusive_zone(win, -1)
+        LS.set_namespace(win, "hyprarch-approve")
+        LS.set_keyboard_mode(win, LS.KeyboardMode.ON_DEMAND)
+
+        mon = Gdk.Display.get_default().get_monitors().get_item(0).get_geometry()
+        a = anchor()
+        if a:
+            x, y = a[0] - CARD_W // 2, a[1] - CARD_H - 150          # justo encima de la cabeza de Claudito
+        else:
+            x, y = mon.width - CARD_W - 24, mon.height - CARD_H - 24
+        x = max(8, min(mon.width - CARD_W - 8, x))
+        y = max(60, min(mon.height - CARD_H - 8, y))
+        LS.set_margin(win, LS.Edge.LEFT, int(x))
+        LS.set_margin(win, LS.Edge.TOP, int(y))
+
+        col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=7)
+        col.add_css_class("pill")
+        col.set_size_request(CARD_W, -1)
+
+        head = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        dot = Gtk.Label(label="●")
+        dot.add_css_class("dot")
+        t = Gtk.Label(xalign=0.0)
+        t.set_markup(f"<b>Claude</b> quiere {GLib.markup_escape_text(TITLE)}")
+        t.add_css_class("title")
+        t.set_hexpand(True)
+        head.append(dot)
+        head.append(t)
+
+        d = Gtk.Label(label=DETAIL, xalign=0.0, ellipsize=3)            # 3 = al final «…», una sola línea
+        d.add_css_class("detail")
+        d.set_tooltip_text(DETAIL)
+
+        row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=7)
+        deny = Gtk.Button(label="Rechazar")
+        deny.add_css_class("deny")
+        deny.connect("clicked", lambda _b: self.decide("deny"))
+        allow = Gtk.Button(label="Permitir")
+        allow.add_css_class("allow")
+        allow.connect("clicked", lambda _b: self.decide("allow"))
+        esc = Gtk.Label(label="Esc")
+        esc.add_css_class("key")
+        esc.set_tooltip_text("Esc rechaza. Para permitir hay que hacer clic.")
+        spacer = Gtk.Box()
+        spacer.set_hexpand(True)
+        row.append(deny)
+        row.append(esc)
+        row.append(spacer)
+        row.append(allow)
+
+        for w in (head, d, row):
+            col.append(w)
+        win.set_child(col)
+
+        keys = Gtk.EventControllerKey()
+        keys.connect("key-pressed", self.on_key)
+        win.add_controller(keys)
+        win.present()
+        GLib.timeout_add_seconds(TIMEOUT_S, lambda: (self.decide("none"), False)[1])   # sin respuesta: que pregunte Claude
+
+    def on_key(self, _c, keyval, _code, _state):
+        # Permitir SOLO con clic: un Enter perdido mientras escribes en otra ventana no puede aprobar nada.
+        if keyval == Gdk.KEY_Escape:
+            self.decide("deny")
+        return True
+
+
+if __name__ == "__main__":
+    try:
+        App().run([])
+    except Exception:
+        pass
+    sys.exit(0)

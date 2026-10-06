@@ -813,6 +813,15 @@ def palette_signature():
 
 def run_daemon():
     """Superposición liviana: una ventanita (440x270) que se desplaza con los márgenes de layer-shell."""
+    # sin layer-shell precargado GTK abriría una ventana normal a pantalla completa: se relanza con el entorno correcto
+    if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):
+        env = dict(os.environ)
+        env["LD_PRELOAD"] = (env.get("LD_PRELOAD", "") + " /usr/lib/libgtk4-layer-shell.so").strip()
+        env["GSK_RENDERER"] = "cairo"
+        try:
+            os.execvpe(sys.executable, [sys.executable] + sys.argv, env)
+        except OSError:
+            pass
     # UNA sola presencia a la vez: si ya hay un personajito vivo, esta copia se retira (así nunca se ven dos Clauditos,
     # aunque se lance el demonio dos veces). El bloqueo lo suelta el sistema solo cuando el proceso termina.
     import fcntl
@@ -1071,6 +1080,18 @@ def run_daemon():
                     S["mt"] = mt
                 S["lx"], S["ly"] = S["x"] - ml, S["y"] - mt
                 set_hit_region()
+
+                # dónde está ahora (para que las ventanas que salen de él, como las aprobaciones, aparezcan encima);
+                # solo se escribe si se movió más de ~6 px y como mucho dos veces por segundo
+                if now - S.get("pos_t", 0) > 0.5 and (abs(S["x"] - S.get("pos_x", -99)) > 6 or abs(S["y"] - S.get("pos_y", -99)) > 6):
+                    S["pos_t"], S["pos_x"], S["pos_y"] = now, S["x"], S["y"]
+                    try:
+                        pf = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "claude-presence.pos")
+                        with open(pf + ".tmp", "w") as fh:
+                            fh.write("%d,%d\n" % (S["x"], S["y"]))
+                        os.replace(pf + ".tmp", pf)
+                    except OSError:
+                        pass
 
                 S["n"] += 1
                 if debug and S["n"] % 30 == 0:
