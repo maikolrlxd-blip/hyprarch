@@ -15,7 +15,14 @@
     "custom/ws-events",
     "clock"
   ],
-  "modules-center": [],          // el centro queda libre para la isla de Claudito (hyprarch-island)
+  "modules-center": ["custom/island-slot"],          // hueco reservado para la isla de Claudito (hyprarch-island)
+
+  "custom/island-slot": {
+    "exec": "echo ' '",
+    "interval": "once",
+    "format": "{}",
+    "tooltip": false
+  },
   "modules-right": [
     "tray",
     "hyprland/language",

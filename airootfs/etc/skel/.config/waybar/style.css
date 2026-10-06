@@ -16,6 +16,15 @@ window#waybar {
   color: @fg;
 }
 
+/* Hueco reservado en el centro de la barra para la isla de Claudito (hyprarch-island): invisible, pero ocupa su sitio
+   para que ningún otro módulo se meta debajo de la isla. */
+#custom-island-slot {
+  min-width: 252px;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
 tooltip {
   background: @surface;
   border: 1px solid @accent;

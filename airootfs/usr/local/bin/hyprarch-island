@@ -42,10 +42,11 @@ except OSError:
     sys.exit(0)                                   # ya hay una isla
 
 SOUNDS = "/usr/share/hyprarch/sounds"
-WIN_W, WIN_H = 580, 176                           # ventana fija y transparente: la isla se dibuja dentro, pegada arriba
-CW, CH = 214, 30                                  # compacta (como la de Coucou: una pestaña colgando del borde)
-EW, EH = 520, 132                                 # expandida: fila de iconos arriba + tarjeta con Claudito
-TOP = 0                                           # pegada al borde superior de la pantalla
+WIN_W, WIN_H = 580, 206                           # ventana fija y transparente: la isla se dibuja dentro
+CW, CH = 216, 36                                 # pastilla fija: ocupa el hueco reservado en el centro de la barra
+GAP = 8                                           # separación entre la pastilla y el panel desplegado
+EW, EH = 520, 132                                 # panel desplegado (cae debajo de la barra): fila de iconos + tarjeta
+TOP = 10                                          # a la altura de la barra (su margen superior)
 HEAD_H = 38                                       # alto de la fila de iconos
 
 ST = {"k": 0.0, "target": 0.0, "mood": "idle", "label": "Claudito", "look": 0.0, "hover": False,
@@ -269,43 +270,46 @@ class App(Gtk.Application):
         ST["k"] = max(-0.06, min(1.12, k + self.vel * dt))
         kk = max(0.0, min(1.0, ST["k"]))
         self.exp_box.set_opacity(max(0.0, (kk - 0.6) / 0.4))
-        self.cmp_box.set_opacity(max(0.0, 1.0 - kk * 2.6))
         self.exp_box.set_sensitive(kk > 0.9)
         self.exp_box.set_visible(kk > 0.4)
         self.canvas.queue_draw()
         self.update_region()
         return True
 
-    def pill_size(self):
-        k = ST["k"]
-        return lerp(CW, EW, k), lerp(CH, EH, k)
+    def pill_rect(self, W):
+        """La pastilla fija: vive en su hueco del centro de la barra y nunca se mueve ni tapa nada."""
+        return (W - CW) / 2, 0, CW, CH
+
+    def panel_rect(self, W):
+        """El panel desplegado: cae justo debajo de la barra, centrado."""
+        k = max(0.0, ST["k"])
+        w, h = lerp(CW, EW, k), lerp(0, EH, k)
+        return (W - w) / 2, CH + GAP, w, h
 
     def update_region(self):
         surf = self.win.get_surface()
         if surf is None:
             return
-        w, h = self.pill_size()
-        x = int((WIN_W - w) / 2) - 3
-        surf.set_input_region(cairo.Region(cairo.RectangleInt(max(0, x), 0, int(w) + 6, int(h) + 8)))
+        px, py, pw, ph = self.pill_rect(WIN_W)
+        reg = cairo.Region(cairo.RectangleInt(int(px) - 2, 0, int(pw) + 4, int(ph) + 4))
+        qx, qy, qw, qh = self.panel_rect(WIN_W)
+        if qh > 4:
+            reg.union(cairo.RectangleInt(int(qx) - 3, int(qy) - 2, int(qw) + 6, int(qh) + 6))
+        surf.set_input_region(reg)
 
-    def draw(self, _a, cr, W, H):
-        t = time.monotonic() - ST["t0"]
-        kk = max(0.0, min(1.0, ST["k"]))
-        w, h = self.pill_size()
-        x, y = (W - w) / 2, 0
-        col = MOODS.get(ST["mood"], MOODS["idle"])[0]
-        radius = lerp(15, 26, kk)
-        for i in range(6, 0, -1):                                      # sombra suave con profundidad
+    def body(self, cr, x, y, w, h, radius, col, wash, hover=False):
+        """Fondo de la isla: sombra con profundidad, negro con luz arriba, brillo de color abajo a la derecha y borde fino."""
+        for i in range(6, 0, -1):
             cr.set_source_rgba(0, 0, 0, 0.05)
-            brrect(cr, x - i * 1.1, y, w + i * 2.2, h + 3 + i * 1.6, radius + i)
+            rrect(cr, x - i * 1.1, y + 2 + i * 0.9, w + i * 2.2, h + i * 1.1, radius + i)
             cr.fill()
-        brrect(cr, x, y, w, h, radius)
+        rrect(cr, x, y, w, h, radius)
         cr.set_source_rgba(0.03, 0.045, 0.068, 0.985)
         cr.fill_preserve()
         cr.save()
         cr.clip()
         g = cairo.RadialGradient(x + w * 0.88, y + h * 1.3, 3, x + w * 0.88, y + h * 1.3, max(w, h) * 0.75)
-        g.add_color_stop_rgba(0, col[0], col[1], col[2], 0.26)
+        g.add_color_stop_rgba(0, col[0], col[1], col[2], wash)
         g.add_color_stop_rgba(1, col[0], col[1], col[2], 0)
         cr.set_source(g)
         cr.paint()
@@ -315,32 +319,12 @@ class App(Gtk.Application):
         cr.set_source(lg)
         cr.paint()
         cr.restore()
-        brrect(cr, x + 0.5, y - 1, w - 1, h - 0.5, radius)
-        cr.set_source_rgba(1, 1, 1, 0.11 + (0.10 if ST["hover"] and kk < 0.5 else 0))
+        rrect(cr, x + 0.5, y + 0.5, w - 1, h - 1, radius)
+        cr.set_source_rgba(1, 1, 1, 0.11 + (0.10 if hover else 0))
         cr.set_line_width(1)
         cr.stroke()
-        # tarjeta (solo expandida): rectángulo redondeado oscuro bajo la fila de iconos, como en Coucou
-        if kk > 0.45:
-            ca = max(0.0, (kk - 0.45) / 0.55)
-            cx0, cy0, cw0, ch0 = x + 12, y + HEAD_H, w - 24, h - HEAD_H - 12
-            rrect(cr, cx0, cy0, cw0, ch0, 18)
-            cr.set_source_rgba(1, 1, 1, 0.045 * ca)
-            cr.fill_preserve()
-            cr.set_source_rgba(1, 1, 1, 0.07 * ca)
-            cr.set_line_width(1)
-            cr.stroke()
-            cr.save()
-            rrect(cr, cx0, cy0, cw0, ch0, 18)
-            cr.clip()
-            wg = cairo.RadialGradient(cx0 + cw0 * 0.5, cy0 + ch0 * 1.3, 4, cx0 + cw0 * 0.5, cy0 + ch0 * 1.3, 240)
-            wg.add_color_stop_rgba(0, col[0], col[1], col[2], 0.40 * ca)       # el «lavado» de color según el estado
-            wg.add_color_stop_rgba(1, col[0], col[1], col[2], 0)
-            cr.set_source(wg)
-            cr.paint()
-            cr.restore()
-        r = lerp(8.5, 27, kk)
-        fx = lerp(x + 22, x + 58, kk)
-        fy = lerp(y + h / 2 + 1, y + HEAD_H + (h - HEAD_H - 12) / 2, kk)
+
+    def face_at(self, cr, fx, fy, r, t, col):
         gl = cairo.RadialGradient(fx, fy, r * 0.3, fx, fy, r * 1.8)
         gl.add_color_stop_rgba(0, col[0], col[1], col[2], 0.20 + 0.07 * math.sin(t * 2))
         gl.add_color_stop_rgba(1, col[0], col[1], col[2], 0)
@@ -348,6 +332,38 @@ class App(Gtk.Application):
         cr.arc(fx, fy, r * 1.8, 0, 2 * math.pi)
         cr.fill()
         draw_face(cr, fx, fy, r, t, ST["mood"], ST["look"], squash=max(-0.25, min(0.25, self.vel * 0.012)))
+
+    def draw(self, _a, cr, W, H):
+        t = time.monotonic() - ST["t0"]
+        kk = max(0.0, min(1.0, ST["k"]))
+        col = MOODS.get(ST["mood"], MOODS["idle"])[0]
+        # 1) pastilla fija en su hueco de la barra (Claudito pequeño + estado)
+        px, py, pw, ph = self.pill_rect(W)
+        self.body(cr, px, py, pw, ph, ph / 2, col, 0.18, hover=ST["hover"] and kk < 0.5)
+        # 2) panel que cae debajo al desplegarse
+        qx, qy, qw, qh = self.panel_rect(W)
+        if qh > 6:
+            self.body(cr, qx, qy, qw, qh, 26, col, 0.26)
+            if kk > 0.45:
+                ca = max(0.0, (kk - 0.45) / 0.55)
+                cx0, cy0, cw0, ch0 = qx + 12, qy + HEAD_H, qw - 24, qh - HEAD_H - 12
+                rrect(cr, cx0, cy0, cw0, ch0, 18)                       # tarjeta con borde fino, como en Coucou
+                cr.set_source_rgba(1, 1, 1, 0.045 * ca)
+                cr.fill_preserve()
+                cr.set_source_rgba(1, 1, 1, 0.07 * ca)
+                cr.set_line_width(1)
+                cr.stroke()
+                cr.save()
+                rrect(cr, cx0, cy0, cw0, ch0, 18)
+                cr.clip()
+                wg = cairo.RadialGradient(cx0 + cw0 * 0.5, cy0 + ch0 * 1.3, 4, cx0 + cw0 * 0.5, cy0 + ch0 * 1.3, 240)
+                wg.add_color_stop_rgba(0, col[0], col[1], col[2], 0.40 * ca)    # el «lavado» de color según el estado
+                wg.add_color_stop_rgba(1, col[0], col[1], col[2], 0)
+                cr.set_source(wg)
+                cr.paint()
+                cr.restore()
+                self.face_at(cr, cx0 + 46, cy0 + ch0 / 2, 27, t, col)           # Claudito grande en la tarjeta
+        self.face_at(cr, px + 22, py + ph / 2 + 1, 9, t, col)                   # y el pequeño siempre en la pastilla
 
     def expand(self):
         if ST["target"] < 0.5:
@@ -407,6 +423,7 @@ class App(Gtk.Application):
         exp = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         exp.set_halign(Gtk.Align.CENTER)
         exp.set_valign(Gtk.Align.START)
+        exp.set_margin_top(CH + GAP)                   # debajo de la pastilla
         exp.set_size_request(EW, EH)
         head = Gtk.Box(spacing=6)                      # fila de iconos arriba (como el encabezado de Coucou)
         head.set_size_request(-1, HEAD_H)
@@ -476,7 +493,8 @@ class App(Gtk.Application):
 
         click = Gtk.GestureClick()
         click.set_button(1)
-        click.connect("released", lambda *_a: self.expand() if ST["target"] < 0.5 else None)
+        # clic en la pastilla = abrir/cerrar el panel (un clic en el panel no lo cierra)
+        click.connect("released", lambda _g, _n, _x, y: (self.collapse() if ST["target"] > 0.5 else self.expand()) if y < CH + 4 else None)
         canvas.add_controller(click)
         mo = Gtk.EventControllerMotion()
         mo.connect("enter", lambda *_a: ST.update(hover=True, last_act=time.monotonic()))
