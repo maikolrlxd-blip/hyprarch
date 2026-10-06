@@ -43,7 +43,7 @@ except OSError:
 
 SOUNDS = "/usr/share/hyprarch/sounds"
 WIN_W, WIN_H = 580, 206                           # ventana fija y transparente: la isla se dibuja dentro
-CW, CH = 216, 36                                 # pastilla fija: ocupa el hueco reservado en el centro de la barra
+CW, CH = 176, 36                                # pastilla fija: ocupa el hueco reservado en el centro de la barra
 GAP = 8                                           # separación entre la pastilla y el panel desplegado
 EW, EH = 520, 132                                 # panel desplegado (cae debajo de la barra): fila de iconos + tarjeta
 TOP = 10                                          # a la altura de la barra (su margen superior)
