@@ -41,6 +41,16 @@ apps_of() { grep -v '^[[:space:]]*\(#\|$\)' "$MD/$1.conf" 2>/dev/null; }
 
 running() { pgrep -f -- "$(printf '%s' "$1" | awk '{print $1}')" >/dev/null 2>&1; }
 
+# Hyprland 0.56 usa Lua: `hyprctl dispatch exec ...` ya no existe; se abre con hl.exec_cmd (y el espacio como regla)
+lua_exec() {  # comando [espacio]
+  local c=${1//\\/\\\\}; c=${c//\"/\\\"}
+  if [[ ${2:-0} =~ ^[1-9][0-9]?$ ]]; then
+    hyprarch-ctl hyprctl eval "hl.exec_cmd(\"$c\", { workspace = \"$2 silent\" })" >/dev/null 2>&1
+  else
+    hyprarch-ctl hyprctl eval "hl.exec_cmd(\"$c\")" >/dev/null 2>&1
+  fi
+}
+
 launch_apps() {
   local line ws cmd bin
   while IFS= read -r line; do
@@ -49,11 +59,7 @@ launch_apps() {
     bin=${cmd%% *}
     safe_cmd "$cmd" || { echo "se ignora una línea no permitida en $1.conf" >&2; continue; }
     command -v "$bin" >/dev/null 2>&1 || continue          # app no instalada: se salta sin ruido
-    if [[ $ws =~ ^[1-9][0-9]?$ ]]; then
-      hyprctl dispatch exec "[workspace $ws silent] $cmd" >/dev/null 2>&1
-    else
-      hyprctl dispatch exec "$cmd" >/dev/null 2>&1
-    fi
+    lua_exec "$cmd" "$ws"
   done < <(apps_of "$1")
 }
 

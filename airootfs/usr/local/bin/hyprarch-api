@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+# hyprarch-api — la interfaz del sistema para IAs y scripts: acciones acotadas y seguras, respuesta siempre en JSON.
+#
+#   hyprarch-api help                         lista de comandos
+#   hyprarch-api windows | workspaces | active
+#   hyprarch-api focus <clase|0xdirección>    hyprarch-api close <clase|0xdirección>    hyprarch-api workspace <n>
+#   hyprarch-api apps                         aplicaciones instaladas (id y nombre)
+#   hyprarch-api open <nombre|id de app>      abre una aplicación instalada (por su nombre o id; NO ejecuta comandos libres)
+#   hyprarch-api mode [set <gamer|cine|estudio|trabajo|normal>]    modo del escritorio
+#   hyprarch-api theme [set <tema>]           tema de colores
+#   hyprarch-api volume [set <0-100>|mute]    hyprarch-api brightness [set <0-100>]
+#   hyprarch-api wifi [status|list|connect SSID [clave]]
+#   hyprarch-api system                       carga, memoria, batería, tiempo encendido
+#   hyprarch-api screenshot [archivo]         captura de pantalla (devuelve la ruta)
+#   hyprarch-api notify "Título" "Texto"      muestra una notificación        hyprarch-api osd "Texto"   aviso corto animado
+#
+# Funciona también por SSH (usa hyprarch-ctl para entrar a la sesión gráfica). Sale con código 1 y {"ok":false,"error":...} si falla.
+set -u
+command -v jq >/dev/null 2>&1 || { echo '{"ok":false,"error":"falta jq"}'; exit 1; }
+
+hc()   { if command -v hyprarch-ctl >/dev/null 2>&1; then hyprarch-ctl hyprctl "$@"; else hyprctl "$@"; fi; }
+ok()   { jq -cn --arg m "${1:-ok}" '{ok:true,message:$m}'; }
+fail() { jq -cn --arg e "$1" '{ok:false,error:$e}'; exit 1; }
+num()  { [[ ${1:-} =~ ^[0-9]{1,3}$ ]] && (( $1 <= 100 )) || fail "se esperaba un número de 0 a 100"; }
+sel()  { # clase o dirección -> selector de Hyprland (devuelve 1 si no es válido; el que llama muestra el error)
+  case $1 in
+    0x*) [[ $1 =~ ^0x[0-9a-fA-F]+$ ]] || return 1; echo "address:$1" ;;
+    *)   [[ $1 =~ ^[A-Za-z0-9._@+-]+$ ]] || return 1; echo "class:^($1)\$" ;;
+  esac
+}
+lua()  { hc eval "$1" >/dev/null; }     # Hyprland 0.56: la configuración y los comandos van en Lua
+
+desktop_apps() {  # id<TAB>nombre
+  local f n
+  for f in /usr/share/applications/*.desktop "$HOME"/.local/share/applications/*.desktop; do
+    [[ -f $f ]] || continue
+    grep -qi '^NoDisplay=true' "$f" && continue
+    n=$(grep -m1 '^Name=' "$f" | cut -d= -f2-)
+    [[ -n $n ]] && printf '%s\t%s\n' "$(basename "$f" .desktop)" "$n"
+  done | sort -t$'\t' -k2,2
+}
+
+case "${1:-help}" in
+  windows)    hc clients -j | jq -c '[.[] | {address, class, title, workspace: .workspace.id, pid, floating, focused: (.focusHistoryID == 0)}]' ;;
+  workspaces) hc workspaces -j | jq -c '[.[] | {id, name, windows}]' ;;
+  active)     hc activewindow -j | jq -c '{address, class, title, workspace: .workspace.id}' ;;
+  focus)      s=$(sel "${2:?clase o dirección}") || fail "clase o dirección no válida"
+              lua "hl.dispatch(hl.dsp.focus({ window = \"$s\" }))" && ok "enfocada" ;;
+  close)      s=$(sel "${2:?clase o dirección}") || fail "clase o dirección no válida"
+              lua "hl.dispatch(hl.dsp.window.close({ window = \"$s\" }))" && ok "cerrada" ;;
+  workspace)  [[ ${2:-} =~ ^[0-9]{1,2}$ ]] || fail "número de espacio no válido"
+              lua "hl.dispatch(hl.dsp.focus({ workspace = $2 }))" && ok "espacio $2" ;;
+  apps)       desktop_apps | jq -R -s -c 'split("\n") | map(select(length > 0) | split("\t") | {id: .[0], name: .[1]})' ;;
+  open)
+    q=${2:?nombre o id de la app}
+    id=$(desktop_apps | awk -F'\t' -v q="$q" 'tolower($1) == tolower(q) || tolower($2) == tolower(q) {print $1; exit}')
+    [[ -n $id ]] || id=$(desktop_apps | awk -F'\t' -v q="$q" 'index(tolower($2), tolower(q)) {print $1; exit}')
+    [[ -n $id ]] || fail "no hay ninguna app instalada que se llame '$q' (mira: hyprarch-api apps)"
+    [[ $id =~ ^[A-Za-z0-9._-]+$ ]] || fail "id de app no válido"
+    lua "hl.exec_cmd(\"gtk-launch $id\")" && ok "abriendo $id" ;;
+  mode)
+    if [[ ${2:-} == set ]]; then hyprarch-mode set "${3:?modo}" >/dev/null 2>&1 && ok "modo ${3}" || fail "modo no válido"
+    else jq -cn --arg m "$(hyprarch-mode current 2>/dev/null)" '{mode:$m}'; fi ;;
+  theme)
+    if [[ ${2:-} == set ]]; then hyprarch-theme "${3:?tema}" >/dev/null 2>&1 && ok "tema ${3}" || fail "tema no válido"
+    else jq -cn --arg t "$(cat "$HOME/.config/hyprarch/current" 2>/dev/null)" '{theme:$t}'; fi ;;
+  volume)
+    case ${2:-get} in
+      get)  v=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null) || fail "sin audio"; jq -cn --arg v "$v" '{volume: (($v|capture("(?<n>[0-9.]+)").n|tonumber)*100|floor), muted: ($v|contains("MUTED"))}' ;;
+      set)  num "${3:-}"; wpctl set-volume @DEFAULT_AUDIO_SINK@ "$3%" && ok "volumen $3" ;;
+      mute) wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle && ok "silencio alternado" ;;
+      *)    fail "uso: volume [get|set N|mute]" ;;
+    esac ;;
+  brightness)
+    case ${2:-get} in
+      get) b=$(brightnessctl -m 2>/dev/null | cut -d, -f4 | tr -d %); [[ -n $b ]] || fail "sin control de brillo"; jq -cn --argjson b "$b" '{brightness:$b}' ;;
+      set) num "${3:-}"; brightnessctl -q set "$3%" && ok "brillo $3" ;;
+      *)   fail "uso: brightness [get|set N]" ;;
+    esac ;;
+  wifi)
+    case ${2:-status} in
+      status)  jq -cn --arg s "$(hyprarch-wifi status 2>/dev/null)" '{status:$s}' ;;
+      list)    hyprarch-wifi list ;;
+      connect) hyprarch-wifi connect "${3:?SSID}" "${4:-}" >/dev/null 2>&1 && ok "conectando a ${3}" || fail "no se pudo conectar" ;;
+      *)       fail "uso: wifi [status|list|connect SSID [clave]]" ;;
+    esac ;;
+  system)
+    read -r l1 l5 l15 _ < /proc/loadavg
+    mem=$(awk '/MemTotal/{t=$2}/MemAvailable/{a=$2}END{printf "%d %d", t/1024, (t-a)/1024}' /proc/meminfo)
+    bat=$(cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -1)
+    jq -cn --arg l "$l1 $l5 $l15" --arg m "$mem" --arg b "${bat:-}" --arg up "$(uptime -p 2>/dev/null)" \
+      '{load:$l, memory_total_mb:($m|split(" ")[0]|tonumber), memory_used_mb:($m|split(" ")[1]|tonumber), battery:(if $b=="" then null else ($b|tonumber) end), uptime:$up}' ;;
+  screenshot)
+    f=${2:-$HOME/captura-$(date +%Y%m%d-%H%M%S).png}
+    case $f in /*) ;; *) f=$PWD/$f ;; esac
+    hyprarch-ctl grim "$f" 2>/dev/null && jq -cn --arg p "$f" '{ok:true,path:$p}' || fail "no se pudo capturar" ;;
+  notify)  notify-send "${2:?título}" "${3:-}" && ok "enviada" ;;
+  osd)     hyprarch-osd text "${2:?texto}" >/dev/null 2>&1 & ok "mostrado" ;;
+  help|-h|--help)
+    sed -n '2,/^set -u/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//' ;;
+  *) fail "comando desconocido: $1 (prueba: hyprarch-api help)" ;;
+esac

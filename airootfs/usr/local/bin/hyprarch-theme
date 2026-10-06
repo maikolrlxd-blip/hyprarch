@@ -152,21 +152,29 @@ render_mako() {
   put "$CFG/mako/config" <<EOF
 # Generado por hyprarch-theme (${NAME}). No editar a mano.
 font=JetBrainsMono Nerd Font 11
-background-color=#${BG}ee
+layer=overlay
+background-color=#${BG}e0
 text-color=#${FG}
-border-color=#${ACCENT}
-progress-color=over #${ACCENT}55
-border-size=2
-border-radius=14
-padding=14
-margin=14
-width=380
+border-color=#${ACCENT}66
+progress-color=over #${ACCENT}44
+border-size=1
+border-radius=20
+padding=16,20
+margin=14,18
+width=370
 height=220
+max-icon-size=44
+icon-border-radius=12
 anchor=top-right
 default-timeout=5000
+group-by=app-name
+
+[urgency=low]
+border-color=#${DIM}55
+default-timeout=3000
 
 [urgency=critical]
-border-color=#${ALERT}
+border-color=#${ALERT}cc
 default-timeout=0
 EOF
 }

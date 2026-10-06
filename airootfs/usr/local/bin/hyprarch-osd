@@ -1,0 +1,253 @@
+#!/usr/bin/env python3
+"""hyprarch-osd — aviso animado de volumen, brillo y mensajes cortos, con el estilo de los menús de hyprarch.
+
+  hyprarch-osd vol 62          volumen (0-100)           hyprarch-osd vol mute      silenciado
+  hyprarch-osd bright 40       brillo (0-100)            hyprarch-osd text "Hola"   mensaje corto
+
+Aparece abajo al centro con un pequeño resorte, la barra sigue el valor con suavidad y se va sola a los ~1,6 s.
+Si ya hay uno abierto (mantienes pulsada la tecla de volumen) lo actualiza en vez de abrir otro. No roba el foco ni el ratón.
+"""
+import importlib.machinery
+import importlib.util
+import json
+import math
+import os
+import signal
+import sys
+import time
+from pathlib import Path
+
+RUN = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp"))
+PIDF, STATEF = RUN / "hyprarch-osd.pid", RUN / "hyprarch-osd.json"
+SHOW_S = 1.6          # cuánto se queda
+W, H = 400, 112       # tamaño de la ventana (incluye margen para la sombra)
+
+
+def parse(argv):
+    kind = argv[1] if len(argv) > 1 else "text"
+    if kind in ("vol", "bright"):
+        v = argv[2] if len(argv) > 2 else "0"
+        if v == "mute":
+            return dict(kind="vol", value=0, muted=True, label="Silenciado")
+        try:
+            n = max(0, min(100, int(float(v))))
+        except ValueError:
+            n = 0
+        return dict(kind=kind, value=n, muted=False, label=f"{n}%")
+    return dict(kind="text", value=0, muted=False, label=" ".join(argv[2:])[:60])
+
+
+def forward(st):
+    """Si ya hay un aviso abierto, le pasa el valor nuevo y termina."""
+    try:
+        pid = int(PIDF.read_text())
+        os.kill(pid, 0)
+    except (OSError, ValueError):
+        return False
+    STATEF.write_text(json.dumps(st))
+    os.kill(pid, signal.SIGUSR1)
+    return True
+
+
+def _load(name, modname):
+    for base in ("/usr/local/bin", str(Path(__file__).resolve().parent)):
+        p = Path(base) / name
+        if p.exists():
+            loader = importlib.machinery.SourceFileLoader(modname, str(p))
+            spec = importlib.util.spec_from_loader(loader.name, loader)
+            mod = importlib.util.module_from_spec(spec)
+            loader.exec_module(mod)
+            return mod
+    return None
+
+
+def ensure_env():
+    if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):
+        env = dict(os.environ)
+        env["LD_PRELOAD"] = (env.get("LD_PRELOAD", "") + " /usr/lib/libgtk4-layer-shell.so").strip()
+        env["GSK_RENDERER"] = "cairo"
+        os.execvpe(sys.executable, [sys.executable] + sys.argv, env)
+
+
+def glyph(st):
+    if st["kind"] == "bright":
+        return ""
+    if st["kind"] == "vol":
+        if st["muted"] or st["value"] == 0:
+            return ""
+        return "" if st["value"] < 50 else ""
+    return ""
+
+
+def run(st):
+    ensure_env()
+    U = _load("hyprarch-menu", "hyprarch_menu_mod")
+    if U is None:
+        return 1
+    import gi
+
+    gi.require_version("Gtk", "4.0")
+    gi.require_version("Gtk4LayerShell", "1.0")
+    from gi.repository import GLib, Gtk, Gtk4LayerShell as LS
+
+    pal = U.load_palette()
+    A, A2, BG, SF, FG, DIM = (pal[k] for k in ("ACCENT", "ACCENT2", "BG", "SURFACE", "FG", "DIM"))
+    S = dict(st=st, disp=float(st["value"]), t0=time.monotonic(), last=time.monotonic(), hide_at=time.monotonic() + SHOW_S,
+             bump=0.0, closing=None)
+
+    app = Gtk.Application(application_id="local.hyprarch.osd")
+
+    def on_activate(app):
+        win = Gtk.ApplicationWindow(application=app)
+        win.set_decorated(False)
+        win.set_default_size(W, H)
+        area = Gtk.DrawingArea()
+        area.set_content_width(W)
+        area.set_content_height(H)
+        win.set_child(area)
+        css = Gtk.CssProvider()
+        css.load_from_data(b"window, window.background { background: transparent; }")
+        Gtk.StyleContext.add_provider_for_display(win.get_display(), css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        LS.init_for_window(win)
+        LS.set_layer(win, LS.Layer.OVERLAY)
+        LS.set_anchor(win, LS.Edge.BOTTOM, True)
+        LS.set_margin(win, LS.Edge.BOTTOM, 56)
+        LS.set_exclusive_zone(win, -1)
+        LS.set_namespace(win, "hyprarch-osd")
+        LS.set_keyboard_mode(win, LS.KeyboardMode.NONE)
+
+        def draw(_a, cr, w, h):
+            import cairo
+
+            cr.set_operator(cairo.OPERATOR_CLEAR)
+            cr.paint()
+            cr.set_operator(cairo.OPERATOR_OVER)
+            now = time.monotonic()
+            enter = U.clamp((now - S["t0"]) / 0.32)
+            e = U.spring(enter) if hasattr(U, "spring") else U.ease_out_strong(enter)
+            fade = 1.0 if S["closing"] is None else 1.0 - U.clamp((now - S["closing"]) / 0.22)
+            a = U.clamp(enter * 1.6) * fade
+            if a <= 0.01:
+                return
+            dy = (1.0 - min(e, 1.1)) * 18 + (1.0 - fade) * 8
+            x, y, cw, ch = 16, 16 + dy, w - 32, h - 40
+            st = S["st"]
+            muted = st["muted"] or (st["kind"] == "vol" and st["value"] == 0)
+            # sombra y vidrio
+            U.glow_rrect(cr, x, y + 4, cw, ch, 26, (0, 0, 0), a * 0.9, 14)
+            U.rrect(cr, x, y, cw, ch, 26)
+            cr.set_source_rgba(*U.mix(BG, SF, 0.35), 0.86 * a)
+            cr.fill()
+            U.rrect(cr, x, y, cw, ch, 26)
+            cr.set_source_rgba(*(DIM if muted else A), 0.35 * a)
+            cr.set_line_width(1.2)
+            cr.stroke()
+            # círculo del ícono
+            ix, iy = x + 44, y + ch / 2
+            bump = S["bump"]
+            r = 22 + 3 * bump
+            cr.new_sub_path()
+            cr.arc(ix, iy, r, 0, 2 * math.pi)
+            cr.set_source_rgba(*U.mix(SF, (DIM if muted else A), 0.18 + 0.2 * bump), 0.95 * a)
+            cr.fill_preserve()
+            cr.set_source_rgba(*(DIM if muted else A), 0.45 * a)
+            cr.set_line_width(1.1)
+            cr.stroke()
+            U.draw_text(cr, glyph(st), ix, iy + 7, 21, DIM if muted else U.mix(FG, A, 0.5), a, center=True)
+            if st["kind"] == "text":
+                U.draw_text(cr, st["label"], ix + 44, iy + 6, 16, FG, a, bold=True)
+                return
+            # barra con brillo en el extremo
+            bx0, bx1 = ix + 46, x + cw - 86
+            bw, by = bx1 - bx0, iy
+            U.rrect(cr, bx0, by - 5, bw, 10, 5)
+            cr.set_source_rgba(*FG, 0.12 * a)
+            cr.fill()
+            fillw = max(0.0, bw * S["disp"] / 100.0)
+            if fillw > 0.5:
+                g = cairo.LinearGradient(bx0, 0, bx0 + bw, 0)
+                g.add_color_stop_rgba(0, *(DIM if muted else A), 0.95 * a)
+                g.add_color_stop_rgba(1, *(DIM if muted else U.mix(A, A2, 0.6)), 0.95 * a)
+                U.rrect(cr, bx0, by - 5, max(fillw, 10), 10, 5)
+                cr.set_source(g)
+                cr.fill()
+                if not muted:
+                    U.glow_rrect(cr, bx0 + fillw - 8, by - 5, 12, 10, 5, A, a * 0.8, 8)
+                cr.new_sub_path()
+                cr.arc(bx0 + max(fillw, 10) - 5, by, 7 + 1.5 * bump, 0, 2 * math.pi)
+                cr.set_source_rgba(*FG, 0.95 * a)
+                cr.fill()
+            U.draw_text(cr, st["label"], x + cw - 24, iy + 6, 17, DIM if muted else FG, a, bold=True, right=True)
+
+        area.set_draw_func(draw)
+
+        def apply(new):
+            old = S["st"]
+            S["st"] = new
+            S["hide_at"] = time.monotonic() + SHOW_S
+            S["closing"] = None
+            if new["kind"] != old["kind"]:
+                S["disp"] = float(new["value"])
+            if new["value"] != old["value"]:
+                S["bump"] = 1.0
+
+        def on_usr1():
+            try:
+                apply(json.loads(STATEF.read_text()))
+            except (OSError, ValueError):
+                pass
+            return GLib.SOURCE_CONTINUE
+
+        try:                                              # GLib nuevo: GLibUnix.signal_add; el viejo da un aviso de obsolescencia
+            gi.require_version("GLibUnix", "2.0")
+            from gi.repository import GLibUnix
+
+            GLibUnix.signal_add(GLib.PRIORITY_DEFAULT, signal.SIGUSR1, on_usr1)
+        except (ValueError, ImportError, AttributeError):
+            GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGUSR1, on_usr1)
+
+        def tick():
+            now = time.monotonic()
+            dt = min(0.05, now - S["last"])
+            S["last"] = now
+            S["disp"] += (S["st"]["value"] - S["disp"]) * (1 - math.exp(-dt * 14))      # la barra sigue al valor con suavidad
+            S["bump"] = max(0.0, S["bump"] - dt * 5)
+            if S["closing"] is None and now >= S["hide_at"]:
+                S["closing"] = now
+            if S["closing"] is not None and now - S["closing"] > 0.24:
+                app.quit()
+                return False
+            area.queue_draw()
+            return True
+
+        def no_input():                                   # el aviso nunca captura el ratón ni el teclado
+            try:
+                import cairo
+
+                win.get_native().get_surface().set_input_region(cairo.Region())
+            except Exception:
+                pass
+            return False
+
+        win.present()
+        GLib.timeout_add(16, tick)
+        GLib.timeout_add(60, no_input)
+
+    PIDF.write_text(str(os.getpid()))
+    app.connect("activate", on_activate)
+    try:
+        app.run(None)
+    finally:
+        try:
+            if PIDF.read_text().strip() == str(os.getpid()):
+                PIDF.unlink()
+        except OSError:
+            pass
+    return 0
+
+
+if __name__ == "__main__":
+    state = parse(sys.argv)
+    if forward(state):
+        sys.exit(0)
+    sys.exit(run(state))

@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# Cambia volumen/brillo y muestra una notificación con barra de progreso.
+# Cambia volumen/brillo y muestra el aviso animado de hyprarch (hyprarch-osd); si no está, una notificación con barra.
 # Uso: osd.sh vol-up | vol-down | mute | bright-up | bright-down
 
-notify() { # notify <titulo> <porcentaje> <texto>
-  notify-send -t 1500 -h string:x-canonical-private-synchronous:osd \
-    -h "int:value:$2" "$1" "$3"
+show() { # show <vol|bright> <porcentaje|mute> <texto>
+  if command -v hyprarch-osd >/dev/null 2>&1; then
+    hyprarch-osd "$1" "$2" &
+  else
+    notify-send -t 1500 -h string:x-canonical-private-synchronous:osd -h "int:value:${2/mute/0}" "$1" "$3"
+  fi
 }
 
 case "$1" in
@@ -17,15 +20,15 @@ case "$1" in
     out=$(wpctl get-volume @DEFAULT_AUDIO_SINK@) || exit 1
     pct=$(LC_ALL=C awk '{printf "%d", $2 * 100}' <<<"$out")
     if grep -q MUTED <<<"$out"; then
-      notify "Volumen" 0 "Silenciado"
+      show vol mute "Silenciado"
     else
-      notify "Volumen" "$pct" "$pct%"
+      show vol "$pct" "$pct%"
     fi
     ;;
   bright-up|bright-down)
     if [[ $1 == bright-up ]]; then brightnessctl -q set 5%+ || exit 1; else brightnessctl -q set 5%- || exit 1; fi
     out=$(brightnessctl -m) || exit 1
     pct=$(cut -d, -f4 <<<"$out" | tr -d %)
-    notify "Brillo" "$pct" "$pct%"
+    show bright "$pct" "$pct%"
     ;;
 esac
