@@ -394,6 +394,14 @@ hl.window_rule({
     size   = { 860, 520 },
 })
 
+-- El chat con la IA es una ventana de trabajo (hay que poder verla junto al navegador al iniciar sesión,
+-- pegar códigos, etc.): en mosaico y no flotante encima de todo.
+hl.window_rule({
+    name  = "hyprarch-ai-tiled",
+    match = { class = "^(hyprarch-ai)$" },
+    float = false,
+})
+
 -- Diálogos típicos: flotantes
 hl.window_rule({
     name  = "float-dialogs",
