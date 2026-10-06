@@ -23,6 +23,7 @@
 #include <sys/mman.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <time.h>
 #include <unistd.h>
 #include <wayland-client.h>
 
@@ -42,8 +43,12 @@ static struct wl_seat *seat;
 static struct wl_pointer *ptr;
 static struct wl_surface *surf;
 static struct zwlr_layer_surface_v1 *ls;
-static struct wl_buffer *buf;
-static void *pix;
+// Dos buffers alternados: el compositor puede seguir leyendo el que acabamos de enviar, asi que nunca se dibuja sobre uno ocupado
+// (wl_buffer.release avisa cuando queda libre). Si un compositor no avisara nunca, tras 1 s se da por liberado.
+static struct wl_buffer *bufs[2];
+static void *pixbase;
+static int busy_[2], dirty;
+static double busy_t[2];
 static int configured;
 
 static int visible, hover = -1, fs, floating_win;
@@ -119,7 +124,8 @@ static int jpair(const char *j, const char *key, int *a, int *b) {
 // ---------- Hyprland ----------
 static int hypr_connect(const char *name) {
     struct sockaddr_un a = {.sun_family = AF_UNIX};
-    snprintf(a.sun_path, sizeof a.sun_path, "%s/%s", hypr_dir, name);
+    int k = snprintf(a.sun_path, sizeof a.sun_path, "%s/%s", hypr_dir, name);
+    if (k < 0 || (size_t)k >= sizeof a.sun_path) return -1;      // ruta demasiado larga: no se conecta a una truncada
     int fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
     if (fd < 0) return -1;
     if (connect(fd, (struct sockaddr *)&a, sizeof a) < 0) { close(fd); return -1; }
@@ -171,7 +177,35 @@ static void rrect(cairo_t *c, double x, double y, double w, double h, double r) 
     cairo_close_path(c);
 }
 
+static double now_s(void) {
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return (double)t.tv_sec + (double)t.tv_nsec / 1e9;
+}
+
+// elige un buffer libre; -1 si los dos siguen en uso (entonces se redibuja al recibir el release)
+static int pick_buffer(void) {
+    int i = !busy_[0] ? 0 : (!busy_[1] ? 1 : -1);
+    if (i < 0) {
+        i = busy_t[0] <= busy_t[1] ? 0 : 1;
+        if (now_s() - busy_t[i] < 1.0) return -1;
+    }
+    return i;
+}
+
+static void draw(void);
+
+static void buf_release(void *d, struct wl_buffer *b) {
+    (void)b;
+    busy_[(int)(intptr_t)d] = 0;
+    if (dirty) { dirty = 0; draw(); }
+}
+static const struct wl_buffer_listener buf_l = {buf_release};
+
 static void draw(void) {
+    int bi = pick_buffer();
+    if (bi < 0) { dirty = 1; return; }
+    void *pix = (char *)pixbase + (size_t)bi * W * H * 4;
     cairo_surface_t *cs = cairo_image_surface_create_for_data(pix, CAIRO_FORMAT_ARGB32, W, H, W * 4);
     cairo_t *c = cairo_create(cs);
     cairo_set_operator(c, CAIRO_OPERATOR_CLEAR);
@@ -226,8 +260,10 @@ static void draw(void) {
         wl_surface_set_input_region(surf, r);
         wl_region_destroy(r);
     }
-    wl_surface_attach(surf, buf, 0, 0);
+    wl_surface_attach(surf, bufs[bi], 0, 0);
     wl_surface_damage_buffer(surf, 0, 0, W, H);
+    busy_[bi] = 1;
+    busy_t[bi] = now_s();
     wl_surface_commit(surf);
 }
 
@@ -358,11 +394,16 @@ int main(void) {
     if (!comp || !shm || !lsh) { fprintf(stderr, "hyprarch-wbar: falta wl_compositor, wl_shm o layer-shell\n"); return 1; }
     wl_display_roundtrip(dpy);
 
+    size_t one = (size_t)W * H * 4;
     int fd = memfd_create("wbar", MFD_CLOEXEC);
-    if (fd < 0 || ftruncate(fd, W * H * 4) < 0) return 1;
-    pix = mmap(NULL, W * H * 4, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    struct wl_shm_pool *pool = wl_shm_create_pool(shm, fd, W * H * 4);
-    buf = wl_shm_pool_create_buffer(pool, 0, W, H, W * 4, WL_SHM_FORMAT_ARGB8888);
+    if (fd < 0 || ftruncate(fd, (off_t)(one * 2)) < 0) return 1;
+    pixbase = mmap(NULL, one * 2, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (pixbase == MAP_FAILED) return 1;
+    struct wl_shm_pool *pool = wl_shm_create_pool(shm, fd, (int32_t)(one * 2));
+    for (int i = 0; i < 2; i++) {
+        bufs[i] = wl_shm_pool_create_buffer(pool, (int32_t)(one * (size_t)i), W, H, W * 4, WL_SHM_FORMAT_ARGB8888);
+        wl_buffer_add_listener(bufs[i], &buf_l, (void *)(intptr_t)i);
+    }
     wl_shm_pool_destroy(pool);
     close(fd);
 
@@ -380,14 +421,17 @@ int main(void) {
     int ev = hypr_connect(".socket2.sock");
     refresh();
     for (;;) {
-        while (wl_display_prepare_read(dpy) != 0) wl_display_dispatch_pending(dpy);
-        wl_display_flush(dpy);
+        while (wl_display_prepare_read(dpy) != 0)
+            if (wl_display_dispatch_pending(dpy) < 0) return 1;
+        if (wl_display_flush(dpy) < 0 && errno != EAGAIN) { wl_display_cancel_read(dpy); return 1; }
         struct pollfd pf[2] = {{wl_display_get_fd(dpy), POLLIN, 0}, {ev, POLLIN, 0}};
         // flotante: se mira su sitio a menudo (arrastrarla no avisa); en mosaico, de vez en cuando; sin ventana: solo eventos
         int timeout = visible ? (floating_win ? 600 : 2800) : 5000;
         int r = poll(pf, ev >= 0 ? 2 : 1, timeout);
-        if (r < 0 && errno != EINTR) break;
-        if (pf[0].revents & POLLIN) wl_display_read_events(dpy);
+        if (r < 0 && errno != EINTR) { wl_display_cancel_read(dpy); break; }
+        // conexion con Wayland perdida (el compositor se cerro o se reinicio): salir en vez de girar al 100 % de CPU
+        if (pf[0].revents & (POLLHUP | POLLERR | POLLNVAL)) { wl_display_cancel_read(dpy); break; }
+        if (pf[0].revents & POLLIN) { if (wl_display_read_events(dpy) < 0) break; }
         else wl_display_cancel_read(dpy);
         if (wl_display_dispatch_pending(dpy) < 0) break;
         int changed = (r == 0);                    // vencido el plazo: se refresca
