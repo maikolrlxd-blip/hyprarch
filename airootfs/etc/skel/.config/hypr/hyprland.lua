@@ -297,7 +297,9 @@ local mod = "SUPER"
 
 -- Aplicaciones
 hl.bind(mod .. " + Return", hl.dsp.exec_cmd(terminal))
-hl.bind(mod .. " + D",      hl.dsp.exec_cmd(menu))
+-- La tecla Super (Windows) SOLA abre el menú de inicio, como en Windows: se dispara al SOLTARLA y solo si no se usó en un
+-- atajo combinado (Super + otra tecla no lo abre). Pulsarla de nuevo lo cierra.
+hl.bind(mod .. " + Super_L", hl.dsp.exec_cmd(menu), { release = true })
 hl.bind(mod .. " + B",      hl.dsp.exec_cmd(browser))
 hl.bind(mod .. " + E",      hl.dsp.exec_cmd(files))
 hl.bind(mod .. " + N",      hl.dsp.exec_cmd("hyprarch-wifi"))                                       -- redes Wi-Fi (panel animado, sin terminal)

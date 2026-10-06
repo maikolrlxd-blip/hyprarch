@@ -8,7 +8,7 @@ ISO live de Arch Linux con **Hyprland + Waybar**, estética neón (verde ciber /
 | Atajo | Acción |
 |---|---|
 | `SUPER+Enter` | Terminal |
-| `SUPER+D` | Lanzador de aplicaciones |
+| `Super` (sola) | Menú de inicio |
 | `SUPER+Q` / `ALT+F4` | **Cerrar ventana** |
 | `SUPER+T` | **Cambiar colores** (menú interactivo) |
 | `SUPER+F1` | Lista de todos los atajos |

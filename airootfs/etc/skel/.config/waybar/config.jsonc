@@ -57,7 +57,7 @@
 
   "custom/launcher": {
     "format": "",
-    "tooltip-format": "Aplicaciones (SUPER + D)",
+    "tooltip-format": "Inicio (tecla Super)",
     "tooltip": true,
     "on-click": "hyprarch-start"
   },

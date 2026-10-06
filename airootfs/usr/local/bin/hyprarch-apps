@@ -56,7 +56,7 @@ install_pack() {
   if [[ $pack == tienda ]]; then
     sudo flatpak remote-add --system --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || { note "$(T apps.fail 'No se pudo instalar')" "flathub"; return 1; }
   fi
-  note "$(T apps.ok 'Listo')" "$(T apps.ok.d 'Ya puedes abrirlo desde el lanzador (SUPER+D)')"
+  note "$(T apps.ok 'Listo')" "$(T apps.ok.d 'Ya puedes abrirlo desde el menú de inicio (tecla Super)')"
   return 0
 }
 

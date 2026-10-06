@@ -41,4 +41,4 @@ Por SSH funciona igual (el comando entra solo a la sesión gráfica). Si necesit
 ## Sobre la persona y el sistema
 - El asistente visual es **Claudito** (robot en el escritorio); puedes cambiarle el nombre en `~/.config/hyprarch/buddy.conf`.
 - Está pensado para equipos modestos: `hyprarch-perf status` dice si usa el perfil ligero.
-- Atajos útiles: SUPER+D lanzador · SUPER+I instalar apps · SUPER+N Wi‑Fi · SUPER+T colores · SUPER+A hablar con la IA · SUPER+F1 todos los atajos.
+- Atajos útiles: tecla Super (sola) menú de inicio · SUPER+I instalar apps · SUPER+N Wi‑Fi · SUPER+T colores · SUPER+A hablar con la IA · SUPER+F1 todos los atajos.

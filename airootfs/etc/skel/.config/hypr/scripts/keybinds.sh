@@ -3,11 +3,11 @@
 # Formato: id <TAB> descripción <TAB> ícono <TAB> combinación (se ve a la derecha y también se puede buscar).
 cat <<'EOF' | hyprarch-pick --layout wheel --title "Atajos" --placeholder "¿Qué querés hacer? (ej. captura, cerrar)" >/dev/null
 a	Terminal		SUPER + Enter
-b	Lanzador de aplicaciones		SUPER + D
+b	Menú de inicio (apps y búsqueda)		SUPER (sola)
 c	Firefox		SUPER + B
 d	Archivos		SUPER + E
-e	Hablar con tu IA (o clic en el personajito)		SUPER + A
-f	Cambiar de IA		SUPER + SHIFT + A
+e	Preguntar algo rápido a la IA (no se guarda)		SUPER + A
+f	Chat flotante con la IA (o clic en Claudito)		SUPER + SHIFT + A
 g	Redes Wi-Fi		SUPER + N
 h	Colores del sistema		SUPER + T
 i	CERRAR ventana		SUPER + Q  /  ALT + F4

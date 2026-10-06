@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """hyprarch-start — el menú de inicio.
 
-Se abre sobre la barra de tareas (botón de inicio o SUPER+D) y se CIERRA del todo al terminar: no queda ningún
+Se abre sobre la barra de tareas (botón de inicio o la tecla Super sola) y se CIERRA del todo al terminar: no queda ningún
 proceso residente, así que en reposo no gasta nada. Si ya está abierto, una segunda llamada lo cierra.
 
   · Buscador arriba (escribe y Enter abre la primera coincidencia).
