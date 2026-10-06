@@ -45,7 +45,7 @@ if not os.environ.get("WAYLAND_DISPLAY"):
     sys.exit(0)
 
 RUN = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
-CARD_W, CARD_H = 500, 116
+CARD_W, CARD_H = 600, 112
 
 TOOL = str(payload.get("tool_name") or "una acción")
 INP = payload.get("tool_input") or {}
@@ -71,7 +71,7 @@ window { background: transparent; }
 .detail { color: #f1f6f8; font-family: monospace; font-size: 12.5px; background: rgba(255,255,255,0.075);
           border-radius: 10px; padding: 6px 10px; }
 .key { color: #7d8f97; font-size: 10px; background: rgba(255,255,255,0.09); border-radius: 5px; padding: 0 5px; margin-left: 4px; }
-button { border: none; border-radius: 13px; padding: 5px 15px; font-weight: 600; font-size: 12.5px; min-height: 0; }
+button { border: none; border-radius: 999px; padding: 6px 16px; font-weight: 600; font-size: 12.5px; min-height: 0; }
 button.deny { background: rgba(255, 255, 255, 0.075); color: #d3dce0; }
 button.deny:hover { background: rgba(255, 90, 110, 0.85); color: #ffffff; }
 button.allow { background: #ffffff; color: #0a0f14; padding: 5px 20px; }
@@ -171,13 +171,10 @@ class App(Gtk.Application):
         LS.set_keyboard_mode(win, LS.KeyboardMode.ON_DEMAND)
 
         mon = Gdk.Display.get_default().get_monitors().get_item(0).get_geometry()
-        a = anchor()
-        if a:
-            x, y = a[0] - CARD_W // 2, a[1] - CARD_H - 150          # justo encima de la cabeza de Claudito
-        else:
-            x, y = mon.width - CARD_W - 24, mon.height - CARD_H - 24
+        # como una isla: centrada y pegada arriba (justo bajo la barra), así no tapa lo que haces
+        x = (mon.width - CARD_W) // 2
+        y = 52
         x = max(8, min(mon.width - CARD_W - 8, x))
-        y = max(60, min(mon.height - CARD_H - 8, y))
         LS.set_margin(win, LS.Edge.LEFT, int(x))
         LS.set_margin(win, LS.Edge.TOP, int(y))
 
@@ -198,7 +195,7 @@ class App(Gtk.Application):
         dot = Gtk.Label(label="●")
         dot.add_css_class("dot")
         t = Gtk.Label(xalign=0.0)
-        t.set_markup(f"<b>Claude</b> quiere {GLib.markup_escape_text(TITLE)}")
+        t.set_markup(f"<b>Claude</b>  necesita permiso para {GLib.markup_escape_text(TITLE)}")
         t.add_css_class("title")
         t.set_hexpand(True)
         head.append(dot)
