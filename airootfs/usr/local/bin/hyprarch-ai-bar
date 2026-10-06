@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""hyprarch-ai-bar — la tira de modelos pegada al chat de la IA.
+"""hyprarch-ai-bar — la barra de título del chat de la IA (a nuestro estilo).
 
-Se ve encima del chat flotante o de pantalla completa. Un clic en el nombre de una IA cambia de modelo
-(el chat se reabre con ella); «Directo» abre el modelo tal cual, en una ventana normal, sin adornos.
-Sigue a la ventana del chat si la mueves y se cierra sola cuando el chat se cierra.
+Va pegada encima del chat flotante o de pantalla completa:
+  · arrastra la zona izquierda para MOVER el chat (el tamaño se cambia arrastrando sus bordes);
+  · el selector de modelo cambia de IA (el chat se reabre con ella);
+  · «Directo» abre el modelo tal cual, en una ventana normal, sin adornos;
+  · «Grande» pasa a pantalla completa y × cierra el chat.
+Sigue a la ventana del chat y se cierra sola cuando el chat se cierra.
 
 Uso (lo lanza hyprarch-ai): hyprarch-ai-bar <clase-de-la-ventana>
 """
@@ -12,6 +15,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 
 if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza solo con el entorno correcto
     env = dict(os.environ)
@@ -27,16 +31,18 @@ gi.require_version("Gtk4LayerShell", "1.0")
 from gi.repository import Gdk, GLib, Gtk, Gtk4LayerShell as LS  # noqa: E402
 
 CLASS = sys.argv[1] if len(sys.argv) > 1 else "hyprarch-ai-float"
+FULL = CLASS == "hyprarch-ai-full"
 RUN = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
 CONF = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "hyprarch", "ai.conf")
 PROVIDERS = [("claude", "Claude"), ("codex", "Codex"), ("gemini", "Gemini"), ("ollama", "Ollama")]
+NAMES = dict(PROVIDERS)
 BAR_H = 38
 
 lock = open(os.path.join(RUN, f"hyprarch-ai-bar-{CLASS}.lock"), "w")
 try:
     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
 except OSError:
-    sys.exit(0)                                   # ya hay una tira para esta ventana
+    sys.exit(0)                                   # ya hay una barra para esta ventana
 
 
 def current_ai():
@@ -62,14 +68,21 @@ def client():
 
 CSS = b"""
 window { background: transparent; }
-.bar { background: rgba(10, 20, 30, 0.94); border: 1px solid rgba(94, 242, 200, 0.55);
-       border-radius: 14px; padding: 4px 6px; }
+.bar { background: rgba(10, 20, 30, 0.96); border: 1px solid rgba(94, 242, 200, 0.55);
+       border-radius: 14px; padding: 3px 6px; }
+.grip { color: #5ef2c8; font-weight: 700; padding: 3px 10px; }
+.grip:hover { color: #ffffff; }
 button { background: transparent; color: #8fb3bd; border: none; border-radius: 10px;
-         padding: 3px 12px; min-height: 0; font-weight: 600; }
+         padding: 2px 7px; min-height: 0; font-weight: 600; }
 button:hover { background: rgba(94, 242, 200, 0.16); color: #ffffff; }
-button.on { background: #5ef2c8; color: #0b1620; }
+button.model { color: #0b1620; background: #5ef2c8; }
 button.direct { color: #ffb347; }
-label.sep { color: rgba(143, 179, 189, 0.5); padding: 0 4px; }
+button.close { color: #ff7a8a; font-size: 16px; padding: 0 9px; }
+button.close:hover { background: #ff5a6e; color: #ffffff; }
+popover contents { background: rgba(10, 20, 30, 0.98); border: 1px solid rgba(94, 242, 200, 0.55);
+                   border-radius: 12px; padding: 4px; }
+popover button.item { color: #cfe8ee; padding: 5px 14px; }
+popover button.item.on { background: rgba(94, 242, 200, 0.22); color: #5ef2c8; }
 """
 
 
@@ -78,12 +91,21 @@ def run_ai(*args):
                      stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
+def hypr_eval(lua):
+    subprocess.Popen(["hyprctl", "eval", lua], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                     stderr=subprocess.DEVNULL)
+
+
 class App(Gtk.Application):
     def __init__(self):
         super().__init__(application_id=None)
-        self.buttons = {}
         self.win = None
         self.misses = 0
+        self.model_btn = None
+        self.items = {}
+        self.drag = None             # (x0, y0) de la ventana al empezar a arrastrar
+        self.last_move = 0.0
+        self.pos = (0, 0)
 
     def do_activate(self):
         prov = Gtk.CssProvider()
@@ -102,44 +124,97 @@ class App(Gtk.Application):
 
         row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
         row.add_css_class("bar")
+
+        grip = Gtk.Label(label="::", xalign=0.0)
+        grip.add_css_class("grip")
+        grip.set_hexpand(True)
+        grip.set_tooltip_text("Arrastra para mover · estira los bordes para cambiar el tamaño")
+        if not FULL:                                  # a pantalla completa no hay nada que mover
+            g = Gtk.GestureDrag()
+            g.connect("drag-begin", self.on_drag_begin)
+            g.connect("drag-update", self.on_drag_update)
+            grip.add_controller(g)
+        row.append(grip)
+
+        # selector de modelo: un botón con la IA actual y una lista al pulsarlo
+        self.model_btn = Gtk.MenuButton()
+        self.model_btn.add_css_class("model")
+        pop = Gtk.Popover()
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
         for pid, name in PROVIDERS:
             b = Gtk.Button(label=name)
-            b.connect("clicked", lambda _b, p=pid: run_ai("use", p, CLASS))
-            row.append(b)
-            self.buttons[pid] = b
-        sep = Gtk.Label(label="|")
-        sep.add_css_class("sep")
-        row.append(sep)
+            b.add_css_class("item")
+            b.set_halign(Gtk.Align.FILL)
+            b.connect("clicked", lambda _b, p=pid: (pop.popdown(), run_ai("use", p, CLASS)))
+            box.append(b)
+            self.items[pid] = b
+        pop.set_child(box)
+        self.model_btn.set_popover(pop)
+        row.append(self.model_btn)
+
         d = Gtk.Button(label="Directo")
         d.add_css_class("direct")
         d.set_tooltip_text("Hablar con el modelo tal cual, en una ventana normal")
         d.connect("clicked", lambda _b: run_ai("open", "direct", CLASS))
         row.append(d)
+
+        big = Gtk.Button(label="Pequeño" if FULL else "Grande")
+        big.set_tooltip_text("Volver al chat flotante" if FULL else "Pantalla completa")
+        big.connect("clicked", lambda _b: run_ai("open", "float" if FULL else "full", CLASS))
+        row.append(big)
+
+        x = Gtk.Button(label="×")
+        x.add_css_class("close")
+        x.set_tooltip_text("Cerrar")
+        x.connect("clicked", lambda _b: hypr_eval(
+            f'hl.dispatch(hl.dsp.window.close({{ window = "class:^({CLASS})$" }}))'))
+        row.append(x)
+
         win.set_child(row)
         win.present()
         self.refresh()
         GLib.timeout_add(300, self.tick)
 
+    # ---- mover el chat arrastrando la barra ----
+    def on_drag_begin(self, _g, _x, _y):
+        c = client()
+        self.drag = tuple(c["at"]) if c else None
+
+    def on_drag_update(self, _g, dx, dy):
+        if not self.drag:
+            return
+        nx, ny = int(self.drag[0] + dx), max(BAR_H + 6, int(self.drag[1] + dy))
+        now = time.monotonic()
+        # la barra acompaña al instante; la ventana se mueve a ~30 veces por segundo
+        LS.set_margin(self.win, LS.Edge.LEFT, max(0, nx))
+        LS.set_margin(self.win, LS.Edge.TOP, max(0, ny - BAR_H - 4))
+        if now - self.last_move > 0.03:
+            self.last_move = now
+            hypr_eval(f'hl.dispatch(hl.dsp.window.move({{ x = {nx}, y = {ny}, window = "class:^({CLASS})$" }}))')
+
     def refresh(self):
         cur = current_ai()
-        for pid, b in self.buttons.items():
+        self.model_btn.set_label(NAMES.get(cur, "IA"))
+        for pid, b in self.items.items():
             (b.add_css_class if pid == cur else b.remove_css_class)("on")
 
     def tick(self):
         c = client()
         if c is None:
             self.misses += 1
-            if self.misses > 15:                   # el chat se cerró
+            if self.misses > 15:                  # el chat se cerró
                 self.quit()
                 return False
             return True
         self.misses = 0
         x, y = c["at"]
         w = c["size"][0]
-        # encima de la ventana; si no hay sitio (pantalla completa o pegada arriba) va dentro, arriba
+        # la barra tiene el ancho del chat; si no hay sitio encima (pantalla completa) va dentro, arriba
+        self.win.set_size_request(max(300, int(w)), -1)
         top = y - BAR_H - 4 if y > BAR_H + 10 else y + 8
-        bw = self.win.get_width() or 330
-        LS.set_margin(self.win, LS.Edge.LEFT, max(0, int(x + w - bw)))     # alineada al borde derecho del chat
+        bw = max(self.win.get_width(), int(w))
+        left = int(x) if bw <= w else int(x + w - bw)            # si la barra es mÃ¡s ancha que el chat, se alinea a su borde derecho
+        LS.set_margin(self.win, LS.Edge.LEFT, max(0, left))
         LS.set_margin(self.win, LS.Edge.TOP, max(0, int(top)))
         self.refresh()
         return True
