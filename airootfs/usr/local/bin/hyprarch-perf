@@ -26,7 +26,8 @@ detect() {   # imprime "lite|full<TAB>motivo"
   if (( ${#why[@]} )); then printf 'lite\t%s' "$(IFS=,; echo "${why[*]}")"; else printf 'full\t%s' "RAM ${ram_mb} MB, ${cores} núcleos"; fi
 }
 
-choice=$(tr -d '[:space:]' < "$CFG/perf" 2>/dev/null)
+choice=""
+[[ -r $CFG/perf ]] && choice=$(tr -d '[:space:]' < "$CFG/perf")
 case ${1:-auto} in
   auto)
     case $choice in
