@@ -93,7 +93,7 @@ hl.monitor({
 })
 
 local terminal = "kitty"
-local menu     = "hyprarch-launcher"      -- burbujas animadas (motor hyprarch-pick); ya no se usa fuzzel
+local menu     = "hyprarch-start"         -- el menú de inicio (se abre y se cierra del todo; no queda nada residente)
 local files    = "thunar"
 local browser  = "firefox"
 local scripts  = (os.getenv("HOME") or "") .. "/.config/hypr/scripts"

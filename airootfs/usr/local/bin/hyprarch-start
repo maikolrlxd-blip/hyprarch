@@ -1,0 +1,372 @@
+#!/usr/bin/env python3
+"""hyprarch-start — el menú de inicio.
+
+Se abre sobre la barra de tareas (botón de inicio o SUPER+D) y se CIERRA del todo al terminar: no queda ningún
+proceso residente, así que en reposo no gasta nada. Si ya está abierto, una segunda llamada lo cierra.
+
+  · Buscador arriba (escribe y Enter abre la primera coincidencia).
+  · Apps ancladas en rejilla (~/.config/hyprarch/pinned, un id .desktop por línea; si no existe se eligen las instaladas).
+  · «Todas las apps» y atajo a Claudito (hablar con la IA).
+  · Pie con tu usuario y el botón de apagar.
+Esc, un clic fuera o elegir algo lo cierran.
+"""
+import os
+import signal
+import subprocess
+import sys
+import time
+
+if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza solo con el entorno correcto
+    env = dict(os.environ)
+    env["LD_PRELOAD"] = (env.get("LD_PRELOAD", "") + " /usr/lib/libgtk4-layer-shell.so").strip()
+    env["GSK_RENDERER"] = "cairo"
+    os.execvpe(sys.executable, [sys.executable] + sys.argv, env)
+
+import fcntl
+
+RUN = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+PIDFILE = os.path.join(RUN, "hyprarch-start.pid")
+lock = open(os.path.join(RUN, "hyprarch-start.lock"), "w")
+try:
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except OSError:                                       # ya hay uno abierto: esta llamada lo cierra
+    try:
+        os.kill(int(open(PIDFILE).read().strip()), signal.SIGTERM)
+    except (OSError, ValueError):
+        pass
+    sys.exit(0)
+open(PIDFILE, "w").write(str(os.getpid()))
+
+import gi
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
+gi.require_version("Gtk4LayerShell", "1.0")
+from gi.repository import Gdk, Gio, GLib, Gtk, Gtk4LayerShell as LS  # noqa: E402
+
+CFG = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
+SOUNDS = "/usr/share/hyprarch/sounds"
+PANEL_W = 520
+BAR_SPACE = 76                                        # sitio que ocupa la barra de tareas (+ aire) por abajo
+COLS = 6
+DEFAULT_PINNED = ["firefox", "thunar", "kitty", "org.xfce.mousepad", "org.pulseaudio.pavucontrol", "mpv",
+                  "org.pwmt.zathura", "nm-connection-editor", "blueman-manager", "btop", "nvim", "hyprarch-report"]
+
+
+def play(name):
+    path = os.path.join(SOUNDS, name)
+    if os.path.exists(path):
+        for cmd in (["pw-play", "--volume", "0.5", path], ["paplay", path]):
+            try:
+                subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return
+            except OSError:
+                continue
+
+
+def all_apps():
+    apps = [a for a in Gio.AppInfo.get_all() if a.should_show()]
+    apps.sort(key=lambda a: a.get_name().lower())
+    return apps
+
+
+def pinned_apps(apps):
+    by_id = {(a.get_id() or "").removesuffix(".desktop"): a for a in apps}
+    want = []
+    try:
+        want = [l.strip().removesuffix(".desktop") for l in open(os.path.join(CFG, "hyprarch", "pinned"), encoding="utf-8")
+                if l.strip() and not l.startswith("#")]
+    except OSError:
+        pass
+    want = want or DEFAULT_PINNED
+    return [by_id[i] for i in want if i in by_id][:COLS * 3]
+
+
+CSS = b"""
+window { background: transparent; }
+.panel { background-color: rgba(9, 14, 21, 0.95);
+         background-image: radial-gradient(circle at 90% 120%, rgba(94, 242, 200, 0.12), rgba(94, 242, 200, 0.0) 60%),
+                           linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.0) 30%);
+         border: 1px solid rgba(255,255,255,0.10); border-radius: 26px; padding: 18px 18px 14px 18px;
+         box-shadow: 0 18px 50px rgba(0,0,0,0.65), 0 2px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.10); }
+entry.search { background: rgba(255,255,255,0.07); color: #ffffff; border: 1px solid rgba(255,255,255,0.08);
+               border-radius: 999px; padding: 8px 16px; min-height: 0; font-size: 13px; caret-color: #5ef2c8; }
+entry.search:focus { border-color: rgba(94,242,200,0.65); background: rgba(255,255,255,0.10); }
+.sec { color: #93a4ad; font-size: 11px; font-weight: 700; letter-spacing: 0.6px; }
+.link { background: rgba(255,255,255,0.07); color: #dfe9ed; border: none; border-radius: 999px; padding: 3px 12px;
+        font-size: 11px; font-weight: 600; min-height: 0; transition: background 140ms ease-out; }
+.link:hover { background: #ffffff; color: #0a0f14; }
+.app { background: transparent; border: none; border-radius: 14px; padding: 9px 4px 7px 4px; min-height: 0;
+       transition: background 140ms ease-out; }
+.app:hover { background: rgba(255,255,255,0.10); }
+.app label { color: #e8f0f3; font-size: 11px; }
+row.res { border-radius: 12px; padding: 5px 8px; }
+row.res:hover, row.res:selected { background: rgba(255,255,255,0.10); }
+row.res label { color: #e8f0f3; font-size: 12.5px; }
+.foot { border-top: 1px solid rgba(255,255,255,0.07); padding-top: 11px; }
+.user { color: #cfdbe0; font-size: 12px; font-weight: 600; }
+.ia { background: rgba(94,242,200,0.16); color: #5ef2c8; border: none; border-radius: 999px; padding: 6px 14px;
+      font-weight: 700; font-size: 12px; min-height: 0; transition: background 140ms ease-out, color 140ms ease-out; }
+.ia:hover { background: #5ef2c8; color: #0a0f14; }
+.pw { background: rgba(255,255,255,0.07); color: #dfe9ed; border: none; border-radius: 999px; min-width: 34px; min-height: 34px;
+      padding: 0; font-family: "JetBrainsMono Nerd Font", monospace; font-size: 14px; transition: background 140ms ease-out; }
+.pw:hover { background: rgba(255, 90, 110, 0.92); color: #ffffff; }
+scrolledwindow, list, listview { background: transparent; }
+list row { background: transparent; }
+"""
+
+
+def ease_out_back(x):
+    c1, c3 = 1.2, 2.2
+    return 1 + c3 * (x - 1) ** 3 + c1 * (x - 1) ** 2
+
+
+class App(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id=None)
+        self.apps = all_apps()
+        self.win = None
+        self.panel = None
+        self.stack = None
+        self.entry = None
+        self.results = None
+        self.armed = False
+        self.closing = False
+
+    def launch(self, app):
+        try:
+            app.launch([], None)
+        except Exception:
+            pass
+        self.close_menu(sound=False)
+
+    def close_menu(self, sound=True):
+        if self.closing:
+            return
+        self.closing = True
+        if sound:
+            play("menu-back.wav")
+        t0 = time.monotonic()
+
+        def step():
+            k = min(1.0, (time.monotonic() - t0) / 0.14)
+            self.panel.set_opacity(1.0 - k)
+            self.panel.set_margin_bottom(BAR_SPACE - int(18 * k))
+            if k >= 1.0:
+                self.quit()
+                return False
+            return True
+        GLib.timeout_add(16, step)
+
+    def animate_in(self):
+        t0 = time.monotonic()
+
+        def step():
+            k = min(1.0, (time.monotonic() - t0) / 0.28)
+            e = ease_out_back(k)
+            self.panel.set_opacity(min(1.0, k * 2.5))
+            self.panel.set_margin_bottom(BAR_SPACE - 26 + int(26 * e))
+            return k < 1.0
+        GLib.timeout_add(16, step)
+
+    def app_button(self, app):
+        b = Gtk.Button()
+        b.add_css_class("app")
+        col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        img = Gtk.Image()
+        img.set_pixel_size(34)
+        icon = app.get_icon()
+        if icon:
+            img.set_from_gicon(icon)
+        else:
+            img.set_from_icon_name("application-x-executable")
+        name = Gtk.Label(label=app.get_name())
+        name.set_ellipsize(3)
+        name.set_max_width_chars(11)
+        col.append(img)
+        col.append(name)
+        b.set_child(col)
+        b.set_tooltip_text(app.get_name())
+        b.connect("clicked", lambda _b, a=app: self.launch(a))
+        return b
+
+    def refill_results(self, text=""):
+        child = self.results.get_first_child()
+        while child:
+            nxt = child.get_next_sibling()
+            self.results.remove(child)
+            child = nxt
+        t = text.strip().lower()
+        shown = [a for a in self.apps if not t or t in a.get_name().lower() or t in (a.get_id() or "").lower()]
+        for a in shown[:60]:
+            row = Gtk.ListBoxRow()
+            row.add_css_class("res")
+            h = Gtk.Box(spacing=12)
+            img = Gtk.Image()
+            img.set_pixel_size(26)
+            ic = a.get_icon()
+            if ic:
+                img.set_from_gicon(ic)
+            h.append(img)
+            h.append(Gtk.Label(label=a.get_name(), xalign=0.0))
+            row.set_child(h)
+            row.app = a
+            self.results.append(row)
+        first = self.results.get_row_at_index(0)
+        if first:
+            self.results.select_row(first)
+
+    def on_search(self, entry):
+        text = entry.get_text()
+        if text.strip():
+            self.refill_results(text)
+            self.stack.set_visible_child_name("res")
+        else:
+            self.stack.set_visible_child_name("pin")
+
+    def show_all(self):
+        self.entry.set_text("")
+        self.refill_results("")
+        self.stack.set_visible_child_name("res")
+
+    def do_activate(self):
+        prov = Gtk.CssProvider()
+        prov.load_from_data(CSS)
+        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), prov, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        win = Gtk.ApplicationWindow(application=self)
+        self.win = win
+        LS.init_for_window(win)
+        LS.set_layer(win, LS.Layer.OVERLAY)
+        for edge in (LS.Edge.TOP, LS.Edge.BOTTOM, LS.Edge.LEFT, LS.Edge.RIGHT):      # toda la pantalla, transparente: un clic fuera cierra
+            LS.set_anchor(win, edge, True)
+        LS.set_exclusive_zone(win, -1)
+        LS.set_namespace(win, "hyprarch-start")
+        LS.set_keyboard_mode(win, LS.KeyboardMode.EXCLUSIVE)
+
+        root = Gtk.Box()
+        root.set_hexpand(True)
+        root.set_vexpand(True)
+        click_out = Gtk.GestureClick()
+        click_out.connect("pressed", lambda *_a: self.close_menu())
+        root.add_controller(click_out)
+
+        panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        panel.add_css_class("panel")
+        panel.set_size_request(PANEL_W, -1)
+        panel.set_halign(Gtk.Align.CENTER)
+        panel.set_valign(Gtk.Align.END)
+        panel.set_margin_bottom(BAR_SPACE - 26)
+        panel.set_opacity(0.0)
+        self.panel = panel
+        stop = Gtk.GestureClick()                        # un clic dentro del panel no lo cierra
+        stop.connect("pressed", lambda g, *_a: g.set_state(Gtk.EventSequenceState.CLAIMED))
+        panel.add_controller(stop)
+
+        entry = Gtk.SearchEntry()
+        entry.add_css_class("search")
+        entry.set_placeholder_text("Buscar aplicaciones…")
+        entry.connect("search-changed", self.on_search)
+        entry.connect("activate", lambda _e: self.activate_first())
+        self.entry = entry
+        panel.append(entry)
+
+        stack = Gtk.Stack()
+        stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
+        stack.set_transition_duration(120)
+        stack.set_vhomogeneous(False)                    # cada vista usa su propia altura (si no, las ancladas dejan un hueco)
+        self.stack = stack
+
+        pin = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        head = Gtk.Box()
+        sec = Gtk.Label(label="ANCLADAS", xalign=0.0)
+        sec.add_css_class("sec")
+        sec.set_hexpand(True)
+        allb = Gtk.Button(label="Todas las apps  ›")
+        allb.add_css_class("link")
+        allb.connect("clicked", lambda _b: self.show_all())
+        head.append(sec)
+        head.append(allb)
+        pin.append(head)
+        grid = Gtk.Grid()
+        grid.set_column_homogeneous(True)
+        grid.set_row_spacing(2)
+        grid.set_column_spacing(2)
+        for i, a in enumerate(pinned_apps(self.apps)):
+            grid.attach(self.app_button(a), i % COLS, i // COLS, 1, 1)
+        pin.append(grid)
+        stack.add_named(pin, "pin")
+
+        results = Gtk.ListBox()
+        results.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        results.connect("row-activated", lambda _l, row: self.launch(row.app))
+        self.results = results
+        sw = Gtk.ScrolledWindow()
+        sw.set_propagate_natural_height(True)            # la lista crece con los resultados, hasta un máximo
+        sw.set_max_content_height(300)
+        sw.set_child(results)
+        stack.add_named(sw, "res")
+        panel.append(stack)
+
+        foot = Gtk.Box(spacing=8)
+        foot.add_css_class("foot")
+        user = Gtk.Label(label=GLib.get_real_name() if GLib.get_real_name() not in ("", "Unknown") else GLib.get_user_name(), xalign=0.0)
+        user.add_css_class("user")
+        user.set_hexpand(True)
+        ia = Gtk.Button(label="Hablar con Claudito")
+        ia.add_css_class("ia")
+        ia.connect("clicked", lambda _b: (subprocess.Popen(["hyprarch-ai", "open", "float"], start_new_session=True,
+                                                            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                                            stderr=subprocess.DEVNULL), self.close_menu(False)))
+        pw = Gtk.Button(label="⏻")
+        pw.add_css_class("pw")
+        pw.set_tooltip_text("Apagar, reiniciar, suspender…")
+        pw.connect("clicked", lambda _b: (subprocess.Popen([os.path.join(os.path.expanduser("~"), ".config/hypr/scripts/powermenu.sh")],
+                                                            start_new_session=True, stdin=subprocess.DEVNULL,
+                                                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL),
+                                          self.close_menu(False)))
+        foot.append(user)
+        foot.append(ia)
+        foot.append(pw)
+        panel.append(foot)
+
+        root.append(panel)
+        win.set_child(root)
+
+        keys = Gtk.EventControllerKey()
+        keys.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)       # antes que el buscador: Esc siempre cierra
+        keys.connect("key-pressed", self.on_key)
+        win.add_controller(keys)
+        win.present()
+        entry.grab_focus()
+        play("menu-open.wav")
+        self.animate_in()
+
+    def activate_first(self):
+        if self.stack.get_visible_child_name() == "res":
+            row = self.results.get_selected_row() or self.results.get_row_at_index(0)
+            if row:
+                self.launch(row.app)
+
+    def on_key(self, _c, keyval, _code, _state):
+        if keyval == Gdk.KEY_Escape:
+            self.close_menu()
+            return True
+        if keyval in (Gdk.KEY_Down, Gdk.KEY_Up) and self.stack.get_visible_child_name() == "res":
+            row = self.results.get_selected_row()
+            idx = (row.get_index() if row else -1) + (1 if keyval == Gdk.KEY_Down else -1)
+            nxt = self.results.get_row_at_index(max(0, idx))
+            if nxt:
+                self.results.select_row(nxt)
+            return True
+        return False
+
+
+if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, lambda *_a: os._exit(0))
+    try:
+        App().run([])
+    finally:
+        try:
+            os.remove(PIDFILE)
+        except OSError:
+            pass
