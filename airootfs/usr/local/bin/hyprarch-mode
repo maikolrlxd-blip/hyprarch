@@ -47,8 +47,8 @@ launch_apps() {
     ws=${line%%|*}; cmd=${line#*|}
     [[ $line == *"|"* ]] || { ws=0; cmd=$line; }
     bin=${cmd%% *}
+    safe_cmd "$cmd" || { echo "se ignora una línea no permitida en $1.conf" >&2; continue; }
     command -v "$bin" >/dev/null 2>&1 || continue          # app no instalada: se salta sin ruido
-    running "$cmd" && continue                              # ya abierta: no se duplica
     if [[ $ws =~ ^[1-9][0-9]?$ ]]; then
       hyprctl dispatch exec "[workspace $ws silent] $cmd" >/dev/null 2>&1
     else
@@ -133,18 +133,29 @@ ask_ws() {
     hyprarch-pick --layout orbit --title "$(T mode.ws.ask 'En qué espacio de trabajo abrirla')" || echo 0
 }
 
+safe_cmd() {   # el comando se ejecuta por /bin/sh: solo se aceptan programas con argumentos simples (sin encadenar ni sustituir)
+  [[ -n $1 && $1 != *$'\n'* && $1 != *$'\r'* && $1 != *$'\t'* ]] || return 1
+  [[ $1 != *[\;\&\|\`\$\<\>\(\)\{\}]* ]]
+}
+
 add_app() {  # modo comando [espacio]
   local m=$1 cmd=$2 ws=${3:-0}
-  [[ $ws =~ ^[0-9]+$ ]] || ws=0
+  valid "$m" && [[ $m != normal ]] || { echo "modo no válido: $m" >&2; return 2; }
+  safe_cmd "$cmd" || { echo "comando no permitido (sin ; & | \` \$ < > ( ) { }): $cmd" >&2; return 2; }
+  [[ $ws =~ ^(0|[1-9][0-9]?)$ ]] || ws=0
   init
   grep -qxF "$ws|$cmd" "$MD/$m.conf" 2>/dev/null || printf '%s|%s\n' "$ws" "$cmd" >> "$MD/$m.conf"
 }
 
-remove_app() {  # modo línea-completa-o-comando
+remove_app() {  # modo línea-completa-o-comando (comparación literal, escritura atómica)
   local m=$1 x=$2 tmp
-  tmp=$(mktemp) || return 1
-  grep -vxF -- "$x" "$MD/$m.conf" | grep -v -- "^[0-9]*|$(printf '%s' "$x" | sed 's/[][\.*^$/]/\\&/g')\$" > "$tmp" || :
-  mv -f "$tmp" "$MD/$m.conf"
+  valid "$m" && [[ $m != normal ]] || { echo "modo no válido: $m" >&2; return 2; }
+  [[ $x != *$'\n'* && $x != *$'\r'* ]] || return 2
+  tmp=$(mktemp "$MD/.remove.XXXXXX") || return 1
+  if ! REMOVE_APP="$x" awk '{ c = $0; sub(/^[0-9]+\|/, "", c); if ($0 != ENVIRON["REMOVE_APP"] && c != ENVIRON["REMOVE_APP"]) print }' "$MD/$m.conf" > "$tmp"; then
+    rm -f -- "$tmp"; return 1
+  fi
+  mv -f -- "$tmp" "$MD/$m.conf"
 }
 
 edit() {

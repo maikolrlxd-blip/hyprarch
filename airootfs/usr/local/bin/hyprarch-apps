@@ -32,9 +32,12 @@ gpu_extra() {
   return 0
 }
 
-enable_multilib() {
-  grep -q '^\[multilib\]' /etc/pacman.conf && return 0
-  sudo sed -i '/^#\[multilib\]/,/^#Include/ s/^#//' /etc/pacman.conf
+enable_multilib() {   # descomenta SOLO la sección [multilib] y comprueba que quedó con servidores
+  sudo sed -i -E '/^[[:space:]]*#?[[:space:]]*\[multilib\][[:space:]]*$/,/^[[:space:]]*#?[[:space:]]*\[(core|extra|community)\]/ {
+      s/^([[:space:]]*)#[[:space:]]*(\[multilib\][[:space:]]*)$/\1\2/
+      s/^([[:space:]]*)#[[:space:]]*(Include[[:space:]]*=.*)$/\1\2/
+    }' /etc/pacman.conf || return 1
+  [[ -n $(pacman-conf --repo multilib Server 2>/dev/null) ]]
 }
 
 install_pack() {
@@ -46,19 +49,20 @@ install_pack() {
     note "$(T apps.live 'Estás en la sesión de prueba')" "$(T apps.live.d 'Hay poco espacio: instala hyprarch en el disco para instalar apps pesadas')"
     return 1
   fi
-  [[ $pack == juegos ]] && enable_multilib
+  if [[ $pack == juegos ]]; then enable_multilib || { note "$(T apps.fail 'No se pudo instalar')" "multilib"; return 1; }; fi
   echo ">> Instalando: $pkgs"
   # shellcheck disable=SC2086
-  sudo pacman -Sy --needed --noconfirm $pkgs || { note "$(T apps.fail 'No se pudo instalar')" "$pack"; return 1; }
+  sudo pacman -Syu --needed $pkgs || { note "$(T apps.fail 'No se pudo instalar')" "$pack"; return 1; }
   if [[ $pack == tienda ]]; then
-    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null
+    sudo flatpak remote-add --system --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || { note "$(T apps.fail 'No se pudo instalar')" "flathub"; return 1; }
   fi
   note "$(T apps.ok 'Listo')" "$(T apps.ok.d 'Ya puedes abrirlo desde el lanzador (SUPER+D)')"
+  return 0
 }
 
 run_in_terminal() {   # se ve el progreso y la contraseña (si la pide)
   if command -v kitty >/dev/null 2>&1; then
-    kitty --title "hyprarch · apps" bash -c "\"$0\" --run $1; echo; read -rn1 -p '$(T apps.close 'Pulsa una tecla para cerrar')'"
+    kitty --title "hyprarch · apps" bash -c '"$1" --run "$2"; rc=$?; printf "\n"; read -rn1 -p "$3"; exit "$rc"' bash "$0" "$1" "$(T apps.close 'Pulsa una tecla para cerrar')"
   else
     install_pack "$1"
   fi

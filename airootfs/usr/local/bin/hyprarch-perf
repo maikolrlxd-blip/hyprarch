@@ -22,7 +22,12 @@ detect() {   # imprime "lite|full<TAB>motivo"
   (( ${cores:-4} <= 2 )) && why+=("${cores} núcleos")
   [[ $model =~ (Celeron|Atom|Pentium|Intel\(R\)\ N[0-9]|Intel\(R\)\ J[0-9]|Athlon\ (Silver|Gold)|AMD\ [AE][0-9]-|E-?[0-9]{3}) ]] && why+=("procesador de gama baja")
   compgen -G '/dev/dri/renderD*' >/dev/null || why+=("sin aceleración gráfica")
-  if command -v glxinfo >/dev/null 2>&1 && glxinfo -B 2>/dev/null | grep -qi 'llvmpipe\|softpipe'; then why+=("render por software"); fi
+  local glx
+  if command -v glxinfo >/dev/null 2>&1 && glx=$(timeout 3s glxinfo -B 2>/dev/null) && [[ -n $glx ]]; then
+    grep -qiE 'llvmpipe|softpipe' <<< "$glx" && why+=("render por software")
+  elif compgen -G '/dev/dri/renderD*' >/dev/null; then
+    :   # hay aceleración y no se pudo comprobar GLX (sin pantalla): se confía en el nodo de render
+  fi
   if (( ${#why[@]} )); then printf 'lite\t%s' "$(IFS=,; echo "${why[*]}")"; else printf 'full\t%s' "RAM ${ram_mb} MB, ${cores} núcleos"; fi
 }
 
