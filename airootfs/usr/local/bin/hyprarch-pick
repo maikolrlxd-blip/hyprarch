@@ -1073,8 +1073,16 @@ def run(args):
                 cr.set_operator(cairo.OPERATOR_CLEAR)
                 cr.paint()
                 cr.set_operator(cairo.OPERATOR_OVER)
+                t_ini = time.perf_counter()
                 draw_scene(cr, w, h, S, pal, pal_full)
                 draw_close_btn(cr, w, h, S, pal)
+                # calidad ADAPTATIVA: se mide lo que tarda cada cuadro; si el equipo va justo se quitan los adornos pesados
+                # (resplandores de pantalla completa y partículas) y se baja el ritmo para que el menú siga fluido
+                ms = (time.perf_counter() - t_ini) * 1000.0
+                S["avg_ms"] = ms if "avg_ms" not in S else S["avg_ms"] * 0.9 + ms * 0.1
+                S["nfr"] = S.get("nfr", 0) + 1
+                if S["nfr"] > 20 and not U.LITE and S["avg_ms"] > 16.0:
+                    U.LITE = True
             except Exception as e:
                 if os.environ.get("HYPRARCH_DEBUG"):
                     import traceback
@@ -1222,7 +1230,11 @@ def run(args):
             for i in range(len(items)):
                 cur = S["hov"].get(i, 0.0)
                 S["hov"][i] = cur + ((1.0 if S["sel"] == i else 0.0) - cur) * 0.30
-            area.queue_draw()
+            # ritmo adaptativo: nunca se pide un cuadro nuevo antes de lo que tarda en pintarse el anterior (+25 %)
+            iv = max(U.FRAME_MS, S.get("avg_ms", 0.0) * 1.25) / 1000.0
+            if now - S.get("last_draw", 0.0) >= iv * 0.9:
+                S["last_draw"] = now
+                area.queue_draw()
             return True
 
         U.play("menu-open")

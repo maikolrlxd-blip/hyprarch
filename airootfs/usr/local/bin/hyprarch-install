@@ -169,6 +169,10 @@ mkdir -p /mnt/usr/share/backgrounds
 cp -a /usr/share/hyprarch /mnt/usr/share/
 cp -a /usr/share/backgrounds/hyprarch-* /mnt/usr/share/backgrounds/ 2>/dev/null || true
 cp -a /etc/skel/. /mnt/etc/skel/
+mkdir -p /mnt/etc/modprobe.d /mnt/etc/wireplumber
+cp -a /etc/modprobe.d/hyprarch-audio.conf /mnt/etc/modprobe.d/ 2>/dev/null || true
+cp -a /etc/wireplumber/. /mnt/etc/wireplumber/ 2>/dev/null || true
+cp -a /etc/issue /mnt/etc/issue 2>/dev/null || true
 
 # PipeWire para todos los usuarios (igual que en la ISO)
 mkdir -p /mnt/etc/systemd/user/sockets.target.wants /mnt/etc/systemd/user/default.target.wants
