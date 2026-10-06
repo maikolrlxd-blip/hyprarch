@@ -233,7 +233,11 @@ for f in vmlinuz-linux initramfs-linux.img intel-ucode.img amd-ucode.img loader/
   [[ -s /mnt/boot/$f ]] || die "falta el archivo de arranque /boot/$f: la instalación no arrancaría."
 done
 sync
-umount -R /mnt
+# pacstrap deja un gpg-agent (llaves de pacman) con /mnt ocupado: se cierra antes de desmontar
+arch-chroot /mnt gpgconf --kill all >/dev/null 2>&1 || true
+pkill -x gpg-agent 2>/dev/null || true
+sleep 1
+umount -R /mnt || { warn "/mnt sigue ocupado; reintentando"; fuser -km /mnt >/dev/null 2>&1 || true; sleep 2; umount -R /mnt; }
 OWN_MNT=0
 say "Listo. hyprarch quedó instalado en $DISK (usuario: $USERNAME)."
 echo "Apagá el equipo, sacá el USB (o el medio de instalación) y arrancá desde el disco."
