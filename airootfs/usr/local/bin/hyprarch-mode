@@ -104,11 +104,11 @@ edit_mode() {
       [[ -z $line ]] && continue
       items+="rm:$line"$'\t'"$(pretty "$line")"$'\t'"$(tint "$m")"$'\t'"$(T mode.rm 'Tocá para quitarla de este modo')"$'\t'"serious"$'\n'
     done < <(apps_of "$m")
-    sel=$(printf '%s' "$items"; printf '%s\n' \
+    sel=$({ printf '%s' "$items"; printf '%s\n' \
         "add"$'\t'"+  $(T mode.add 'Agregar una aplicación')"$'\t'"$(tint "$m")"$'\t'"$(T mode.add.d 'Elegí de las instaladas')"$'\thappy' \
         "cmd"$'\t'"+  $(T mode.cmd 'Escribir un comando')"$'\t\t'"$(T mode.cmd.d 'Para cualquier programa o página web')"$'\twink' \
         "try"$'\t'"▶  $(T mode.try 'Activar este modo ahora')"$'\t\t'"$(T mode.try.d 'Prueba cómo queda')"$'\tsurprised' \
-        "back"$'\t'"←  $(T ui.back 'Volver')"$'\t\t\tsleepy' |
+        "back"$'\t'"←  $(T ui.back 'Volver')"$'\t\t\tsleepy'; } |
       hyprarch-pick --layout orbit --title "$(label "$m")  ·  $(T mode.apps 'aplicaciones')") || return 0
     case $sel in
       rm:*) remove_app "$m" "${sel#rm:}" ;;
@@ -156,7 +156,7 @@ edit() {
     for x in "${MODES[@]}"; do
       items+="$x"$'\t'"$(label "$x")"$'\t'"$(tint "$x")"$'\t'"$(apps_of "$x" | wc -l) $(T mode.apps 'aplicaciones')"$'\t'"$(mood "$x")"$'\n'
     done
-    sel=$(printf '%s' "$items"; printf '%s\n' "normal"$'\t'"$(T mode.normal 'Modo normal')"$'\t#5ef2c8\t'"$(T mode.normal.d 'Sin apps automáticas')"$'\thappy' |
+    sel=$({ printf '%s' "$items"; printf '%s\n' "normal"$'\t'"$(T mode.normal 'Modo normal')"$'\t#5ef2c8\t'"$(T mode.normal.d 'Sin apps automáticas')"$'\thappy'; } |
       hyprarch-pick --layout orbit --title "$(T mode.edit 'Modos y sus aplicaciones')") || return 0
     case $sel in
       normal) set_mode normal; return 0 ;;
