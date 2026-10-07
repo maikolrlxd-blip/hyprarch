@@ -62,9 +62,9 @@ SOUNDS = "/usr/share/hyprarch/sounds"
 WIN_W, WIN_H = 580, 450                           # ventana fija y transparente: la isla se dibuja dentro (solo lo dibujado recibe clics)
 CW, CH = 176, 36                                # pastilla fija: ocupa el hueco reservado en el centro de la barra
 GAP = 8                                           # separación entre la pastilla y el panel desplegado
-EW, EH = 520, 176                                 # panel desplegado en reposo: encabezado + saludo + cuadro para escribir
-EH_CHAT = 380                                     # el mismo panel crece así cuando hay conversación
-INPUT_H = 54                                      # alto de la fila del cuadro de texto
+EW, EH = 360, 58                                  # panel desplegado en reposo: solo el cuadro para escribir (pequeño)
+EH_CHAT = 360                                     # tope de alto: crece con el texto hasta aquí y luego se desplaza
+INPUT_H = 44                                      # alto de la fila del cuadro de texto
 TOP = 0                                           # cuelga del borde superior de la pantalla (la barra de tareas está abajo)
 PANEL_PAD = 12                                    # margen sobre el panel para su sombra
 HEAD_H = 40                                       # alto del encabezado
@@ -351,7 +351,7 @@ class App(Gtk.Application):
         self.working = False           # ¿la IA está respondiendo?
         self.proc = None
         self.sid = None                # sesión de Claude para seguir la conversación
-        self.entry = self.view = self.buf = self.greet = self.scroll = self.send_btn = self.exp_size = None
+        self.entry = self.view = self.buf = self.head = self.scroll = self.send_btn = self.exp_size = None
         self.provider = ai_conf()[0]
 
     def tick(self):
@@ -472,9 +472,9 @@ class App(Gtk.Application):
             return
         qx, qy = (W - w) / 2, PANEL_PAD
         self.body(cr, qx, qy, w, h, 26, col, 0.26)
-        if kk > 0.45:
+        if kk > 0.45 and self.chatting:
             ca = max(0.0, (kk - 0.45) / 0.55)
-            cx0, cy0, cw0, ch0 = qx + 12, qy + HEAD_H, w - 24, h - HEAD_H - INPUT_H - 4
+            cx0, cy0, cw0, ch0 = qx + 12, qy + HEAD_H, w - 24, h - HEAD_H - INPUT_H - 10
             if self.chatting:
                 self.face_at(cr, qx + 30, qy + HEAD_H / 2 + 1, 10, t, col)      # en conversación: Hyro pequeño en el encabezado
             rrect(cr, cx0, cy0, cw0, ch0, 18)                       # tarjeta con borde fino, como en Coucou
@@ -520,13 +520,26 @@ class App(Gtk.Application):
     # ---------- la conversación vive dentro de la isla ----------
     def show_chat(self, on):
         self.chatting = on
-        ST["eh_t"] = float(EH_CHAT if on else EH)
-        self.greet.set_visible(not on)
+        self.head.set_visible(on)
         self.scroll.set_visible(on)
+        if on:
+            self.fit()
+        else:
+            ST["eh_t"] = float(EH)
+
+    def fit(self):
+        """El cuadro crece con el texto (hasta un tope; después se desplaza) y vuelve a achicarse con «Nueva»."""
+        if not self.chatting:
+            return False
+        _mn, nat, _a, _b = self.view.measure(Gtk.Orientation.VERTICAL, EW - 24)
+        want = HEAD_H + nat + INPUT_H + 14
+        ST["eh_t"] = float(max(150, min(EH_CHAT, want)))
+        return False
 
     def append(self, text, tag):
         end = self.buf.get_end_iter()
         self.buf.insert_with_tags_by_name(end, text, tag)
+        self.fit()
         GLib.idle_add(lambda: (self.view.scroll_mark_onscreen(self.buf.get_mark("fin")), False)[1])
         return False
 
@@ -705,6 +718,8 @@ class App(Gtk.Application):
         head.set_size_request(-1, HEAD_H)
         head.set_margin_start(52)                      # a la izquierda queda sitio para Hyro pequeño
         head.set_margin_end(14)
+        head.set_visible(False)
+        self.head = head
         self.pbtns = {}
         import shutil
         extra = os.path.expanduser("~/.local/bin") + os.pathsep + os.environ.get("PATH", "")
@@ -722,8 +737,7 @@ class App(Gtk.Application):
         spacer.set_hexpand(True)
         head.append(spacer)
         for label, tip, handler in (("Nueva", "Empezar una conversación nueva", self.new_chat),
-                                    ("Historial", "Conversaciones anteriores", lambda *_a: self.act("hyprarch-ai", "history")),
-                                    ("Grande", "Abrir en pantalla completa", lambda *_a: self.act("hyprarch-ai", "open", "full"))):
+                                    ("Historial", "Conversaciones anteriores", lambda *_a: self.act("hyprarch-ai", "history"))):
             b = Gtk.Button(label=label)
             b.add_css_class("pill")
             b.set_valign(Gtk.Align.CENTER)
@@ -752,8 +766,6 @@ class App(Gtk.Application):
         self.say.add_css_class("say")
         titles.append(nm)
         titles.append(self.say)
-        self.greet = titles
-        body.add_overlay(titles)
         view = Gtk.TextView()
         view.add_css_class("chat")
         view.set_editable(False)
@@ -783,11 +795,12 @@ class App(Gtk.Application):
         row.set_size_request(-1, INPUT_H)
         row.set_margin_start(14)
         row.set_margin_end(14)
-        row.set_margin_bottom(12)
+        row.set_margin_bottom(7)
         row.set_valign(Gtk.Align.END)
         entry = Gtk.Entry()
         entry.add_css_class("in")
         entry.set_hexpand(True)
+        entry.set_valign(Gtk.Align.CENTER)
         entry.set_placeholder_text("Escríbele a %s…" % PROV_NAMES.get(self.provider, self.provider))
         entry.connect("activate", self.send)
         self.entry = entry
