@@ -14,6 +14,7 @@ import json
 import math
 import os
 import random
+import re
 import signal
 signal.signal(signal.SIGUSR1, signal.SIG_IGN)               # hasta que la isla esté lista, el atajo no puede matarla
 import subprocess
@@ -664,6 +665,11 @@ class App(Gtk.Application):
         if not q or self.working:
             return
         self.entry.set_text("")
+        if not self.provs:                                                  # ninguna IA instalada (p. ej. edición pública): el asistente la instala
+            self.show_chat(True)
+            self.append("Aún no hay ninguna IA instalada. Te abro el asistente para elegir una…\n", "dim")
+            GLib.timeout_add(1200, lambda: (self.act("hyprarch-ai", "setup-only"), False)[1])
+            return
         self.gen += 1                                                       # cada pregunta tiene su número: lo que llegue de una anterior se descarta
         gen = self.gen
         self.show_chat(True)
@@ -758,6 +764,8 @@ class App(Gtk.Application):
                     if ev.get("is_error") or not gotten:
                         GLib.idle_add(self.append, str(ev.get("result") or "Sin respuesta."), "err" if ev.get("is_error") else "ai", gen)
                         gotten = True
+                        if ev.get("is_error") and re.search(r"not logged in|/login", str(ev.get("result")), re.I):
+                            GLib.idle_add(self.need_login, gen)
             try:
                 rc = proc.wait(timeout=5)
             except subprocess.TimeoutExpired:
@@ -773,6 +781,13 @@ class App(Gtk.Application):
         finally:
             self.stop_proc(proc)
             GLib.idle_add(self.finish, rc, gen)
+
+    def need_login(self, gen):
+        """Claude sin sesión: se explica y se abre el asistente de inicio de sesión de hyprarch (no hace falta saber comandos)."""
+        if gen == self.gen:
+            self.append("\nTe falta iniciar sesión. Te abro el asistente…\n", "dim", gen)
+            GLib.timeout_add(1200, lambda: (self.act("hyprarch-ai", "login-window"), False)[1])
+        return False
 
     def finish(self, rc, gen):
         if gen != self.gen:                                                 # una conversación anterior que ya se canceló

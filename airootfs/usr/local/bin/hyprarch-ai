@@ -374,13 +374,24 @@ guide_login() {  # corre en segundo plano mientras el chat muestra el inicio de 
 }
 
 login_flow() {
-  setup || return 0
+  [[ -n $AI ]] || { setup || return 0; }       # solo pregunta qué IA si todavía no hay una elegida
   export BROWSER=firefox
   if [[ $AI != custom && $AI != ollama ]] && ! logged_in; then
     note "Te voy a guiar" "1) Iniciá sesión en el navegador · 2) Tocá «Copy code» · 3) En el chat: Ctrl+V y Enter." 14000
     guide_login >/dev/null 2>&1 &
   fi
   chat
+}
+
+# Desde la isla: abre una ventana de chat normal con el asistente de inicio de sesión (la isla no tiene terminal).
+login_window() {
+  [[ -n $AI ]] || { setup || return 0; }
+  export BROWSER=firefox
+  if [[ $AI != custom && $AI != ollama ]] && ! logged_in; then
+    note "Te voy a guiar" "1) Iniciá sesión en el navegador · 2) Tocá «Copy code» · 3) En el chat: Ctrl+V y Enter." 14000
+    guide_login >/dev/null 2>&1 &
+  fi
+  setsid -f kitty --class hyprarch-ai -e hyprarch-ai chat >/dev/null 2>&1 </dev/null
 }
 
 case ${1:-chat} in
@@ -392,6 +403,7 @@ case ${1:-chat} in
   how)    m=$(choose_mode) && open_ai "$m" ;;       # elegir cómo hablar y abrir
   ask)    quick_ask ;;
   login)  login_flow ;;
+  login-window) login_window ;;
   mode)   if [[ -n ${2:-} ]]; then printf '%s\n' "$2" > "$MODE_FILE"; else get_mode; fi ;;
   setup)  setup && chat ;;
   setup-only) setup ;;           # solo elegir la IA (lo usa el asistente de primer inicio), sin abrir la conversación
