@@ -297,7 +297,12 @@ choose_mode() {
 
 # Si la isla está viva, el chat es ella misma (un cuadro para escribir justo debajo de la pastilla): se le avisa y listo.
 island_chat() {
-  pkill -USR1 -f 'bin/hyprarch-islan[d]' 2>/dev/null
+  case $AI in claude|codex|gemini|ollama) ;; *) return 1 ;; esac      # con otras IAs la isla no sabe hablar: se abre el chat normal
+  local f=${XDG_RUNTIME_DIR:-/nonexistent}/hyprarch-island.ready pid
+  [[ -r $f ]] || return 1                                                # la isla publica su pid solo cuando ya escucha el atajo
+  pid=$(<"$f"); [[ $pid =~ ^[0-9]+$ ]] || return 1
+  tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null | grep -q 'hyprarch-island' || return 1
+  kill -USR1 "$pid" 2>/dev/null
 }
 
 # pregunta de una sola vez (sin abrir el chat); la respuesta se muestra en una ventanita

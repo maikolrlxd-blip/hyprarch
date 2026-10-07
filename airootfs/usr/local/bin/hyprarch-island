@@ -15,6 +15,7 @@ import math
 import os
 import random
 import signal
+signal.signal(signal.SIGUSR1, signal.SIG_IGN)               # hasta que la isla esté lista, el atajo no puede matarla
 import subprocess
 import sys
 import threading
@@ -26,6 +27,7 @@ if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza
     env["GSK_RENDERER"] = "cairo"
     os.execvpe(sys.executable, [sys.executable] + sys.argv, env)
 
+import atexit
 import fcntl
 
 import cairo
@@ -59,6 +61,7 @@ def buddy_name():
 
 NAME = buddy_name()
 SOUNDS = "/usr/share/hyprarch/sounds"
+READY_FILE = os.path.join(RUN, "hyprarch-island.ready")        # el pid de la isla, publicado solo cuando ya escucha el atajo (SIGUSR1)
 WIN_W, WIN_H = 580, 450                           # ventana fija y transparente: la isla se dibuja dentro (solo lo dibujado recibe clics)
 CW, CH = 176, 36                                # pastilla fija: ocupa el hueco reservado en el centro de la barra
 GAP = 8                                           # separación entre la pastilla y el panel desplegado
@@ -368,6 +371,9 @@ class App(Gtk.Application):
         self.panel = None
         self.cur_ms = 16
         self.region_dirty = True
+        self.gen = 0                   # número de la consulta en curso
+        self.provs = []                # IAs instaladas (para el botón que las cambia)
+        self.pbtn = None
         self.at_home = True            # ¿la pastilla está en su hueco de la barra? (si arrastras el cuadro, se oculta)
         self.cur = (0, 0)
         self.d0 = (0, 0)
@@ -566,7 +572,7 @@ class App(Gtk.Application):
 
     def clamp(self, x, y):
         x = max(-(WIN_W - EW) / 2, min(self.sw - (WIN_W + EW) / 2, x))
-        y = max(-(CH + GAP), min(self.sh - 150, y))
+        y = max(-(CH + GAP), min(self.sh - (CH + GAP) - ST["eh_t"] - 6, y))        # el cuadro entero (con su cuadro de texto) siempre cabe en pantalla
         return x, y
 
     def make_draggable(self, w):
@@ -640,9 +646,13 @@ class App(Gtk.Application):
         _mn, nat, _a, _b = self.view.measure(Gtk.Orientation.VERTICAL, EW - 24)
         want = HEAD_H + nat + INPUT_H + 14
         ST["eh_t"] = float(max(150, min(EH_CHAT, want)))
+        if not self.at_home:                                                # si crece estando suelto, que no se salga por abajo
+            self.place(*self.clamp(*self.cur))
         return False
 
-    def append(self, text, tag):
+    def append(self, text, tag, gen=None):
+        if gen is not None and gen != self.gen:                              # texto de una consulta que ya se canceló
+            return False
         end = self.buf.get_end_iter()
         self.buf.insert_with_tags_by_name(end, text, tag)
         self.fit()
@@ -654,78 +664,123 @@ class App(Gtk.Application):
         if not q or self.working:
             return
         self.entry.set_text("")
+        self.gen += 1                                                       # cada pregunta tiene su número: lo que llegue de una anterior se descarta
+        gen = self.gen
         self.show_chat(True)
         if self.buf.get_char_count():
-            self.append("\n", "ai")
-        self.append(q + "\n", "me")
+            self.append("\n", "ai", gen)
+        self.append(q + "\n", "me", gen)
         self.working = True
         self.send_btn.set_sensitive(False)
         ST.update(mood="thinking", label=MOODS["thinking"][1], last_act=time.monotonic())
         self.cmp_label.set_text(ST["label"])
-        threading.Thread(target=self.worker, args=(q,), daemon=True).start()
-
-    def worker(self, q):
-        """Pregunta a la IA elegida y pasa su respuesta a la isla a medida que llega (Claude: palabra a palabra)."""
         pid, acmd = ai_conf()
+        threading.Thread(target=self.worker, args=(q, gen, pid, acmd, self.sid), daemon=True).start()
+
+    @staticmethod
+    def stop_proc(proc):
+        """Termina la IA y todo lo que lanzó (su grupo); si no hace caso en 2 s, a la fuerza."""
+        if proc is None or proc.poll() is not None:
+            return
+        try:
+            os.killpg(proc.pid, signal.SIGTERM)
+        except OSError:
+            return
+
+        def hard():
+            if proc.poll() is None:
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except OSError:
+                    pass
+            return False
+        GLib.timeout_add(2000, hard)
+
+    def set_sid(self, sid, gen):
+        if gen == self.gen:
+            self.sid = sid
+        return False
+
+    def worker(self, q, gen, pid, acmd, sid):
+        """Pregunta a la IA elegida y pasa su respuesta a la isla a medida que llega (Claude: palabra a palabra)."""
         env = dict(os.environ)
         env["PATH"] = os.path.expanduser("~/.local/bin") + os.pathsep + env.get("PATH", "")
-        if pid == "claude":
-            cmd = ["claude", "-p", q, "--output-format", "stream-json", "--include-partial-messages", "--verbose"]
-            if self.sid:
-                cmd += ["--resume", self.sid]
-        elif pid == "codex":
-            cmd = ["codex", "exec", "--skip-git-repo-check", q]
-        elif pid == "gemini":
-            cmd = ["gemini", "-p", q]
-        elif pid == "ollama":
-            cmd = ["ollama", "run", (acmd.split() or ["", "", "llama3.2"])[-1], q]
-        else:
-            GLib.idle_add(self.append, "Esta IA no tiene modo de una pasada. Elige Claude, Codex, Gemini u Ollama arriba.\n", "err")
-            GLib.idle_add(self.finish, 1)
-            return
-        gotten = False
-        sep = False
+        if q.startswith("-"):                                               # que la pregunta nunca se lea como una opción del programa
+            q = " " + q
+        tail, gotten, rc, proc = [], False, 1, None
         try:
-            self.proc = subprocess.Popen(cmd, cwd=os.path.expanduser("~"), env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                                         stderr=subprocess.STDOUT, text=True, bufsize=1, start_new_session=True)
-            for line in self.proc.stdout:
+            if pid == "claude":
+                cmd = ["claude", "-p", q, "--output-format", "stream-json", "--include-partial-messages", "--verbose"]
+                if sid:
+                    cmd += ["--resume", sid]
+            elif pid == "codex":
+                cmd = ["codex", "exec", "--skip-git-repo-check", q]
+            elif pid == "gemini":
+                cmd = ["gemini", "-p", q]
+            elif pid == "ollama":
+                cmd = ["ollama", "run", (acmd.split() or ["", "", "llama3.2"])[-1], q]
+            else:
+                GLib.idle_add(self.append, "Esta IA no tiene modo de una pasada. Elige Claude, Codex, Gemini u Ollama.\n", "err", gen)
+                return
+            proc = subprocess.Popen(cmd, cwd=os.path.expanduser("~"), env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace", bufsize=1,
+                                    start_new_session=True)
+            self.proc = proc
+            if gen != self.gen:                                             # «Nueva» llegó justo antes de que arrancara
+                self.stop_proc(proc)
+            for line in proc.stdout:
+                if gen != self.gen:
+                    break
                 if pid != "claude":
                     gotten = True
-                    GLib.idle_add(self.append, line, "ai")
+                    GLib.idle_add(self.append, line, "ai", gen)
                     continue
                 try:
                     ev = json.loads(line)
                 except ValueError:
+                    tail = (tail + [line.rstrip()])[-6:]                    # lo que no es JSON suele ser un error de la herramienta
+                    continue
+                if not isinstance(ev, dict):
                     continue
                 if ev.get("session_id"):
-                    self.sid = ev["session_id"]
+                    GLib.idle_add(self.set_sid, ev["session_id"], gen)
                 t = ev.get("type")
                 if t == "stream_event":
-                    e = ev.get("event", {})
+                    e = ev.get("event") or {}
                     et = e.get("type")
-                    if et == "content_block_start" and e.get("content_block", {}).get("type") == "tool_use":
-                        GLib.idle_add(self.append, "· " + str(e["content_block"].get("name", "herramienta")) + "…\n", "dim")
-                        sep = True
-                    elif et == "content_block_delta" and e.get("delta", {}).get("type") == "text_delta":
+                    if et == "content_block_start" and (e.get("content_block") or {}).get("type") == "tool_use":
+                        GLib.idle_add(self.append, "· " + str(e["content_block"].get("name", "herramienta")) + "…\n", "dim", gen)
+                    elif et == "content_block_delta" and (e.get("delta") or {}).get("type") == "text_delta":
                         txt = e["delta"].get("text", "")
-                        if sep and txt:
-                            sep = False
                         gotten = gotten or bool(txt)
-                        GLib.idle_add(self.append, txt, "ai")
+                        GLib.idle_add(self.append, txt, "ai", gen)
                 elif t == "result":
                     if ev.get("is_error") or not gotten:
-                        GLib.idle_add(self.append, str(ev.get("result") or "Sin respuesta."), "err" if ev.get("is_error") else "ai")
-            rc = self.proc.wait()
-        except OSError as exc:
-            GLib.idle_add(self.append, "No pude lanzar la IA (%s).\n" % exc, "err")
+                        GLib.idle_add(self.append, str(ev.get("result") or "Sin respuesta."), "err" if ev.get("is_error") else "ai", gen)
+                        gotten = True
+            try:
+                rc = proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.stop_proc(proc)
+                rc = 1
+            if rc != 0 and not gotten and tail:
+                GLib.idle_add(self.append, "\n".join(tail) + "\n", "err", gen)
+            elif rc != 0 and not gotten:
+                GLib.idle_add(self.append, "La IA terminó con un error (código %s).\n" % rc, "err", gen)
+        except Exception as exc:                                            # nada de lo que pase aquí debe dejar el chat bloqueado
+            GLib.idle_add(self.append, "No pude hablar con la IA (%s).\n" % exc, "err", gen)
             rc = 1
-        GLib.idle_add(self.finish, rc)
+        finally:
+            self.stop_proc(proc)
+            GLib.idle_add(self.finish, rc, gen)
 
-    def finish(self, rc):
+    def finish(self, rc, gen):
+        if gen != self.gen:                                                 # una conversación anterior que ya se canceló
+            return False
         self.proc = None
         self.working = False
         self.send_btn.set_sensitive(True)
-        self.append("\n", "ai")
+        self.append("\n", "ai", gen)
         m = "done" if rc == 0 else "error"
         ST.update(mood=m, label=MOODS[m][1], last_act=time.monotonic())
         if m == "done":
@@ -736,26 +791,43 @@ class App(Gtk.Application):
         return False
 
     def new_chat(self, *_a):
-        if self.proc:
-            try:
-                os.killpg(self.proc.pid, 15)
-            except OSError:
-                pass
+        self.gen += 1                                                       # lo que traiga la consulta anterior ya no cuenta
+        self.stop_proc(self.proc)
+        self.proc = None
+        self.working = False
+        self.send_btn.set_sensitive(True)
         self.sid = None
         self.buf.set_text("")
         self.buf.move_mark(self.buf.get_mark("fin"), self.buf.get_end_iter())
+        ST.update(mood="idle", label=MOODS["idle"][1])
+        self.cmp_label.set_text(ST["label"])
         self.show_chat(False)
         self.entry.grab_focus()
 
-    def pick_provider(self, pid):
-        """Cambia la IA con la que hablas desde la isla (se guarda igual que lo hace hyprarch-ai)."""
+    def pick_provider(self, *_a):
+        """Pasa a la siguiente IA instalada (un solo botón: caben todas aunque el cuadro sea pequeño)."""
+        if len(self.provs) < 2:
+            return
+        pid = self.provs[(self.provs.index(self.provider) + 1) % len(self.provs)] if self.provider in self.provs else self.provs[0]
         set_ai(pid)
         self.provider = pid
+        self.gen += 1
+        self.stop_proc(self.proc)
+        self.working = False
+        self.send_btn.set_sensitive(True)
         self.sid = None
-        for p, b in self.pbtns.items():
-            (b.add_css_class if p == pid else b.remove_css_class)("sel")
+        self.pbtn.set_label(PROV_NAMES.get(pid, pid))
         self.entry.set_placeholder_text("Escríbele a %s…" % PROV_NAMES.get(pid, pid))
         self.entry.grab_focus()
+
+    def quit_clean(self, *_a):
+        self.stop_proc(self.proc)
+        try:
+            os.remove(READY_FILE)
+        except OSError:
+            pass
+        self.quit()
+        return False
 
     def act(self, *cmd):
         self.collapse()
@@ -832,19 +904,17 @@ class App(Gtk.Application):
         head.set_visible(False)
         self.head = head
         self.make_draggable(head)
-        self.pbtns = {}
         import shutil
         extra = os.path.expanduser("~/.local/bin") + os.pathsep + os.environ.get("PATH", "")
-        for pid, pname in PROV_NAMES.items():
-            if shutil.which(pid, path=extra):
-                pb = Gtk.Button(label=pname)
-                pb.add_css_class("pill")
-                if pid == self.provider:
-                    pb.add_css_class("sel")
-                pb.set_valign(Gtk.Align.CENTER)
-                pb.connect("clicked", lambda _b, p=pid: self.pick_provider(p))
-                self.pbtns[pid] = pb
-                head.append(pb)
+        self.provs = [pid for pid in PROV_NAMES if shutil.which(pid, path=extra)]
+        pb = Gtk.Button(label=PROV_NAMES.get(self.provider, self.provider))       # un solo botón: pasa a la siguiente IA instalada
+        pb.add_css_class("pill")
+        pb.add_css_class("sel")
+        pb.set_valign(Gtk.Align.CENTER)
+        pb.set_tooltip_text("Cambiar de IA")
+        pb.connect("clicked", self.pick_provider)
+        self.pbtn = pb
+        head.append(pb)
         spacer = Gtk.Box()
         spacer.set_hexpand(True)
         head.append(spacer)
@@ -964,7 +1034,15 @@ class App(Gtk.Application):
             GLib.timeout_add(600, lambda: (self.expand(), False)[1])
         GLib.timeout_add(16, self.tick)
         self.region_dirty = True
-        GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGUSR1, self.toggle)    # atajo: pkill -USR1 -f hyprarch-island abre/cierra
+        GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGUSR1, self.toggle)    # atajo: hyprarch-ai avisa con SIGUSR1
+        GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, self.quit_clean)
+        GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, self.quit_clean)
+        try:
+            with open(READY_FILE, "w") as fh:
+                fh.write(str(os.getpid()))
+            atexit.register(lambda: os.path.exists(READY_FILE) and os.remove(READY_FILE))
+        except OSError:
+            pass
         GLib.timeout_add(1000, self.poll_status)
         GLib.timeout_add(1500, self.maybe_wink)
 
