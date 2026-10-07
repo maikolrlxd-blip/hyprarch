@@ -19,7 +19,7 @@ buscamos fallos, cosas que confundan y cosas que no se vean o suenen bien.
 - [ ] ¿Arranca y llega al escritorio? ¿A qué resolución? ¿Se ve nítido?
 - [ ] **Wi‑Fi:** clic en el icono de red de la barra (o **SUPER+N**; SUPER = tecla Windows). ¿Aparecen tus redes? ¿Te conecta?
 - [ ] **Sonido:** ¿suena la animación de entrada y los menús? ¿Hay chasquidos o ruidos raros? ¿Funcionan las teclas de volumen y se ve el aviso?
-- [ ] **Menús:** **SUPER+D** (aplicaciones), **SUPER+ESC** (apagar/bloquear), **SUPER+T** (colores), **SUPER+I** (instalar apps), **SUPER+F1** (todos los atajos). ¿Van fluidos?
+- [ ] **Menús:** **SUPER sola** (menú de inicio con tus aplicaciones), **SUPER+ESC** (apagar/bloquear), **SUPER+T** (colores), **SUPER+I** (instalar apps), **SUPER+F1** (todos los atajos). ¿Van fluidos?
 - [ ] **Teclado y ratón/trackpad:** ¿funcionan bien? ¿Las teclas especiales (brillo, volumen)?
 - [ ] **Modos** (gamer, cine, estudio, trabajo): desde el menú de Hyro (clic en el robot). ¿Cambian el fondo y abren sus apps?
 - [ ] **Navegador y archivos:** abre Firefox y una web; abre la carpeta de archivos.
@@ -29,7 +29,7 @@ buscamos fallos, cosas que confundan y cosas que no se vean o suenen bien.
 - [ ] Cualquier cosa que te confunda, te parezca fea, lenta o rara. **Las impresiones tuyas son tan valiosas como los errores.**
 
 ## Cómo reportar un problema (30 segundos)
-1. Pulsa **SUPER+D** y busca **«Reportar un problema»** (o escribe `hyprarch-report` en una terminal).
+1. Pulsa la tecla **SUPER** (menú de inicio) y busca **«Reportar un problema»** (o escribe `hyprarch-report` en una terminal).
 2. Escribe en una frase qué pasó y elige si incluyes una captura.
 3. Se crea un archivo `hyprarch-reporte-FECHA.txt` en tu carpeta personal (y, si quisiste, una imagen). **Léelo si quieres: no incluye contraseñas ni nombres de tus redes Wi‑Fi.**
 4. Envíame ese archivo (y la foto/captura, si hay) con tu mensaje. Si el sistema no arranca, una **foto con el móvil** de la pantalla ya ayuda mucho.

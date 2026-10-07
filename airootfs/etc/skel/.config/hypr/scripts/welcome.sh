@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 sleep 3
-notify-send -t 15000 "Bienvenido a hyprarch" "SUPER (tecla Windows) + Q cierra la ventana · +D apps · +Enter terminal · +T colores · +F1 todos los atajos"
+notify-send -t 15000 "Bienvenido a hyprarch" "Tecla SUPER (Windows) sola: menú de inicio · +Enter terminal · +Q cierra la ventana · +A habla con tu IA · +X centro de control · +F1 todos los atajos"
 
 # El personajito saluda según la hora (idea tomada del proyecto "Ale")
 h=$((10#$(date +%H)))
