@@ -371,6 +371,7 @@ class App(Gtk.Application):
         self.at_home = True            # ¿la pastilla está en su hueco de la barra? (si arrastras el cuadro, se oculta)
         self.cur = (0, 0)
         self.d0 = (0, 0)
+        self.last_press = 0.0
         self.chatting = False          # ¿hay conversación a la vista?
         self.working = False           # ¿la IA está respondiendo?
         self.proc = None
@@ -534,10 +535,20 @@ class App(Gtk.Application):
             self.region_dirty = True
             ST["last_act"] = time.monotonic()
             play("menu-open.wav")
-            LS.set_keyboard_mode(self.win, LS.KeyboardMode.EXCLUSIVE)      # mientras está abierta, el teclado es suyo (Esc la cierra)
+            # Al abrirla (clic o atajo) toma el teclado un instante para poder escribir ya; luego pasa a «a demanda»:
+            # el teclado va a lo último donde hiciste clic, así que al pulsar fuera deja de escribir ahí.
+            LS.set_keyboard_mode(self.win, LS.KeyboardMode.EXCLUSIVE)
             GLib.timeout_add(160, lambda: (self.entry.grab_focus(), False)[1])
+            GLib.timeout_add(450, self.release_keyboard)
         else:
+            LS.set_keyboard_mode(self.win, LS.KeyboardMode.EXCLUSIVE)
             self.entry.grab_focus()
+            GLib.timeout_add(450, self.release_keyboard)
+
+    def release_keyboard(self):
+        if ST["target"] > 0.5:
+            LS.set_keyboard_mode(self.win, LS.KeyboardMode.ON_DEMAND)
+        return False
 
     def collapse(self):
         if ST["target"] > 0.5:
@@ -561,20 +572,43 @@ class App(Gtk.Application):
     def make_draggable(self, w):
         g = Gtk.GestureDrag()
         g.set_button(1)
-        g.connect("drag-begin", lambda *_a: setattr(self, "d0", self.cur))
+        g.connect("drag-begin", lambda *_a: self.drag_begin())
         g.connect("drag-update", lambda _g, ox, oy: self.drag_move(ox, oy))
         g.connect("drag-end", lambda *_a: self.drag_end())
         w.add_controller(g)
 
+    def drag_begin(self):
+        self.d0 = self.cur
+        now = time.monotonic()
+        if now - self.last_press < 0.4:                                    # doble clic: de vuelta a su sitio (sin gestos extra que roben el arrastre)
+            self.reset_pos()
+            self.d0 = self.cur
+        self.last_press = now
+
     def drag_move(self, ox, oy):
+        if abs(ox) < 6 and abs(oy) < 6 and self.at_home:                  # un clic suelto no es un arrastre
+            return
         x, y = self.clamp(self.d0[0] + ox, self.d0[1] + oy)
         self.at_home = False
         self.cmp_box.set_visible(False)
         self.place(x, y)
 
     def drag_end(self):
+        if self.at_home:                                                   # no hubo arrastre
+            return
         self.custom = self.cur
         save_pos(self.custom)
+
+    def reset_pos(self):
+        self.custom = None
+        try:
+            os.remove(POS_FILE)
+        except OSError:
+            pass
+        self.place(*self.home)
+        self.at_home = True
+        self.cmp_box.set_visible(True)
+        self.region_dirty = True
 
     def go_home(self):
         """Tras recoger el panel, la pastilla vuelve a su hueco de la barra."""
