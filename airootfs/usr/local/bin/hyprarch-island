@@ -333,6 +333,25 @@ def set_ai(pid):
         fh.write("AI=%s\nAI_CMD=%s\n" % (shlex.quote(pid), shlex.quote(cmd)))
 
 
+POS_FILE = os.path.join(os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "hyprarch-buddy", "island-pos.json")
+
+
+def load_pos():
+    try:
+        x, y = json.load(open(POS_FILE, encoding="utf-8"))
+        return float(x), float(y)
+    except (OSError, ValueError, TypeError):
+        return None
+
+
+def save_pos(pos):
+    try:
+        os.makedirs(os.path.dirname(POS_FILE), exist_ok=True)
+        json.dump(list(pos), open(POS_FILE, "w", encoding="utf-8"))
+    except OSError:
+        pass
+
+
 class App(Gtk.Application):
     def __init__(self):
         super().__init__(application_id=None)
@@ -347,6 +366,9 @@ class App(Gtk.Application):
         self.panel = None
         self.cur_ms = 16
         self.region_dirty = True
+        self.at_home = True            # ¿la pastilla está en su hueco de la barra? (si arrastras el cuadro, se oculta)
+        self.cur = (0, 0)
+        self.d0 = (0, 0)
         self.chatting = False          # ¿hay conversación a la vista?
         self.working = False           # ¿la IA está respondiendo?
         self.proc = None
@@ -408,7 +430,7 @@ class App(Gtk.Application):
         if surf is None:
             return
         px, py, pw, ph = self.pill_rect(WIN_W)
-        reg = cairo.Region(cairo.RectangleInt(int(px) - 2, 0, int(pw) + 4, int(ph) + 4))
+        reg = cairo.Region(cairo.RectangleInt(int(px) - 2, 0, int(pw) + 4, int(ph) + 4) if self.at_home else cairo.RectangleInt(0, 0, 0, 0))
         qx, qy, qw, qh = self.panel_rect(WIN_W)
         if qh > 4:
             reg.union(cairo.RectangleInt(int(qx) - 3, int(qy) - 2, int(qw) + 6, int(qh) + 6))
@@ -454,6 +476,8 @@ class App(Gtk.Application):
 
     def draw_pill(self, _a, cr, W, H):
         """La pastilla (lienzo pequeño: es lo único que se repinta en reposo)."""
+        if not self.at_home:
+            return
         t = time.monotonic() - ST["t0"]
         kk = max(0.0, min(1.0, ST["k"]))
         col = MOODS.get(ST["mood"], MOODS["idle"])[0]
@@ -500,6 +524,11 @@ class App(Gtk.Application):
             ST["phrase"] = random.choice(PHRASES)
             self.say.set_text(ST["phrase"])
             ST["target"] = 1.0
+            if self.custom:                                                # abre donde lo dejaste la última vez
+                self.at_home = False
+                self.cmp_box.set_visible(False)
+                self.place(*self.clamp(*self.custom))
+            self.region_dirty = True
             ST["last_act"] = time.monotonic()
             play("menu-open.wav")
             LS.set_keyboard_mode(self.win, LS.KeyboardMode.EXCLUSIVE)      # mientras está abierta, el teclado es suyo (Esc la cierra)
@@ -512,6 +541,46 @@ class App(Gtk.Application):
             ST["target"] = 0.0
             play("menu-select.wav")
             LS.set_keyboard_mode(self.win, LS.KeyboardMode.NONE)
+            if not self.at_home:
+                GLib.timeout_add(420, self.go_home)
+
+    # ---------- mover el cuadro a donde quieras (se arrastra desde los puntitos o el encabezado) ----------
+    def place(self, x, y):
+        self.cur = (x, y)
+        LS.set_margin(self.win, LS.Edge.LEFT, int(x))
+        LS.set_margin(self.win, LS.Edge.TOP, int(y))
+
+    def clamp(self, x, y):
+        x = max(-(WIN_W - EW) / 2, min(self.sw - (WIN_W + EW) / 2, x))
+        y = max(-(CH + GAP), min(self.sh - 150, y))
+        return x, y
+
+    def make_draggable(self, w):
+        g = Gtk.GestureDrag()
+        g.set_button(1)
+        g.connect("drag-begin", lambda *_a: setattr(self, "d0", self.cur))
+        g.connect("drag-update", lambda _g, ox, oy: self.drag_move(ox, oy))
+        g.connect("drag-end", lambda *_a: self.drag_end())
+        w.add_controller(g)
+
+    def drag_move(self, ox, oy):
+        x, y = self.clamp(self.d0[0] + ox, self.d0[1] + oy)
+        self.at_home = False
+        self.cmp_box.set_visible(False)
+        self.place(x, y)
+
+    def drag_end(self):
+        self.custom = self.cur
+        save_pos(self.custom)
+
+    def go_home(self):
+        """Tras recoger el panel, la pastilla vuelve a su hueco de la barra."""
+        if ST["target"] < 0.5:
+            self.place(*self.home)
+            self.at_home = True
+            self.cmp_box.set_visible(True)
+            self.region_dirty = True
+        return False
 
     def toggle(self):                                                          # atajo de teclado (SIGUSR1)
         self.collapse() if ST["target"] > 0.5 else self.expand()
@@ -664,8 +733,13 @@ class App(Gtk.Application):
         win.set_default_size(WIN_W, WIN_H)
         LS.init_for_window(win)
         LS.set_layer(win, LS.Layer.OVERLAY)
+        mon = Gdk.Display.get_default().get_monitors().get_item(0).get_geometry()
+        self.sw, self.sh = mon.width, mon.height
+        self.home = ((self.sw - WIN_W) // 2, TOP)                    # casa: centrada arriba (hueco de la barra)
+        self.custom = load_pos()                                     # sitio al que la persona arrastró el cuadro (si lo hizo)
         LS.set_anchor(win, LS.Edge.TOP, True)
-        LS.set_margin(win, LS.Edge.TOP, TOP)
+        LS.set_anchor(win, LS.Edge.LEFT, True)                       # se coloca con márgenes: así se puede mover a cualquier sitio
+        self.place(*self.home)
         LS.set_exclusive_zone(win, -1)
         LS.set_namespace(win, "hyprarch-island")
         LS.set_keyboard_mode(win, LS.KeyboardMode.NONE)
@@ -720,6 +794,7 @@ class App(Gtk.Application):
         head.set_margin_end(14)
         head.set_visible(False)
         self.head = head
+        self.make_draggable(head)
         self.pbtns = {}
         import shutil
         extra = os.path.expanduser("~/.local/bin") + os.pathsep + os.environ.get("PATH", "")
@@ -810,6 +885,21 @@ class App(Gtk.Application):
         sb.set_tooltip_text("Enviar")
         sb.connect("clicked", self.send)
         self.send_btn = sb
+        grip = Gtk.DrawingArea()                      # los puntitos para arrastrar el cuadro a donde quieras
+        grip.set_content_width(14)
+        grip.set_content_height(30)
+        grip.set_valign(Gtk.Align.CENTER)
+        grip.set_tooltip_text("Arrastra para mover")
+        grip.set_cursor(Gdk.Cursor.new_from_name("grab", None))
+        def draw_grip(_a, cr, w, h):
+            cr.set_source_rgba(1, 1, 1, 0.30)
+            for gx in (4, 10):
+                for gy in (7, 15, 23):
+                    cr.arc(gx, gy, 1.5, 0, 2 * math.pi)
+                    cr.fill()
+        grip.set_draw_func(draw_grip)
+        self.make_draggable(grip)
+        row.append(grip)
         row.append(entry)
         row.append(sb)
         exp.append(row)
