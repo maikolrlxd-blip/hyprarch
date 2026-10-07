@@ -418,7 +418,7 @@ def start_sound():
     f = Path("/usr/share/hyprarch/sounds/intro.wav")
     if mode == "mute" or (Path.home() / ".cache/hyprarch-buddy/mute").exists() or not f.exists():
         return None
-    for player in (["pw-play"], ["paplay"], ["aplay", "-q"]):
+    for player in (["pw-play", "--latency", "200ms"], ["paplay"], ["aplay", "-q"]):
         try:
             return subprocess.Popen(player + [str(f)], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                                     stderr=subprocess.DEVNULL, start_new_session=True)

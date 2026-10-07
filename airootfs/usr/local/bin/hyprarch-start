@@ -11,9 +11,12 @@ proceso residente, así que en reposo no gasta nada. Si ya está abierto, una se
 Esc, un clic fuera o elegir algo lo cierran.
 """
 import os
+import re
+import shlex
 import signal
 import subprocess
 import sys
+import threading
 import time
 
 if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza solo con el entorno correcto
@@ -69,7 +72,7 @@ def buddy_name():
 def play(name):
     path = os.path.join(SOUNDS, name)
     if os.path.exists(path):
-        for cmd in (["pw-play", "--volume", "0.5", path], ["paplay", path]):
+        for cmd in (["pw-play", "--latency", "200ms", "--volume", "0.5", path], ["paplay", path]):
             try:
                 subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 return
@@ -147,10 +150,21 @@ class App(Gtk.Application):
         self.closing = False
 
     def launch(self, app):
+        # Se lanza el comando del .desktop directamente y por separado. Con app.launch() de Gio, las apps «activables por D-Bus»
+        # (Firefox y otras) pueden dejar la llamada colgada hasta ~25 s si el servicio no responde: el menú se queda quieto y
+        # «no pasa nada». Así el menú se cierra al instante y la app arranca por su cuenta.
         try:
-            app.launch([], None)
+            argv = [a for a in shlex.split(app.get_commandline() or "") if not re.fullmatch(r"%[A-Za-z]", a)]
+            argv = [a.replace("%%", "%") for a in argv]
+            if argv and app.get_boolean("Terminal"):
+                argv = ["kitty", "-e"] + argv
+            if argv:
+                subprocess.Popen(argv, cwd=os.path.expanduser("~"), start_new_session=True, stdin=subprocess.DEVNULL,
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            else:
+                threading.Thread(target=lambda: app.launch([], None), daemon=True).start()
         except Exception:
-            pass
+            threading.Thread(target=lambda: app.launch([], None), daemon=True).start()
         self.close_menu(sound=False)
 
     def close_menu(self, sound=True):

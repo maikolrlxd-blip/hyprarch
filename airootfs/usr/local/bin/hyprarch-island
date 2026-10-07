@@ -91,7 +91,7 @@ def play(name):
     path = os.path.join(SOUNDS, name)
     if not os.path.exists(path):
         return
-    for cmd in (["pw-play", "--volume", "0.55", path], ["paplay", path]):
+    for cmd in (["pw-play", "--latency", "200ms", "--volume", "0.55", path], ["paplay", path]):
         try:
             pr = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             threading.Thread(target=pr.wait, daemon=True).start()          # recoge el proceso al terminar (si no, queda zombi)

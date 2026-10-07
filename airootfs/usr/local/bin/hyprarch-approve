@@ -19,6 +19,17 @@ import sys
 import time
 
 TIMEOUT_S = 120
+LOG = os.path.join(os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "hyprarch-buddy", "approve.log")
+
+
+def log(msg):
+    """Registro mínimo para saber por qué se cerró una tarjeta (si falla algo en otro equipo): ~/.cache/hyprarch-buddy/approve.log"""
+    try:
+        os.makedirs(os.path.dirname(LOG), exist_ok=True)
+        with open(LOG, "a", encoding="utf-8") as fh:
+            fh.write("%s %s\n" % (time.strftime("%H:%M:%S"), msg))
+    except OSError:
+        pass
 
 if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza solo con el entorno correcto
     env = dict(os.environ)
@@ -41,10 +52,12 @@ try:
     gi.require_version("Gdk", "4.0")
     gi.require_version("Gtk4LayerShell", "1.0")
     from gi.repository import Gdk, GLib, Gtk, Gtk4LayerShell as LS
-except Exception:
+except Exception as exc:
+    log("no se pudo cargar GTK: %r" % (exc,))
     sys.exit(0)                                   # sin pantalla: Claude pregunta como siempre
 
 if not os.environ.get("WAYLAND_DISPLAY"):
+    log("sin WAYLAND_DISPLAY: no se muestra la tarjeta")
     sys.exit(0)
 
 PAD = 20                                          # margen transparente alrededor: aquí se dibuja la sombra
@@ -117,7 +130,7 @@ def play(name):
     path = os.path.join(SOUNDS, name)
     if not os.path.exists(path):
         return
-    for cmd in (["pw-play", "--volume", "0.6", path], ["paplay", path]):
+    for cmd in (["pw-play", "--latency", "200ms", "--volume", "0.6", path], ["paplay", path]):
         try:
             subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return
@@ -255,6 +268,7 @@ class App(Gtk.Application):
         if self.decided:
             return
         self.decided = True
+        log("decision: %s" % behavior)
         if behavior == "allow":
             say("allow")
             play("menu-select.wav")
@@ -382,6 +396,7 @@ class App(Gtk.Application):
         keys.connect("key-pressed", self.on_key)
         win.add_controller(keys)
         self.shown_at = time.monotonic()
+        log("tarjeta mostrada: %s - %s" % (TOOL, DETAIL[:80]))
         win.present()
         play("menu-open.wav")
         self.animate_in()
@@ -390,6 +405,7 @@ class App(Gtk.Application):
 
     def timeout(self):
         if not self.decided:
+            log("sin respuesta en %s s: pregunta Claude" % TIMEOUT_S)
             self.decided = True              # sin respuesta: que pregunte Claude
             self.animate_out()
 
@@ -404,5 +420,7 @@ if __name__ == "__main__":
     try:
         App().run([])
     except Exception:
-        pass
+        import traceback
+        log("ERROR en la tarjeta: " + traceback.format_exc().replace("\n", " | "))
+    log("la tarjeta terminó")
     sys.exit(0)

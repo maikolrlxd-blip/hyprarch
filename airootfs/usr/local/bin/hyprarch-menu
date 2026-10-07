@@ -224,7 +224,7 @@ def play(name):
     f = SOUNDS / f"{name}.wav"
     if not f.exists():
         return
-    for player in (["pw-play"], ["paplay"], ["aplay", "-q"]):
+    for player in (["pw-play", "--latency", "200ms"], ["paplay"], ["aplay", "-q"]):
         try:
             subprocess.Popen(player + [str(f)], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                              start_new_session=True)

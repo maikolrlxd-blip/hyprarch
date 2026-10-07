@@ -75,7 +75,7 @@ def bg(*cmd):
 def play(name):
     path = os.path.join(SOUNDS, name)
     if os.path.exists(path):
-        for cmd in (["pw-play", "--volume", "0.5", path], ["paplay", path]):
+        for cmd in (["pw-play", "--latency", "200ms", "--volume", "0.5", path], ["paplay", path]):
             try:
                 subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 return
