@@ -307,7 +307,8 @@ render_wallpaper() {
 reload_all() {
   [[ -n ${HYPRARCH_NO_RELOAD:-} ]] && return 0
   command -v hyprctl >/dev/null 2>&1 && hyprctl reload >/dev/null 2>&1
-  pkill -SIGUSR2 waybar 2>/dev/null
+  # waybar se reinicia en vez de recargarse con SIGUSR2: al recargar, sus módulos con script dejan procesos zombi y volcados de memoria
+  if pkill -x waybar 2>/dev/null; then sleep 0.3; setsid -f waybar >/dev/null 2>&1 </dev/null; fi
   pkill -SIGUSR1 kitty 2>/dev/null
   command -v makoctl >/dev/null 2>&1 && makoctl reload >/dev/null 2>&1
   # setsid -f: el fondo debe sobrevivir al cierre de la terminal del menú

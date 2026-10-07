@@ -89,7 +89,8 @@ def play(name):
         return
     for cmd in (["pw-play", "--volume", "0.55", path], ["paplay", path]):
         try:
-            subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            pr = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            threading.Thread(target=pr.wait, daemon=True).start()          # recoge el proceso al terminar (si no, queda zombi)
             return
         except OSError:
             continue
@@ -293,13 +294,14 @@ def lite_profile():
 
 LITE = lite_profile()
 IDLE_MS = 200 if LITE else 100                     # reposo: 5 o ~12 cuadros por segundo (el parpadeo y el balanceo siguen suaves)
-OPEN_MS = 66 if LITE else 33                       # desplegada y quieta: ~15 o 30 cuadros por segundo
+OPEN_MS = 100 if LITE else 50                       # desplegada y quieta: ~15 o 30 cuadros por segundo
 
 
 def run(*cmd):
     try:
-        subprocess.Popen(list(cmd), start_new_session=True, stdin=subprocess.DEVNULL,
-                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        pr = subprocess.Popen(list(cmd), start_new_session=True, stdin=subprocess.DEVNULL,
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        threading.Thread(target=pr.wait, daemon=True).start()
     except OSError:
         pass
 
@@ -399,7 +401,8 @@ class App(Gtk.Application):
         self.exp_box.set_sensitive(kk > 0.9)
         self.exp_box.set_visible(kk > 0.4)
         busy = abs(tgt - ST["k"]) > 0.003 or abs(self.vel) > 0.02 or abs(deh) > 0.4   # solo se anima a pleno ritmo mientras se mueve
-        self.canvas.queue_draw()
+        if self.at_home:                                                       # con el cuadro suelto la pastilla no se dibuja
+            self.canvas.queue_draw()
         if kk > 0.01 or busy:
             self.panel.set_visible(True)
             self.panel.queue_draw()
