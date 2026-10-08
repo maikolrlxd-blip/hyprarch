@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hyprarch-install — instala hyprarch en un disco (UEFI). BORRA TODO el disco elegido.
+# hyprarch-install — instala hyprarch en un disco (UEFI o BIOS clásico). BORRA TODO el disco elegido.
 #
 #   hyprarch-install                      muestra los discos y te guía
 #   hyprarch-install --disk /dev/sda --user maria
@@ -18,7 +18,8 @@
 # Qué hace: particiona (EFI 1 GiB + raíz ext4), instala Arch con los paquetes de hyprarch
 # (/usr/share/hyprarch/packages.txt), copia la configuración de esta sesión, crea tu usuario,
 # configura idioma/hora/teclado de esta sesión y deja systemd-boot listo.
-# Necesita internet (descarga los paquetes) y arrancar en modo UEFI.
+# Necesita internet (descarga los paquetes). Detecta solo si el equipo arrancó en UEFI (systemd-boot, partición EFI de 1 GiB)
+# o en BIOS clásico (GRUB, partición «BIOS boot» de 1 MiB en un disco GPT): en los dos casos el disco queda con tabla GPT.
 set -euo pipefail
 
 say()  { printf '\n\033[1;32m==>\033[0m %s\n' "$*"; }
@@ -55,11 +56,12 @@ done
 
 (( YES == 0 )) || [[ -n $DISK ]] || die "--yes exige indicar --disk explícitamente."
 [[ $EUID -eq 0 ]] || die "ejecutalo como administrador: sudo hyprarch-install"
-[[ -d /sys/firmware/efi ]] || die "este instalador necesita arrancar en modo UEFI (no BIOS clásico)."
+if [[ -d /sys/firmware/efi ]]; then BOOT_MODE=uefi; else BOOT_MODE=bios; fi
 [[ -r /usr/share/hyprarch/packages.txt ]] || die "falta /usr/share/hyprarch/packages.txt (¿ISO muy vieja?)."
-for c in sgdisk pacstrap genfstab arch-chroot mkfs.fat mkfs.ext4 lsblk findmnt wipefs partprobe udevadm blkid pacman-key mount umount mountpoint flock timedatectl; do
+for c in sgdisk pacstrap genfstab arch-chroot mkfs.ext4 lsblk findmnt wipefs partprobe udevadm blkid pacman-key mount umount mountpoint flock timedatectl; do
   command -v "$c" >/dev/null || die "falta el comando $c"
 done
+[[ $BOOT_MODE == bios ]] || command -v mkfs.fat >/dev/null || die "falta el comando mkfs.fat"
 ping -c1 -W3 archlinux.org >/dev/null 2>&1 || ping -c1 -W3 1.1.1.1 >/dev/null 2>&1 || die "no hay internet (SUPER+N abre el menú de red)."
 
 # ---------- elegir el disco ----------
@@ -146,18 +148,23 @@ check_disk      # revalidar justo antes de borrar
 say "Particionando $DISK"
 wipefs -af "$DISK" >/dev/null
 sgdisk --zap-all "$DISK" >/dev/null
-sgdisk -n1:0:+1G -t1:ef00 -c1:ESP -n2:0:0 -t2:8300 -c2:hyprarch "$DISK" >/dev/null
+if [[ $BOOT_MODE == uefi ]]; then
+  sgdisk -n1:0:+1G -t1:ef00 -c1:ESP -n2:0:0 -t2:8300 -c2:hyprarch "$DISK" >/dev/null
+else   # BIOS clásico: GRUB necesita una partición «BIOS boot» (sin formato) al principio del disco GPT
+  sgdisk -n1:0:+1M -t1:ef02 -c1:biosboot -n2:0:0 -t2:8300 -c2:hyprarch "$DISK" >/dev/null
+fi
 partprobe "$DISK"; udevadm settle; sleep 1
-mkfs.fat -F32 -n ESP "$ESP" >/dev/null
+[[ $BOOT_MODE == uefi ]] && mkfs.fat -F32 -n ESP "$ESP" >/dev/null
 mkfs.ext4 -F -q -L hyprarch "$ROOT"
 mount "$ROOT" /mnt
 OWN_MNT=1
 mkdir -p /mnt/boot
-mount "$ESP" /mnt/boot
+[[ $BOOT_MODE == uefi ]] && mount "$ESP" /mnt/boot
 
 # ---------- sistema base ----------
 say "Instalando paquetes (puede tardar varios minutos)"
 mapfile -t PKGS < <(grep -vE '^\s*(#|$)' /usr/share/hyprarch/packages.txt)
+[[ $BOOT_MODE == bios ]] && PKGS+=(grub)
 pacstrap -K /mnt base linux linux-firmware intel-ucode amd-ucode sudo "${PKGS[@]}"
 genfstab -U /mnt >> /mnt/etc/fstab
 
@@ -217,12 +224,13 @@ if [[ -n $SSH_KEY ]]; then
   arch-chroot /mnt systemctl enable sshd >/dev/null 2>&1
 fi
 
-# ---------- arranque (systemd-boot) ----------
-say "Instalando el gestor de arranque"
-arch-chroot /mnt bootctl install >/dev/null
+# ---------- arranque ----------
+say "Instalando el gestor de arranque ($BOOT_MODE)"
 ROOT_UUID=$(blkid -s UUID -o value "$ROOT")
-printf 'default hyprarch.conf\ntimeout 3\nconsole-mode max\neditor no\n' > /mnt/boot/loader/loader.conf
-cat > /mnt/boot/loader/entries/hyprarch.conf <<EOF
+if [[ $BOOT_MODE == uefi ]]; then
+  arch-chroot /mnt bootctl install >/dev/null
+  printf 'default hyprarch.conf\ntimeout 3\nconsole-mode max\neditor no\n' > /mnt/boot/loader/loader.conf
+  cat > /mnt/boot/loader/entries/hyprarch.conf <<EOF
 title   hyprarch
 linux   /vmlinuz-linux
 initrd  /intel-ucode.img
@@ -230,10 +238,17 @@ initrd  /amd-ucode.img
 initrd  /initramfs-linux.img
 options root=UUID=$ROOT_UUID rw quiet loglevel=3
 EOF
+else
+  sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="quiet loglevel=3"/; s/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=3/' /mnt/etc/default/grub
+  arch-chroot /mnt grub-install --target=i386-pc --recheck "$DISK" >/dev/null 2>&1 || die "no pude instalar GRUB en $DISK."
+  arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1 || die "no pude generar la configuración de GRUB."
+fi
 # arch-chroot deja /etc/resolv.conf montado; el enlace definitivo va al final
 ln -sf ../run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf
 
-for f in vmlinuz-linux initramfs-linux.img intel-ucode.img amd-ucode.img loader/loader.conf loader/entries/hyprarch.conf; do
+if [[ $BOOT_MODE == uefi ]]; then BOOT_FILES="vmlinuz-linux initramfs-linux.img intel-ucode.img amd-ucode.img loader/loader.conf loader/entries/hyprarch.conf"
+else BOOT_FILES="vmlinuz-linux initramfs-linux.img grub/grub.cfg grub/i386-pc/core.img"; fi
+for f in $BOOT_FILES; do
   [[ -s /mnt/boot/$f ]] || die "falta el archivo de arranque /boot/$f: la instalación no arrancaría."
 done
 sync
