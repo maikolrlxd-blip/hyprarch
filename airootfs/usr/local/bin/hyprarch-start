@@ -165,6 +165,12 @@ class App(Gtk.Application):
                 threading.Thread(target=lambda: app.launch([], None), daemon=True).start()
         except Exception:
             threading.Thread(target=lambda: app.launch([], None), daemon=True).start()
+        try:                                                                   # en un PC lento una app tarda: avisar de que ya se está abriendo
+            subprocess.Popen(["notify-send", "-t", "4000", "-a", "hyprarch", "Abriendo " + (app.get_name() or "la app"),
+                              "Puede tardar unos segundos en un equipo lento."],
+                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+        except OSError:
+            pass
         self.close_menu(sound=False)
 
     def close_menu(self, sound=True):
