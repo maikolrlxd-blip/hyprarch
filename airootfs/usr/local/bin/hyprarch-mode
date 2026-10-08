@@ -9,6 +9,8 @@
 #   hyprarch-mode apps <modo>      lista las apps del modo
 #   hyprarch-mode add <modo> <comando> [espacio]    agrega una app
 #   hyprarch-mode remove <modo> <comando>           quita una app
+#   hyprarch-mode theme <modo> [tema]               ver o cambiar el tema de un modo (fresco, verde, rojo, gamer… o custom)
+#   hyprarch-mode wallpaper <modo> [ruta|default]   ver o cambiar el fondo de un modo (jpg/png/webp)
 #
 # Cada modo vive en ~/.config/hyprarch/modes/<modo>.conf (texto simple, una app por línea: "espacio|comando";
 # espacio 0 = donde esté). Las IAs también pueden editarlo: basta con cambiar ese archivo o usar add/remove.
@@ -34,6 +36,26 @@ init() {
     [[ -f $MD/$m.conf ]] || { [[ -f $DEF/$m.conf ]] && cp "$DEF/$m.conf" "$MD/$m.conf" || : > "$MD/$m.conf"; }
   done
 }
+
+# Opciones propias de cada modo (tema y fondo): ~/.config/hyprarch/modes/<modo>.opts, líneas "theme=..." y "wallpaper=..."
+THEMES_DIR=/usr/share/hyprarch/themes
+opt_get() { grep -m1 "^$2=" "$MD/$1.opts" 2>/dev/null | cut -d= -f2-; }
+opt_set() {  # modo clave valor ("" = volver al valor de fábrica)
+  local tmp; tmp=$(mktemp "$MD/.opts.XXXXXX") || return 1
+  { grep -v "^$2=" "$MD/$1.opts" 2>/dev/null; [[ -n $3 ]] && printf '%s=%s\n' "$2" "$3"; } > "$tmp"
+  mv -f -- "$tmp" "$MD/$1.opts"
+}
+theme_ok() { [[ $1 =~ ^[a-z0-9_-]+$ && ( -f $THEMES_DIR/$1.env || ( $1 == custom && -f $CFG/custom.env ) ) ]]; }
+wall_ok()  { [[ -n $1 && $1 != *$'\n'* && $1 == /* && -f $1 && -r $1 ]] && case ${1,,} in *.jpg|*.jpeg|*.png|*.webp) true ;; *) false ;; esac; }
+theme_of() { local x; x=$(opt_get "$1" theme); if theme_ok "$x"; then echo "$x"; else echo "$1"; fi; }
+apply_wall() {  # el fondo propio del modo (si lo hay) se pone encima del que trae el tema
+  local w; w=$(opt_get "$1" wallpaper)
+  wall_ok "$w" || return 0
+  printf '%s\n' "$w" > "$CFG/wallpaper"
+  if [[ -x $HOME/.config/hypr/scripts/wallpaper.sh ]]; then ( sleep 3; exec "$HOME/.config/hypr/scripts/wallpaper.sh" ) 8>&- 9>&- >/dev/null 2>&1 </dev/null & fi
+  return 0
+}
+theme_name() { grep -m1 '^NAME=' "$THEMES_DIR/$1.env" 2>/dev/null | cut -d= -f2- | tr -d '"'; }
 
 current() { local m; m=$(head -n1 "$CFG/mode" 2>/dev/null | tr -d '[:space:]'); echo "${m:-normal}"; }
 
@@ -128,7 +150,7 @@ set_mode() {
   # un solo cambio de modo a la vez (atajo + IA + menú a la vez dejarían el tema y las apps mezclados)
   if command -v flock >/dev/null 2>&1; then exec 8>"$CFG/.mode.lock" && flock -w 15 8 || return 1; fi
   cur=$(current)
-  [[ $m != normal && $cur == "$m" ]] && return 0       # ya está activo: no se abre nada otra vez
+  [[ $m != normal && $cur == "$m" && ${FORCE:-0} != 1 ]] && return 0       # ya está activo: no se abre nada otra vez
   init
   if [[ $cur == normal && $m != normal ]]; then
     cat "$CFG/current" 2>/dev/null > "$CFG/theme.before"  # recuerda tu tema para volver a él
@@ -141,7 +163,8 @@ set_mode() {
     note "$(T mode.normal 'Modo normal')" "$(T mode.normal.d 'Todo vuelve a como lo dejaste')"
   else
     close_mode_windows                                  # las del modo anterior (si lo había)
-    hyprarch-theme "$m" >/dev/null 2>&1 8>&- || hyprctl reload >/dev/null 2>&1
+    hyprarch-theme "$(theme_of "$m")" >/dev/null 2>&1 8>&- || hyprctl reload >/dev/null 2>&1
+    apply_wall "$m"
     note "$(label "$m")" "$(T mode.opening 'Abriendo tus apps…')"
     tok="hyprarch-mode-$(head -c 6 /dev/urandom | od -An -tx1 | tr -d ' \n')"
     printf '%s\n' "$tok" > "$MODE_TOKEN"
@@ -179,6 +202,8 @@ edit_mode() {
       items+="rm:$line"$'\t'"$(pretty "$line")"$'\t'"$(tint "$m")"$'\t'"$(T mode.rm 'Tocá para quitarla de este modo')"$'\t'"serious"$'\n'
     done < <(apps_of "$m")
     sel=$({ printf '%s' "$items"; printf '%s\n' \
+        "theme"$'\t'"🎨  $(T mode.theme 'Tema de este modo')"$'\t'"$(tint "$m")"$'\t'"$(theme_name "$(theme_of "$m")")"$'\thappy' \
+        "wall"$'\t'"🖼  $(T mode.wall 'Fondo de este modo')"$'\t'"$(tint "$m")"$'\t'"$(w=$(opt_get "$m" wallpaper); if [[ -n $w ]]; then basename "$w"; else T mode.wall.def 'El que trae el tema'; fi)"$'\twink' \
         "add"$'\t'"+  $(T mode.add 'Agregar una aplicación')"$'\t'"$(tint "$m")"$'\t'"$(T mode.add.d 'Elegí de las instaladas')"$'\thappy' \
         "cmd"$'\t'"+  $(T mode.cmd 'Escribir un comando')"$'\t\t'"$(T mode.cmd.d 'Para cualquier programa o página web')"$'\twink' \
         "try"$'\t'"▶  $(T mode.try 'Activar este modo ahora')"$'\t\t'"$(T mode.try.d 'Prueba cómo queda')"$'\tsurprised' \
@@ -193,10 +218,43 @@ edit_mode() {
       cmd)
         app=$(hyprarch-pick --input --title "$(T mode.cmd 'Escribir un comando')" --placeholder "firefox https://…") || continue
         [[ -n $app ]] && add_app "$m" "$app" "$(ask_ws)" ;;
-      try) set_mode "$m"; return 0 ;;
+      theme) pick_theme "$m" ;;
+      wall)  pick_wall "$m" ;;
+      try) FORCE=1 set_mode "$m"; return 0 ;;
       back|"") return 0 ;;
     esac
   done
+}
+
+# vuelve a aplicar el modo si es el que está activo (para ver el cambio al instante)
+refresh_if_active() { if [[ $(current) == "$1" ]]; then FORCE=1 set_mode "$1"; fi; return 0; }
+
+pick_theme() {  # modo
+  local m=$1 f n sel
+  sel=$({ printf '%s\t%s\t\t%s\n' "__def__" "$(T mode.theme.def 'El de fábrica de este modo')" "$(theme_name "$m")"
+          for f in "$THEMES_DIR"/*.env; do n=$(basename "$f" .env); printf '%s\t%s\t\t\n' "$n" "$(theme_name "$n")"; done
+          [[ -f $CFG/custom.env ]] && printf '%s\t%s\t\t\n' custom "$(T mode.theme.custom 'Mis colores')"; } |
+        hyprarch-pick --layout wheel --title "$(label "$m")  ·  $(T mode.theme 'Tema')" --placeholder "$(T ui.search 'Buscar')") || return 0
+  if [[ $sel == __def__ ]]; then opt_set "$m" theme ""; elif theme_ok "$sel"; then opt_set "$m" theme "$sel"; fi
+  refresh_if_active "$m"
+}
+
+pick_wall() {  # modo
+  local m=$1 f sel d
+  sel=$({ printf '%s\t%s\t\t%s\n' "__def__" "$(T mode.wall.def 'El que trae el tema')" ""
+          printf '%s\t%s\t\t%s\n' "__path__" "$(T mode.wall.path 'Escribir la ruta de una imagen mía')" "$(T mode.wall.path.d 'jpg, png o webp')"
+          for f in /usr/share/backgrounds/*.jpg /usr/share/backgrounds/*.png; do [[ -f $f ]] && printf '%s\t%s\t\t%s\n' "$f" "$(basename "${f%.*}")" "$(T mode.wall.sys 'Incluido')"; done
+          for d in "$HOME/Imágenes" "$HOME/Pictures" "$HOME/Descargas" "$HOME/Downloads"; do
+            for f in "$d"/*.jpg "$d"/*.jpeg "$d"/*.png "$d"/*.webp; do [[ -f $f ]] && printf '%s\t%s\t\t%s\n' "$f" "$(basename "$f")" "$(basename "$d")"; done
+          done | head -60; } |
+        hyprarch-pick --layout wheel --title "$(label "$m")  ·  $(T mode.wall 'Fondo')" --placeholder "$(T ui.search 'Buscar')") || return 0
+  case $sel in
+    __def__) opt_set "$m" wallpaper "" ;;
+    __path__) sel=$(hyprarch-pick --input --title "$(T mode.wall.path 'Ruta de la imagen')" --placeholder "/home/…/foto.jpg") || return 0
+              if wall_ok "$sel"; then opt_set "$m" wallpaper "$sel"; else note "$(T mode.wall.bad 'Esa imagen no se puede usar')" "$(T mode.wall.bad.d 'Escribe la ruta completa de un jpg, png o webp que exista.')"; fi ;;
+    *) wall_ok "$sel" && opt_set "$m" wallpaper "$sel" ;;
+  esac
+  refresh_if_active "$m"
 }
 
 ask_ws() {
@@ -263,5 +321,10 @@ case "${1:-edit}" in
   add)    add_app "${2:?modo}" "${3:?comando}" "${4:-0}" ;;
   remove) remove_app "${2:?modo}" "${3:?comando}" ;;
   init)   init ;;
-  *) echo "Uso: hyprarch-mode {toggle|set|normal|current|edit|apps|add|remove} ..." >&2; exit 1 ;;
+  theme)  valid "${2:?modo}" && [[ $2 != normal ]] || exit 2
+          if [[ -z ${3:-} ]]; then theme_of "$2"; elif [[ $3 == default ]]; then init; opt_set "$2" theme ""; refresh_if_active "$2"; elif theme_ok "$3"; then init; opt_set "$2" theme "$3"; refresh_if_active "$2"; else echo "tema desconocido: $3" >&2; exit 2; fi ;;
+  wallpaper) valid "${2:?modo}" && [[ $2 != normal ]] || exit 2
+          if [[ -z ${3:-} ]]; then opt_get "$2" wallpaper; elif [[ $3 == default ]]; then init; opt_set "$2" wallpaper ""; refresh_if_active "$2"
+          elif wall_ok "$3"; then init; opt_set "$2" wallpaper "$3"; refresh_if_active "$2"; else echo "imagen no válida: $3" >&2; exit 2; fi ;;
+  *) echo "Uso: hyprarch-mode {toggle|set|normal|current|edit|apps|add|remove|theme|wallpaper} ..." >&2; exit 1 ;;
 esac
