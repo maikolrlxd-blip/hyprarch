@@ -33,10 +33,12 @@ do_undo() {
   local snap; snap=$(latest)
   [[ -n $snap ]] || { note "$(T upd.title 'Actualizar')" "$(T upd.nosnap 'No hay ninguna actualización guardada que deshacer.')"; exit 0; }
   local list files="" missing="" name old cur f
+  declare -A now
+  while read -r name cur; do now[$name]=$cur; done < <(pacman -Q 2>/dev/null)   # una sola consulta (cientos de paquetes)
   list=$(mktemp)
   # paquetes cuya versión actual difiere de la guardada
   while read -r name old; do
-    cur=$(pacman -Q "$name" 2>/dev/null | awk '{print $2}')
+    cur=${now[$name]:-}
     [[ -n $cur && $cur != "$old" ]] || continue
     f=$(ls -1 /var/cache/pacman/pkg/"$name"-"$old"-*.pkg.tar.* 2>/dev/null | grep -v '\.sig$' | tail -n1)
     if [[ -n $f ]]; then files+="$f "; echo "$name $cur -> $old" >> "$list"; else missing+="$name "; fi
