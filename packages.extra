@@ -60,6 +60,20 @@ imv
 zathura
 zathura-pdf-mupdf
 
+# --- Discos externos, portátiles e impresoras ---
+ntfs-3g
+exfatprogs
+dosfstools
+udisks2
+gvfs-mtp
+thunar-volman
+hypridle
+upower
+power-profiles-daemon
+cups
+cups-filters
+system-config-printer
+
 # --- Tipografías y tema ---
 ttf-jetbrains-mono-nerd
 noto-fonts

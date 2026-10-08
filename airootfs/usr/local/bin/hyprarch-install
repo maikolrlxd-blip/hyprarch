@@ -188,7 +188,7 @@ printf 'KEYMAP=%s\n' "$KEYMAP" > /mnt/etc/vconsole.conf
 printf 'en_US.UTF-8 UTF-8\n%s UTF-8\n' "$LOCALE" > /mnt/etc/locale.gen
 ln -sf "/usr/share/zoneinfo/$TZ_LINK" /mnt/etc/localtime
 arch-chroot /mnt locale-gen >/dev/null
-arch-chroot /mnt systemctl enable NetworkManager systemd-resolved systemd-timesyncd bluetooth >/dev/null 2>&1
+arch-chroot /mnt systemctl enable NetworkManager systemd-resolved systemd-timesyncd bluetooth upower power-profiles-daemon cups.socket >/dev/null 2>&1
 arch-chroot /mnt hwclock --systohc || warn "no pude actualizar el reloj de hardware"
 
 # ---------- usuario ----------

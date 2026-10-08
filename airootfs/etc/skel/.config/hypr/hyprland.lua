@@ -85,11 +85,21 @@ end
 local virt  = sh("systemd-detect-virt 2>/dev/null")
 local in_vm = (virt ~= "" and virt ~= "none")
 
+-- Resolución y tamaño elegidos con hyprarch-display (archivo "WxH@Hz escala"); sin archivo, la recomendada
+local D_MODE, D_SCALE = "preferred", (in_vm and "1" or "auto")
+do
+    local f = io.open((os.getenv("HOME") or "") .. "/.config/hyprarch/display", "r")
+    if f then
+        local m, s = (f:read("l") or ""):match("^(%d+x%d+@?[%d%.]*)%s+([%d%.]+)")
+        f:close()
+        if m then D_MODE, D_SCALE = m, s end
+    end
+end
 hl.monitor({
     output   = "",
-    mode     = "preferred",
+    mode     = D_MODE,
     position = "auto",
-    scale    = in_vm and "1" or "auto",
+    scale    = D_SCALE,
 })
 
 local terminal = "kitty"
@@ -107,6 +117,8 @@ hl.on("hyprland.start", function()
     -- Asistente de primer inicio: aparece cuando termina la animación de entrada (solo la primera vez)
     hl.exec_cmd("bash -c 'sleep 8; hyprarch-welcome'")
     hl.exec_cmd(scripts .. "/wallpaper.sh")
+    -- Portátiles: apaga la pantalla y bloquea tras un rato sin usar (si hypridle está instalado)
+    hl.exec_cmd("bash -c 'command -v hypridle >/dev/null && exec hypridle'")
     hl.exec_cmd("waybar")
     hl.exec_cmd("mako")
     hl.exec_cmd("nm-applet --indicator")
@@ -318,6 +330,7 @@ hl.bind(mod .. " + SHIFT + U", hl.dsp.exec_cmd("hyprarch-mode toggle estudio"))
 hl.bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd("hyprarch-mode toggle trabajo"))
 hl.bind(mod .. " + SHIFT + N", hl.dsp.exec_cmd("hyprarch-mode normal"))
 hl.bind(mod .. " + T",      hl.dsp.exec_cmd("hyprarch-theme"))                                            -- colores (rueda animada)
+hl.bind(mod .. " + comma",  hl.dsp.exec_cmd("hyprarch-settings"))   -- Ajustes del sistema
 hl.bind(mod .. " + S",      hl.dsp.exec_cmd("hyprarch-start"))   -- buscar apps, como en Windows (el shader CRT ya no tiene atajo: scripts/toggle-shader.sh)
 hl.bind(mod .. " + F1",     hl.dsp.exec_cmd(scripts .. "/keybinds.sh"))
 hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(scripts .. "/powermenu.sh"))

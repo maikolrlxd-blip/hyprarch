@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# hyprarch-settings — Ajustes del sistema en un solo sitio, con el menú animado de hyprarch (SUPER+coma, o «Ajustes» en el menú de inicio).
+#
+#   hyprarch-settings          abre el menú; elige una sección y vuelve aquí al terminar (Esc cierra)
+#
+# No guarda nada por su cuenta: cada sección abre la herramienta de hyprarch que ya hace ese trabajo
+# (Wi-Fi, idioma/teclado, pantalla, navegador, colores, rendimiento, actualizaciones, Bluetooth, contraseña…).
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/hyprarch"
+T() { hyprarch-i18n "$1" "${2:-$1}" 2>/dev/null || printf '%s' "${2:-$1}"; }
+note() { command -v notify-send >/dev/null 2>&1 && notify-send -a hyprarch -t "${3:-6000}" "$1" "${2:-}"; }
+term() { setsid -f kitty --class hyprarch-ai-answer -o font_size=11 -o window_padding_width=14 "$@" >/dev/null 2>&1 </dev/null; }
+
+perf_pick() {
+  local cur p
+  cur=$(head -n1 "$CFG/perf" 2>/dev/null)
+  p=$(printf '%s\n' \
+      $'auto\t'"$(T set.perf.auto 'Automático')"$'\t\t'"$(T set.perf.auto.d 'Detecta tu equipo y elige solo (recomendado)')" \
+      $'lite\t'"$(T set.perf.lite 'Ligero')"$'\t\t'"$(T set.perf.lite.d 'Sin desenfoques ni sombras: para equipos modestos')" \
+      $'full\t'"$(T set.perf.full 'Completo')"$'\t\t'"$(T set.perf.full.d 'Todos los efectos: para equipos buenos')" |
+    hyprarch-pick --layout orbit --title "$(T set.perf 'Rendimiento')") || return 0
+  mkdir -p "$CFG"; printf '%s\n' "$p" > "$CFG/perf"
+  command -v hyprarch-perf >/dev/null 2>&1 && hyprarch-perf auto >/dev/null 2>&1
+  hyprctl reload >/dev/null 2>&1
+  note "$(T set.perf 'Rendimiento')" "$(T set.perf.done 'Listo. Algunos cambios se ven al reiniciar la sesión.')"
+}
+
+while true; do
+  sel=$(printf '%s\n' \
+      $'wifi\t'"$(T set.wifi 'Wi-Fi y red')"$'\t\t'"$(T set.wifi.d 'Conectarte a una red')" \
+      $'sound\t'"$(T set.sound 'Sonido')"$'\t\t'"$(T set.sound.d 'Volumen, altavoces y micrófono')" \
+      $'display\t'"$(T set.display 'Pantalla')"$'\t\t'"$(T set.display.d 'Resolución y tamaño de las cosas')" \
+      $'language\t'"$(T set.lang 'Idioma y teclado')"$'\t\t'"$(T set.lang.d 'Idioma del sistema y distribución del teclado')" \
+      $'browser\t'"$(T set.browser 'Navegador')"$'\t\t'"$(T set.browser.d 'Elegir tu navegador')" \
+      $'look\t'"$(T set.look 'Colores y estilo')"$'\t\t'"$(T set.look.d 'Tema, colores y aspecto')" \
+      $'bluetooth\t'"$(T set.bt 'Bluetooth')"$'\t\t'"$(T set.bt.d 'Auriculares, ratón, teclado')" \
+      $'perf\t'"$(T set.perf 'Rendimiento')"$'\t\t'"$(T set.perf.d 'Ligero para equipos modestos, completo para equipos buenos')" \
+      $'update\t'"$(T set.update 'Actualizar el sistema')"$'\t\t'"$(T set.update.d 'Instalar las novedades de forma segura')" \
+      $'undo\t'"$(T set.undo 'Deshacer la última actualización')"$'\t\t'"$(T set.undo.d 'Si algo dejó de funcionar tras actualizar')" \
+      $'password\t'"$(T set.pw 'Cambiar mi contraseña')"$'\t\t'"$(T set.pw.d 'La contraseña de tu usuario')" \
+      $'report\t'"$(T set.report 'Reportar un problema')"$'\t\t'"$(T set.report.d 'Guarda los datos del equipo para pedir ayuda')" \
+      $'about\t'"$(T set.about 'Acerca de este equipo')"$'\t\t'"$(T set.about.d 'Procesador, memoria, versión')" |
+    hyprarch-pick --layout wheel --title "$(T set.title 'Ajustes')" --placeholder "$(T ui.search 'Escribe para buscar…')") || exit 0
+  case $sel in
+    wifi)      hyprarch-wifi ;;
+    sound)     command -v pavucontrol >/dev/null 2>&1 && setsid -f pavucontrol >/dev/null 2>&1 </dev/null; exit 0 ;;
+    display)   hyprarch-display pick ;;
+    language)  hyprarch-lang pick ;;
+    browser)   hyprarch-browser pick ;;
+    look)      hyprarch-theme ;;
+    bluetooth) command -v blueman-manager >/dev/null 2>&1 && setsid -f blueman-manager >/dev/null 2>&1 </dev/null; exit 0 ;;
+    perf)      perf_pick ;;
+    update)    hyprarch-update; exit 0 ;;
+    undo)      hyprarch-update undo; exit 0 ;;
+    password)  term -e passwd; exit 0 ;;
+    report)    hyprarch-report; exit 0 ;;
+    about)     term -e bash -c 'fastfetch; echo; read -rp "  (Enter para cerrar)" _'; exit 0 ;;
+  esac
+done

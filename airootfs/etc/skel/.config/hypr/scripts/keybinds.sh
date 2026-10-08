@@ -5,6 +5,7 @@ cat <<'EOF' | hyprarch-pick --layout wheel --title "Atajos" --placeholder "¿Qu�
 a	Terminal		SUPER + Enter
 b	Menú de inicio (apps y búsqueda)		SUPER (sola)
 c	Navegador		SUPER + B
+c	Ajustes del sistema		SUPER + coma (,)
 d	Archivos		SUPER + E
 e	Preguntar algo rápido a la IA (no se guarda)		SUPER + A
 f	Chat flotante con la IA (o clic en Hyro)		SUPER + SHIFT + A

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Ajustes
+Name[en]=Settings
+Comment=Wi-Fi, sonido, pantalla, idioma, navegador, actualizaciones y más
+Exec=hyprarch-settings
+Icon=preferences-system
+Categories=System;Settings;
+Terminal=false

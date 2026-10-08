@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# hyprarch-display — resolución y tamaño de las cosas (escala), con el menú animado.
+#
+#   hyprarch-display pick     elige resolución y tamaño; se aplica y tienes 15 s para confirmar (si no, vuelve atrás solo)
+#   hyprarch-display modes    lista las resoluciones disponibles de la pantalla principal
+#   hyprarch-display reset    vuelve a la resolución recomendada
+#
+# Se guarda en ~/.config/hyprarch/display («RESOLUCIÓN ESCALA», p. ej. 1920x1080@60 1.25) y hyprland.lua lo lee al cargar.
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/hyprarch"
+FILE="$CFG/display"
+T() { hyprarch-i18n "$1" "${2:-$1}" 2>/dev/null || printf '%s' "${2:-$1}"; }
+note() { command -v notify-send >/dev/null 2>&1 && notify-send -a hyprarch -t "${3:-6000}" "$1" "${2:-}"; }
+mkdir -p "$CFG"
+
+mon_json() { hyprctl monitors -j 2>/dev/null | jq -c '.[0] // empty'; }
+
+# una línea por resolución: "WxH@Hz<TAB>texto"; de cada resolución se usa la frecuencia más alta
+modes() {
+  mon_json | jq -r '.availableModes[]?' | sed -E 's/Hz$//' |
+    awk -F'[x@]' '{ k=$1"x"$2; if (!(k in best) || $3+0 > best[k]+0) best[k]=$3+0 }
+                  END { for (k in best) printf "%s %s\n", k, best[k] }' |
+    sort -t x -k1,1nr -k2,2nr | head -14 |
+    while read -r res hz; do printf '%s@%s\t%s  ·  %s Hz\n' "$res" "$hz" "$res" "$hz"; done
+}
+
+apply_reload() { hyprctl reload >/dev/null 2>&1; sleep 3; }
+
+pick() {
+  local prev="" new mode scale ok
+  [[ -f $FILE ]] && prev=$(cat "$FILE")
+  mode=$(modes | awk -F'\t' '{ printf "%s\t%s\t\t\n", $1, $2 }' |
+    hyprarch-pick --layout wheel --title "$(T dsp.res 'Resolución')" --placeholder "$(T ui.search 'Escribe para buscar…')") || return 0
+  [[ -n $mode ]] || return 0
+  scale=$(printf '%s\n' \
+      $'1\t100 %\t\t'"$(T dsp.s1 'Tamaño normal')" \
+      $'1.25\t125 %\t\t'"$(T dsp.s125 'Un poco más grande')" \
+      $'1.5\t150 %\t\t'"$(T dsp.s15 'Grande: para pantallas pequeñas con muchos píxeles')" \
+      $'2\t200 %\t\t'"$(T dsp.s2 'Muy grande: para pantallas 4K')" |
+    hyprarch-pick --layout orbit --title "$(T dsp.scale 'Tamaño de las cosas')") || return 0
+  printf '%s %s\n' "$mode" "${scale:-1}" > "$FILE"
+  apply_reload
+  # 15 segundos para confirmar; si la pantalla se ve mal y no pasa nada, vuelve atrás sola
+  ok=$(printf '%s\n' \
+      $'si\t'"$(T dsp.keep 'Mantener esto')"$'\t\t'"$(T dsp.keep.d 'Se ve bien')" \
+      $'no\t'"$(T dsp.back 'Volver atrás')"$'\t\t'"$(T dsp.back.d 'Si no haces nada, vuelve atrás sola en 15 segundos')" |
+    timeout 15 hyprarch-pick --layout orbit --title "$(T dsp.ask '¿Se ve bien?')") || ok=no
+  if [[ $ok != si ]]; then
+    if [[ -n $prev ]]; then printf '%s\n' "$prev" > "$FILE"; else rm -f "$FILE"; fi
+    apply_reload
+    note "$(T dsp.res 'Resolución')" "$(T dsp.reverted 'Se volvió a la anterior.')"
+  else
+    note "$(T dsp.res 'Resolución')" "$(T dsp.saved 'Guardado.')"
+  fi
+}
+
+case ${1:-pick} in
+  pick)  pick ;;
+  modes) modes ;;
+  reset) rm -f "$FILE"; apply_reload ;;
+  *)     echo "uso: hyprarch-display pick|modes|reset" >&2; exit 2 ;;
+esac

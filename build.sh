@@ -160,6 +160,9 @@ enable /etc/systemd/system/live-setup.service      multi-user.target
 enable /usr/lib/systemd/system/NetworkManager.service multi-user.target
 enable /usr/lib/systemd/system/systemd-resolved.service multi-user.target
 enable /usr/lib/systemd/system/bluetooth.service   multi-user.target
+enable /usr/lib/systemd/system/upower.service      graphical.target     # batería en portátiles
+enable /usr/lib/systemd/system/power-profiles-daemon.service graphical.target
+enable /usr/lib/systemd/system/cups.socket         sockets.target       # impresoras: arranca solo al imprimir
 
 # Modo DESARROLLO (solo cuando se pide con HYPRARCH_DEV=1): SSH con llave para
 # controlar la ISO desde una máquina virtual. NO se usa en la ISO normal.
