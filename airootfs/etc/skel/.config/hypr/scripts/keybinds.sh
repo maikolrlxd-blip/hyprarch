@@ -4,7 +4,7 @@
 cat <<'EOF' | hyprarch-pick --layout wheel --title "Atajos" --placeholder "¿Qué querés hacer? (ej. captura, cerrar)" >/dev/null
 a	Terminal		SUPER + Enter
 b	Menú de inicio (apps y búsqueda)		SUPER (sola)
-c	Firefox		SUPER + B
+c	Navegador		SUPER + B
 d	Archivos		SUPER + E
 e	Preguntar algo rápido a la IA (no se guarda)		SUPER + A
 f	Chat flotante con la IA (o clic en Hyro)		SUPER + SHIFT + A

@@ -861,10 +861,10 @@ class App(Gtk.Application):
 
     def open_url(self, url):
         import shutil
-        browser = shutil.which("firefox") or shutil.which("xdg-open")
-        if browser:
+        cmd = ["hyprarch-browser", "open", url] if shutil.which("hyprarch-browser") else [shutil.which("firefox") or shutil.which("xdg-open") or "", url]
+        if cmd[0]:
             try:
-                pr = subprocess.Popen([browser, url], start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                pr = subprocess.Popen(cmd, start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                                       stderr=subprocess.DEVNULL)
                 threading.Thread(target=pr.wait, daemon=True).start()
             except OSError:

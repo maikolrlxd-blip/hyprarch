@@ -46,3 +46,6 @@ Abre una terminal (**SUPER+Enter**) y escribe `hyprarch-sound-test`. Reproduce e
 
 ## Si algo no abre
 Las aplicaciones del menú de inicio guardan lo que pasó en `~/.cache/hyprarch/apps.log` y avisan con una notificación si fallan.
+
+## Elegir navegador
+La primera vez que arrancas, el asistente te deja elegir tu navegador (Firefox viene incluido). En modo en vivo solo se guarda la elección y se instala al instalar hyprarch en el disco. Para cambiarlo después: `hyprarch-browser pick`.

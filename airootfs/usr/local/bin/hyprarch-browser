@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+# hyprarch-browser — elige tu navegador (la primera vez que inicias el sistema, y cuando quieras después).
+#
+#   hyprarch-browser pick             menú animado para elegir; lo guarda y lo instala/activa
+#   hyprarch-browser apply [--quiet]  instala el elegido si falta y lo deja como navegador predeterminado
+#   hyprarch-browser open [URL]       abre el navegador elegido (si aún no está instalado, abre Firefox)
+#   hyprarch-browser status           qué navegador hay elegido y si está instalado
+#
+# La ISO trae Firefox (liviano para equipos modestos). Los demás se instalan al elegirlos: desde los repositorios de Arch
+# (Chromium, Vivaldi, Falkon) o desde Flathub (Brave, Chrome, Edge, LibreWolf, Zen). En el modo EN VIVO (USB sin instalar)
+# solo se guarda la elección: se instala cuando instales hyprarch en el disco (en vivo todo vive en la memoria RAM).
+CFG="${XDG_CONFIG_HOME:-$HOME/.config}/hyprarch"
+FILE="$CFG/browser"
+mkdir -p "$CFG"
+T() { hyprarch-i18n "$1" "${2:-$1}" 2>/dev/null || printf '%s' "${2:-$1}"; }
+note() { command -v notify-send >/dev/null 2>&1 && notify-send -a hyprarch -t "${3:-8000}" "$1" "${2:-}"; }
+
+# id|nombre|tipo|paquete o id de flatpak|archivo .desktop|comando
+table() {
+  cat <<'EOF'
+firefox|Firefox|have|firefox|firefox.desktop|firefox
+chromium|Chromium|pacman|chromium|chromium.desktop|chromium
+vivaldi|Vivaldi|pacman|vivaldi|vivaldi-stable.desktop|vivaldi-stable
+falkon|Falkon|pacman|falkon|org.kde.falkon.desktop|falkon
+brave|Brave|flatpak|com.brave.Browser|com.brave.Browser.desktop|flatpak run com.brave.Browser
+chrome|Google Chrome|flatpak|com.google.Chrome|com.google.Chrome.desktop|flatpak run com.google.Chrome
+edge|Microsoft Edge|flatpak|com.microsoft.Edge|com.microsoft.Edge.desktop|flatpak run com.microsoft.Edge
+librewolf|LibreWolf|flatpak|io.gitlab.librewolf-community|io.gitlab.librewolf-community.desktop|flatpak run io.gitlab.librewolf-community
+zen|Zen|flatpak|app.zen_browser.zen|app.zen_browser.zen.desktop|flatpak run app.zen_browser.zen
+EOF
+}
+row() { table | awk -F'|' -v id="$1" '$1 == id { print; exit }'; }
+
+chosen() { local id; id=$(head -n1 "$FILE" 2>/dev/null | tr -d '[:space:]'); [[ -n $(row "$id") ]] && echo "$id" || echo firefox; }
+
+is_installed() {  # <id>
+  local r kind pkg
+  r=$(row "$1") || return 1
+  IFS='|' read -r _ _ kind pkg _ _ <<<"$r"
+  case $kind in
+    have)    command -v firefox >/dev/null 2>&1 ;;
+    pacman)  pacman -Qq "$pkg" >/dev/null 2>&1 ;;
+    flatpak) command -v flatpak >/dev/null 2>&1 && flatpak info "$pkg" >/dev/null 2>&1 ;;
+  esac
+}
+
+cmd_of() { local r; r=$(row "$1") || return 1; IFS='|' read -r _ _ _ _ _ c <<<"$r"; printf '%s' "$c"; }
+
+online() { [[ $(nmcli -t -f STATE general 2>/dev/null) == connected ]] || timeout 3 bash -c 'exec 3<>/dev/tcp/1.1.1.1/443' 2>/dev/null; }
+
+set_default() {  # <id>
+  local r desk
+  r=$(row "$1") || return 1
+  IFS='|' read -r _ _ _ _ desk _ <<<"$r"
+  command -v xdg-settings >/dev/null 2>&1 && xdg-settings set default-web-browser "$desk" >/dev/null 2>&1
+  if command -v xdg-mime >/dev/null 2>&1; then
+    for m in x-scheme-handler/http x-scheme-handler/https text/html; do xdg-mime default "$desk" "$m" >/dev/null 2>&1; done
+  fi
+  return 0
+}
+
+install_cmd() {  # <id> -> comando de instalación (se ejecuta en una terminal para ver el progreso y la contraseña)
+  local r kind pkg
+  r=$(row "$1") || return 1
+  IFS='|' read -r _ _ kind pkg _ _ <<<"$r"
+  case $kind in
+    pacman)  printf 'sudo pacman -S --needed --noconfirm %s' "$pkg" ;;
+    flatpak) printf 'command -v flatpak >/dev/null 2>&1 || sudo pacman -S --needed --noconfirm flatpak; sudo flatpak remote-add --system --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo && sudo flatpak install -y --system flathub %s' "$pkg" ;;
+  esac
+}
+
+apply() {
+  local quiet=${1:-} id name
+  id=$(chosen)
+  name=$(row "$id" | cut -d'|' -f2)
+  if is_installed "$id"; then set_default "$id"; return 0; fi
+  if [[ -d /run/archiso ]]; then                                   # sesión en vivo: no se instala nada en la memoria
+    [[ -n $quiet ]] || note "$name" "$(T br.live 'Se instalará cuando instales hyprarch en el disco. Mientras tanto se usa Firefox.')"
+    return 0
+  fi
+  if ! online; then
+    [[ -n $quiet ]] || note "$(T br.nonet 'Falta Internet')" "$(T br.nonet.d 'Conéctate al Wi-Fi: el navegador elegido se instalará solo al iniciar sesión.')"
+    return 0
+  fi
+  local ic
+  ic=$(install_cmd "$id") || return 1
+  note "$(T br.inst 'Instalando') $name" "$(T br.inst.d 'Se abre una ventana con el progreso; puede pedir tu contraseña.')"
+  # ventana propia con el progreso; al terminar se activa como predeterminado y se avisa
+  kitty --class hyprarch-ai-answer -o font_size=11 -o window_padding_width=14 --title "Instalando $name" \
+    -e bash -c "printf '\n  Instalando $name…\n\n'; $ic; rc=\$?; if [ \$rc -eq 0 ]; then echo; echo '  Listo.'; else echo; echo '  No se pudo instalar (código '\$rc').'; fi; sleep 4; exit \$rc"
+  if is_installed "$id"; then
+    set_default "$id"
+    note "$name" "$(T br.ready 'Listo: es tu navegador. Super+B lo abre.')"
+  else
+    note "$name" "$(T br.fail 'No se pudo instalar. Puedes reintentar con: hyprarch-browser apply')"
+  fi
+}
+
+open_browser() {
+  local id c
+  id=$(chosen)
+  is_installed "$id" || id=firefox
+  c=$(cmd_of "$id")
+  # shellcheck disable=SC2086
+  exec setsid -f $c "$@" >/dev/null 2>&1
+}
+
+pick() {
+  local cur id
+  cur=$(chosen)
+  id=$(printf '%s\n' \
+      $'firefox\tFirefox\t\t'"$(T br.have 'Ya incluido · liviano · recomendado')" \
+      $'chromium\tChromium\t\t'"$(T br.pkg 'Se instala al elegirlo · base de Chrome sin Google')" \
+      $'brave\tBrave\t\t'"$(T br.brave 'Bloquea anuncios · se instala al elegirlo')" \
+      $'chrome\tGoogle Chrome\t\t'"$(T br.chrome 'El de Google · se instala al elegirlo')" \
+      $'edge\tMicrosoft Edge\t\t'"$(T br.edge 'El de Microsoft · se instala al elegirlo')" \
+      $'vivaldi\tVivaldi\t\t'"$(T br.viv 'Muy personalizable · se instala al elegirlo')" \
+      $'librewolf\tLibreWolf\t\t'"$(T br.lw 'Firefox más privado · se instala al elegirlo')" \
+      $'zen\tZen\t\t'"$(T br.zen 'Moderno, con pestañas laterales · se instala al elegirlo')" \
+      $'falkon\tFalkon\t\t'"$(T br.falk 'Muy ligero para equipos modestos')" |
+    hyprarch-pick --layout wheel --title "$(T w.browser 'Elige tu navegador')" --placeholder "$(T ui.search 'Escribe para buscar…')") || return 0
+  [[ -n $(row "$id") ]] || return 0
+  printf '%s\n' "$id" > "$FILE"
+  if [[ $1 == --background ]]; then
+    ( apply & ) >/dev/null 2>&1
+  else
+    apply
+  fi
+}
+
+case ${1:-pick} in
+  pick)    pick "${2:-}" ;;
+  apply)   apply "${2:-}"; [[ ${2:-} == --quiet ]] && true ;;
+  open)    shift; open_browser "$@" ;;
+  status)  id=$(chosen); printf 'elegido: %s | instalado: %s\n' "$id" "$(is_installed "$id" && echo si || echo no)" ;;
+  *)       echo "uso: hyprarch-browser pick|apply|open [URL]|status" >&2; exit 2 ;;
+esac

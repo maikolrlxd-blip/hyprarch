@@ -87,6 +87,18 @@ def all_apps():
     return apps
 
 
+BROWSER_DESKTOP = {"firefox": "firefox", "chromium": "chromium", "vivaldi": "vivaldi-stable", "falkon": "org.kde.falkon",
+                   "brave": "com.brave.Browser", "chrome": "com.google.Chrome", "edge": "com.microsoft.Edge",
+                   "librewolf": "io.gitlab.librewolf-community", "zen": "app.zen_browser.zen"}
+
+
+def browser_choice():
+    try:
+        return open(os.path.join(CFG, "hyprarch", "browser"), encoding="utf-8").read().split()[0]
+    except (OSError, IndexError):
+        return "firefox"
+
+
 def pinned_apps(apps):
     by_id = {(a.get_id() or "").removesuffix(".desktop"): a for a in apps}
     want = []
@@ -95,7 +107,11 @@ def pinned_apps(apps):
                 if l.strip() and not l.startswith("#")]
     except OSError:
         pass
-    want = want or DEFAULT_PINNED
+    if not want:
+        want = list(DEFAULT_PINNED)
+        elegido = BROWSER_DESKTOP.get(browser_choice(), "firefox")           # el navegador que se eligió en el primer inicio
+        if elegido in by_id:
+            want = [elegido if i == "firefox" else i for i in want]
     return [by_id[i] for i in want if i in by_id][:COLS * 3]
 
 

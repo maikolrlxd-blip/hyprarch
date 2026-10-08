@@ -20,6 +20,9 @@ ask_list() { hyprarch-pick --layout wheel --title "$1" --placeholder "${2:-$(T u
 # 0) idioma: lo primero, para que todo lo demás ya salga en tu idioma
 command -v hyprarch-lang >/dev/null 2>&1 && hyprarch-lang pick
 
+# navegador: se elige en el primer inicio (Firefox ya viene; los demás se instalan al elegirlos). En segundo plano para no esperar.
+command -v hyprarch-browser >/dev/null 2>&1 && hyprarch-browser pick --background
+
 mode=$(printf '%s\n' \
   "recomendado"$'\t'"$(T w.rec)"$'\t\t'"$(T w.rec.d)"$'\thappy' \
   "mi-gusto"$'\t'"$(T w.custom)"$'\t\t'"$(T w.custom.d)"$'\twink' |

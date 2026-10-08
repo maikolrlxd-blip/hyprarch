@@ -95,7 +95,7 @@ hl.monitor({
 local terminal = "kitty"
 local menu     = "hyprarch-start"         -- el menú de inicio (se abre y se cierra del todo; no queda nada residente)
 local files    = "thunar"
-local browser  = "firefox"
+local browser  = "hyprarch-browser open"   -- el navegador que elegiste en el primer inicio
 local scripts  = (os.getenv("HOME") or "") .. "/.config/hypr/scripts"
 
 -------------------------------------------------------------
@@ -125,6 +125,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("sh -c 'hyprarch-wbar || hyprarch-wbar-py'")
     -- La isla de Hyro: un botón arriba, centrado, que se despliega con una animación (esconde al de la esquina)
     hl.exec_cmd("env GSK_RENDERER=cairo LD_PRELOAD=/usr/lib/libgtk4-layer-shell.so hyprarch-island")
+    hl.exec_cmd("sh -c 'sleep 30; hyprarch-browser apply --quiet'")   -- si elegiste un navegador y faltaba Internet, se instala ahora
 end)
 
 -------------------------------------------------------------
