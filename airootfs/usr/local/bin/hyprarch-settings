@@ -11,8 +11,7 @@ note() { command -v notify-send >/dev/null 2>&1 && notify-send -a hyprarch -t "$
 term() { setsid -f kitty --class hyprarch-ai-answer -o font_size=11 -o window_padding_width=14 "$@" >/dev/null 2>&1 </dev/null; }
 
 perf_pick() {
-  local cur p
-  cur=$(head -n1 "$CFG/perf" 2>/dev/null)
+  local p
   p=$(printf '%s\n' \
       $'auto\t'"$(T set.perf.auto 'Automático')"$'\t\t'"$(T set.perf.auto.d 'Detecta tu equipo y elige solo (recomendado)')" \
       $'lite\t'"$(T set.perf.lite 'Ligero')"$'\t\t'"$(T set.perf.lite.d 'Sin desenfoques ni sombras: para equipos modestos')" \

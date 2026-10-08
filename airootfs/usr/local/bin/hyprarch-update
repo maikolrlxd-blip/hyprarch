@@ -21,11 +21,10 @@ latest() { ls -1 "$STATE"/*.txt 2>/dev/null | sort | tail -n1; }
 
 do_update() {
   online || { note "$(T upd.title 'Actualizar')" "$(T upd.nonet 'Falta Internet. Conéctate al Wi-Fi y vuelve a intentarlo.')"; exit 0; }
-  local snap="$STATE/$(date +%Y%m%d-%H%M%S).txt"
+  local snap
+  snap="$STATE/$(date +%Y%m%d-%H%M%S).txt"
   pacman -Q > "$snap" 2>/dev/null
   term "Actualizar hyprarch" "printf '\n  Se guardó la lista de versiones actual para poder deshacer.\n\n'; sudo pacman -Syu; rc=\$?; echo; if [ \$rc -eq 0 ]; then echo '  Listo.'; else echo '  Algo falló (código '\$rc'). Puedes deshacer con: hyprarch-update undo'; fi; read -rp '  (Enter para cerrar) ' _; exit \$rc"
-  local running installed
-  running=$(uname -r); installed=$(pacman -Q linux 2>/dev/null | awk '{print $2}' | tr '-' '.')
   note "$(T upd.title 'Actualizar')" "$(T upd.done 'Terminó. Si se actualizó el sistema, reinicia para usar lo nuevo.')"
 }
 
@@ -40,7 +39,7 @@ do_undo() {
   while read -r name old; do
     cur=${now[$name]:-}
     [[ -n $cur && $cur != "$old" ]] || continue
-    f=$(ls -1 /var/cache/pacman/pkg/"$name"-"$old"-*.pkg.tar.* 2>/dev/null | grep -v '\.sig$' | tail -n1)
+    f=""; for c in /var/cache/pacman/pkg/"$name"-"$old"-*.pkg.tar.*; do [[ -f $c && $c != *.sig ]] && f=$c; done
     if [[ -n $f ]]; then files+="$f "; echo "$name $cur -> $old" >> "$list"; else missing+="$name "; fi
   done < "$snap"
   if [[ ! -s $list ]]; then

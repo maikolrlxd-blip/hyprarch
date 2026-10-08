@@ -26,7 +26,7 @@ modes() {
 apply_reload() { hyprctl reload >/dev/null 2>&1; sleep 3; }
 
 pick() {
-  local prev="" new mode scale ok
+  local prev="" mode scale ok
   [[ -f $FILE ]] && prev=$(cat "$FILE")
   mode=$(modes | awk -F'\t' '{ printf "%s\t%s\t\t\n", $1, $2 }' |
     hyprarch-pick --layout wheel --title "$(T dsp.res 'Resolución')" --placeholder "$(T ui.search 'Escribe para buscar…')") || return 0
