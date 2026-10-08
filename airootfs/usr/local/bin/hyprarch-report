@@ -1,50 +1,62 @@
 #!/usr/bin/env bash
-# hyprarch-report — reúne la información útil para reportar un problema y la deja en UN archivo (en tu carpeta personal).
+# hyprarch-report — reúne la información útil para reportar un problema en UN solo archivo .zip y te ayuda a hacerlo llegar.
 #
-#   hyprarch-report          pregunta qué pasó (con el menú animado), reúne los datos del equipo y te dice dónde quedó el archivo
+#   hyprarch-report          pregunta qué pasó, reúne los datos, y te deja elegir cómo entregarlo: copiarlo a un USB,
+#                            abrir la carpeta, leerlo antes de enviarlo o terminar
+#   hyprarch-report --no-ui  (sin menús; para probar) genera el .zip y escribe su ruta
 #
-# Qué incluye: tu descripción, versión del sistema, procesador/memoria/gráfica/sonido/red (tipos de dispositivo, SIN nombres de
-# redes Wi-Fi), rendimiento, el registro de Hyprland y los avisos del sistema. NO incluye contraseñas, archivos tuyos ni capturas
-# salvo que tú lo aceptes. Puedes abrir el archivo y leerlo antes de enviarlo.
+# El .zip tiene: reporte.txt (tu descripción, versión del sistema, procesador/memoria/gráfica/sonido/red SIN nombres de
+# redes Wi-Fi, rendimiento, registro de Hyprland y avisos del sistema), registros de hyprarch (apps, permisos, fluidez
+# de los menús) y, solo si lo aceptas, una captura de pantalla. NO incluye contraseñas ni archivos tuyos.
+# Nada se envía solo: tú decides a dónde va el archivo.
 set -u
 T() { command -v hyprarch-i18n >/dev/null 2>&1 && hyprarch-i18n "$1" "${2:-$1}" || printf '%s' "${2:-$1}"; }
-note() { command -v notify-send >/dev/null 2>&1 && notify-send -t 9000 "$1" "${2:-}"; }
+note() { command -v notify-send >/dev/null 2>&1 && notify-send -a hyprarch -t "${3:-9000}" "$1" "${2:-}"; }
+NOUI=0; [[ ${1:-} == --no-ui ]] && NOUI=1
 STAMP=$(date +%Y%m%d-%H%M)
-OUT="$HOME/hyprarch-reporte-$STAMP.txt"
-SHOT="$HOME/hyprarch-reporte-$STAMP.png"
+WORK=$(mktemp -d)
+ZIP="$HOME/hyprarch-reporte-$STAMP.zip"
+trap 'rm -rf "$WORK"' EXIT
 
 # la captura (si la aceptas) se toma ANTES de abrir el menú, para que muestre el problema y no el menú
-TMPSHOT=$(mktemp --suffix=.png)
-command -v grim >/dev/null 2>&1 && grim "$TMPSHOT" 2>/dev/null
+command -v grim >/dev/null 2>&1 && [[ $NOUI == 0 ]] && grim "$WORK/captura-candidata.png" 2>/dev/null
 
-desc=$(hyprarch-pick --input --title "$(T rep.title '¿Qué pasó?')" --placeholder "$(T rep.ph 'Cuéntalo en una frase y pulsa Enter')" 2>/dev/null) || desc=""
-[[ -n $desc ]] || desc="(sin descripción)"
-
-withshot=$(printf '%s\n' \
-  $'si\tSí, incluir la captura\t\tMuestra lo que veías cuando falló\thappy' \
-  $'no\tNo, solo los datos\t\tLa captura puede mostrar cosas personales\twink' |
-  hyprarch-pick --layout orbit --title "$(T rep.shot '¿Incluyo una captura de pantalla?')" 2>/dev/null) || withshot=no
-[[ $withshot == si && -s $TMPSHOT ]] && cp "$TMPSHOT" "$SHOT"
-rm -f "$TMPSHOT"
+desc="(sin descripción)"; withshot=no
+if [[ $NOUI == 0 ]]; then
+  d=$(hyprarch-pick --input --title "$(T rep.title '¿Qué pasó?')" --placeholder "$(T rep.ph 'Cuéntalo en una frase y pulsa Enter')" 2>/dev/null) && [[ -n $d ]] && desc=$d
+  if [[ -s $WORK/captura-candidata.png ]]; then
+    withshot=$(printf '%s\n' \
+      $'si\tSí, incluir la captura\t\tMuestra lo que veías cuando falló\thappy' \
+      $'no\tNo, solo los datos\t\tLa captura puede mostrar cosas personales\twink' |
+      hyprarch-pick --layout orbit --title "$(T rep.shot '¿Incluyo una captura de pantalla?')" 2>/dev/null) || withshot=no
+  fi
+fi
+[[ $withshot == si && -s $WORK/captura-candidata.png ]] && mv "$WORK/captura-candidata.png" "$WORK/captura.png"
+rm -f "$WORK/captura-candidata.png"
 
 sec() { printf '\n## %s\n' "$1"; }
+tailf() { [[ -s $1 ]] && tail -n "${2:-60}" "$1"; }
 {
   echo "# Reporte de hyprarch  ($(date -Is))"
   sec "Qué pasó"; echo "$desc"
   sec "Sistema"
   . /etc/os-release 2>/dev/null; echo "${PRETTY_NAME:-?}  | kernel $(uname -r)"
   [[ -d /run/archiso ]] && echo "Sesión: EN VIVO (USB/ISO)" || echo "Sesión: INSTALADO en disco"
-  echo "Idioma: ${LANG:-?}  | Teclado: $(cat "$HOME/.config/hyprarch/keyboard" 2>/dev/null || echo ?)"
-  pacman -Q hyprland waybar mesa linux 2>/dev/null | tr '\n' ' '; echo
+  echo "ISO/versión: $(cat /usr/share/hyprarch/version 2>/dev/null || echo ?)"
+  echo "Idioma: ${LANG:-?}  | Teclado: $(cat "$HOME/.config/hyprarch/keyboard" 2>/dev/null || echo ?)  | Navegador: $(cat "$HOME/.config/hyprarch/browser" 2>/dev/null || echo ?)"
+  pacman -Q hyprland waybar mesa linux pipewire wireplumber 2>/dev/null | tr '\n' ' '; echo
   sec "Equipo"
   lscpu 2>/dev/null | grep -E 'Model name|^CPU\(s\)' | sed 's/  */ /g'
   free -m | sed -n 2p
   lspci 2>/dev/null | grep -Ei 'vga|3d|display|audio|network|wireless|ethernet' | cut -d' ' -f2-
   [[ -d /sys/class/power_supply ]] && ls /sys/class/power_supply | tr '\n' ' ' && echo
+  systemd-detect-virt 2>/dev/null | sed 's/^/virtualización: /'
   sec "Rendimiento"
   hyprarch-perf status 2>&1 | head -4
   command -v hyprarch-api >/dev/null && hyprarch-api system 2>&1
   uptime -p 2>/dev/null; systemd-analyze 2>/dev/null | head -1
+  sec "Fluidez de los menús (últimas aperturas: tiempo de pintado y cuadros por segundo)"
+  tailf "$HOME/.cache/hyprarch/pick-perf.log" 12
   sec "Pantalla y gráficos"
   hyprctl monitors 2>/dev/null | grep -E '^Monitor|@' | head -4
   command -v glxinfo >/dev/null && glxinfo -B 2>/dev/null | grep -E 'OpenGL renderer|OpenGL version' | head -2
@@ -52,15 +64,57 @@ sec() { printf '\n## %s\n' "$1"; }
   wpctl status 2>/dev/null | head -24
   sec "Red (tipos de conexión; sin nombres de redes)"
   nmcli -t -f DEVICE,TYPE,STATE dev 2>/dev/null
+  sec "Servicios fallidos"
+  systemctl --failed --no-legend 2>/dev/null | head -10
+  sec "Registro de apps del menú de inicio (últimas líneas)"
+  tailf "$HOME/.cache/hyprarch/apps.log" 30
+  sec "Registro de permisos de la IA (últimas líneas)"
+  tailf "$HOME/.cache/hyprarch-buddy/approve.log" 30
   sec "Registro de Hyprland (últimas 60 líneas)"
   tail -n 60 "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/hypr/*/hyprland.log 2>/dev/null | tail -60
   sec "Avisos y errores del sistema (este arranque)"
   journalctl -b -p warning --no-pager 2>/dev/null | tail -60
-} > "$OUT" 2>&1
+} > "$WORK/reporte.txt" 2>&1
 
-msg="$OUT"
-[[ -s $SHOT ]] && msg="$OUT  +  $(basename "$SHOT")"
-note "$(T rep.done 'Reporte listo')" "$msg"
-echo "$OUT"
-[[ -s $SHOT ]] && echo "$SHOT"
+if python3 - "$WORK" "$ZIP" <<'PY'
+import sys, zipfile, os
+work, out = sys.argv[1:3]
+with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+    for n in sorted(os.listdir(work)):
+        z.write(os.path.join(work, n), n)
+PY
+then :; else cp "$WORK/reporte.txt" "${ZIP%.zip}.txt"; ZIP="${ZIP%.zip}.txt"; fi
+
+if [[ $NOUI == 1 ]]; then echo "$ZIP"; exit 0; fi
+
+# ---- entrega: no se envía nada solo; la persona elige
+usb_copy() {   # copia a cada USB montado (si hay uno sin montar, se intenta montar con udisks)
+  local mp done=0 dev
+  while read -r dev; do                        # particiones USB sin montar
+    command -v udisksctl >/dev/null 2>&1 && udisksctl mount -b "/dev/$dev" >/dev/null 2>&1
+  done < <(lsblk -rno NAME,TRAN,TYPE,MOUNTPOINT 2>/dev/null | awk '$3=="part" && $4=="" {print $1}' | while read -r p; do
+             [[ $(lsblk -rno TRAN "/dev/$(lsblk -rno PKNAME "/dev/$p" 2>/dev/null | head -1)" 2>/dev/null | head -1) == usb ]] && echo "$p"; done)
+  while read -r mp; do
+    [[ -n $mp && -w $mp ]] || continue
+    cp "$ZIP" "$mp/" 2>/dev/null && { sync; done=$((done + 1)); note "$(T rep.usb 'Copiado al USB')" "$mp/$(basename "$ZIP")"; }
+  done < <(lsblk -rno RM,TRAN,MOUNTPOINT 2>/dev/null | awk '($1=="1" || $2=="usb") && $3!="" {for(i=3;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":""); print ""}')
+  if ((done == 0)); then note "$(T rep.nousb 'No encontré ningún USB')" "$(T rep.nousb.d 'Conéctalo, espera unos segundos y vuelve a elegir esta opción.')"; fi
+}
+
+while true; do
+  sel=$(printf '%s\n' \
+      $'usb\t'"$(T rep.o.usb 'Copiar a un USB')"$'\t\t'"$(T rep.o.usb.d 'Para llevarlo a otro equipo y enviarlo desde ahí')" \
+      $'view\t'"$(T rep.o.view 'Leerlo antes de enviar')"$'\t\t'"$(T rep.o.view.d 'Se abre el texto para que veas qué incluye')" \
+      $'folder\t'"$(T rep.o.folder 'Abrir la carpeta')"$'\t\t'"$(T rep.o.folder.d 'Está en tu carpeta personal: '"$(basename "$ZIP")")" \
+      $'done\t'"$(T rep.o.done 'Listo')"$'\t\t'"$(T rep.o.done.d 'Terminar')" |
+    hyprarch-pick --layout orbit --title "$(T rep.done 'Reporte listo')" 2>/dev/null) || break
+  case $sel in
+    usb)    usb_copy ;;
+    view)   command -v mousepad >/dev/null 2>&1 && { python3 -c "import zipfile,sys;sys.stdout.write(zipfile.ZipFile(sys.argv[1]).read('reporte.txt').decode())" "$ZIP" > "$HOME/.cache/hyprarch-reporte-vista.txt" 2>/dev/null || cp "${ZIP}" "$HOME/.cache/hyprarch-reporte-vista.txt"; setsid -f mousepad "$HOME/.cache/hyprarch-reporte-vista.txt" >/dev/null 2>&1 </dev/null; } ;;
+    folder) setsid -f thunar "$HOME" >/dev/null 2>&1 </dev/null ;;
+    *)      break ;;
+  esac
+done
+note "$(T rep.done 'Reporte listo')" "$ZIP"
+echo "$ZIP"
 exit 0

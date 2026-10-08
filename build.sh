@@ -84,6 +84,7 @@ grep -vE '^\s*(#|$)' packages.extra >> "$PROFILE/packages.x86_64"
 mkdir -p "$AIR/usr/share/hyprarch"
 { grep -vE '^\s*(#|$)' packages.extra; echo openssh; echo pciutils; } | sort -u > "$AIR/usr/share/hyprarch/packages.txt"
 echo "--- packages.txt: $(wc -l < "$AIR/usr/share/hyprarch/packages.txt") paquetes"
+echo "hyprarch $(date +%Y.%m.%d) ${GITHUB_SHA:+commit ${GITHUB_SHA:0:7}} ${HYPRARCH_DEV:+(desarrollo)}" > "$AIR/usr/share/hyprarch/version"
 
 echo "==> Aplicando airootfs (configuración, dotfiles, scripts)"
 # Quitar finales de línea CRLF por si el repo se editó en Windows, sin alterar imágenes.

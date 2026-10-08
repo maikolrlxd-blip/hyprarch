@@ -53,15 +53,16 @@ lua_exec() {  # comando espacio etiqueta
 }
 
 launch_apps() {  # modo etiqueta
-  local line ws cmd bin
+  local line ws cmd bin missing=""
   while IFS= read -r line; do
     ws=${line%%|*}; cmd=${line#*|}
     [[ $line == *"|"* ]] || { ws=0; cmd=$line; }
     bin=${cmd%% *}
     safe_cmd "$cmd" || { echo "se ignora una línea no permitida en $1.conf" >&2; continue; }
-    command -v "$bin" >/dev/null 2>&1 || continue          # app no instalada: se salta sin ruido
+    command -v "$bin" >/dev/null 2>&1 || { missing+="$bin "; continue; }          # app no instalada: se avisa al final
     lua_exec "$cmd" "$ws" "$2"
   done < <(apps_of "$1")
+  [[ -n ${missing:-} ]] && note "$(T mode.missing 'Faltan programas en este modo')" "${missing}— $(T mode.missing.d 'instálalos con hyprarch-apps (SUPER+I) o cambia las apps del modo.')"
 }
 
 # Un solo modo a la vez. La etiqueta de la activación actual se guarda aquí; Hyprland la marca con «*» al final
@@ -89,6 +90,38 @@ close_mode_windows() {
   disown 2>/dev/null || :
 }
 
+
+# Efectos reales del sistema (no solo adornos): energía, avisos, bloqueo/suspensión y descansos. Todo se deshace al volver a normal.
+#   gamer   máximo rendimiento · sin avisos · sin bloqueo ni suspensión mientras juegas
+#   cine    sin avisos · sin bloqueo ni suspensión mientras ves algo
+#   estudio sin avisos · recordatorio de descanso cada 50 minutos
+#   trabajo equilibrado · avisos activos
+#   normal  automático · avisos activos · bloqueo y ahorro de energía normales
+POMO="$CFG/pomodoro.pid"
+pomodoro_stop() { [[ -f $POMO ]] && kill "$(cat "$POMO")" 2>/dev/null; rm -f "$POMO"; }
+effects() {
+  local m=$1 prof=balanced dnd=0 idle=1
+  case $m in
+    gamer)   prof=performance; dnd=1; idle=0 ;;
+    cine)    dnd=1; idle=0 ;;
+    estudio) dnd=1 ;;
+  esac
+  command -v powerprofilesctl >/dev/null 2>&1 && { powerprofilesctl set "$prof" || powerprofilesctl set balanced; } >/dev/null 2>&1 || :
+  if command -v makoctl >/dev/null 2>&1; then
+    if [[ $dnd == 1 ]]; then makoctl mode -a do-not-disturb >/dev/null 2>&1; else makoctl mode -r do-not-disturb >/dev/null 2>&1; fi
+  fi
+  if [[ $idle == 0 ]]; then
+    pkill -x hypridle 2>/dev/null || :
+  elif command -v hypridle >/dev/null 2>&1 && ! pgrep -x hypridle >/dev/null 2>&1; then
+    setsid -f hypridle >/dev/null 2>&1 </dev/null 8>&-
+  fi
+  pomodoro_stop
+  if [[ $m == estudio ]]; then
+    ( while sleep 3000; do notify-send -a hyprarch -t 12000 "$(T mode.break 'Descansa 10 minutos')" "$(T mode.break.d 'Llevas 50 minutos estudiando: estira las piernas y toma agua.')"; done ) >/dev/null 2>&1 8>&- &
+    echo $! > "$POMO"; disown 2>/dev/null || :
+  fi
+}
+
 set_mode() {
   local m=$1 cur tok; cur=$(current)
   valid "$m" || { echo "Modo desconocido: $m" >&2; return 1; }
@@ -114,6 +147,7 @@ set_mode() {
     printf '%s\n' "$tok" > "$MODE_TOKEN"
     launch_apps "$m" "$tok"
   fi
+  effects "$m"
   # el personajito toma el aire del modo
   command -v hyprarch-sysstate >/dev/null 2>&1 && hyprarch-sysstate >/dev/null 2>&1 8>&- || :
 }

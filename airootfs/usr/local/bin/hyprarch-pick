@@ -24,6 +24,13 @@ import time
 import unicodedata
 from pathlib import Path
 
+_T0 = float(os.environ.setdefault("HYPRARCH_T0", str(time.time())))   # para medir cuánto tarda en aparecer el menú (HYPRARCH_PERF)
+if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", "") and not (sys.argv[1:2] == ["frames"]):
+    # se relanza ANTES de cargar el resto (así el arranque no hace el trabajo dos veces)
+    _e = dict(os.environ)
+    _e["LD_PRELOAD"] = (_e.get("LD_PRELOAD", "") + " /usr/lib/libgtk4-layer-shell.so").strip()
+    _e["GSK_RENDERER"] = "cairo"
+    os.execvpe(sys.executable, [sys.executable] + sys.argv, _e)
 
 def _load(name, modname):
     for base in ("/usr/local/bin", str(Path(__file__).resolve().parent)):
@@ -1084,6 +1091,8 @@ def run(args):
                 ms = (time.perf_counter() - t_ini) * 1000.0
                 S["avg_ms"] = ms if "avg_ms" not in S else S["avg_ms"] * 0.9 + ms * 0.1
                 S["nfr"] = S.get("nfr", 0) + 1
+                if S["nfr"] == 1 and os.environ.get("HYPRARCH_PERF"):
+                    print("perf: primer cuadro a los %.0f ms de lanzarse" % ((time.time() - _T0) * 1000), file=sys.stderr)
                 if S["nfr"] > 20 and not U.LITE and S["avg_ms"] > 16.0:
                     U.LITE = True
             except Exception as e:
@@ -1225,6 +1234,18 @@ def run(args):
             if S["close_t0"] is not None:
                 S["closing"] = now - S["close_t0"]
                 if S["closing"] > U.CLOSE_T:
+                    _line = "%s %s %dx%d  pintar %.1f ms  %.1f cuadros/s  lite=%s" % (
+                        time.strftime("%Y-%m-%d %H:%M:%S"), layout, S["size"][0], S["size"][1], S.get("avg_ms", 0.0),
+                        S.get("nfr", 0) / max(S["t"], 0.1), U.LITE)
+                    if os.environ.get("HYPRARCH_PERF"):          # medición: tiempo medio por cuadro y cuadros pintados
+                        print("perf: " + _line, file=sys.stderr)
+                    try:                                         # queda en el registro (lo lee hyprarch-report); se recorta a 40 líneas
+                        _lp = Path.home() / ".cache" / "hyprarch" / "pick-perf.log"
+                        _lp.parent.mkdir(parents=True, exist_ok=True)
+                        _old = _lp.read_text().splitlines()[-39:] if _lp.exists() else []
+                        _lp.write_text("\n".join(_old + [_line]) + "\n")
+                    except OSError:
+                        pass
                     if S["result"] is not None:
                         print(str(S["result"]), flush=True)
                         code["v"] = 0
@@ -1241,7 +1262,10 @@ def run(args):
             return True
 
         U.play("menu-open")
-        GLib.timeout_add(U.FRAME_MS, tick)
+        if os.environ.get("HYPRARCH_PERF"):                 # medición sin manos: se cierra solo a los N segundos
+            GLib.timeout_add_seconds(int(os.environ["HYPRARCH_PERF"]), lambda: (close(None), False)[1])
+        # el reloj de cuadros de la ventana (sincronizado con la pantalla) en vez de un temporizador aparte: sin tirones por desfase
+        area.add_tick_callback(lambda _w, _fc: tick())
         win.present()
 
     app.connect("activate", on_activate)
