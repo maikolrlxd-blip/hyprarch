@@ -12,7 +12,7 @@ buscamos fallos, cosas que confundan y cosas que no se vean o suenen bien.
 
 ## Cómo arrancar
 1. Conecta el USB, reinicia y pulsa la tecla del menú de arranque (suele ser **F12**, a veces F8, F11 o Esc).
-2. Elige el USB en modo **UEFI** y, en el menú, «hyprarch - Hyprland live».
+2. Elige el USB en modo **UEFI** (o BIOS clásico si tu equipo es muy viejo; el instalador detecta cuál usaste y prepara el disco igual) y, en el menú, «hyprarch - Hyprland live».
 3. Espera la animación de entrada y sigue el asistente de primer inicio (elige tu idioma).
 
 ## Qué probar (marca lo que pruebes)
