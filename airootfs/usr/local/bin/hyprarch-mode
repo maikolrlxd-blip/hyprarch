@@ -40,7 +40,12 @@ init() {
 # Opciones propias de cada modo (tema y fondo): ~/.config/hyprarch/modes/<modo>.opts, líneas "theme=..." y "wallpaper=..."
 THEMES_DIR=/usr/share/hyprarch/themes
 opt_get() { grep -m1 "^$2=" "$MD/$1.opts" 2>/dev/null | cut -d= -f2-; }
-opt_set() {  # modo clave valor ("" = volver al valor de fábrica)
+EDIT_LOCK="$MD/.edit.lock"
+with_edit_lock() {   # las ediciones (.opts / .conf) se hacen de una en una: leer-modificar-renombrar no se pisa
+  ( if command -v flock >/dev/null 2>&1; then flock -w 10 9 || exit 1; fi; "$@" ) 9>"$EDIT_LOCK"
+}
+opt_set() { with_edit_lock _opt_set "$@"; }
+_opt_set() {  # modo clave valor ("" = volver al valor de fábrica)
   local tmp; tmp=$(mktemp "$MD/.opts.XXXXXX") || return 1
   { grep -v "^$2=" "$MD/$1.opts" 2>/dev/null; [[ -n $3 ]] && printf '%s=%s\n' "$2" "$3"; } > "$tmp"
   mv -f -- "$tmp" "$MD/$1.opts"
@@ -74,14 +79,27 @@ lua_exec() {  # comando espacio etiqueta
   hyprarch-ctl hyprctl eval "hl.exec_cmd(\"$c\", { $opts })" >/dev/null 2>&1
 }
 
+exe_of() {  # primer "palabra" del comando respetando comillas: "/opt/Mi App/bin/x" --f  ->  /opt/Mi App/bin/x
+  local c=$1
+  if [[ $c == *[\"\']* ]]; then
+    python3 -c 'import shlex, sys
+try:
+    print(shlex.split(sys.argv[1])[0])
+except Exception:
+    pass' "$c"
+  else
+    printf '%s' "${c%% *}"
+  fi
+}
+
 launch_apps() {  # modo etiqueta
   local line ws cmd bin missing=""
   while IFS= read -r line; do
     ws=${line%%|*}; cmd=${line#*|}
     [[ $line == *"|"* ]] || { ws=0; cmd=$line; }
-    bin=${cmd%% *}
+    bin=$(exe_of "$cmd")
     safe_cmd "$cmd" || { echo "se ignora una línea no permitida en $1.conf" >&2; continue; }
-    command -v "$bin" >/dev/null 2>&1 || { missing+="$bin "; continue; }          # app no instalada: se avisa al final
+    [[ -n $bin ]] && command -v "$bin" >/dev/null 2>&1 || { missing+="${bin:-?} "; continue; }          # app no instalada: se avisa al final
     lua_exec "$cmd" "$ws" "$2"
   done < <(apps_of "$1")
   [[ -n ${missing:-} ]] && note "$(T mode.missing 'Faltan programas en este modo')" "${missing}— $(T mode.missing.d 'instálalos con hyprarch-apps (SUPER+I) o cambia las apps del modo.')"
@@ -108,7 +126,7 @@ close_mode_windows() {
   : > "$MODE_TOKEN"
   # las apps tardan unos segundos en abrir su ventana: si el cambio de modo llegó antes, esas ventanas aún no existían.
   # Un barrido corto (12 s, una vez por segundo) cierra las que aparezcan después con la etiqueta ya retirada.
-  ( for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do sleep 1; close_tagged "$tok"; done ) 8>&- >/dev/null 2>&1 &
+  ( for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do sleep 1; close_tagged "$tok"; done ) 8>&- 9>&- >/dev/null 2>&1 &
   disown 2>/dev/null || :
 }
 
@@ -135,21 +153,22 @@ effects() {
   if [[ $idle == 0 ]]; then
     pkill -x hypridle 2>/dev/null || :
   elif command -v hypridle >/dev/null 2>&1 && ! pgrep -x hypridle >/dev/null 2>&1; then
-    setsid -f hypridle >/dev/null 2>&1 </dev/null 8>&-
+    setsid -f hypridle >/dev/null 2>&1 </dev/null 8>&- 9>&-
   fi
   pomodoro_stop
   if [[ $m == estudio ]]; then
-    ( while sleep 3000; do notify-send -a hyprarch -t 12000 "$(T mode.break 'Descansa 10 minutos')" "$(T mode.break.d 'Llevas 50 minutos estudiando: estira las piernas y toma agua.')"; done ) >/dev/null 2>&1 8>&- &
+    ( while sleep 3000; do notify-send -a hyprarch -t 12000 "$(T mode.break 'Descansa 10 minutos')" "$(T mode.break.d 'Llevas 50 minutos estudiando: estira las piernas y toma agua.')"; done ) >/dev/null 2>&1 8>&- 9>&- &
     echo $! > "$POMO"; disown 2>/dev/null || :
   fi
 }
 
-set_mode() {
+set_mode() (   # subshell: el candado (fd 8) se suelta al terminar, aunque lo llame el editor que sigue abierto
   local m=$1 cur tok; cur=$(current)
   valid "$m" || { echo "Modo desconocido: $m" >&2; return 1; }
   # un solo cambio de modo a la vez (atajo + IA + menú a la vez dejarían el tema y las apps mezclados)
   if command -v flock >/dev/null 2>&1; then exec 8>"$CFG/.mode.lock" && flock -w 15 8 || return 1; fi
   cur=$(current)
+  [[ ${2:-} == toggle && $cur == "$m" ]] && m=normal         # la decisión de alternar se toma con el candado puesto
   [[ $m != normal && $cur == "$m" && ${FORCE:-0} != 1 ]] && return 0       # ya está activo: no se abre nada otra vez
   init
   if [[ $cur == normal && $m != normal ]]; then
@@ -157,13 +176,13 @@ set_mode() {
   fi
   printf '%s\n' "$m" > "$CFG/mode"
   if [[ $m == normal ]]; then
-    hyprarch-theme "$(cat "$CFG/theme.before" 2>/dev/null || echo fresco)" >/dev/null 2>&1 8>&- \
+    hyprarch-theme "$(cat "$CFG/theme.before" 2>/dev/null || echo fresco)" >/dev/null 2>&1 8>&- 9>&- \
       || hyprctl reload >/dev/null 2>&1
     : > "$MODE_TOKEN" 2>/dev/null                         # a normal no se cierra nada: solo se olvida qué lanzó el modo
     note "$(T mode.normal 'Modo normal')" "$(T mode.normal.d 'Todo vuelve a como lo dejaste')"
   else
     close_mode_windows                                  # las del modo anterior (si lo había)
-    hyprarch-theme "$(theme_of "$m")" >/dev/null 2>&1 8>&- || hyprctl reload >/dev/null 2>&1
+    hyprarch-theme "$(theme_of "$m")" >/dev/null 2>&1 8>&- 9>&- || hyprctl reload >/dev/null 2>&1
     apply_wall "$m"
     note "$(label "$m")" "$(T mode.opening 'Abriendo tus apps…')"
     tok="hyprarch-mode-$(head -c 6 /dev/urandom | od -An -tx1 | tr -d ' \n')"
@@ -172,8 +191,8 @@ set_mode() {
   fi
   effects "$m"
   # el personajito toma el aire del modo
-  command -v hyprarch-sysstate >/dev/null 2>&1 && hyprarch-sysstate >/dev/null 2>&1 8>&- || :
-}
+  command -v hyprarch-sysstate >/dev/null 2>&1 && hyprarch-sysstate >/dev/null 2>&1 8>&- 9>&- || :
+)
 
 # ---------- editor ----------
 installed_apps() {  # id<TAB>nombre<TAB><TAB>descripción
@@ -270,7 +289,8 @@ safe_cmd() {   # el comando se ejecuta por /bin/sh: solo se aceptan programas co
   [[ $1 != *[\;\&\|\`\$\<\>\(\)\{\}]* ]]
 }
 
-add_app() {  # modo comando [espacio]
+add_app() { with_edit_lock _add_app "$@"; }
+_add_app() {  # modo comando [espacio]
   local m=$1 cmd=$2 ws=${3:-0}
   valid "$m" && [[ $m != normal ]] || { echo "modo no válido: $m" >&2; return 2; }
   safe_cmd "$cmd" || { echo "comando no permitido (sin ; & | \` \$ < > ( ) { }): $cmd" >&2; return 2; }
@@ -279,7 +299,14 @@ add_app() {  # modo comando [espacio]
   grep -qxF "$ws|$cmd" "$MD/$m.conf" 2>/dev/null || printf '%s|%s\n' "$ws" "$cmd" >> "$MD/$m.conf"
 }
 
-remove_app() {  # modo línea-completa-o-comando (comparación literal, escritura atómica)
+remove_app() { with_edit_lock _remove_app "$@"; }
+move_app() { with_edit_lock _move_app "$@"; }       # modo línea-completa espacio: cambia el espacio de una app en una sola operación
+_move_app() {
+  local m=$1 line=$2 ws=$3 cmd=$2
+  [[ $line == *"|"* ]] && cmd=${line#*|}
+  _remove_app "$m" "$line" && _add_app "$m" "$cmd" "$ws"
+}
+_remove_app() {  # modo línea-completa-o-comando (comparación literal, escritura atómica)
   local m=$1 x=$2 tmp
   valid "$m" && [[ $m != normal ]] || { echo "modo no válido: $m" >&2; return 2; }
   [[ $x != *$'\n'* && $x != *$'\r'* ]] || return 2
@@ -312,7 +339,7 @@ edit() {
 
 case "${1:-edit}" in
   toggle) valid "${2:-}" || exit 1
-          if [[ $(current) == "$2" ]]; then set_mode normal; else set_mode "$2"; fi ;;
+          set_mode "$2" toggle ;;
   set)    set_mode "${2:-normal}" ;;
   normal) set_mode normal ;;
   current) current ;;
@@ -320,6 +347,7 @@ case "${1:-edit}" in
   edit-menu) edit "${2:-}" ;;
   apps)   init; apps_of "${2:?modo}" ;;
   add)    add_app "${2:?modo}" "${3:?comando}" "${4:-0}" ;;
+  move)   move_app "${2:?modo}" "${3:?línea}" "${4:-0}" ;;
   remove) remove_app "${2:?modo}" "${3:?comando}" ;;
   init)   init ;;
   theme)  valid "${2:?modo}" && [[ $2 != normal ]] || exit 2

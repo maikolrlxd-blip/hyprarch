@@ -12,41 +12,62 @@ STATE="${XDG_STATE_HOME:-$HOME/.local/state}/hyprarch/updates"
 T() { hyprarch-i18n "$1" "${2:-$1}" 2>/dev/null || printf '%s' "${2:-$1}"; }
 note() { command -v notify-send >/dev/null 2>&1 && notify-send -a hyprarch -t "${3:-9000}" "$1" "${2:-}"; }
 online() { [[ $(nmcli -t -f STATE general 2>/dev/null) == connected ]] || timeout 3 bash -c 'exec 3<>/dev/tcp/1.1.1.1/443' 2>/dev/null; }
-term() { kitty --class hyprarch-ai-answer -o font_size=11 -o window_padding_width=14 --title "$1" -e bash -c "$2"; }
 mkdir -p "$STATE"
 
 [[ -d /run/archiso ]] && { note "$(T upd.title 'Actualizar')" "$(T upd.live 'En el USB en vivo no se actualiza. Instala hyprarch en el disco primero.')"; exit 0; }
 
-latest() { ls -1 "$STATE"/*.txt 2>/dev/null | sort | tail -n1; }
+latest() { local f g=""; for f in "$STATE"/*.txt; do [[ -f $f ]] && g=$f; done; printf '%s' "$g"; }
+
+# La ventana de la terminal recibe todo como ARGUMENTOS (nunca se pega texto dentro del script): así ningún nombre de archivo o paquete se ejecuta.
+UPD_SCRIPT='snap=$1; pend=$2; printf "\n  Se guardó la lista de versiones actual para poder deshacer.\n\n"
+sudo pacman -Syu; rc=$?
+pacman -Q > "$pend.after" 2>/dev/null
+if [ $rc -eq 0 ]; then echo; echo "  Listo."; else echo; echo "  Algo falló (código $rc). Puedes deshacer con: hyprarch-update undo"; fi
+# la lista solo cuenta como «deshacer» si de verdad cambió algo (si cancelas o no había novedades, la anterior sigue valiendo)
+if cmp -s "$pend" "$pend.after"; then rm -f "$pend"; else mv -f "$pend" "$snap"; fi
+rm -f "$pend.after"
+read -rp "  (Enter para cerrar) " _; exit $rc'
+UNDO_SCRIPT='list=$1; shift
+printf "\n  Se volverá a estas versiones:\n\n"; cat "$list"; echo
+read -rp "  ¿Seguir? [s/N] " r
+case $r in s|S|y|Y) sudo pacman -U --noconfirm -- "$@"; rc=$?; echo
+  if [ $rc -eq 0 ]; then echo "  Listo. Reinicia la sesión."; else echo "  Algo falló (código $rc). El sistema pudo quedar a medias: revisa con pacman -Q."; fi;;
+  *) echo "  Cancelado.";; esac
+rm -f "$list"; read -rp "  (Enter para cerrar) " _'
 
 do_update() {
   online || { note "$(T upd.title 'Actualizar')" "$(T upd.nonet 'Falta Internet. Conéctate al Wi-Fi y vuelve a intentarlo.')"; exit 0; }
-  local snap
+  local snap pend
   snap="$STATE/$(date +%Y%m%d-%H%M%S).txt"
-  pacman -Q > "$snap" 2>/dev/null
-  term "Actualizar hyprarch" "printf '\n  Se guardó la lista de versiones actual para poder deshacer.\n\n'; sudo pacman -Syu; rc=\$?; echo; if [ \$rc -eq 0 ]; then echo '  Listo.'; else echo '  Algo falló (código '\$rc'). Puedes deshacer con: hyprarch-update undo'; fi; read -rp '  (Enter para cerrar) ' _; exit \$rc"
+  pend=$(mktemp "$STATE/.pendiente.XXXXXX") || exit 1
+  pacman -Q > "$pend" 2>/dev/null || { rm -f "$pend"; note "$(T upd.title 'Actualizar')" "$(T upd.noq 'No pude leer los paquetes instalados.')"; exit 1; }
+  kitty --class hyprarch-ai-answer -o font_size=11 -o window_padding_width=14 --title "Actualizar hyprarch" -e bash -c "$UPD_SCRIPT" _ "$snap" "$pend"
   note "$(T upd.title 'Actualizar')" "$(T upd.done 'Terminó. Si se actualizó el sistema, reinicia para usar lo nuevo.')"
 }
 
 do_undo() {
   local snap; snap=$(latest)
   [[ -n $snap ]] || { note "$(T upd.title 'Actualizar')" "$(T upd.nosnap 'No hay ninguna actualización guardada que deshacer.')"; exit 0; }
-  local list files="" missing="" name old cur f
+  local list name old cur f c diff=0
+  local -a files=() missing=()
   declare -A now
   while read -r name cur; do now[$name]=$cur; done < <(pacman -Q 2>/dev/null)   # una sola consulta (cientos de paquetes)
   list=$(mktemp)
-  # paquetes cuya versión actual difiere de la guardada
   while read -r name old; do
     cur=${now[$name]:-}
     [[ -n $cur && $cur != "$old" ]] || continue
+    diff=$((diff + 1))
     f=""; for c in /var/cache/pacman/pkg/"$name"-"$old"-*.pkg.tar.*; do [[ -f $c && $c != *.sig ]] && f=$c; done
-    if [[ -n $f ]]; then files+="$f "; echo "$name $cur -> $old" >> "$list"; else missing+="$name "; fi
+    if [[ -n $f ]]; then files+=("$f"); echo "$name $cur -> $old" >> "$list"; else missing+=("$name"); fi
   done < "$snap"
-  if [[ ! -s $list ]]; then
+  if ((diff == 0)); then
     note "$(T upd.title 'Actualizar')" "$(T upd.nochange 'No hay cambios que deshacer.')"; rm -f "$list"; exit 0
   fi
-  term "Deshacer actualización" "printf '\n  Se volverá a estas versiones:\n\n'; cat '$list'; [ -n '$missing' ] && printf '\n  (sin copia guardada, se dejan como están: $missing)\n'; echo; read -rp '  ¿Seguir? [s/N] ' r; case \$r in s|S|y|Y) sudo pacman -U --noconfirm $files; echo; echo '  Listo. Reinicia la sesión.';; *) echo '  Cancelado.';; esac; read -rp '  (Enter para cerrar) ' _"
-  rm -f "$list"
+  if ((${#missing[@]})); then   # volver atrás solo a medias deja versiones mezcladas: mejor no tocar nada
+    note "$(T upd.title 'Actualizar')" "$(T upd.nocopy 'No se puede deshacer: ya no están guardadas las versiones anteriores de') ${missing[*]:0:5}"
+    rm -f "$list"; exit 1
+  fi
+  kitty --class hyprarch-ai-answer -o font_size=11 -o window_padding_width=14 --title "Deshacer actualización" -e bash -c "$UNDO_SCRIPT" _ "$list" "${files[@]}"
 }
 
 case ${1:-update} in

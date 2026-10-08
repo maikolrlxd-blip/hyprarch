@@ -27,6 +27,8 @@ apply_reload() { hyprctl reload >/dev/null 2>&1; sleep 3; }
 
 pick() {
   local prev="" mode scale ok
+  exec 7>"$CFG/.display.lock"   # una sola ventana de pantalla a la vez (si no, una podría deshacer lo que confirmó la otra)
+  flock -n 7 || { note "$(T dsp.res 'Resolución')" "$(T dsp.busy 'Ya hay otra ventana de pantalla abierta.')"; return 0; }
   [[ -f $FILE ]] && prev=$(cat "$FILE")
   mode=$(modes | awk -F'\t' '{ printf "%s\t%s\t\t\n", $1, $2 }' |
     hyprarch-pick --layout wheel --title "$(T dsp.res 'Resolución')" --placeholder "$(T ui.search 'Escribe para buscar…')") || return 0
@@ -56,6 +58,6 @@ pick() {
 case ${1:-pick} in
   pick)  pick ;;
   modes) modes ;;
-  reset) rm -f "$FILE"; apply_reload ;;
+  reset) exec 7>"$CFG/.display.lock"; flock -w 20 7 || exit 1; rm -f "$FILE"; apply_reload ;;
   *)     echo "uso: hyprarch-display pick|modes|reset" >&2; exit 2 ;;
 esac

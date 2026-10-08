@@ -15,7 +15,7 @@ note() { command -v notify-send >/dev/null 2>&1 && notify-send -a hyprarch -t "$
 NOUI=0; [[ ${1:-} == --no-ui ]] && NOUI=1
 STAMP=$(date +%Y%m%d-%H%M)
 WORK=$(mktemp -d)
-ZIP="$HOME/hyprarch-reporte-$STAMP.zip"
+ZIP=$(mktemp "$HOME/hyprarch-reporte-$STAMP-XXXX.zip") || ZIP="$HOME/hyprarch-reporte-$STAMP.zip"
 trap 'rm -rf "$WORK"' EXIT
 
 # la captura (si la aceptas) se toma ANTES de abrir el menú, para que muestre el problema y no el menú
@@ -88,17 +88,43 @@ then :; else cp "$WORK/reporte.txt" "${ZIP%.zip}.txt"; ZIP="${ZIP%.zip}.txt"; fi
 if [[ $NOUI == 1 ]]; then echo "$ZIP"; exit 0; fi
 
 # ---- entrega: no se envía nada solo; la persona elige
-usb_copy() {   # copia a cada USB montado (si hay uno sin montar, se intenta montar con udisks)
-  local mp done=0 dev
-  while read -r dev; do                        # particiones USB sin montar
-    command -v udisksctl >/dev/null 2>&1 && udisksctl mount -b "/dev/$dev" >/dev/null 2>&1
-  done < <(lsblk -rno NAME,TRAN,TYPE,MOUNTPOINT 2>/dev/null | awk '$3=="part" && $4=="" {print $1}' | while read -r p; do
-             [[ $(lsblk -rno TRAN "/dev/$(lsblk -rno PKNAME "/dev/$p" 2>/dev/null | head -1)" 2>/dev/null | head -1) == usb ]] && echo "$p"; done)
-  while read -r mp; do
-    [[ -n $mp && -w $mp ]] || continue
-    cp "$ZIP" "$mp/" 2>/dev/null && { sync; done=$((done + 1)); note "$(T rep.usb 'Copiado al USB')" "$mp/$(basename "$ZIP")"; }
-  done < <(lsblk -rno RM,TRAN,MOUNTPOINT 2>/dev/null | awk '($1=="1" || $2=="usb") && $3!="" {for(i=3;i<=NF;i++) printf "%s%s", $i, (i<NF?" ":""); print ""}')
-  if ((done == 0)); then note "$(T rep.nousb 'No encontré ningún USB')" "$(T rep.nousb.d 'Conéctalo, espera unos segundos y vuelve a elegir esta opción.')"; fi
+usb_copy() {   # copia el .zip a cada USB conectado (si hay uno sin montar, se intenta montar con udisks)
+  local out
+  out=$(python3 - "$ZIP" <<'PY'
+import json, os, shutil, subprocess, sys
+zipf = sys.argv[1]
+def devs():
+    try:
+        j = json.loads(subprocess.run(["lsblk", "-J", "-o", "NAME,PATH,TYPE,TRAN,RM,MOUNTPOINTS,PKNAME"], capture_output=True, text=True, timeout=10).stdout)
+    except Exception:
+        return []
+    out = []
+    def walk(n, parent_usb):
+        usb = parent_usb or n.get("tran") == "usb" or str(n.get("rm")) in ("1", "True", "true")
+        if n.get("type") in ("part", "disk") and usb:
+            out.append(n)
+        for c in n.get("children") or []:
+            walk(c, usb)
+    for n in j.get("blockdevices", []):
+        walk(n, False)
+    return out
+for n in devs():                                   # montar lo que esté sin montar
+    if n.get("type") == "part" and not [m for m in (n.get("mountpoints") or []) if m]:
+        subprocess.run(["udisksctl", "mount", "-b", n["path"]], capture_output=True, timeout=30)
+done = 0
+for n in devs():
+    for m in n.get("mountpoints") or []:
+        if m and os.access(m, os.W_OK):
+            try:
+                shutil.copy(zipf, m)
+                os.sync()
+                print(os.path.join(m, os.path.basename(zipf)))
+                done += 1
+            except OSError:
+                pass
+sys.exit(0 if done else 1)
+PY
+  ) && note "$(T rep.usb 'Copiado al USB')" "$out" || note "$(T rep.nousb 'No encontré ningún USB')" "$(T rep.nousb.d 'Conéctalo, espera unos segundos y vuelve a elegir esta opción.')"
 }
 
 while true; do

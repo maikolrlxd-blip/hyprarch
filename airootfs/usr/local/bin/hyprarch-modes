@@ -5,6 +5,7 @@ A la izquierda eliges el modo; a la derecha lo configuras: qué hace, su tema y 
 Todo se guarda con `hyprarch-mode` (la misma herramienta que usan los atajos y las IAs), así que lo que cambies aquí vale en todas partes.
 """
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -165,6 +166,7 @@ class Win(Gtk.ApplicationWindow):
         self.cur = ORDER[0]
         self.active = "normal"
         self.busy = False
+        self.gen = 0                      # cambia al cambiar de modo: los resultados atrasados se descartan
 
         hb = Gtk.HeaderBar()
         hb.set_title_widget(label("Modos", "card-title", 0.5))
@@ -263,6 +265,7 @@ class Win(Gtk.ApplicationWindow):
         return c
 
     def show_mode(self):
+        self.gen += 1
         clear(self.panel)
         m = self.cur
         if self.toast.get_parent():
@@ -359,6 +362,8 @@ class Win(Gtk.ApplicationWindow):
             sw_holder.append(Swatch([i.get("BG", "222222"), i.get("SURFACE2", "333333"), i.get("ACCENT", "5ef2c8"), i.get("ACCENT2", "888888")]))
 
         info = {"wall": None}
+        gen = self.gen
+        loading = {"v": True}
 
         def load():
             _rc, th, _e = run("theme", m)
@@ -366,21 +371,27 @@ class Win(Gtk.ApplicationWindow):
             return th or m, wp
 
         def loaded(res):
+            if gen != self.gen:
+                return
             th, wp = res
             info["opt_theme"] = th
             # ¿es el de fábrica? (el tema con el mismo nombre del modo)
             idx = 0 if th == m else (names.index(th) + 1 if th in names else 0)
             dd.set_selected(idx)
+            loading["v"] = False           # a partir de aquí, un cambio de la lista sí es de la persona
             set_swatch(th)
             self.set_wall_preview(m, wp, th)
         bg(load, loaded)
 
         def on_theme(_dd, _p):
+            if loading["v"]:
+                return
             i = dd.get_selected()
             val = "default" if i == 0 else names[i - 1]
             set_swatch(m if i == 0 else names[i - 1])
             bg(lambda: run("theme", m, val), lambda r: self.after_look(m, r))
         dd.connect("notify::selected", on_theme)
+        dd.set_sensitive(True)
 
         # fondo
         c.append(label("Fondo", None))
@@ -422,7 +433,7 @@ class Win(Gtk.ApplicationWindow):
     def after_look(self, m, r):
         if r[0] != 0:
             self.say(r[2] or "No se pudo guardar el cambio")
-        if m == self.cur:
+        if m == self.cur and getattr(self, "wall_pic", None) is not None and self.wall_pic.get_parent() is not None:
             bg(lambda: (run("theme", m)[1] or m, run("wallpaper", m)[1]), lambda x: self.set_wall_preview(m, x[1], x[0]))
 
     def pick_included(self, m):
@@ -499,7 +510,11 @@ class Win(Gtk.ApplicationWindow):
         add.connect("clicked", lambda *_: self.add_dialog(m))
         c.append(add)
 
+        gen = self.gen
+
         def got(res):
+            if gen != self.gen or m != self.cur:
+                return
             rc, out, _e = res
             lines = [x for x in out.splitlines() if x.strip()]
             if not lines:
@@ -521,7 +536,11 @@ class Win(Gtk.ApplicationWindow):
         tx.set_valign(Gtk.Align.CENTER)
         top = Gtk.Box(spacing=8)
         top.append(label(name, "card-title"))
-        if not shutil.which(cmd.split()[0] if cmd.split() else ""):
+        try:
+            exe = shlex.split(cmd)[0]
+        except (ValueError, IndexError):
+            exe = ""
+        if not exe or not shutil.which(exe):
             top.append(label("No instalada", "warn-pill"))
         tx.append(top)
         tx.append(label(cmd, "dim"))
@@ -534,14 +553,15 @@ class Win(Gtk.ApplicationWindow):
             n = dd.get_selected()
             if str(n) == ws:
                 return
-            bg(lambda: (run("remove", m, line), run("add", m, cmd, str(n)))[1], lambda r: self.refresh_apps(m))
+            dd.set_sensitive(False)
+            bg(lambda: run("move", m, line, str(n)), lambda r: (self.refresh_apps(m) if m == self.cur else None))
         dd.connect("notify::selected", changed)
         row.append(dd)
         rm = Gtk.Button(icon_name="user-trash-symbolic")
         rm.add_css_class("danger")
         rm.set_valign(Gtk.Align.CENTER)
         rm.set_tooltip_text("Quitar de este modo")
-        rm.connect("clicked", lambda *_: bg(lambda: run("remove", m, line), lambda r: self.refresh_apps(m)))
+        rm.connect("clicked", lambda *_: (rm.set_sensitive(False), bg(lambda: run("remove", m, line), lambda r: (self.refresh_apps(m) if m == self.cur else None))))
         row.append(rm)
         return row
 
@@ -578,7 +598,7 @@ class Win(Gtk.ApplicationWindow):
 
         def chosen(_lb, row):
             dlg.close()
-            bg(lambda: run("add", m, row.cmd, "0"), lambda r: (self.refresh_apps(m), r[0] != 0 and self.say(r[2] or "No se pudo añadir")))
+            bg(lambda: run("add", m, row.cmd, "0"), lambda r: (self.refresh_apps(m) if m == self.cur else None, r[0] != 0 and self.say(r[2] or "No se pudo añadir")))
         lb.set_selection_mode(Gtk.SelectionMode.NONE)
         lb.connect("row-activated", chosen)
         lb.set_activate_on_single_click(True)
@@ -595,7 +615,7 @@ class Win(Gtk.ApplicationWindow):
             txt = ent.get_text().strip()
             if txt:
                 dlg.close()
-                bg(lambda: run("add", m, txt, "0"), lambda r: (self.refresh_apps(m), r[0] != 0 and self.say(r[2] or "Ese comando no está permitido")))
+                bg(lambda: run("add", m, txt, "0"), lambda r: (self.refresh_apps(m) if m == self.cur else None, r[0] != 0 and self.say(r[2] or "Ese comando no está permitido")))
         ok.connect("clicked", add_cmd)
         ent.connect("activate", add_cmd)
         cmdrow.append(ok)
