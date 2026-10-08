@@ -27,7 +27,7 @@ Por SSH funciona igual (el comando entra solo a la sesión gráfica). Si necesit
   Cámbialos con `hyprarch-mode add <modo> <comando> [espacio]` / `remove`. Los comandos no admiten `; & | $ \` < > ( ) { }`.
 - Preferencias: `~/.config/hyprarch/` (`style`, `mascot`, `buddy.conf`, `intro`, `lang`, `perf`…). Tema: `hyprarch-theme`.
 - Configuración de Hyprland: `~/.config/hypr/hyprland.lua` (Lua, Hyprland 0.56). Barra: `~/.config/waybar/`.
-- Navegador: `hyprarch-browser pick|open [URL]|apply|status` (se elige en el primer inicio; guardado en `~/.config/hyprarch/browser`; Super+B lo abre). Firefox viene incluido; Chromium, Brave, Chrome, Edge, Vivaldi, LibreWolf, Zen y Falkon se instalan al elegirlos.
+- Navegador: `hyprarch-browser pick|open [URL]|apply|status` (se elige en el primer inicio; guardado en `~/.config/hyprarch/browser`; Super+B lo abre). Firefox viene incluido; Chromium, Brave, Chrome, Edge, Opera, Opera GX, Vivaldi, LibreWolf, Zen y Falkon se instalan al elegirlos.
 - Instalar programas por packs: `hyprarch-apps juegos|oficina|multimedia|tienda|comunicacion` (necesita internet).
 - Menús del sistema: `hyprarch-pick` (selector animado; **no uses fuzzel, fzf ni menús de terminal básicos**).
 

@@ -89,7 +89,8 @@ def all_apps():
 
 BROWSER_DESKTOP = {"firefox": "firefox", "chromium": "chromium", "vivaldi": "vivaldi-stable", "falkon": "org.kde.falkon",
                    "brave": "com.brave.Browser", "chrome": "com.google.Chrome", "edge": "com.microsoft.Edge",
-                   "librewolf": "io.gitlab.librewolf-community", "zen": "app.zen_browser.zen"}
+                   "librewolf": "io.gitlab.librewolf-community", "zen": "app.zen_browser.zen", "opera": "com.opera.Opera",
+                   "operagx": "com.opera.opera-gx"}
 
 
 def browser_choice():

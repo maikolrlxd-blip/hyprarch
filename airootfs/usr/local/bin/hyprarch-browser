@@ -7,7 +7,7 @@
 #   hyprarch-browser status           qué navegador hay elegido y si está instalado
 #
 # La ISO trae Firefox (liviano para equipos modestos). Los demás se instalan al elegirlos: desde los repositorios de Arch
-# (Chromium, Vivaldi, Falkon) o desde Flathub (Brave, Chrome, Edge, LibreWolf, Zen). En el modo EN VIVO (USB sin instalar)
+# (Chromium, Vivaldi, Falkon) o desde Flathub (Brave, Chrome, Edge, LibreWolf, Zen, Opera, Opera GX). En el modo EN VIVO (USB sin instalar)
 # solo se guarda la elección: se instala cuando instales hyprarch en el disco (en vivo todo vive en la memoria RAM).
 CFG="${XDG_CONFIG_HOME:-$HOME/.config}/hyprarch"
 FILE="$CFG/browser"
@@ -27,6 +27,8 @@ chrome|Google Chrome|flatpak|com.google.Chrome|com.google.Chrome.desktop|flatpak
 edge|Microsoft Edge|flatpak|com.microsoft.Edge|com.microsoft.Edge.desktop|flatpak run com.microsoft.Edge
 librewolf|LibreWolf|flatpak|io.gitlab.librewolf-community|io.gitlab.librewolf-community.desktop|flatpak run io.gitlab.librewolf-community
 zen|Zen|flatpak|app.zen_browser.zen|app.zen_browser.zen.desktop|flatpak run app.zen_browser.zen
+opera|Opera|flatpak|com.opera.Opera|com.opera.Opera.desktop|flatpak run com.opera.Opera
+operagx|Opera GX|flatpak|com.opera.opera-gx|com.opera.opera-gx.desktop|flatpak run com.opera.opera-gx
 EOF
 }
 row() { table | awk -F'|' -v id="$1" '$1 == id { print; exit }'; }
@@ -117,6 +119,8 @@ pick() {
       $'vivaldi\tVivaldi\t\t'"$(T br.viv 'Muy personalizable · se instala al elegirlo')" \
       $'librewolf\tLibreWolf\t\t'"$(T br.lw 'Firefox más privado · se instala al elegirlo')" \
       $'zen\tZen\t\t'"$(T br.zen 'Moderno, con pestañas laterales · se instala al elegirlo')" \
+      $'opera\tOpera\t\t'"$(T br.opera 'VPN y bloqueador integrados · se instala al elegirlo')" \
+      $'operagx\tOpera GX\t\t'"$(T br.operagx 'Para jugadores: limita RAM y CPU · se instala al elegirlo')" \
       $'falkon\tFalkon\t\t'"$(T br.falk 'Muy ligero para equipos modestos')" |
     hyprarch-pick --layout wheel --title "$(T w.browser 'Elige tu navegador')" --placeholder "$(T ui.search 'Escribe para buscar…')") || return 0
   [[ -n $(row "$id") ]] || return 0
