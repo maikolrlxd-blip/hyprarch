@@ -167,7 +167,33 @@ class App(Gtk.Application):
         self.armed = False
         self.closing = False
 
+    def already_opening(self, app, secs=15):
+        """Un PC lento tarda en abrir una app y se vuelve a pulsar: cada pulsación abría otra ventana (Firefox salía 5 veces).
+        Si la misma app se lanzó hace menos de `secs`, no se lanza otra vez."""
+        key = re.sub(r"\W", "_", app.get_id() or app.get_name() or "app")
+        p = os.path.join(os.environ.get("XDG_RUNTIME_DIR") or "/tmp", "hyprarch-launch-" + key)
+        try:
+            if time.time() - os.path.getmtime(p) < secs:
+                return True
+        except OSError:
+            pass
+        try:
+            with open(p, "w"):
+                pass
+        except OSError:
+            pass
+        return False
+
     def launch(self, app):
+        if self.already_opening(app):
+            try:
+                subprocess.Popen(["notify-send", "-t", "3000", "-a", "hyprarch", "Ya se está abriendo " + (app.get_name() or "la app"),
+                                  "Espera unos segundos."], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                 stderr=subprocess.DEVNULL, start_new_session=True)
+            except OSError:
+                pass
+            self.close_menu(sound=False)
+            return
         # Se lanza el comando del .desktop directamente y por separado. Con app.launch() de Gio, las apps «activables por D-Bus»
         # (Firefox y otras) pueden dejar la llamada colgada hasta ~25 s si el servicio no responde: el menú se queda quieto y
         # «no pasa nada». Así el menú se cierra al instante y la app arranca por su cuenta.
