@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# hyprarch-sound-test — prueba el sonido de distintas formas para encontrar por qué se oye entrecortado o con ruido.
+#
+#   hyprarch-sound-test
+#
+# Reproduce el mismo sonido de 6 maneras, numeradas, y deja un informe (~/hyprarch-sonido.txt) con los datos del audio.
+# Escucha y anota cuáles suenan limpios; con esa información se elige la configuración correcta para tu equipo.
+S=/usr/share/hyprarch/sounds/menu-open.wav
+OUT="$HOME/hyprarch-sonido.txt"
+C=$'\e[38;2;94;242;200m' W=$'\e[1;37m' D=$'\e[38;2;150;170;180m' X=$'\e[0m'
+
+{
+  echo "# Informe de sonido de hyprarch ($(date -Is))"
+  echo "## Servidor de audio"
+  pactl info 2>&1 | grep -E 'Server Name|Default Sink|Default Sample|Server Version' | head -5
+  echo "## Dispositivos de salida"
+  pactl list short sinks 2>&1 | head -6
+  echo "## WirePlumber / PipeWire"
+  wpctl status 2>&1 | sed -n '1,22p'
+  echo "## Quantum"
+  pw-metadata -n settings 0 2>/dev/null | grep -E 'clock\.(quantum|rate|min-quantum|force-quantum)' | head -6
+  echo "## Carga del equipo"
+  cat /proc/loadavg
+  echo "## Procesador"
+  grep -m1 'model name' /proc/cpuinfo
+  echo "## Tarjeta de sonido"
+  grep -E 'Name|Card' /proc/asound/cards 2>/dev/null | head -4
+} >"$OUT" 2>&1
+
+printf '\n%s  Prueba de sonido de hyprarch%s\n' "$W" "$X"
+printf '%s  Se reproduce el mismo sonido de 6 formas. Escucha y fíjate en cuáles suenan LIMPIAS (sin crujidos ni cortes).%s\n\n' "$D" "$X"
+
+play() {  # <número> <descripción> <comando...>
+  local n=$1 desc=$2; shift 2
+  printf '%s  %s)%s %s\n' "$C" "$n" "$X" "$desc"
+  "$@" >/dev/null 2>&1
+  sleep 1.6
+}
+
+play 1 "pw-play normal"                         pw-play --volume 0.6 "$S"
+play 2 "pw-play con margen de 200 ms (el actual)" pw-play --latency 200ms --volume 0.6 "$S"
+play 3 "pw-play con margen de 500 ms"           pw-play --latency 500ms --volume 0.6 "$S"
+play 4 "paplay (capa PulseAudio)"               paplay "$S"
+play 5 "aplay directo a ALSA"                   aplay -q "$S"
+printf '%s  6)%s cinco sonidos seguidos (como al mover un menú)\n' "$C" "$X"
+for _ in 1 2 3 4 5; do pw-play --latency 200ms --volume 0.5 /usr/share/hyprarch/sounds/menu-hover.wav >/dev/null 2>&1 & sleep 0.18; done
+wait; sleep 1
+
+printf '\n%s  Listo.%s Dime los números que sonaron limpios y cuáles mal.\n' "$W" "$X"
+printf '%s  El informe del equipo quedó en: %s%s\n' "$D" "$OUT" "$X"
+printf '%s  Para verlo: cat ~/hyprarch-sonido.txt%s\n\n' "$D" "$X"

@@ -395,6 +395,10 @@ class App(Gtk.Application):
         self.gen = 0                   # número de la consulta en curso
         self.provs = []                # IAs instaladas (para el botón que las cambia)
         self.pbtn = None
+        self.login_proc = None         # "claude auth login" en curso (el código se pega en el cuadro de la isla)
+        self.login_mode = False
+        self.last_q = ""
+        self.net_btn = None
         self.at_home = True            # ¿la pastilla está en su hueco de la barra? (si arrastras el cuadro, se oculta)
         self.cur = (0, 0)
         self.d0 = (0, 0)
@@ -685,6 +689,16 @@ class App(Gtk.Application):
         if not q or self.working:
             return
         self.entry.set_text("")
+        if self.login_mode and self.login_proc is not None and self.login_proc.poll() is None:      # lo escrito es el código del navegador
+            try:
+                self.login_proc.stdin.write(q + "\n")
+                self.login_proc.stdin.flush()
+                self.append("Comprobando el código…\n", "dim")
+            except OSError:
+                self.append("No pude enviar el código. Pulsa Nueva y reintenta.\n", "err")
+            return
+        self.last_q = q
+        self.net_btn.set_visible(False)
         if not self.provs:                                                  # ninguna IA instalada (p. ej. edición pública): el asistente la instala
             self.show_chat(True)
             self.append("Aún no hay ninguna IA instalada. Te abro el asistente para elegir una…\n", "dim")
@@ -737,6 +751,7 @@ class App(Gtk.Application):
         try:
             if pid != "ollama" and not online():                          # sin Internet: avisar en vez de fallar en silencio
                 GLib.idle_add(self.append, NET_MSG, "err", gen)
+                GLib.idle_add(self.show_net)
                 return
             if pid == "claude":
                 cmd = ["claude", "-p", q, "--output-format", "stream-json", "--include-partial-messages", "--verbose"]
@@ -791,6 +806,7 @@ class App(Gtk.Application):
                             GLib.idle_add(self.need_login, gen)
                         elif ev.get("is_error") and re.search(r"unable to connect|econn|enotfound|network|fetch failed|timed? ?out|offline", str(ev.get("result")), re.I):
                             GLib.idle_add(self.append, "\n" + NET_MSG, "err", gen)
+                            GLib.idle_add(self.show_net)
             try:
                 rc = proc.wait(timeout=5)
             except subprocess.TimeoutExpired:
@@ -808,10 +824,68 @@ class App(Gtk.Application):
             GLib.idle_add(self.finish, rc, gen)
 
     def need_login(self, gen):
-        """Claude sin sesión: se explica y se abre el asistente de inicio de sesión de hyprarch (no hace falta saber comandos)."""
+        """Claude sin sesión: el inicio de sesión se hace aquí mismo, sin terminal (se abre el navegador y se pega el código)."""
         if gen == self.gen:
-            self.append("\nTe falta iniciar sesión. Te abro el asistente…\n", "dim", gen)
-            GLib.timeout_add(1200, lambda: (self.act("hyprarch-ai", "login-window"), False)[1])
+            self.start_login(gen)
+        return False
+
+    def start_login(self, gen):
+        if self.login_proc is not None and self.login_proc.poll() is None:
+            return False
+        self.append("\nTe falta iniciar sesión con Claude. Se abre el navegador: entra con tu cuenta, acepta, copia el código que te muestra y pégalo aquí.\n", "dim", gen)
+        env = dict(os.environ)
+        env["PATH"] = os.path.expanduser("~/.local/bin") + os.pathsep + env.get("PATH", "")
+        env["BROWSER"] = "true"                                              # el navegador lo abrimos nosotros (así sabemos cuál)
+        try:
+            self.login_proc = subprocess.Popen(["claude", "auth", "login"], cwd=os.path.expanduser("~"), env=env, stdin=subprocess.PIPE,
+                                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",
+                                               errors="replace", bufsize=1, start_new_session=True)
+        except OSError as exc:
+            self.append("No pude iniciar el acceso (%s).\n" % exc, "err", gen)
+            return False
+        self.login_mode = True
+        self.entry.set_placeholder_text("Pega aquí el código y pulsa Enter…")
+        threading.Thread(target=self.login_reader, args=(self.login_proc,), daemon=True).start()
+        return False
+
+    def login_reader(self, proc):
+        opened = False
+        for line in proc.stdout:
+            clean = re.sub(r"\x1b\[[0-9;?]*[A-Za-z]", "", line)
+            m = re.search(r"https://\S+", clean)
+            if m and not opened:
+                opened = True
+                GLib.idle_add(self.open_url, m.group(0))
+        rc = proc.wait()
+        GLib.idle_add(self.login_done, rc)
+
+    def open_url(self, url):
+        import shutil
+        browser = shutil.which("firefox") or shutil.which("xdg-open")
+        if browser:
+            try:
+                pr = subprocess.Popen([browser, url], start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL)
+                threading.Thread(target=pr.wait, daemon=True).start()
+            except OSError:
+                pass
+        return False
+
+    def login_done(self, rc):
+        self.login_mode = False
+        self.login_proc = None
+        self.entry.set_placeholder_text("Escríbele a %s…" % PROV_NAMES.get(self.provider, self.provider))
+        if rc == 0:
+            self.append("¡Listo, ya entraste!\n", "me")
+            if self.last_q:                                                  # se repite la pregunta que quedó pendiente
+                q = self.last_q
+                GLib.timeout_add(700, lambda: (self.entry.set_text(q), self.send(), False)[1])
+        else:
+            self.append("No se pudo iniciar sesión (código incorrecto o caducado). Escribe algo para intentarlo otra vez.\n", "err")
+        return False
+
+    def show_net(self):
+        self.net_btn.set_visible(True)
         return False
 
     def finish(self, rc, gen):
@@ -831,6 +905,10 @@ class App(Gtk.Application):
         return False
 
     def new_chat(self, *_a):
+        self.stop_proc(self.login_proc)
+        self.login_proc = None
+        self.login_mode = False
+        self.net_btn.set_visible(False)
         self.gen += 1                                                       # lo que traiga la consulta anterior ya no cuenta
         self.stop_proc(self.proc)
         self.proc = None
@@ -862,6 +940,7 @@ class App(Gtk.Application):
 
     def quit_clean(self, *_a):
         self.stop_proc(self.proc)
+        self.stop_proc(self.login_proc)
         try:
             os.remove(READY_FILE)
         except OSError:
@@ -1011,6 +1090,16 @@ class App(Gtk.Application):
         sw.set_visible(False)
         self.scroll = sw
         body.add_overlay(sw)
+        nb = Gtk.Button(label="Abrir Wi-Fi")                              # aparece solo cuando falta Internet
+        nb.add_css_class("pill")
+        nb.add_css_class("sel")
+        nb.set_halign(Gtk.Align.CENTER)
+        nb.set_valign(Gtk.Align.END)
+        nb.set_margin_bottom(10)
+        nb.set_visible(False)
+        nb.connect("clicked", lambda _b: (self.net_btn.set_visible(False), self.act("hyprarch-wifi")))
+        self.net_btn = nb
+        body.add_overlay(nb)
         exp.append(body)
 
         row = Gtk.Box(spacing=8)                       # el cuadro para escribir (siempre visible, abajo)

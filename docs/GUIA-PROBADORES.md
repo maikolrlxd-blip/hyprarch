@@ -40,3 +40,9 @@ buscamos fallos, cosas que confundan y cosas que no se vean o suenen bien.
 - Si algo te sorprendió **para bien** también cuéntalo.
 
 ¡Gracias! Cada fallo que encuentres hoy es uno que nadie más sufrirá mañana.
+
+## Si el sonido se oye mal
+Abre una terminal (**SUPER+Enter**) y escribe `hyprarch-sound-test`. Reproduce el mismo sonido de 6 maneras: dime cuáles suenan limpias y cuáles no. También deja un informe en `~/hyprarch-sonido.txt`.
+
+## Si algo no abre
+Las aplicaciones del menú de inicio guardan lo que pasó en `~/.cache/hyprarch/apps.log` y avisan con una notificación si fallan.
