@@ -202,8 +202,8 @@ edit_mode() {
       items+="rm:$line"$'\t'"$(pretty "$line")"$'\t'"$(tint "$m")"$'\t'"$(T mode.rm 'Tocá para quitarla de este modo')"$'\t'"serious"$'\n'
     done < <(apps_of "$m")
     sel=$({ printf '%s' "$items"; printf '%s\n' \
-        "theme"$'\t'"🎨  $(T mode.theme 'Tema de este modo')"$'\t'"$(tint "$m")"$'\t'"$(theme_name "$(theme_of "$m")")"$'\thappy' \
-        "wall"$'\t'"🖼  $(T mode.wall 'Fondo de este modo')"$'\t'"$(tint "$m")"$'\t'"$(w=$(opt_get "$m" wallpaper); if [[ -n $w ]]; then basename "$w"; else T mode.wall.def 'El que trae el tema'; fi)"$'\twink' \
+        "theme"$'\t'"◆  $(T mode.theme 'Tema de este modo')"$'\t'"$(tint "$m")"$'\t'"$(theme_name "$(theme_of "$m")")"$'\thappy' \
+        "wall"$'\t'"■  $(T mode.wall 'Fondo de este modo')"$'\t'"$(tint "$m")"$'\t'"$(w=$(opt_get "$m" wallpaper); if [[ -n $w ]]; then basename "$w"; else T mode.wall.def 'El que trae el tema'; fi)"$'\twink' \
         "add"$'\t'"+  $(T mode.add 'Agregar una aplicación')"$'\t'"$(tint "$m")"$'\t'"$(T mode.add.d 'Elegí de las instaladas')"$'\thappy' \
         "cmd"$'\t'"+  $(T mode.cmd 'Escribir un comando')"$'\t\t'"$(T mode.cmd.d 'Para cualquier programa o página web')"$'\twink' \
         "try"$'\t'"▶  $(T mode.try 'Activar este modo ahora')"$'\t\t'"$(T mode.try.d 'Prueba cómo queda')"$'\tsurprised' \
