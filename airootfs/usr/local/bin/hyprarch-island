@@ -16,6 +16,7 @@ import os
 import random
 import re
 import signal
+import socket
 signal.signal(signal.SIGUSR1, signal.SIG_IGN)               # hasta que la isla esté lista, el atajo no puede matarla
 import subprocess
 import sys
@@ -27,6 +28,7 @@ if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza
     env["LD_PRELOAD"] = (env.get("LD_PRELOAD", "") + " /usr/lib/libgtk4-layer-shell.so").strip()
     env["GSK_RENDERER"] = "cairo"
     os.execvpe(sys.executable, [sys.executable] + sys.argv, env)
+os.environ["LD_PRELOAD"] = " ".join(x for x in os.environ.get("LD_PRELOAD", "").split() if "gtk4-layer-shell" not in x)   # las apps que lance este programa no heredan la librería (Firefox y otras GTK3 se caen con ella)
 
 import atexit
 import fcntl
@@ -329,6 +331,24 @@ def ai_conf():
     except (OSError, ValueError):
         pass
     return pid, cmd
+
+
+def online():
+    """¿Hay Internet? NetworkManager dice «connected» solo si hay salida a Internet; si no está, se prueba una conexión corta."""
+    try:
+        st = subprocess.run(["nmcli", "-t", "-f", "STATE", "general"], capture_output=True, text=True, timeout=2).stdout.strip()
+        if st:
+            return st == "connected"
+    except (OSError, subprocess.SubprocessError):
+        pass
+    try:
+        socket.create_connection(("1.1.1.1", 443), timeout=2).close()
+        return True
+    except OSError:
+        return False
+
+
+NET_MSG = "Se necesita Internet para hablar con la IA.\nConéctate al Wi-Fi desde el centro de control (el icono de los deslizadores, abajo a la derecha) y vuelve a intentarlo.\n"
 
 
 def set_ai(pid):
@@ -715,6 +735,9 @@ class App(Gtk.Application):
             q = " " + q
         tail, gotten, rc, proc = [], False, 1, None
         try:
+            if pid != "ollama" and not online():                          # sin Internet: avisar en vez de fallar en silencio
+                GLib.idle_add(self.append, NET_MSG, "err", gen)
+                return
             if pid == "claude":
                 cmd = ["claude", "-p", q, "--output-format", "stream-json", "--include-partial-messages", "--verbose"]
                 if sid:
@@ -766,6 +789,8 @@ class App(Gtk.Application):
                         gotten = True
                         if ev.get("is_error") and re.search(r"not logged in|/login", str(ev.get("result")), re.I):
                             GLib.idle_add(self.need_login, gen)
+                        elif ev.get("is_error") and re.search(r"unable to connect|econn|enotfound|network|fetch failed|timed? ?out|offline", str(ev.get("result")), re.I):
+                            GLib.idle_add(self.append, "\n" + NET_MSG, "err", gen)
             try:
                 rc = proc.wait(timeout=5)
             except subprocess.TimeoutExpired:

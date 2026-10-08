@@ -24,6 +24,7 @@ if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza
     env["LD_PRELOAD"] = (env.get("LD_PRELOAD", "") + " /usr/lib/libgtk4-layer-shell.so").strip()
     env["GSK_RENDERER"] = "cairo"
     os.execvpe(sys.executable, [sys.executable] + sys.argv, env)
+os.environ["LD_PRELOAD"] = " ".join(x for x in os.environ.get("LD_PRELOAD", "").split() if "gtk4-layer-shell" not in x)   # las apps que lance este programa no heredan la librería (Firefox y otras GTK3 se caen con ella)
 
 import fcntl
 
@@ -159,8 +160,17 @@ class App(Gtk.Application):
             if argv and app.get_boolean("Terminal"):
                 argv = ["kitty", "-e"] + argv
             if argv:
-                subprocess.Popen(argv, cwd=os.path.expanduser("~"), start_new_session=True, stdin=subprocess.DEVNULL,
-                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                # La app corre dentro de un pequeño envoltorio: su salida de error va a un archivo y, si se cierra con error,
+                # se avisa («No se pudo abrir X») en vez de no hacer nada. Así sabemos POR QUÉ no abre en un equipo concreto.
+                logdir = os.path.join(os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")), "hyprarch")
+                os.makedirs(logdir, exist_ok=True)
+                env = dict(os.environ, HYPRARCH_APP_LOG=os.path.join(logdir, "apps.log"), HYPRARCH_APP_NAME=app.get_name() or argv[0])
+                shell = ('{ date "+%H:%M:%S abriendo $HYPRARCH_APP_NAME"; } >>"$HYPRARCH_APP_LOG"; "$@" 2>>"$HYPRARCH_APP_LOG"; rc=$?; '
+                         'echo "  fin de $HYPRARCH_APP_NAME, código $rc" >>"$HYPRARCH_APP_LOG"; '
+                         'if [ "$rc" -ne 0 ]; then notify-send -a hyprarch "No se pudo abrir $HYPRARCH_APP_NAME" '
+                         '"Código $rc. Detalles en ~/.cache/hyprarch/apps.log"; fi')
+                subprocess.Popen(["sh", "-c", shell, "hyprarch-app"] + argv, cwd=os.path.expanduser("~"), env=env,
+                                 start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             else:
                 threading.Thread(target=lambda: app.launch([], None), daemon=True).start()
         except Exception:

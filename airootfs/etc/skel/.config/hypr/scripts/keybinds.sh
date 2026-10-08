@@ -34,6 +34,6 @@ x	Bloquear pantalla		SUPER + L
 y	Menú de energía		SUPER + ESC
 z	Modo gamer / cine / estudio / trabajo		SUPER + SHIFT + G / C / U / W
 za	Volver al modo normal		SUPER + SHIFT + N
-zb	Efecto de pantalla (CRT)		SUPER + S
+zb	Buscar apps (como en Windows)		SUPER + S
 zc	Recargar configuración		SUPER + SHIFT + R
 EOF

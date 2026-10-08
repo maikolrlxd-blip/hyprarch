@@ -39,6 +39,7 @@ if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", ""):      # se relanza
         os.execvpe(sys.executable, [sys.executable] + sys.argv, env)
     except OSError:
         sys.exit(0)
+os.environ["LD_PRELOAD"] = " ".join(x for x in os.environ.get("LD_PRELOAD", "").split() if "gtk4-layer-shell" not in x)   # las apps que lance este programa no heredan la librería (Firefox y otras GTK3 se caen con ella)
 
 try:
     payload = json.loads(sys.stdin.read() or "{}")

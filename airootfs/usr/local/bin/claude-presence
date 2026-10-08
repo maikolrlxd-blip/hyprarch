@@ -822,6 +822,7 @@ def run_daemon():
             os.execvpe(sys.executable, [sys.executable] + sys.argv, env)
         except OSError:
             pass
+    os.environ["LD_PRELOAD"] = " ".join(x for x in os.environ.get("LD_PRELOAD", "").split() if "gtk4-layer-shell" not in x)   # las apps que lance este programa no heredan la librería (Firefox y otras GTK3 se caen con ella)
     # UNA sola presencia a la vez: si ya hay un personajito vivo, esta copia se retira (así nunca se ven dos Hyros,
     # aunque se lance el demonio dos veces). El bloqueo lo suelta el sistema solo cuando el proceso termina.
     import fcntl
