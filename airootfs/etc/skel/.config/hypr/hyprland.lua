@@ -425,6 +425,15 @@ hl.window_rule({
     size   = { 860, 520 },
 })
 
+-- Ventana de configuración de modos: más grande que las auxiliares
+hl.window_rule({
+    name   = "hyprarch-modes-win",
+    match  = { class = "^(hyprarch-modes)$" },
+    float  = true,
+    center = true,
+    size   = { 1040, 720 },
+})
+
 -- El chat con la IA es una ventana de trabajo (hay que poder verla junto al navegador al iniciar sesión,
 -- pegar códigos, etc.): en mosaico y no flotante encima de todo.
 hl.window_rule({

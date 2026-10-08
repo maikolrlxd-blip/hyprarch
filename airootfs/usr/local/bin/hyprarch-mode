@@ -316,7 +316,8 @@ case "${1:-edit}" in
   set)    set_mode "${2:-normal}" ;;
   normal) set_mode normal ;;
   current) current ;;
-  edit|menu) edit "${2:-}" ;;
+  edit|menu) if [[ -n ${WAYLAND_DISPLAY:-} ]] && command -v hyprarch-modes >/dev/null 2>&1; then init; exec hyprarch-modes; else edit "${2:-}"; fi ;;
+  edit-menu) edit "${2:-}" ;;
   apps)   init; apps_of "${2:?modo}" ;;
   add)    add_app "${2:?modo}" "${3:?comando}" "${4:-0}" ;;
   remove) remove_app "${2:?modo}" "${3:?comando}" ;;

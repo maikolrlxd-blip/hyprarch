@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Modos
+Name[en]=Modes
+Comment=Configura los modos gamer, cine, estudio y trabajo: tema, fondo y aplicaciones
+Exec=hyprarch-modes
+Icon=applications-games
+Categories=System;Settings;
+Terminal=false

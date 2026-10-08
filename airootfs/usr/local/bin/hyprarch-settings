@@ -31,6 +31,7 @@ while true; do
       $'display\t'"$(T set.display 'Pantalla')"$'\t\t'"$(T set.display.d 'Resolución y tamaño de las cosas')" \
       $'language\t'"$(T set.lang 'Idioma y teclado')"$'\t\t'"$(T set.lang.d 'Idioma del sistema y distribución del teclado')" \
       $'browser\t'"$(T set.browser 'Navegador')"$'\t\t'"$(T set.browser.d 'Elegir tu navegador')" \
+      $'modes\t'"$(T set.modes 'Modos')"$'\t\t'"$(T set.modes.d 'Gamer, cine, estudio y trabajo: tema, fondo y apps')" \
       $'look\t'"$(T set.look 'Colores y estilo')"$'\t\t'"$(T set.look.d 'Tema, colores y aspecto')" \
       $'bluetooth\t'"$(T set.bt 'Bluetooth')"$'\t\t'"$(T set.bt.d 'Auriculares, ratón, teclado')" \
       $'perf\t'"$(T set.perf 'Rendimiento')"$'\t\t'"$(T set.perf.d 'Ligero para equipos modestos, completo para equipos buenos')" \
@@ -47,6 +48,7 @@ while true; do
     language)  hyprarch-lang pick ;;
     browser)   hyprarch-browser pick ;;
     look)      hyprarch-theme ;;
+    modes)     setsid -f hyprarch-modes >/dev/null 2>&1 </dev/null; exit 0 ;;
     bluetooth) command -v blueman-manager >/dev/null 2>&1 && setsid -f blueman-manager >/dev/null 2>&1 </dev/null; exit 0 ;;
     perf)      perf_pick ;;
     update)    hyprarch-update; exit 0 ;;

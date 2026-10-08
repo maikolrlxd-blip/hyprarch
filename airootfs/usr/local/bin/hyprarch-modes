@@ -1,0 +1,627 @@
+#!/usr/bin/env python3
+"""hyprarch-modes — ventana para configurar los modos (gamer, cine, estudio, trabajo).
+
+A la izquierda eliges el modo; a la derecha lo configuras: qué hace, su tema y su fondo, y las aplicaciones que se abren.
+Todo se guarda con `hyprarch-mode` (la misma herramienta que usan los atajos y las IAs), así que lo que cambies aquí vale en todas partes.
+"""
+import os
+import shutil
+import subprocess
+import sys
+import threading
+
+os.environ.pop("LD_PRELOAD", None)       # ventana normal: no necesita layer-shell (y las apps que lance no deben heredarlo)
+os.environ.setdefault("GSK_RENDERER", "cairo")
+
+import gi
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
+from gi.repository import Gdk, Gio, GLib, Gtk  # noqa: E402
+
+GLib.set_prgname("hyprarch-modes")       # la clase de la ventana (reglas de Hyprland)
+GLib.set_application_name("Modos")
+
+THEMES = "/usr/share/hyprarch/themes"
+BACKS = "/usr/share/backgrounds"
+
+MODES = {
+    "gamer": ("Gamer", "#00e5ff", "Para jugar sin interrupciones",
+              ["Máximo rendimiento del equipo (si lo permite)", "Sin avisos que te corten la partida",
+               "No se bloquea ni se suspende la pantalla", "Menos efectos visuales para ir más fluido"]),
+    "cine": ("Cine", "#ffb347", "Para ver películas y series",
+             ["Sin avisos mientras ves algo", "No se bloquea ni se suspende la pantalla", "Ventanas sin bordes ni huecos, animaciones suaves"]),
+    "estudio": ("Estudio", "#4fd1c5", "Para concentrarte",
+                ["Sin avisos que te distraigan", "Te recuerda descansar 10 minutos cada 50", "Tema sereno y animaciones calmadas"]),
+    "trabajo": ("Trabajo", "#5ec2ff", "Para el día a día de oficina",
+                ["Consumo equilibrado", "Avisos activos", "Interfaz sobria y rápida"]),
+}
+ORDER = ["gamer", "cine", "estudio", "trabajo"]
+
+CSS = """
+window.modes { background: #0b0f14; color: #dfe9ee; }
+.side { background: #0e141b; border-right: 1px solid #1c2630; }
+.side list, .side listbox, list { background: transparent; }
+scrolledwindow, viewport { background: transparent; }
+.side row { padding: 10px 12px; margin: 2px 8px; border-radius: 12px; }
+.side row:selected { background: #17222c; }
+.dot { min-width: 12px; min-height: 12px; border-radius: 6px; }
+.pill { background: #123c33; color: #5ef2c8; border-radius: 9px; padding: 1px 8px; font-size: 11px; }
+.warn-pill { background: #3a2c0c; color: #ffb347; border-radius: 9px; padding: 1px 8px; font-size: 11px; }
+.title-big { font-size: 28px; font-weight: 700; }
+.sub { color: #8aa0ad; }
+.card { background: #111922; border: 1px solid #1c2630; border-radius: 16px; padding: 16px; }
+.card-title { font-size: 15px; font-weight: 700; }
+.dim { color: #7d909c; font-size: 12px; }
+.approw { background: #0e151d; border-radius: 12px; padding: 8px 10px; }
+.big-btn { padding: 9px 22px; border-radius: 12px; font-weight: 700; }
+button.accent { background: #5ef2c8; color: #04130f; }
+button.accent:hover { background: #7cf7d6; }
+button.flat-soft { background: #17222c; color: #dfe9ee; border-radius: 10px; padding: 6px 12px; }
+button.flat-soft:hover { background: #1f2e3a; }
+button.danger { background: #2a1519; color: #ff8f9f; border-radius: 10px; }
+.thumb { border-radius: 10px; border: 2px solid transparent; }
+.thumb-sel { border-color: #5ef2c8; }
+entry, searchentry { background: #17222c; color: #dfe9ee; border-radius: 10px; border: 1px solid #243442; padding: 6px 10px; }
+dropdown button, dropdown > button { background: #17222c; color: #dfe9ee; border-radius: 10px; }
+window.modes list row { color: #dfe9ee; }
+.toast { background: #3a1820; color: #ffb4c0; border-radius: 10px; padding: 8px 12px; }
+"""
+
+
+def run(*args, t=40):
+    try:
+        r = subprocess.run(["hyprarch-mode", *args], capture_output=True, text=True, timeout=t)
+        return r.returncode, r.stdout.strip(), r.stderr.strip()
+    except (OSError, subprocess.TimeoutExpired) as e:
+        return 1, "", str(e)
+
+
+def bg(work, done=None):
+    """work() corre fuera de la interfaz; done(resultado) vuelve a ella."""
+    def th():
+        res = work()
+        if done:
+            GLib.idle_add(lambda: (done(res), False)[1])
+    threading.Thread(target=th, daemon=True).start()
+
+
+def theme_info(name):
+    d = {}
+    try:
+        for line in open(os.path.join(THEMES, name + ".env"), encoding="utf-8"):
+            if "=" in line:
+                k, v = line.strip().split("=", 1)
+                d[k] = v.strip('"')
+    except OSError:
+        pass
+    return d
+
+
+def installed_apps():
+    out = []
+    for ai in Gio.AppInfo.get_all():
+        if not ai.should_show():
+            continue
+        cmd = (ai.get_commandline() or "").strip()
+        parts = [p for p in cmd.split() if not p.startswith("%")]
+        if not parts:
+            continue
+        out.append((ai.get_name() or parts[0], " ".join(parts), ai.get_icon()))
+    out.sort(key=lambda x: x[0].lower())
+    return out
+
+
+def app_for(cmd, apps):
+    first = cmd.split()[0] if cmd.split() else ""
+    for n, c, ic in apps:
+        if c.split()[0] == first:
+            return n, ic
+    return first, None
+
+
+def clear(box):
+    c = box.get_first_child()
+    while c:
+        nx = c.get_next_sibling()
+        box.remove(c)
+        c = nx
+
+
+def label(text, css=None, xalign=0.0, wrap=False):
+    lb = Gtk.Label(label=text, xalign=xalign, wrap=wrap)
+    if css:
+        for c in css.split():
+            lb.add_css_class(c)
+    return lb
+
+
+class Swatch(Gtk.DrawingArea):
+    def __init__(self, cols):
+        super().__init__()
+        self.cols = cols
+        self.set_content_width(96)
+        self.set_content_height(22)
+        self.set_draw_func(self.draw)
+
+    def draw(self, _a, cr, w, h):
+        n = len(self.cols)
+        for i, c in enumerate(self.cols):
+            try:
+                r, g, b = (int(c[k:k + 2], 16) / 255 for k in (0, 2, 4))
+            except ValueError:
+                r = g = b = 0.3
+            cr.set_source_rgb(r, g, b)
+            cr.rectangle(i * w / n, 0, w / n + 1, h)
+            cr.fill()
+
+
+class Win(Gtk.ApplicationWindow):
+    def __init__(self, app):
+        super().__init__(application=app, title="Modos")
+        self.add_css_class("modes")
+        self.set_default_size(1020, 700)
+        self.apps = installed_apps()
+        self.cur = ORDER[0]
+        self.active = "normal"
+        self.busy = False
+
+        hb = Gtk.HeaderBar()
+        hb.set_title_widget(label("Modos", "card-title", 0.5))
+        self.set_titlebar(hb)
+
+        root = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.set_child(root)
+
+        # ---- barra lateral
+        side = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        side.add_css_class("side")
+        side.set_size_request(250, -1)
+        side.append(label("Elige un modo", "dim"))
+        side.get_first_child().set_margin_top(16)
+        side.get_first_child().set_margin_start(20)
+        side.get_first_child().set_margin_bottom(6)
+        self.list = Gtk.ListBox()
+        self.list.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        self.list.set_vexpand(True)
+        self.rows = {}
+        for m in ORDER + ["normal"]:
+            self.list.append(self.make_row(m))
+        self.list.connect("row-selected", self.on_row)
+        side.append(self.list)
+        root.append(side)
+
+        # ---- panel derecho
+        sc = Gtk.ScrolledWindow()
+        sc.set_hexpand(True)
+        sc.set_vexpand(True)
+        sc.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self.panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        for s in ("top", "bottom"):
+            getattr(self.panel, "set_margin_" + s)(22)
+        for s in ("start", "end"):
+            getattr(self.panel, "set_margin_" + s)(26)
+        sc.set_child(self.panel)
+        root.append(sc)
+
+        self.toast = label("", "toast")
+        self.toast.set_visible(False)
+
+        bg(lambda: run("current")[1] or "normal", self.got_active)
+        self.list.select_row(self.rows[self.cur][0])
+
+    # ---------- barra lateral
+    def make_row(self, m):
+        name, col, sub = (MODES[m][0], MODES[m][1], MODES[m][2]) if m in MODES else ("Normal", "#5ef2c8", "Todo como lo dejaste")
+        row = Gtk.ListBoxRow()
+        row.mode = m
+        box = Gtk.Box(spacing=12)
+        dot = Gtk.Box()
+        dot.add_css_class("dot")
+        p = Gtk.CssProvider()
+        p.load_from_data(f".dot {{ background: {col}; }}".encode())
+        dot.get_style_context().add_provider(p, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        dot.set_valign(Gtk.Align.CENTER)
+        box.append(dot)
+        tx = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        tx.set_hexpand(True)
+        tx.append(label(name, "card-title"))
+        tx.append(label(sub, "dim"))
+        box.append(tx)
+        pill = label("Activo", "pill")
+        pill.set_valign(Gtk.Align.CENTER)
+        pill.set_visible(False)
+        box.append(pill)
+        row.set_child(box)
+        self.rows[m] = (row, pill)
+        return row
+
+    def got_active(self, m):
+        self.active = m or "normal"
+        for k, (_r, pill) in self.rows.items():
+            pill.set_visible(k == self.active)
+        self.show_mode()
+
+    def on_row(self, _lb, row):
+        if row is not None:
+            self.cur = row.mode
+            self.show_mode()
+
+    # ---------- avisos
+    def say(self, text):
+        self.toast.set_label(text)
+        self.toast.set_visible(True)
+        GLib.timeout_add_seconds(6, lambda: (self.toast.set_visible(False), False)[1])
+
+    # ---------- panel
+    def card(self, title, sub=None):
+        c = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        c.add_css_class("card")
+        c.append(label(title, "card-title"))
+        if sub:
+            c.append(label(sub, "dim", wrap=True))
+        return c
+
+    def show_mode(self):
+        clear(self.panel)
+        m = self.cur
+        if self.toast.get_parent():
+            self.toast.get_parent().remove(self.toast)
+        self.panel.append(self.toast)
+        if m == "normal":
+            self.show_normal()
+            return
+        name, col, sub, fx = MODES[m]
+        head = Gtk.Box(spacing=12)
+        tx = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        tx.set_hexpand(True)
+        t = label("Modo " + name.lower(), "title-big")
+        p = Gtk.CssProvider()
+        p.load_from_data(f"label {{ color: {col}; }}".encode())
+        t.get_style_context().add_provider(p, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        tx.append(t)
+        tx.append(label(sub, "sub"))
+        head.append(tx)
+        if self.active == m:
+            b = Gtk.Button(label="Volver a normal")
+            b.add_css_class("flat-soft")
+            b.connect("clicked", lambda *_: self.activate("normal"))
+        else:
+            b = Gtk.Button(label="▶  Activar ahora")
+            b.add_css_class("accent")
+            b.add_css_class("big-btn")
+            b.connect("clicked", lambda *_: self.activate(m))
+        b.set_valign(Gtk.Align.CENTER)
+        head.append(b)
+        self.panel.append(head)
+
+        c = self.card("Qué hace este modo")
+        for line in fx:
+            c.append(label("•  " + line, None, wrap=True))
+        self.panel.append(c)
+
+        self.panel.append(self.look_card(m))
+        self.apps_card_holder = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.panel.append(self.apps_card_holder)
+        self.refresh_apps(m)
+
+    def show_normal(self):
+        head = label("Modo normal", "title-big")
+        self.panel.append(head)
+        self.panel.append(label("Todo vuelve a como lo dejaste: tu tema, tus avisos y el ahorro de energía normal.", "sub", wrap=True))
+        if self.active != "normal":
+            b = Gtk.Button(label="Volver a normal")
+            b.add_css_class("accent")
+            b.add_css_class("big-btn")
+            b.set_halign(Gtk.Align.START)
+            b.connect("clicked", lambda *_: self.activate("normal"))
+            self.panel.append(b)
+        else:
+            self.panel.append(label("Es el modo que está activo ahora.", "dim"))
+
+    def activate(self, m):
+        if self.busy:
+            return
+        self.busy = True
+        self.say("Cambiando de modo…")
+        bg(lambda: (run("set", m), run("current")[1] or "normal")[1], lambda a: (setattr(self, "busy", False), self.toast.set_visible(False), self.got_active(a)))
+
+    # ---------- apariencia
+    def look_card(self, m):
+        c = self.card("Apariencia", "Elige los colores y el fondo que se ponen cuando activas este modo.")
+        # tema
+        names = []
+        try:
+            names = sorted(f[:-4] for f in os.listdir(THEMES) if f.endswith(".env"))
+        except OSError:
+            pass
+        names = [n for n in names]
+        if os.path.exists(os.path.expanduser("~/.config/hyprarch/custom.env")):
+            names.append("custom")
+        row = Gtk.Box(spacing=12)
+        row.append(label("Tema", None))
+        row.get_first_child().set_size_request(60, -1)
+        shown = ["De fábrica de este modo"] + [(theme_info(n).get("NAME") or n) if n != "custom" else "Mis colores" for n in names]
+        dd = Gtk.DropDown.new_from_strings(shown)
+        dd.set_hexpand(True)
+        row.append(dd)
+        sw_holder = Gtk.Box()
+        row.append(sw_holder)
+        c.append(row)
+
+        def cur_theme():
+            _rc, out, _e = run("theme", m)
+            return out or m
+
+        def set_swatch(name):
+            clear(sw_holder)
+            i = theme_info(name)
+            sw_holder.append(Swatch([i.get("BG", "222222"), i.get("SURFACE2", "333333"), i.get("ACCENT", "5ef2c8"), i.get("ACCENT2", "888888")]))
+
+        info = {"wall": None}
+
+        def load():
+            _rc, th, _e = run("theme", m)
+            _rc, wp, _e = run("wallpaper", m)
+            return th or m, wp
+
+        def loaded(res):
+            th, wp = res
+            info["opt_theme"] = th
+            # ¿es el de fábrica? (el tema con el mismo nombre del modo)
+            idx = 0 if th == m else (names.index(th) + 1 if th in names else 0)
+            dd.set_selected(idx)
+            set_swatch(th)
+            self.set_wall_preview(m, wp, th)
+        bg(load, loaded)
+
+        def on_theme(_dd, _p):
+            i = dd.get_selected()
+            val = "default" if i == 0 else names[i - 1]
+            set_swatch(m if i == 0 else names[i - 1])
+            bg(lambda: run("theme", m, val), lambda r: self.after_look(m, r))
+        dd.connect("notify::selected", on_theme)
+
+        # fondo
+        c.append(label("Fondo", None))
+        wrow = Gtk.Box(spacing=16)
+        self.wall_pic = Gtk.Picture()
+        self.wall_pic.set_size_request(320, 180)
+        self.wall_pic.set_content_fit(Gtk.ContentFit.COVER)
+        self.wall_pic.add_css_class("thumb")
+        self.wall_pic.set_overflow(Gtk.Overflow.HIDDEN)
+        wrow.append(self.wall_pic)
+        btns = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        btns.set_valign(Gtk.Align.CENTER)
+        b1 = Gtk.Button(label="Elegir de los incluidos")
+        b1.add_css_class("flat-soft")
+        b1.connect("clicked", lambda *_: self.pick_included(m))
+        b2 = Gtk.Button(label="Elegir una imagen mía…")
+        b2.add_css_class("flat-soft")
+        b2.connect("clicked", lambda *_: self.pick_file(m))
+        b3 = Gtk.Button(label="Usar el del tema")
+        b3.add_css_class("flat-soft")
+        b3.connect("clicked", lambda *_: bg(lambda: run("wallpaper", m, "default"), lambda r: self.after_look(m, r)))
+        self.wall_name = label("", "dim")
+        for b in (b1, b2, b3):
+            b.set_halign(Gtk.Align.START)
+            btns.append(b)
+        btns.append(self.wall_name)
+        wrow.append(btns)
+        c.append(wrow)
+        return c
+
+    def set_wall_preview(self, m, wp, th):
+        path = wp if wp and os.path.exists(wp) else os.path.join(BACKS, "hyprarch-%s.jpg" % (theme_info(th).get("WALL") or th))
+        if not os.path.exists(path):
+            path = os.path.join(BACKS, "hyprarch-fresco.jpg")
+        if os.path.exists(path):
+            self.wall_pic.set_filename(path)
+        self.wall_name.set_label(("Tu imagen: " + os.path.basename(wp)) if wp else "El que trae el tema")
+
+    def after_look(self, m, r):
+        if r[0] != 0:
+            self.say(r[2] or "No se pudo guardar el cambio")
+        if m == self.cur:
+            bg(lambda: (run("theme", m)[1] or m, run("wallpaper", m)[1]), lambda x: self.set_wall_preview(m, x[1], x[0]))
+
+    def pick_included(self, m):
+        dlg = Gtk.Window(title="Fondos incluidos", transient_for=self, modal=True)
+        dlg.add_css_class("modes")
+        dlg.set_default_size(720, 520)
+        sc = Gtk.ScrolledWindow()
+        fb = Gtk.FlowBox()
+        fb.set_selection_mode(Gtk.SelectionMode.NONE)
+        fb.set_max_children_per_line(3)
+        fb.set_margin_top(14)
+        fb.set_margin_bottom(14)
+        fb.set_margin_start(14)
+        fb.set_margin_end(14)
+        fb.set_row_spacing(12)
+        fb.set_column_spacing(12)
+        try:
+            files = sorted(f for f in os.listdir(BACKS) if f.lower().endswith((".jpg", ".png", ".jpeg", ".webp")))
+        except OSError:
+            files = []
+        for f in files:
+            path = os.path.join(BACKS, f)
+            pic = Gtk.Picture.new_for_filename(path)
+            pic.set_size_request(200, 112)
+            pic.set_content_fit(Gtk.ContentFit.COVER)
+            pic.set_overflow(Gtk.Overflow.HIDDEN)
+            pic.add_css_class("thumb")
+            b = Gtk.Button()
+            b.add_css_class("flat")
+            bx = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+            bx.append(pic)
+            bx.append(label(os.path.splitext(f)[0].replace("hyprarch-", "").capitalize(), "dim", 0.5))
+            b.set_child(bx)
+            b.connect("clicked", lambda _b, p=path: (dlg.close(), bg(lambda: run("wallpaper", m, p), lambda r: self.after_look(m, r))))
+            fb.append(b)
+        sc.set_child(fb)
+        dlg.set_child(sc)
+        dlg.present()
+
+    def pick_file(self, m):
+        fd = Gtk.FileDialog(title="Elige una imagen")
+        flt = Gtk.FileFilter()
+        flt.set_name("Imágenes (jpg, png, webp)")
+        for pat in ("*.jpg", "*.jpeg", "*.png", "*.webp", "*.JPG", "*.PNG"):
+            flt.add_pattern(pat)
+        store = Gio.ListStore.new(Gtk.FileFilter)
+        store.append(flt)
+        fd.set_filters(store)
+        pics = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES)
+        if pics and os.path.isdir(pics):
+            fd.set_initial_folder(Gio.File.new_for_path(pics))
+
+        def done(d, res):
+            try:
+                f = d.open_finish(res)
+            except GLib.Error:
+                return
+            p = f.get_path()
+            if p:
+                bg(lambda: run("wallpaper", m, p), lambda r: self.after_look(m, r))
+        fd.open(self, None, done)
+
+    # ---------- aplicaciones
+    def refresh_apps(self, m):
+        holder = self.apps_card_holder
+        clear(holder)
+        c = self.card("Aplicaciones", "Se abren solas al activar el modo, cada una en el espacio de trabajo que elijas.")
+        holder.append(c)
+        lst = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        c.append(lst)
+        add = Gtk.Button(label="+  Añadir una aplicación")
+        add.add_css_class("flat-soft")
+        add.set_halign(Gtk.Align.START)
+        add.connect("clicked", lambda *_: self.add_dialog(m))
+        c.append(add)
+
+        def got(res):
+            rc, out, _e = res
+            lines = [x for x in out.splitlines() if x.strip()]
+            if not lines:
+                lst.append(label("Todavía no hay aplicaciones en este modo.", "dim"))
+            for ln in lines:
+                ws, cmd = (ln.split("|", 1) + [""])[:2] if "|" in ln else ("0", ln)
+                lst.append(self.app_row(m, ln, ws if ws.isdigit() else "0", cmd))
+        bg(lambda: run("apps", m), got)
+
+    def app_row(self, m, line, ws, cmd):
+        name, icon = app_for(cmd, self.apps)
+        row = Gtk.Box(spacing=10)
+        row.add_css_class("approw")
+        img = Gtk.Image.new_from_gicon(icon) if icon else Gtk.Image.new_from_icon_name("application-x-executable")
+        img.set_pixel_size(32)
+        row.append(img)
+        tx = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        tx.set_hexpand(True)
+        tx.set_valign(Gtk.Align.CENTER)
+        top = Gtk.Box(spacing=8)
+        top.append(label(name, "card-title"))
+        if not shutil.which(cmd.split()[0] if cmd.split() else ""):
+            top.append(label("No instalada", "warn-pill"))
+        tx.append(top)
+        tx.append(label(cmd, "dim"))
+        row.append(tx)
+        dd = Gtk.DropDown.new_from_strings(["Donde esté", "Espacio 1", "Espacio 2", "Espacio 3", "Espacio 4", "Espacio 5"])
+        dd.set_selected(int(ws) if ws.isdigit() and int(ws) <= 5 else 0)
+        dd.set_valign(Gtk.Align.CENTER)
+
+        def changed(_d, _p):
+            n = dd.get_selected()
+            if str(n) == ws:
+                return
+            bg(lambda: (run("remove", m, line), run("add", m, cmd, str(n)))[1], lambda r: self.refresh_apps(m))
+        dd.connect("notify::selected", changed)
+        row.append(dd)
+        rm = Gtk.Button(icon_name="user-trash-symbolic")
+        rm.add_css_class("danger")
+        rm.set_valign(Gtk.Align.CENTER)
+        rm.set_tooltip_text("Quitar de este modo")
+        rm.connect("clicked", lambda *_: bg(lambda: run("remove", m, line), lambda r: self.refresh_apps(m)))
+        row.append(rm)
+        return row
+
+    def add_dialog(self, m):
+        dlg = Gtk.Window(title="Añadir una aplicación", transient_for=self, modal=True)
+        dlg.add_css_class("modes")
+        dlg.set_default_size(520, 600)
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        for s in ("top", "bottom", "start", "end"):
+            getattr(box, "set_margin_" + s)(16)
+        se = Gtk.SearchEntry(placeholder_text="Buscar entre tus aplicaciones…")
+        box.append(se)
+        sc = Gtk.ScrolledWindow()
+        sc.set_vexpand(True)
+        lb = Gtk.ListBox()
+        lb.set_selection_mode(Gtk.SelectionMode.NONE)
+        for n, cmd, ic in self.apps:
+            r = Gtk.ListBoxRow()
+            r.cmd, r.nm = cmd, n
+            hb = Gtk.Box(spacing=10)
+            hb.set_margin_top(6)
+            hb.set_margin_bottom(6)
+            im = Gtk.Image.new_from_gicon(ic) if ic else Gtk.Image.new_from_icon_name("application-x-executable")
+            im.set_pixel_size(28)
+            hb.append(im)
+            tb = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+            tb.append(label(n, "card-title"))
+            tb.append(label(cmd, "dim"))
+            hb.append(tb)
+            r.set_child(hb)
+            lb.append(r)
+        lb.set_filter_func(lambda r: (se.get_text().lower() in r.nm.lower()) or (se.get_text().lower() in r.cmd.lower()))
+        se.connect("search-changed", lambda *_: lb.invalidate_filter())
+
+        def chosen(_lb, row):
+            dlg.close()
+            bg(lambda: run("add", m, row.cmd, "0"), lambda r: (self.refresh_apps(m), r[0] != 0 and self.say(r[2] or "No se pudo añadir")))
+        lb.set_selection_mode(Gtk.SelectionMode.NONE)
+        lb.connect("row-activated", chosen)
+        lb.set_activate_on_single_click(True)
+        sc.set_child(lb)
+        box.append(sc)
+        cmdrow = Gtk.Box(spacing=8)
+        ent = Gtk.Entry(placeholder_text="…o escribe un comando, por ejemplo: firefox https://youtube.com")
+        ent.set_hexpand(True)
+        cmdrow.append(ent)
+        ok = Gtk.Button(label="Añadir")
+        ok.add_css_class("accent")
+
+        def add_cmd(*_):
+            txt = ent.get_text().strip()
+            if txt:
+                dlg.close()
+                bg(lambda: run("add", m, txt, "0"), lambda r: (self.refresh_apps(m), r[0] != 0 and self.say(r[2] or "Ese comando no está permitido")))
+        ok.connect("clicked", add_cmd)
+        ent.connect("activate", add_cmd)
+        cmdrow.append(ok)
+        box.append(cmdrow)
+        dlg.set_child(box)
+        dlg.present()
+
+
+def main():
+    app = Gtk.Application()
+
+    def activate(a):
+        w = a.get_active_window()
+        if w:
+            w.present()
+            return
+        css = Gtk.CssProvider()
+        css.load_from_data(CSS.encode())
+        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        st = Gtk.Settings.get_default()
+        if st:
+            st.set_property("gtk-application-prefer-dark-theme", True)
+        Win(a).present()
+    app.connect("activate", activate)
+    return app.run(None)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
