@@ -19,7 +19,7 @@ command -v nmcli >/dev/null 2>&1 || [[ -n $FAKE ]] || { echo "falta NetworkManag
 scan() {
   if [[ -n $FAKE ]]; then
     local U=$'\037'
-    printf '%s\n' "*${U}Casa-Maikol${U}88${U}WPA2" "${U}Movistar_5G${U}74${U}WPA2" "${U}Cafeteria Libre${U}61${U}" \
+    printf '%s\n' "*${U}Casa-Wifi${U}88${U}WPA2" "${U}Fibra_5G${U}74${U}WPA2" "${U}Cafeteria Libre${U}61${U}" \
       "${U}Vecino_2.4${U}42${U}WPA2" "${U}Red con ñ y acentos${U}30${U}WPA3" "${U}DIRECT-TV${U}18${U}WPA2"
     return 0
   fi
@@ -49,7 +49,7 @@ cmd_list() {
 
 cmd_status() {
   local s
-  if [[ -n $FAKE ]]; then echo "conectado: Casa-Maikol"; return 0; fi
+  if [[ -n $FAKE ]]; then echo "conectado: Casa-Wifi"; return 0; fi
   s=$(nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | awk -F: '$1=="yes"{print $2; exit}')
   if [[ -n $s ]]; then echo "conectado: $s"; else
     case $(nmcli radio wifi 2>/dev/null) in enabled) echo "sin conexión (Wi-Fi encendido)" ;; *) echo "Wi-Fi apagado" ;; esac

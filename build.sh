@@ -14,7 +14,7 @@ CONSOLE_KEYMAP="la-latin1"
 
 # Edición:  personal = la del dueño (Claude Code preinstalado, "Hyro").
 #           public   = para compartir: NINGUNA IA incluida; cada persona elige la suya con hyprarch-ai.
-EDITION="${HYPRARCH_EDITION:-personal}"
+EDITION="${HYPRARCH_EDITION:-public}"
 case "$EDITION" in
   personal|public) ;;
   *) echo "ERROR: HYPRARCH_EDITION debe ser 'personal' o 'public' (llegó '$EDITION')"; exit 1 ;;

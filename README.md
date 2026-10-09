@@ -1,59 +1,58 @@
 # hyprarch
 
-ISO live de Arch Linux con **Hyprland + Waybar**, estética neón (verde ciber / rojo carmesí sobre fondo casi negro), pensada para equipos con gráficos **Intel**. Arranca directo al escritorio, sin instalar nada.
+**Un sistema operativo (Arch Linux + Hyprland) pensado como casa para tu IA.**
+Tu IA conoce el sistema, lo controla con permisos claros y tú sigues al mando. También es cómodo para jugar,
+trabajar y funcionar en equipos modestos.
 
-> Hyprland 0.55+ usa **Lua** (`hyprland.lua`); el formato viejo `hyprland.conf` está obsoleto. Esta ISO ya usa el nuevo.
+> **Estado: beta.** Se prueba en VM y en algún equipo real; faltan pruebas en más hardware. Úsalo en modo «en vivo»
+> (USB) o en una máquina virtual antes de instalarlo en un disco que te importe: el instalador **borra el disco que elijas**.
 
-## Atajos (SUPER = tecla Windows)
-| Atajo | Acción |
-|---|---|
-| `SUPER+Enter` | Terminal |
-| `Super` (sola) | Menú de inicio |
-| `SUPER+Q` / `ALT+F4` | **Cerrar ventana** |
-| `SUPER+T` | **Cambiar colores** (menú interactivo) |
-| `SUPER+F1` | Lista de todos los atajos |
-| `SUPER+N` | Wi-Fi |
-| `SUPER+Esc` | Apagar / reiniciar / salir |
+## Qué trae
+- **La isla de Hyro** (arriba al centro): una pastilla que se abre en un chat con la IA que elijas (Claude, Codex, Gemini
+  u Ollama). Si la IA necesita permiso para ejecutar algo, sale una tarjeta con el comando completo y **solo se ejecuta si pulsas «Permitir»**.
+- **`hyprarch-api`**: acciones acotadas y seguras con respuesta JSON para que una IA controle el escritorio
+  (ventanas, apps, modos, temas, volumen, Wi-Fi, capturas…). Funciona también por SSH. Guía para IAs: [`AGENTS.md`](airootfs/etc/skel/AGENTS.md).
+- **Modos** (gamer, cine, estudio, trabajo, normal) con efectos reales: rendimiento, avisos, tema, fondo y apps propias, configurables en una ventana.
+- **Escritorio propio**: barra, menú de inicio, centro de control, selector animado, sonidos, tema de colores con un solo acento.
+- **Pensado para equipos modestos**: perfil ligero automático, menús que se adaptan a la potencia disponible.
+- **Todos los idiomas** y asistente de primer arranque; instalador guiado **UEFI y BIOS clásico**, con cifrado de disco (LUKS) opcional.
+- **Reportar un problema** (SUPER → «Reportar un problema»): crea un informe sin contraseñas ni nombres de Wi-Fi y, **solo si tú lo aceptas**, lo envía a los desarrolladores.
 
-La barra también tiene botones para el mouse: lanzador, cerrar ventana, cambiar colores, ayuda y energía.
+## Descargar y probar
+Las ISO se compilan en GitHub Actions: pestaña **Actions → Build ISO → artefacto `hyprarch-iso-public`**
+(o la sección *Releases* cuando haya una publicada). Grábala en un USB con [Rufus](https://rufus.ie), [Ventoy](https://www.ventoy.net)
+o USBImager (se borra el USB) y arranca en modo UEFI. Guía paso a paso: [`docs/GUIA-PROBADORES.md`](docs/GUIA-PROBADORES.md).
 
-## Cambiar colores
-`SUPER+T` abre un menú (fzf) con:
-- **Modo Verde Dominante** · **Modo Rojo Dominante**
-- **Acento personalizado (HEX)**: escribís tus propios códigos de acento y alerta
-- Alternar verde/rojo · ver colores actuales
+La edición pública **no incluye ninguna IA**: al primer uso, `hyprarch-ai` instala la que elijas (con tu cuenta; hyprarch no guarda credenciales).
 
-También por terminal: `hyprarch-theme verde|rojo|toggle|custom`.
-
-El script genera solo estos archivos (el resto de la configuración los importa):
-`~/.config/hypr/colors.lua`, `waybar/colors.css`, `kitty/colors.conf`, `fuzzel/fuzzel.ini`, `mako/config`, `gtk-3.0|4.0/gtk.css`.
-Las paletas base están en `airootfs/usr/share/hyprarch/themes/*.env`.
-
-**Regla de colores de la barra:** verde = todo bien, rojo = problema (batería baja, sin red, CPU/RAM/temperatura altas, volumen en mute).
-
-## Animaciones
-En `hyprland.lua`, sección "Animaciones": curvas `snap`, `softback`, `bounce` y un resorte (`pop`) para abrir ventanas con rebote ligero; barra y lanzador entran con rebote; espacios de trabajo deslizan con un pequeño pasarse. El borde con degradado giratorio se apaga con `ROTATING_BORDER = false` al inicio del archivo (ahorra batería).
-
-## Compilar con GitHub Actions
-1. Subir esta carpeta a un repositorio **público**.
-2. Pestaña **Actions** → **Build ISO** (corre sola con cada push).
-3. Descargar el artefacto `hyprarch-iso`.
-
-## Compilar en un Arch local
+## Compilar
 ```bash
-sudo ./build.sh
+sudo ./build.sh                      # edición pública (por defecto)
+HYPRARCH_EDITION=personal sudo ./build.sh   # incluye Claude Code: solo para uso propio, no se redistribuye
 ```
-La ISO queda en `out/`.
+La ISO queda en `out/`. Con GitHub Actions: sube el repo, ejecuta **Build ISO** y baja el artefacto.
 
-## Grabar en la USB
-[Rufus](https://rufus.ie) o Ventoy. Se borra todo el contenido de la USB.
+## Privacidad
+- No hay telemetría. Lo único que sale del equipo es un informe **si lo envías tú**, tras pedirte permiso: descripción, datos del equipo
+  (sin nombre de usuario, equipo, MAC ni IP; sin redes Wi-Fi ni contraseñas), registros y una captura **solo si la incluyes**.
+- Puedes leer el informe antes de enviarlo o copiarlo a un USB en su lugar.
+
+## Contribuir y seguridad
+- Probar y reportar fallos es lo más valioso ahora: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- Vulnerabilidades: [`SECURITY.md`](SECURITY.md) (no las publiques en una *issue*).
 
 ## Licencia
-Gratis para uso personal y sin ánimo de lucro ([PolyForm Noncommercial 1.0.0](LICENSE)); el uso comercial requiere un acuerdo
-con el autor. El software de terceros (Arch Linux, Hyprland, etc.) conserva su propia licencia. Detalles en
-[LICENSING.md](LICENSING.md).
+**Código visible, uso no comercial** ([PolyForm Noncommercial 1.0.0](LICENSE)): puedes usarlo, estudiarlo, modificarlo y compartirlo
+sin ánimo de lucro; el uso comercial requiere un acuerdo con el autor. No es «código abierto» en el sentido estricto de la OSI.
+El software de terceros (Arch Linux, Hyprland, etc.) conserva su propia licencia. Detalles y marca («hyprarch», «Hyro»):
+[`LICENSING.md`](LICENSING.md). hyprarch no está afiliado a Anthropic, OpenAI, Google ni a Arch Linux.
 
-## Personalizar
-- Paquetes: `packages.extra`
-- Idioma, zona horaria, teclado de consola, hostname: variables al inicio de `build.sh`
-- Escritorio: `airootfs/etc/skel/.config/`
+---
+
+## English summary
+**hyprarch** is an Arch Linux + Hyprland operating system built as a home for your AI: a chat "island" with the AI of your choice,
+a safe JSON API (`hyprarch-api`) so an AI can control the desktop, real "modes" (gamer, cinema, study, work), a light profile for modest
+PCs, a UEFI/BIOS installer with optional disk encryption, and a privacy-first bug reporter (sent only if you agree).
+**Beta**: try it live from USB or in a VM first — the installer erases the disk you pick. The public edition ships no AI; you install
+the one you want on first use. Source-available under **PolyForm Noncommercial 1.0.0** (free for non-commercial use; commercial use
+needs an agreement). Not "open source" in the OSI sense. Build with `sudo ./build.sh` or the *Build ISO* GitHub Action.

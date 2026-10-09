@@ -8,10 +8,10 @@ on:
         type: boolean
         default: false
       edition:
-        description: "Edición: personal (con Claude Code) o public (sin ninguna IA incluida)"
+        description: "Edición: public (sin ninguna IA incluida; la que se comparte) o personal (con Claude Code, solo uso propio: no se redistribuye)"
         type: choice
         options: [personal, public]
-        default: personal
+        default: public
   push:
     branches: [main]
 
@@ -30,14 +30,14 @@ jobs:
       - name: Compilar la ISO
         env:
           HYPRARCH_DEV: ${{ inputs.dev && '1' || '0' }}
-          HYPRARCH_EDITION: ${{ inputs.edition || 'personal' }}
+          HYPRARCH_EDITION: ${{ inputs.edition || 'public' }}
         run: |
           sed -i 's/\r$//' build.sh
           bash build.sh
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ (inputs.edition == 'public') && 'hyprarch-iso-public' || 'hyprarch-iso' }}
+          name: ${{ (inputs.edition == 'personal') && 'hyprarch-iso' || 'hyprarch-iso-public' }}
           path: out/*.iso
           compression-level: 0
           retention-days: 7

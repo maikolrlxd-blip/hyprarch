@@ -31,8 +31,8 @@ buscamos fallos, cosas que confundan y cosas que no se vean o suenen bien.
 ## Cómo reportar un problema (30 segundos)
 1. Pulsa la tecla **SUPER** (menú de inicio) y busca **«Reportar un problema»** (o escribe `hyprarch-report` en una terminal).
 2. Escribe en una frase qué pasó y elige si incluyes una captura.
-3. Se crea un archivo `hyprarch-reporte-FECHA.txt` en tu carpeta personal (y, si quisiste, una imagen). **Léelo si quieres: no incluye contraseñas ni nombres de tus redes Wi‑Fi.**
-4. Envíame ese archivo (y la foto/captura, si hay) con tu mensaje. Si el sistema no arranca, una **foto con el móvil** de la pantalla ya ayuda mucho.
+3. Se crea un informe en tu carpeta personal (con una captura solo si tú la eliges). **No incluye contraseñas, nombre de usuario ni de equipo, MAC, IP ni nombres de tus redes Wi‑Fi.** Elige «Leerlo antes de enviar» si quieres verlo.
+4. Elige **«Enviar a los desarrolladores»** (te pide permiso antes de enviar nada) o **«Copiar a un USB»** y mándalo por tu cuenta. Si el sistema no arranca, una **foto con el móvil** de la pantalla ya ayuda mucho.
 
 ## Qué datos son más útiles
 - Qué equipo es (marca, modelo, año) y si es portátil o de escritorio.
