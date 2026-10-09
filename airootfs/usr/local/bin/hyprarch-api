@@ -59,10 +59,10 @@ case "${1:-help}" in
     [[ $id =~ ^[A-Za-z0-9._-]+$ ]] || fail "id de app no válido"
     lua "hl.exec_cmd(\"gtk-launch $id\")" && ok "abriendo $id" ;;
   mode)
-    if [[ ${2:-} == set ]]; then hyprarch-mode set "${3:?modo}" >/dev/null 2>&1 && ok "modo ${3}" || fail "modo no válido"
+    if [[ ${2:-} == set ]]; then hyprarch-ctl hyprarch-mode set "${3:?modo}" >/dev/null 2>&1 && ok "modo ${3}" || fail "modo no válido"
     else jq -cn --arg m "$(hyprarch-mode current 2>/dev/null)" '{mode:$m}'; fi ;;
   theme)
-    if [[ ${2:-} == set ]]; then hyprarch-theme "${3:?tema}" >/dev/null 2>&1 && ok "tema ${3}" || fail "tema no válido"
+    if [[ ${2:-} == set ]]; then hyprarch-ctl hyprarch-theme "${3:?tema}" >/dev/null 2>&1 && ok "tema ${3}" || fail "tema no válido"
     else jq -cn --arg t "$(cat "$HOME/.config/hyprarch/current" 2>/dev/null)" '{theme:$t}'; fi ;;
   volume)
     case ${2:-get} in
