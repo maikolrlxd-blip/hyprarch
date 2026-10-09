@@ -8,11 +8,26 @@
 # El .zip tiene: reporte.txt (tu descripción, versión del sistema, procesador/memoria/gráfica/sonido/red SIN nombres de
 # redes Wi-Fi, rendimiento, registro de Hyprland y avisos del sistema), registros de hyprarch (apps, permisos, fluidez
 # de los menús) y, solo si lo aceptas, una captura de pantalla. NO incluye contraseñas ni archivos tuyos.
-# Nada se envía solo: tú decides a dónde va el archivo.
+# Nada se envía solo: tú decides a dónde va el archivo. Si esta ISO trae un servidor de reportes configurado
+# (/usr/share/hyprarch/report-endpoint), aparece la opción «Enviar a los desarrolladores»: te dice qué se manda, pide tu permiso
+# y, sin Internet, lo guarda en cola (~/.cache/hyprarch/report-queue) para reintentar (hyprarch-report --retry).
 set -u
 T() { command -v hyprarch-i18n >/dev/null 2>&1 && hyprarch-i18n "$1" "${2:-$1}" || printf '%s' "${2:-$1}"; }
 note() { command -v notify-send >/dev/null 2>&1 && notify-send -a hyprarch -t "${3:-9000}" "$1" "${2:-}"; }
 NOUI=0; [[ ${1:-} == --no-ui ]] && NOUI=1
+ENDPOINT=${HYPRARCH_REPORT_URL:-$(head -n1 /usr/share/hyprarch/report-endpoint 2>/dev/null | tr -d '[:space:]')}
+QUEUE="$HOME/.cache/hyprarch/report-queue"
+endpoint_ok() { [[ $ENDPOINT == https://* || $ENDPOINT =~ ^http://(127\.0\.0\.1|localhost|10\.0\.2\.2)(:[0-9]+)?(/|$) ]]; }
+post_payload() {   # archivo.json -> 0 si el servidor lo aceptó (imprime el número del reporte)
+  local out
+  out=$(curl -sS --max-time 40 -H 'content-type: application/json; charset=utf-8' --data-binary "@$1" "${ENDPOINT%/}/api/report" 2>/dev/null) || return 1
+  python3 -c 'import json,sys; d=json.loads(sys.argv[1]); print(d["id"]) if d.get("ok") else sys.exit(1)' "$out" 2>/dev/null
+}
+if [[ ${1:-} == --retry ]]; then   # reenviar lo que quedó en cola
+  endpoint_ok || exit 0
+  for f in "$QUEUE"/*.json; do [[ -f $f ]] || continue; if id=$(post_payload "$f"); then rm -f "$f"; echo "enviado #$id"; else echo "sin conexión: se queda en cola"; break; fi; done
+  exit 0
+fi
 STAMP=$(date +%Y%m%d-%H%M)
 WORK=$(mktemp -d)
 ZIP=$(mktemp "$HOME/hyprarch-reporte-$STAMP-XXXX.zip") || ZIP="$HOME/hyprarch-reporte-$STAMP.zip"
@@ -21,6 +36,7 @@ trap 'rm -rf "$WORK"' EXIT
 # la captura (si la aceptas) se toma ANTES de abrir el menú, para que muestre el problema y no el menú
 command -v grim >/dev/null 2>&1 && [[ $NOUI == 0 ]] && grim "$WORK/captura-candidata.png" 2>/dev/null
 
+( endpoint_ok && ls "$QUEUE"/*.json >/dev/null 2>&1 && "$0" --retry >/dev/null 2>&1 & ) 2>/dev/null
 desc="(sin descripción)"; withshot=no
 if [[ $NOUI == 0 ]]; then
   d=$(hyprarch-pick --input --title "$(T rep.title '¿Qué pasó?')" --placeholder "$(T rep.ph 'Cuéntalo en una frase y pulsa Enter')" 2>/dev/null) && [[ -n $d ]] && desc=$d
@@ -85,7 +101,7 @@ with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
 PY
 then :; else cp "$WORK/reporte.txt" "${ZIP%.zip}.txt"; ZIP="${ZIP%.zip}.txt"; fi
 
-if [[ $NOUI == 1 ]]; then echo "$ZIP"; exit 0; fi
+NOUI_SEND=0; if [[ $NOUI == 1 ]]; then if [[ ${HYPRARCH_REPORT_SEND:-} == 1 ]]; then NOUI_SEND=1; else echo "$ZIP"; exit 0; fi; fi
 
 # ---- entrega: no se envía nada solo; la persona elige
 usb_copy() {   # copia el .zip a cada USB conectado (si hay uno sin montar, se intenta montar con udisks)
@@ -127,14 +143,76 @@ PY
   ) && note "$(T rep.usb 'Copiado al USB')" "$out" || note "$(T rep.nousb 'No encontré ningún USB')" "$(T rep.nousb.d 'Conéctalo, espera unos segundos y vuelve a elegir esta opción.')"
 }
 
+send_dev() {   # envía el reporte al servidor de los desarrolladores, con permiso
+  endpoint_ok || { note "$(T rep.nosrv 'Envío no disponible')" "$(T rep.nosrv.d 'Esta versión no trae servidor de reportes. Copia el archivo a un USB.')"; return; }
+  local ok=si
+  if [[ ${HYPRARCH_REPORT_SEND:-} != 1 ]]; then ok=$(printf '%s\n' \
+      $'si\t'"$(T rep.s.yes 'Sí, enviar')"$'\t\t'"$(T rep.s.yes.d 'Descripción, datos del equipo (sin nombres de Wi-Fi, usuario ni contraseñas) y registros. Captura solo si la incluiste.')" \
+      $'no\t'"$(T rep.s.no 'No enviar')"$'\t\t'"$(T rep.s.no.d 'No sale nada de tu equipo')" |
+    hyprarch-pick --layout orbit --title "$(T rep.s.ask '¿Enviar el reporte a los desarrolladores?')" 2>/dev/null) || return; fi
+  [[ $ok == si ]] || return
+  mkdir -p "$QUEUE"
+  local payload; payload=$(mktemp "$QUEUE/.nuevo.XXXXXX") || return
+  if ! python3 - "$WORK" "$payload" "$desc" <<'PY'
+import base64, getpass, json, os, platform, re, socket, subprocess, sys, secrets
+work, out, desc = sys.argv[1:4]
+rep = open(os.path.join(work, "reporte.txt"), encoding="utf-8", errors="replace").read()
+# se quita lo que identifica a la persona: usuario, nombre del equipo, direcciones MAC e IP
+for word, repl in ((getpass.getuser(), "<usuario>"), (socket.gethostname(), "<equipo>")):
+    if word and len(word) > 2:
+        rep = re.sub(r"\b" + re.escape(word) + r"\b", repl, rep)
+rep = re.sub(r"\b(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}\b", "<mac>", rep)
+rep = re.sub(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", "<ip>", rep)
+shot = ""
+p = os.path.join(work, "captura.png")
+if os.path.exists(p) and os.path.getsize(p) < 450_000:
+    shot = base64.b64encode(open(p, "rb").read()).decode()
+cid_file = os.path.expanduser("~/.config/hyprarch/client-id")
+if not os.path.exists(cid_file):
+    os.makedirs(os.path.dirname(cid_file), exist_ok=True)
+    open(cid_file, "w").write(secrets.token_hex(8))
+cid = open(cid_file).read().strip()
+ver = ""
+try:
+    ver = open("/usr/share/hyprarch/version").read().strip()
+except OSError:
+    pass
+mode = "live" if os.path.isdir("/run/archiso") else ("uefi" if os.path.isdir("/sys/firmware/efi") else "bios")
+try:
+    virt = subprocess.run(["systemd-detect-virt"], capture_output=True, text=True, timeout=5).stdout.strip()
+except (OSError, subprocess.SubprocessError):
+    virt = ""
+if virt and virt != "none":
+    mode += "+vm"
+json.dump({"description": desc, "report": rep, "screenshot": shot, "version": ver, "mode": mode,
+           "lang": os.environ.get("LANG", ""), "client": cid}, open(out, "w", encoding="utf-8"), ensure_ascii=False)
+PY
+  then
+    rm -f "$payload"
+    note "$(T rep.err 'No pude preparar el reporte')" "$(T rep.err.d 'Copia el archivo a un USB como alternativa.')"
+    return
+  fi
+  local id
+  if id=$(post_payload "$payload"); then
+    rm -f "$payload"
+    note "$(T rep.sent 'Reporte enviado')" "$(T rep.sent.d 'Gracias. Número de reporte:') #$id"
+  else
+    mv -f "$payload" "$QUEUE/$(date +%Y%m%d-%H%M%S).json"
+    note "$(T rep.queued 'Sin conexión: quedó en cola')" "$(T rep.queued.d 'Se enviará la próxima vez (hyprarch-report --retry).')"
+  fi
+}
+
+if [[ $NOUI_SEND == 1 ]]; then send_dev; echo "$ZIP"; exit 0; fi
+
 while true; do
-  sel=$(printf '%s\n' \
+  sel=$({ endpoint_ok && printf '%s\n' $'send\t'"$(T rep.o.send 'Enviar a los desarrolladores')"$'\t\t'"$(T rep.o.send.d 'Llega directo a quienes arreglan hyprarch (te pido permiso antes)')"; printf '%s\n' \
       $'usb\t'"$(T rep.o.usb 'Copiar a un USB')"$'\t\t'"$(T rep.o.usb.d 'Para llevarlo a otro equipo y enviarlo desde ahí')" \
       $'view\t'"$(T rep.o.view 'Leerlo antes de enviar')"$'\t\t'"$(T rep.o.view.d 'Se abre el texto para que veas qué incluye')" \
       $'folder\t'"$(T rep.o.folder 'Abrir la carpeta')"$'\t\t'"$(T rep.o.folder.d 'Está en tu carpeta personal: '"$(basename "$ZIP")")" \
-      $'done\t'"$(T rep.o.done 'Listo')"$'\t\t'"$(T rep.o.done.d 'Terminar')" |
+      $'done\t'"$(T rep.o.done 'Listo')"$'\t\t'"$(T rep.o.done.d 'Terminar')"; } |
     hyprarch-pick --layout orbit --title "$(T rep.done 'Reporte listo')" 2>/dev/null) || break
   case $sel in
+    send)   send_dev ;;
     usb)    usb_copy ;;
     view)   command -v mousepad >/dev/null 2>&1 && { python3 -c "import zipfile,sys;sys.stdout.write(zipfile.ZipFile(sys.argv[1]).read('reporte.txt').decode())" "$ZIP" > "$HOME/.cache/hyprarch-reporte-vista.txt" 2>/dev/null || cp "${ZIP}" "$HOME/.cache/hyprarch-reporte-vista.txt"; setsid -f mousepad "$HOME/.cache/hyprarch-reporte-vista.txt" >/dev/null 2>&1 </dev/null; } ;;
     folder) setsid -f thunar "$HOME" >/dev/null 2>&1 </dev/null ;;
