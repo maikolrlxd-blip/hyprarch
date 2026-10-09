@@ -34,7 +34,6 @@ intel-media-driver
 vulkan-radeon
 libva-mesa-driver
 vulkan-nouveau
-mesa-vdpau
 
 # --- Audio ---
 pipewire
