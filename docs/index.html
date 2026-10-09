@@ -4,10 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1620">
+<link rel="icon" href="hyro.png">
 <title>hyprarch — a home for AIs</title>
-<meta name="description" content="hyprarch is a Linux desktop built as a home for AIs and comfortable for humans. Help us test the beta.">
+<meta name="description" content="hyprarch is a Linux desktop built as a home for AIs and comfortable for humans. Download the beta and try it live from a USB stick.">
+<meta property="og:image" content="https://maikolrlxd-blip.github.io/hyprarch/og.png">
 <meta property="og:title" content="hyprarch — a home for AIs">
-<meta property="og:description" content="A Linux desktop where your AI lives, knows the system and helps — and you stay in control. Join the beta.">
+<meta property="og:description" content="A Linux desktop where your AI lives, knows the system and helps — and you stay in control. Download the beta.">
 <style>
 :root{--bg:#0b1620;--bg2:#10202b;--card:#13303a;--mint:#5ef2c8;--cyan:#5ec2ff;--fg:#e8fbff;--dim:#8fb3bd;--line:#5ef2c82b;--ease:cubic-bezier(.2,.9,.3,1.2)}
 *{box-sizing:border-box}
@@ -15,6 +17,7 @@ html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.55 system-ui,"Segoe UI",Roboto,sans-serif;overflow-x:hidden}
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(70% 50% at 80% 0%,#5ec2ff22,transparent 70%),radial-gradient(60% 50% at 10% 30%,#5ef2c822,transparent 70%),linear-gradient(#0b1620,#0a121a)}
 a{color:var(--mint)}
+code{background:#0a1a22;border:1px solid var(--line);padding:1px 6px;border-radius:6px;font-size:.85em;word-break:break-all}
 .wrap{max-width:980px;margin:0 auto;padding:0 20px}
 nav{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
 .logo{font-weight:800;letter-spacing:.28em;font-size:14px}
@@ -77,15 +80,15 @@ html.es [data-en]{display:none}html.es [data-es]{display:revert}
 
   <header class="hero">
     <div>
-      <span class="tag" data-en>OPEN BETA SOON · TESTERS WANTED</span><span class="tag" data-es>BETA ABIERTA PRONTO · BUSCAMOS PROBADORES</span>
+      <span class="tag" data-en>BETA 0.1 · DOWNLOAD IT NOW · TESTERS WANTED</span><span class="tag" data-es>BETA 0.1 · DESCÁRGALO YA · BUSCAMOS PROBADORES</span>
       <h1><span data-en>A home for AIs.</span><span data-es>Un hogar para IAs.</span><br><span style="color:var(--fg)" data-en>Comfortable for humans.</span><span style="color:var(--fg)" data-es>Cómodo para personas.</span></h1>
       <p class="lead" data-en>A Linux desktop where your AI lives, knows the whole system and helps you — and you stay in control.</p>
       <p class="lead" data-es>Un escritorio Linux donde tu IA vive, conoce todo el sistema y te ayuda — y tú sigues al mando.</p>
       <div class="cta">
-        <a id="signup" class="btn main" href="#signup-box" aria-disabled="true"><span data-en>Join the beta</span><span data-es>Apuntarme a la beta</span> →</a>
+        <a id="signup" class="btn main" href="#download"><span data-en>Download</span><span data-es>Descargar</span> ↓</a>
         <a class="btn" href="#what"><span data-en>See what it does</span><span data-es>Ver qué hace</span></a>
       </div>
-      <p class="note" id="signup-note" data-en>Signups open soon.</p><p class="note" data-es>Las inscripciones abren pronto.</p>
+      <p class="note" data-en>Free for non-commercial use · Arch Linux + Hyprland · live USB, no install needed.</p><p class="note" data-es>Gratis para uso no comercial · Arch Linux + Hyprland · USB en vivo, sin instalar nada.</p>
     </div>
     <svg class="robot" viewBox="0 0 300 300" role="img" aria-label="Hyro, the hyprarch robot">
       <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fffe0"/><stop offset="1" stop-color="#5ec2ff"/></linearGradient></defs>
@@ -147,12 +150,27 @@ html.es [data-en]{display:none}html.es [data-es]{display:revert}
     </ul>
   </section>
 
-  <section id="signup-box" class="reveal">
-    <h2 data-en>Join the beta</h2><h2 data-es>Únete a la beta</h2>
-    <p class="sub" data-en>Leave your interest and we’ll send you the download and a short testing guide.</p>
-    <p class="sub" data-es>Deja tu interés y te enviaremos la descarga y una guía corta de pruebas.</p>
-    <div class="cta"><a id="signup2" class="btn main" href="#" aria-disabled="true"><span data-en>Sign up</span><span data-es>Inscribirme</span> →</a></div>
-    <p class="note" data-en>We only use your details to send beta information. No spam.</p><p class="note" data-es>Solo usamos tus datos para enviarte información de la beta. Sin spam.</p>
+  <section id="download" class="reveal">
+    <h2 data-en>Download hyprarch 0.1 (beta)</h2><h2 data-es>Descarga hyprarch 0.1 (beta)</h2>
+    <p class="sub" data-en>Public edition (no AI bundled — you install the one you like on first use). About 2.7 GB. GitHub limits files to 2 GB, so the ISO comes in two parts.</p>
+    <p class="sub" data-es>Edición pública (sin ninguna IA incluida: instalas la que quieras al primer uso). Unos 2,7 GB. GitHub limita los archivos a 2 GB, así que la ISO viene en dos partes.</p>
+    <div class="cta">
+      <a class="btn main" href="https://github.com/maikolrlxd-blip/hyprarch/releases/download/v0.1.0-beta/hyprarch-public-2026.10.09-x86_64.iso.part00">⬇ <span data-en>Part 1 (1.9 GB)</span><span data-es>Parte 1 (1,9 GB)</span></a>
+      <a class="btn main" href="https://github.com/maikolrlxd-blip/hyprarch/releases/download/v0.1.0-beta/hyprarch-public-2026.10.09-x86_64.iso.part01">⬇ <span data-en>Part 2 (0.7 GB)</span><span data-es>Parte 2 (0,7 GB)</span></a>
+      <a class="btn" href="https://github.com/maikolrlxd-blip/hyprarch/releases/download/v0.1.0-beta/SHA256SUMS.txt">SHA256</a>
+    </div>
+    <ul class="list" style="margin-top:18px">
+      <li><span data-en><b>Join the parts.</b> Windows (PowerShell): <code>cmd /c copy /b hyprarch-public-2026.10.09-x86_64.iso.part00+hyprarch-public-2026.10.09-x86_64.iso.part01 hyprarch.iso</code> · Linux/macOS: <code>cat hyprarch-public-*.part* &gt; hyprarch.iso</code></span><span data-es><b>Junta las partes.</b> Windows (PowerShell): <code>cmd /c copy /b hyprarch-public-2026.10.09-x86_64.iso.part00+hyprarch-public-2026.10.09-x86_64.iso.part01 hyprarch.iso</code> · Linux/macOS: <code>cat hyprarch-public-*.part* &gt; hyprarch.iso</code></span></li>
+      <li><span data-en><b>Burn it</b> to a USB stick with <a href="https://rufus.ie">Rufus</a>, <a href="https://www.ventoy.net">Ventoy</a> or USBImager (the stick is erased) and boot it in UEFI mode.</span><span data-es><b>Grábala</b> en un USB con <a href="https://rufus.ie">Rufus</a>, <a href="https://www.ventoy.net">Ventoy</a> o USBImager (se borra el USB) y arranca en modo UEFI.</span></li>
+      <li><span data-en><b>Check it</b> against SHA256 (first line = the full ISO).</span><span data-es><b>Compruébala</b> con el SHA256 (la primera línea es la ISO completa).</span></li>
+    </ul>
+    <div class="cta" style="margin-top:14px">
+      <a class="btn" href="https://github.com/maikolrlxd-blip/hyprarch/releases/tag/v0.1.0-beta"><span data-en>All files &amp; release notes</span><span data-es>Todos los archivos y notas</span></a>
+      <a class="btn" href="https://github.com/maikolrlxd-blip/hyprarch/blob/main/docs/GUIA-PROBADORES.md"><span data-en>Testing guide</span><span data-es>Guía de pruebas</span></a>
+      <a class="btn" href="https://github.com/maikolrlxd-blip/hyprarch"><span data-en>Source code</span><span data-es>Código fuente</span></a>
+    </div>
+    <p class="note" data-en>Source-available, free for non-commercial use (PolyForm Noncommercial 1.0.0). Not “open source” in the strict sense. Not affiliated with Anthropic, OpenAI, Google or Arch Linux.</p>
+    <p class="note" data-es>Código visible, gratis para uso no comercial (PolyForm Noncommercial 1.0.0). No es «código abierto» en sentido estricto. Sin afiliación con Anthropic, OpenAI, Google ni Arch Linux.</p>
   </section>
 
   <footer>
@@ -161,15 +179,11 @@ html.es [data-en]{display:none}html.es [data-es]{display:revert}
   </footer>
 </div>
 <script>
-// ===== CONFIGURACION: pon aqui el enlace de inscripcion (formulario de Google, Tally, un chat, etc.). Vacio = "pronto". =====
-const SIGNUP_URL = "";
-// ====================================================================================================================
 const html = document.documentElement;
 function setLang(l){html.classList.toggle('es', l==='es');html.lang=l;document.getElementById('en').classList.toggle('on',l==='en');document.getElementById('es').classList.toggle('on',l==='es');try{localStorage.setItem('lang',l)}catch(e){}}
 document.getElementById('en').onclick=()=>setLang('en');document.getElementById('es').onclick=()=>setLang('es');
 let saved=null;try{saved=localStorage.getItem('lang')}catch(e){}
 setLang(saved|| ((navigator.language||'').toLowerCase().startsWith('es') ? 'es':'en'));
-if(SIGNUP_URL){for(const id of ['signup','signup2']){const a=document.getElementById(id);a.href=SIGNUP_URL;a.removeAttribute('aria-disabled');a.target='_blank';a.rel='noopener'}document.querySelectorAll('#signup-note,#signup-note+p').forEach(e=>e.style.display='none')}
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
 document.querySelectorAll('.reveal').forEach(e=>io.observe(e));
 </script>
