@@ -39,16 +39,20 @@ export default {
     };
     if (r) h["content-range"] = `bytes ${s}-${e}/${TOTAL}`;
     if (req.method === "HEAD") return new Response(null, { status: r ? 206 : 200, headers: h });
-    const { readable, writable } = new TransformStream();
+    // IdentityTransformStream (nativo de Workers) + pipeTo: el cuerpo pasa sin que el código JS toque cada trozo (así no se agota el límite de CPU).
+    const segs = [];
+    let off = 0;
+    for (const p of PARTS) {
+      const ps = off, pe = off + p.size - 1;
+      off += p.size;
+      if (pe < s || ps > e) continue;
+      segs.push({ p, a: Math.max(s, ps) - ps, b: Math.min(e, pe) - ps });
+    }
+    const { readable, writable } = new IdentityTransformStream();
     ctx.waitUntil((async () => {
       try {
-        let off = 0;
-        for (const p of PARTS) {
-          const ps = off, pe = off + p.size - 1;
-          off += p.size;
-          if (pe < s || ps > e) continue;
-          const a = Math.max(s, ps) - ps, b = Math.min(e, pe) - ps;
-          const up = await fetch(url(p), { headers: { range: `bytes=${a}-${b}` }, redirect: "follow" });
+        for (const sg of segs) {
+          const up = await fetch(url(sg.p), { headers: { range: `bytes=${sg.a}-${sg.b}` }, redirect: "follow" });
           if (!up.ok && up.status !== 206) throw new Error("origen " + up.status);
           await up.body.pipeTo(writable, { preventClose: true });
         }
