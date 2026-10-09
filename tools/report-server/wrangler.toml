@@ -1,11 +1,13 @@
 name = "hyprarch-reports"
 main = "src/index.js"
 compatibility_date = "2025-01-01"
+workers_dev = true
+preview_urls = false
 
 # Después de `wrangler d1 create hyprarch-reports`, pega aquí el database_id que imprime.
 [[d1_databases]]
 binding = "DB"
 database_name = "hyprarch-reports"
-database_id = "REEMPLAZAR-con-el-id-de-d1"
+database_id = "9c41cd28-8cb9-4665-82c9-ef618ee98ff9"
 
 # Secretos (no van en este archivo): wrangler secret put ADMIN_TOKEN   y   wrangler secret put SALT
