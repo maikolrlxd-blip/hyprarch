@@ -19,8 +19,8 @@ trabajar y funcionar en equipos modestos.
 - **Reportar un problema** (SUPER → «Reportar un problema»): crea un informe sin contraseñas ni nombres de Wi-Fi y, **solo si tú lo aceptas**, lo envía a los desarrolladores.
 
 ## Descargar y probar
-Las ISO se compilan en GitHub Actions: pestaña **Actions → Build ISO → artefacto `hyprarch-iso-public`**
-(o la sección *Releases* cuando haya una publicada). Grábala en un USB con [Rufus](https://rufus.ie), [Ventoy](https://www.ventoy.net)
+Descarga la última versión en [**Releases**](https://github.com/maikolrlxd-blip/hyprarch/releases) (la ISO va en 2 partes por el límite de 2 GB de GitHub; las instrucciones para juntarlas y el `SHA256SUMS.txt` están ahí).
+También puedes compilarla tú mismo (abajo) o bajar el artefacto `hyprarch-iso-public` de **Actions → Build ISO**. Grábala en un USB con [Rufus](https://rufus.ie), [Ventoy](https://www.ventoy.net)
 o USBImager (se borra el USB) y arranca en modo UEFI. Guía paso a paso: [`docs/GUIA-PROBADORES.md`](docs/GUIA-PROBADORES.md).
 
 La edición pública **no incluye ninguna IA**: al primer uso, `hyprarch-ai` instala la que elijas (con tu cuenta; hyprarch no guarda credenciales).
