@@ -7,6 +7,20 @@ trabajar y funcionar en equipos modestos.
 > **Estado: beta.** Se prueba en VM y en algún equipo real; faltan pruebas en más hardware. Úsalo en modo «en vivo»
 > (USB) o en una máquina virtual antes de instalarlo en un disco que te importe: el instalador **borra el disco que elijas**.
 
+## Capturas
+![La isla de Hyro: pides algo y la IA lo hace (grabado en una máquina virtual)](docs/media/demo-isla.gif)
+*La isla de Hyro. En esta grabación la respuesta del chat está simulada (la VM no tenía sesión de Claude); el cambio de modo y la apertura de Archivos son reales.*
+
+| Tarjeta de permiso | Modo gamer | Menú de inicio |
+|---|---|---|
+| ![permiso](docs/media/02_permiso_isla.jpg) | ![gamer](docs/media/03_gamer_terminal.jpg) | ![menu](docs/media/04_menu.jpg) |
+
+| Ventana de modos | Tema fresco | Tema rojo |
+|---|---|---|
+| ![modos](docs/media/05_modos.jpg) | ![fresco](docs/media/06_fresco.jpg) | ![rojo](docs/media/07_rojo.jpg) |
+
+*Capturas tomadas en una máquina virtual (por eso la GPU aparece como «VMware SVGA»).*
+
 ## Qué trae
 - **La isla de Hyro** (arriba al centro): una pastilla que se abre en un chat con la IA que elijas (Claude, Codex, Gemini
   u Ollama). Si la IA necesita permiso para ejecutar algo, sale una tarjeta con el comando completo y **solo se ejecuta si pulsas «Permitir»**.
