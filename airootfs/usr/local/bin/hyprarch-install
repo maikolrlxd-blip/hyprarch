@@ -219,7 +219,14 @@ say "Instalando paquetes (puede tardar varios minutos)"
 mapfile -t PKGS < <(grep -vE '^\s*(#|$)' /usr/share/hyprarch/packages.txt)
 [[ $BOOT_MODE == bios ]] && PKGS+=(grub)
 (( ENCRYPT )) && PKGS+=(cryptsetup)
-pacstrap -K /mnt base linux linux-firmware intel-ucode amd-ucode sudo "${PKGS[@]}"
+# Gráfica: NVIDIA moderna -> controlador propio (nvidia-open); Intel/AMD/NVIDIA antigua -> controladores libres (ya van en los paquetes)
+GPU_PKGS=(); GPU_MODULES=""; GPU_CMDLINE=""
+if command -v hyprarch-gpu >/dev/null 2>&1; then
+  read -ra GPU_PKGS <<<"$(hyprarch-gpu packages | tr '\n' ' ')"
+  GPU_MODULES=$(hyprarch-gpu modules); GPU_CMDLINE=$(hyprarch-gpu cmdline)
+  (( ${#GPU_PKGS[@]} )) && say "Gráfica NVIDIA detectada: se instala su controlador (${GPU_PKGS[*]})"
+fi
+pacstrap -K /mnt base linux linux-firmware intel-ucode amd-ucode sudo "${PKGS[@]}" "${GPU_PKGS[@]}"
 genfstab -U /mnt >> /mnt/etc/fstab
 
 # ---------- configuración de hyprarch ----------
@@ -256,6 +263,11 @@ if (( ENCRYPT )); then   # el arranque pide la frase secreta: hace falta el ganc
   [[ $HOOKS_LINE == *"$ENC_HOOK"* ]] || sed -i "/^HOOKS=/ s/ filesystems/ $ENC_HOOK filesystems/" /mnt/etc/mkinitcpio.conf
   grep '^HOOKS=' /mnt/etc/mkinitcpio.conf | grep -q "$ENC_HOOK" || die "no pude agregar el gancho $ENC_HOOK."
   arch-chroot /mnt mkinitcpio -P >/dev/null 2>&1 || die "no pude regenerar el initramfs con cifrado."
+fi
+if [[ -n $GPU_MODULES ]]; then   # controlador NVIDIA propio: módulos en el initramfs (arranque gráfico limpio)
+  if grep -q '^MODULES=' /mnt/etc/mkinitcpio.conf; then sed -i "s/^MODULES=(\(.*\))/MODULES=(\1 $GPU_MODULES)/" /mnt/etc/mkinitcpio.conf
+  else echo "MODULES=($GPU_MODULES)" >> /mnt/etc/mkinitcpio.conf; fi
+  arch-chroot /mnt mkinitcpio -P >/dev/null 2>&1 || die "no pude regenerar el initramfs con el controlador NVIDIA."
 fi
 arch-chroot /mnt systemctl enable NetworkManager systemd-resolved systemd-timesyncd bluetooth upower power-profiles-daemon cups.socket >/dev/null 2>&1
 arch-chroot /mnt hwclock --systohc || warn "no pude actualizar el reloj de hardware"
@@ -302,10 +314,29 @@ linux   /vmlinuz-linux
 initrd  /intel-ucode.img
 initrd  /amd-ucode.img
 initrd  /initramfs-linux.img
-options $ROOT_OPTS rw quiet loglevel=3
+options $ROOT_OPTS rw quiet loglevel=3${GPU_CMDLINE:+ $GPU_CMDLINE}
 EOF
+  if [[ -n $GPU_CMDLINE ]]; then   # rescate: si el controlador NVIDIA diera pantalla negra, esta entrada arranca en consola sin él (sudo hyprarch-gpu quitar-nvidia)
+    cat > /mnt/boot/loader/entries/hyprarch-rescate.conf <<EOF2
+title   hyprarch (rescate gráfico: consola)
+linux   /vmlinuz-linux
+initrd  /intel-ucode.img
+initrd  /amd-ucode.img
+initrd  /initramfs-linux.img
+options $ROOT_OPTS rw nomodeset module_blacklist=nvidia,nvidia_modeset,nvidia_uvm,nvidia_drm systemd.unit=multi-user.target
+EOF2
+  fi
 else
-  sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="quiet loglevel=3"/; s/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=3/' /mnt/etc/default/grub
+  sed -i "s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT=\"quiet loglevel=3${GPU_CMDLINE:+ $GPU_CMDLINE}\"|; s|^GRUB_TIMEOUT=.*|GRUB_TIMEOUT=3|" /mnt/etc/default/grub
+  if [[ -n $GPU_CMDLINE ]]; then   # rescate gráfico (consola, sin el controlador NVIDIA propio)
+    cat >> /mnt/etc/grub.d/40_custom <<EOF2
+menuentry 'hyprarch (rescate gráfico: consola)' {
+  search --no-floppy --fs-uuid --set=root $ROOT_UUID
+  linux /boot/vmlinuz-linux $ROOT_OPTS rw nomodeset module_blacklist=nvidia,nvidia_modeset,nvidia_uvm,nvidia_drm systemd.unit=multi-user.target
+  initrd /boot/initramfs-linux.img
+}
+EOF2
+  fi
   if (( ENCRYPT )); then sed -i "s|^GRUB_CMDLINE_LINUX=.*|GRUB_CMDLINE_LINUX=\"$ROOT_OPTS\"|" /mnt/etc/default/grub; fi
   disk_same || die "el disco $DISK cambió durante la instalación; no se instala GRUB ahí."
   arch-chroot /mnt grub-install --target=i386-pc --recheck "$DISK" >/dev/null 2>&1 || die "no pude instalar GRUB en $DISK."

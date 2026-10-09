@@ -32,6 +32,19 @@ HYPRARCH_EDITION=personal sudo ./build.sh   # incluye Claude Code: solo para uso
 ```
 La ISO queda en `out/`. Con GitHub Actions: sube el repo, ejecuta **Build ISO** y baja el artefacto.
 
+## Compatibilidad de hardware
+| Hardware | Estado |
+|---|---|
+| Procesadores Intel y AMD (x86_64) | Funciona (la ISO incluye microcódigo de ambos) |
+| Gráficos **Intel** | Probado |
+| Gráficos **AMD** | Controladores libres incluidos (mesa/RADV); **pendiente de probar en equipo real** |
+| Gráficos **NVIDIA moderna** (GTX 16xx, RTX 20 y posteriores) | En vivo usa el controlador libre (nouveau/NVK). Al **instalar**, `hyprarch-install` pone el controlador propio `nvidia-open` y deja una entrada de **rescate gráfico** en el arranque. **Pendiente de probar en equipo real** |
+| NVIDIA antigua (GTX 10xx/9xx y anteriores) | Controlador libre (nouveau): funciona, con menos rendimiento en juegos |
+| Portátiles híbridos (Intel/AMD + NVIDIA) | La pantalla usa la gráfica integrada; `prime-run <juego>` usa la NVIDIA. Pendiente de probar |
+| Procesadores ARM | No soportado |
+
+`hyprarch-gpu status` muestra qué detecta tu equipo. Si lo pruebas con AMD o NVIDIA, **cuéntanos cómo te fue** (Reportar un problema): es lo que más necesitamos.
+
 ## Privacidad
 - No hay telemetría. Lo único que sale del equipo es un informe **si lo envías tú**, tras pedirte permiso: descripción, datos del equipo
   (sin nombre de usuario, equipo, MAC ni IP; sin redes Wi-Fi ni contraseñas), registros y una captura **solo si la incluyes**.

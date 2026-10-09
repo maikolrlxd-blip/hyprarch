@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+# hyprarch-gpu — detecta la(s) gráfica(s) y prepara lo que cada una necesita (Intel, AMD y NVIDIA).
+#
+#   hyprarch-gpu status          qué gráficas hay y qué controlador usan
+#   hyprarch-gpu packages        paquetes EXTRA que conviene instalar en el sistema instalado (lo usa hyprarch-install)
+#   hyprarch-gpu modules         módulos para el initramfs (solo si hay controlador NVIDIA propio)
+#   hyprarch-gpu cmdline         parámetros del kernel (solo si hay controlador NVIDIA propio)
+#   hyprarch-gpu env             variables de entorno de la sesión (KEY=VALOR por línea); las lee hyprland.lua
+#   hyprarch-gpu quitar-nvidia   (como root) quita el controlador NVIDIA propio y vuelve al libre (nouveau): para el modo rescate
+#
+# Reglas:
+#   · La ISO en vivo usa siempre los controladores LIBRES (mesa: Intel, AMD y NVIDIA con nouveau/NVK): arranca en cualquier equipo.
+#   · Al INSTALAR en un equipo con NVIDIA moderna (Turing/RTX 20 y posteriores, GTX 16xx) se instala nvidia-open.
+#     Las NVIDIA más antiguas (GTX 10xx/9xx y anteriores) no las soporta nvidia-open: se quedan con el controlador libre.
+#   · Portátiles con Intel/AMD + NVIDIA: la pantalla la maneja la gráfica integrada (ahorra batería); la NVIDIA queda para `prime-run`.
+#
+# Para pruebas: HYPRARCH_LSPCI=/ruta/salida.txt usa esa salida de `lspci -nn` en vez de la real.
+set -u
+
+lspci_out() {
+  if [[ -n ${HYPRARCH_LSPCI:-} ]]; then cat "$HYPRARCH_LSPCI"; else lspci -nn 2>/dev/null; fi
+}
+
+# una línea por gráfica:  dirección<TAB>vendor<TAB>chip<TAB>nombre
+cards() {
+  lspci_out | grep -E 'VGA compatible controller|3D controller|Display controller' | while IFS= read -r l; do
+    addr=${l%% *}
+    ven=$(sed -nE 's/.*\[([0-9a-f]{4}):[0-9a-f]{4}\].*/\1/p' <<<"$l" | tail -1)
+    case $ven in 8086) v=intel ;; 1002) v=amd ;; 10de) v=nvidia ;; *) v=otro ;; esac
+    desc=${l#*: }
+    chip=$(sed -E 's/^[^:]*:[[:space:]]*//; s/^(NVIDIA Corporation|Advanced Micro Devices, Inc\. \[AMD\/ATI\]|Intel Corporation)[[:space:]]+//' <<<"$desc" | awk '{print $1}')
+    printf '%s\t%s\t%s\t%s\n' "$addr" "$v" "$chip" "$desc"
+  done
+}
+
+# ¿esta NVIDIA la soporta nvidia-open (Turing y posteriores)?
+nvidia_open_ok() {
+  local chip=$1 desc=$2
+  [[ $chip =~ ^(TU|GA|AD|GB)[0-9] ]] && return 0
+  [[ $chip =~ ^(GP|GM|GK|GF|G[0-9]|NV) ]] && return 1
+  # chip desconocido (arquitectura nueva): por el nombre comercial
+  [[ $desc =~ (RTX|GTX\ 16[0-9]{2}|TITAN\ RTX) ]] && return 0
+  return 1
+}
+
+HAS_INTEL=0; HAS_AMD=0; NV_OPEN=0; NV_OLD=0; IGPU_ADDR=""; NV_ADDR=""
+scan() {
+  while IFS=$'\t' read -r addr v chip desc; do
+    case $v in
+      intel) HAS_INTEL=1; [[ -z $IGPU_ADDR ]] && IGPU_ADDR=$addr ;;
+      amd) HAS_AMD=1; [[ -z $IGPU_ADDR ]] && IGPU_ADDR=$addr ;;
+      nvidia) if nvidia_open_ok "$chip" "$desc"; then NV_OPEN=1; else NV_OLD=1; fi; [[ -z $NV_ADDR ]] && NV_ADDR=$addr ;;
+    esac
+  done < <(cards)
+}
+scan
+
+driver_installed() { [[ -e /usr/lib/modprobe.d/nvidia-utils.conf ]] || pacman -Q nvidia-utils >/dev/null 2>&1; }
+hybrid() { (( NV_OPEN || NV_OLD )) && (( HAS_INTEL || HAS_AMD )); }
+
+card_node() {   # /dev/dri/cardN de una dirección PCI (0000:00:02.0)
+  local a=$1; [[ $a == *:*:* ]] || a="0000:$a"
+  readlink -f "/dev/dri/by-path/pci-${a}-card" 2>/dev/null
+}
+
+case ${1:-status} in
+  status)
+    cards | while IFS=$'\t' read -r addr v chip desc; do printf '%-9s %-7s %s\n' "$addr" "$v" "$desc"; done
+    (( HAS_INTEL )) && echo "· Intel: controlador libre (mesa) + vídeo por hardware (iHD)"
+    (( HAS_AMD )) && echo "· AMD: controlador libre (mesa/radeonsi, Vulkan RADV)"
+    if (( NV_OPEN )); then
+      if driver_installed; then echo "· NVIDIA moderna: controlador propio nvidia-open instalado"; else echo "· NVIDIA moderna: ahora usa el controlador libre (nouveau/NVK); al instalar hyprarch se instala nvidia-open"; fi
+    fi
+    (( NV_OLD )) && echo "· NVIDIA antigua (GTX 10xx/9xx o anterior): controlador libre (nouveau); el propio para estas ya no viene en los repositorios oficiales"
+    (( HAS_INTEL + HAS_AMD + NV_OPEN + NV_OLD )) || echo "· No detecto gráfica conocida (máquina virtual u otra): controlador genérico"
+    hybrid && echo "· Portátil híbrido: la pantalla usa la gráfica integrada; para jugar con la NVIDIA: prime-run <programa>"
+    ;;
+  packages)
+    if (( NV_OPEN )); then
+      echo "nvidia-open nvidia-utils nvidia-settings libva-nvidia-driver"
+      hybrid && echo "nvidia-prime"
+    fi
+    ;;
+  modules)
+    (( NV_OPEN )) && echo "nvidia nvidia_modeset nvidia_uvm nvidia_drm"
+    ;;
+  cmdline)
+    (( NV_OPEN )) && echo "nvidia_drm.modeset=1 nvidia_drm.fbdev=1"
+    ;;
+  env)
+    ig=""; [[ -n $IGPU_ADDR ]] && ig=$(card_node "$IGPU_ADDR")
+    nv=""; [[ -n $NV_ADDR ]] && nv=$(card_node "$NV_ADDR")
+    if hybrid; then
+      [[ -n $ig ]] && echo "AQ_DRM_DEVICES=$ig${nv:+:$nv}"          # la integrada manda la pantalla
+      (( HAS_INTEL )) && echo "LIBVA_DRIVER_NAME=iHD" || echo "LIBVA_DRIVER_NAME=radeonsi"
+    elif (( NV_OPEN )) && driver_installed; then
+      echo "LIBVA_DRIVER_NAME=nvidia"; echo "NVD_BACKEND=direct"
+      echo "GBM_BACKEND=nvidia-drm"; echo "__GLX_VENDOR_LIBRARY_NAME=nvidia"
+    elif (( HAS_INTEL )); then echo "LIBVA_DRIVER_NAME=iHD"
+    elif (( HAS_AMD )); then echo "LIBVA_DRIVER_NAME=radeonsi"
+    fi
+    ;;
+  quitar-nvidia)
+    (( EUID == 0 )) || { echo "ejecútalo con sudo" >&2; exit 1; }
+    pacman -Rns --noconfirm nvidia-open nvidia-utils nvidia-settings libva-nvidia-driver nvidia-prime 2>/dev/null || true
+    rm -f /etc/modprobe.d/hyprarch-nvidia.conf
+    sed -i -E '/^MODULES=/ s/ ?nvidia(_modeset|_uvm|_drm)?//g' /etc/mkinitcpio.conf
+    mkinitcpio -P && echo "Listo: vuelve a arrancar con el menú normal; usará el controlador libre."
+    ;;
+  *) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+esac

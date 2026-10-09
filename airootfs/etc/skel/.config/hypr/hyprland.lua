@@ -148,7 +148,17 @@ hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("XCURSOR_THEME", "Adwaita")
 hl.env("MOZ_ENABLE_WAYLAND", "1")
-hl.env("LIBVA_DRIVER_NAME", "iHD")
+-- Gráfica(s) del equipo (Intel, AMD, NVIDIA): variables propias de cada una (vídeo por hardware, portátiles híbridos…)
+do
+    local p = io.popen("hyprarch-gpu env 2>/dev/null")
+    if p then
+        for line in p:lines() do
+            local k, v = line:match("^([A-Z_a-z0-9]+)=(.+)$")
+            if k then hl.env(k, v) end
+        end
+        p:close()
+    end
+end
 hl.env("QT_QPA_PLATFORM", "wayland;xcb")
 -- Colores del menú de Wi-Fi (nmtui, usa "newt"): verde/negro con la paleta ANSI del tema
 hl.env("NEWT_COLORS",
