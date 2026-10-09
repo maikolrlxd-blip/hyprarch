@@ -165,16 +165,22 @@ send_dev() {   # envía el reporte al servidor de los desarrolladores, con permi
 import base64, getpass, json, os, platform, re, socket, subprocess, sys, secrets
 work, out, desc = sys.argv[1:4]
 rep = open(os.path.join(work, "reporte.txt"), encoding="utf-8", errors="replace").read()
-# se quita lo que identifica a la persona: usuario, nombre del equipo, direcciones MAC e IP
-for word, repl in ((getpass.getuser(), "<usuario>"), (socket.gethostname(), "<equipo>")):
-    if word and len(word) > 2 and word.lower() not in ("hyprarch", "localhost", "archiso", "arch", "live", "root"):   # nombres genéricos NO se tapan: dañarían el diagnóstico
-        rep = re.sub(r"\b" + re.escape(word) + r"\b", repl, rep)
-rep = re.sub(r"\b(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}\b", "<mac>", rep)
-rep = re.sub(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", "<ip>", rep)
+# se quita lo que identifica a la persona: usuario, nombre del equipo, direcciones MAC e IP (en el informe Y en la descripción)
+def sanitize(s):
+    for word, repl in ((getpass.getuser(), "<usuario>"), (socket.gethostname(), "<equipo>")):
+        if word and len(word) > 2 and word.lower() not in ("hyprarch", "localhost", "archiso", "arch", "live", "root"):   # nombres genéricos NO se tapan: dañarían el diagnóstico
+            s = re.sub(r"\b" + re.escape(word) + r"\b", repl, s)
+    s = re.sub(r"\b(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}\b", "<mac>", s)
+    return re.sub(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", "<ip>", s)
+rep = sanitize(rep)
+desc = sanitize(desc)
 shot = ""
 p = os.path.join(work, "captura.png")
-if os.path.exists(p) and os.path.getsize(p) < 450_000:
-    shot = base64.b64encode(open(p, "rb").read()).decode()
+if os.path.exists(p):
+    if os.path.getsize(p) < 450_000:
+        shot = base64.b64encode(open(p, "rb").read()).decode()
+    else:
+        rep += "\n[la captura elegida pesaba demasiado y no se adjuntó]\n"
 cid_file = os.path.expanduser("~/.config/hyprarch/client-id")
 if not os.path.exists(cid_file):
     os.makedirs(os.path.dirname(cid_file), exist_ok=True)
@@ -205,7 +211,7 @@ PY
     rm -f "$payload"
     note "$(T rep.sent 'Reporte enviado')" "$(T rep.sent.d 'Gracias. Número de reporte:') #$id"
   else
-    mv -f "$payload" "$QUEUE/$(date +%Y%m%d-%H%M%S).json"
+    mv -- "$payload" "$QUEUE/rep-${payload##*.nuevo.}.json"
     note "$(T rep.queued 'Sin conexión: quedó en cola')" "$(T rep.queued.d 'Se enviará la próxima vez (hyprarch-report --retry).')"
   fi
 }

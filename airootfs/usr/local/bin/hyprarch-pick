@@ -49,10 +49,23 @@ def _renderer():
     try:
         os.makedirs(cdir, exist_ok=True)
         if os.path.exists(trying):
+            try:
+                owner = int(open(trying).read().strip() or 0)
+            except (OSError, ValueError):
+                owner = 0
+            alive = False
+            if owner and owner != os.getpid():
+                try:
+                    os.kill(owner, 0)
+                    alive = True
+                except OSError:
+                    alive = False
+            if alive:                                    # otra apertura sigue probando la GPU: esta usa cairo sin condenar a la GPU
+                return "cairo"
             open(failed, "w").write("el render por GPU no llego a dibujar la ultima vez\n")
             os.remove(trying)
             return "cairo"
-        open(trying, "w").write("1")
+        open(trying, "w").write(str(os.getpid()))             # el dueño de la prueba (el pid se mantiene al relanzarse)
     except OSError:
         return "cairo"
     return "gl"
@@ -64,6 +77,20 @@ if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", "") and not (sys.argv[
     _e["LD_PRELOAD"] = (_e.get("LD_PRELOAD", "") + " /usr/lib/libgtk4-layer-shell.so").strip()
     _e["GSK_RENDERER"] = _renderer()
     os.execvpe(sys.executable, [sys.executable] + sys.argv, _e)
+
+def _gl_ok():
+    """Quita la marca de «probando GPU» solo si es nuestra."""
+    f = os.path.expanduser("~/.cache/hyprarch/gl-trying")
+    try:
+        if open(f).read().strip() == str(os.getpid()):
+            os.remove(f)
+    except OSError:
+        pass
+
+
+import atexit  # noqa: E402
+atexit.register(_gl_ok)                                  # salida normal (p. ej. se cerró antes del primer dibujo): no es un fallo de la GPU
+
 
 def _load(name, modname):
     for base in ("/usr/local/bin", str(Path(__file__).resolve().parent)):
@@ -1138,11 +1165,8 @@ def run(args):
                 ms = (time.perf_counter() - t_ini) * 1000.0
                 S["avg_ms"] = ms if "avg_ms" not in S else S["avg_ms"] * 0.9 + ms * 0.1
                 S["nfr"] = S.get("nfr", 0) + 1
-                if S["nfr"] == 1:
-                    try:
-                        os.remove(os.path.expanduser("~/.cache/hyprarch/gl-trying"))      # la GPU dibujó: no hace falta la red de seguridad
-                    except OSError:
-                        pass
+                if S["nfr"] == 4:                                         # varios cuadros ya pintados por la GPU (no solo el primer dibujo): se acredita
+                    _gl_ok()
                 if S["nfr"] == 1 and os.environ.get("HYPRARCH_PERF"):
                     print("perf: primer cuadro a los %.0f ms de lanzarse" % ((time.time() - _T0) * 1000), file=sys.stderr)
                 if S["nfr"] > 20 and not U.LITE and S["avg_ms"] > 16.0:

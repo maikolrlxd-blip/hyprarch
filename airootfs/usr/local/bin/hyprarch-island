@@ -413,6 +413,8 @@ class App(Gtk.Application):
         self.chatting = False          # ¿hay conversación a la vista?
         self.working = False           # ¿la IA está respondiendo?
         self.proc = None
+        self.plock = threading.Lock()  # protege gen/proc: un worker viejo no pisa al vigente
+        self.perm_id = None            # (gen, proveedor, sesión) a la que pertenece la tarjeta de permiso
         self.sid = None                # sesión de Claude para seguir la conversación
         self.entry = self.view = self.buf = self.head = self.scroll = self.send_btn = self.exp_size = None
         self.provider = ai_conf()[0]
@@ -704,8 +706,12 @@ class App(Gtk.Application):
             self.append("Aún no hay ninguna IA instalada. Te abro el asistente para elegir una…\n", "dim")
             GLib.timeout_add(1200, lambda: (self.act("hyprarch-ai", "setup-only"), False)[1])
             return
-        self.gen += 1                                                       # cada pregunta tiene su número: lo que llegue de una anterior se descarta
-        gen = self.gen
+        with self.plock:
+            self.gen += 1                                                   # cada pregunta tiene su número: lo que llegue de una anterior se descarta
+            gen = self.gen
+        self.perm_row.set_visible(False)
+        self.perm_h = 0
+        self.perm_id = None
         self.show_chat(True)
         if self.buf.get_char_count():
             self.append("\n", "ai", gen)
@@ -773,8 +779,11 @@ class App(Gtk.Application):
             proc = subprocess.Popen(cmd, cwd=os.path.expanduser("~"), env=env, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace", bufsize=1,
                                     start_new_session=True)
-            self.proc = proc
-            if gen != self.gen:                                             # «Nueva» llegó justo antes de que arrancara
+            with self.plock:
+                stale = gen != self.gen
+                if not stale:
+                    self.proc = proc
+            if stale:                                                       # «Nueva» llegó justo antes de que arrancara: no pisa al vigente
                 self.stop_proc(proc)
             for line in proc.stdout:
                 if gen != self.gen:
@@ -830,23 +839,32 @@ class App(Gtk.Application):
             GLib.idle_add(self.finish, rc, gen)
 
     def show_perm(self, gen, denials):
-        """La IA quiso hacer algo que necesita permiso: aquí mismo sale una tarjeta con «Permitir» (nada se ejecuta sin tu clic)."""
+        """La IA quiso hacer algo que necesita permiso: aquí mismo sale una tarjeta con «Permitir» (nada se ejecuta sin tu clic).
+        Se muestra cada comando COMPLETO y solo se concede lo que se ve."""
         if gen != self.gen or self.perm_row is None:
             return False
-        specs, lines = [], []
+        specs, lines, ok = [], [], True
         for d in denials:
             tn = d.get("tool_name", "?")
             ti = d.get("tool_input") or {}
             cmdline = ti.get("command") if isinstance(ti, dict) else None
             if tn == "Bash" and isinstance(cmdline, str) and cmdline.strip():
                 c = cmdline.strip()
-                lines.append(c if len(c) < 64 else c[:61] + "…")
-                if "\n" not in c and "(" not in c and ")" not in c:        # solo se puede conceder un comando exacto y sencillo
+                lines.append(c)
+                if any(ch in c for ch in "\n()*?[]") or len(c) > 300:      # solo un comando exacto y sencillo (sin comodines)
+                    ok = False
+                else:
                     specs.append("Bash(%s)" % c)
             else:
                 lines.append(str(tn))
+                ok = False
+        if len(lines) > 3:
+            ok = False
+        if not ok:
+            specs = []
         self.perm_specs = specs
-        self.perm_label.set_text("Quiere ejecutar:  " + "  ·  ".join(lines[:2]) + ("" if specs else "   (no se puede permitir desde aquí)"))
+        self.perm_id = (gen, self.provider, self.sid)
+        self.perm_label.set_text("Quiere ejecutar:  " + "  ·  ".join(lines) + ("" if specs else "   (no se puede permitir desde aquí)"))
         self.perm_allow.set_visible(bool(specs))
         self.perm_row.set_visible(True)
         _mn, nat_h, _a, _b = self.perm_row.measure(Gtk.Orientation.VERTICAL, EW - 32)
@@ -855,12 +873,19 @@ class App(Gtk.Application):
         return False
 
     def perm_answer(self, allow):
+        valid = (self.perm_id == (self.gen, self.provider, self.sid)) and not self.working
         self.perm_row.set_visible(False)
         self.perm_h = 0
+        self.perm_id = None
+        if not valid:
+            self.fit()
+            return
         if allow and self.perm_specs:
             self.allow_once = list(self.perm_specs)
             self.entry.set_text("Tienes permiso para ese comando. Continúa con lo que te pedí.")
             self.send()
+            if not self.working:
+                self.allow_once = []
         else:
             self.append("Entendido: no se ejecuta.\n", "dim")
             self.fit()
@@ -887,10 +912,10 @@ class App(Gtk.Application):
             return False
         self.login_mode = True
         self.entry.set_placeholder_text("Pega aquí el código y pulsa Enter…")
-        threading.Thread(target=self.login_reader, args=(self.login_proc,), daemon=True).start()
+        threading.Thread(target=self.login_reader, args=(self.login_proc, self.gen), daemon=True).start()
         return False
 
-    def login_reader(self, proc):
+    def login_reader(self, proc, gen):
         opened = False
         for line in proc.stdout:
             clean = re.sub(r"\x1b\[[0-9;?]*[A-Za-z]", "", line)
@@ -899,7 +924,7 @@ class App(Gtk.Application):
                 opened = True
                 GLib.idle_add(self.open_url, m.group(0))
         rc = proc.wait()
-        GLib.idle_add(self.login_done, rc)
+        GLib.idle_add(self.login_done, rc, proc, gen)
 
     def open_url(self, url):
         import shutil
@@ -913,7 +938,9 @@ class App(Gtk.Application):
                 pass
         return False
 
-    def login_done(self, rc):
+    def login_done(self, rc, proc=None, gen=None):
+        if proc is not self.login_proc or gen != self.gen:                 # un inicio de sesión viejo (ya cancelado con «Nueva»)
+            return False
         self.login_mode = False
         self.login_proc = None
         self.entry.set_placeholder_text("Escríbele a %s…" % PROV_NAMES.get(self.provider, self.provider))
@@ -921,7 +948,7 @@ class App(Gtk.Application):
             self.append("¡Listo, ya entraste!\n", "me")
             if self.last_q:                                                  # se repite la pregunta que quedó pendiente
                 q = self.last_q
-                GLib.timeout_add(700, lambda: (self.entry.set_text(q), self.send(), False)[1])
+                GLib.timeout_add(700, lambda: (self.entry.set_text(q), self.send(), False)[1] if gen == self.gen else False)
         else:
             self.append("No se pudo iniciar sesión (código incorrecto o caducado). Escribe algo para intentarlo otra vez.\n", "err")
         return False
@@ -955,9 +982,11 @@ class App(Gtk.Application):
             self.perm_row.set_visible(False)
             self.perm_h = 0
         self.allow_once = []
-        self.gen += 1                                                       # lo que traiga la consulta anterior ya no cuenta
-        self.stop_proc(self.proc)
-        self.proc = None
+        self.perm_id = None
+        with self.plock:
+            self.gen += 1                                                   # lo que traiga la consulta anterior ya no cuenta
+            old, self.proc = self.proc, None
+        self.stop_proc(old)
         self.working = False
         self.send_btn.set_sensitive(True)
         self.sid = None
@@ -975,8 +1004,14 @@ class App(Gtk.Application):
         pid = self.provs[(self.provs.index(self.provider) + 1) % len(self.provs)] if self.provider in self.provs else self.provs[0]
         set_ai(pid)
         self.provider = pid
-        self.gen += 1
-        self.stop_proc(self.proc)
+        with self.plock:
+            self.gen += 1
+            old, self.proc = self.proc, None
+        self.stop_proc(old)
+        self.perm_id = None
+        self.allow_once = []
+        self.perm_row.set_visible(False)
+        self.perm_h = 0
         self.working = False
         self.send_btn.set_sensitive(True)
         self.sid = None
@@ -984,9 +1019,25 @@ class App(Gtk.Application):
         self.entry.set_placeholder_text("Escríbele a %s…" % PROV_NAMES.get(pid, pid))
         self.entry.grab_focus()
 
+    @staticmethod
+    def kill_now(proc):
+        """Al cerrar: TERM, espera corta y KILL de verdad (el bucle de GLib ya no estará para hacerlo después)."""
+        if proc is None or proc.poll() is not None:
+            return
+        for sig, wait in ((signal.SIGTERM, 2.0), (signal.SIGKILL, 1.0)):
+            try:
+                os.killpg(proc.pid, sig)
+            except OSError:
+                return
+            t_end = time.monotonic() + wait
+            while time.monotonic() < t_end and proc.poll() is None:
+                time.sleep(0.05)
+            if proc.poll() is not None:
+                return
+
     def quit_clean(self, *_a):
-        self.stop_proc(self.proc)
-        self.stop_proc(self.login_proc)
+        self.kill_now(self.proc)
+        self.kill_now(self.login_proc)
         try:
             os.remove(READY_FILE)
         except OSError:
@@ -1008,7 +1059,10 @@ class App(Gtk.Application):
         win.set_default_size(WIN_W, WIN_H)
         LS.init_for_window(win)
         LS.set_layer(win, LS.Layer.OVERLAY)
-        mon = Gdk.Display.get_default().get_monitors().get_item(0).get_geometry()
+        mobj = Gdk.Display.get_default().get_monitors().get_item(0)
+        self.mobj = mobj
+        LS.set_monitor(win, mobj)
+        mon = mobj.get_geometry()
         self.sw, self.sh = mon.width, mon.height
         # el cuadro sigue creciendo HACIA ABAJO con la charla (hasta ~60 % de la pantalla) antes de ponerse a desplazar
         EH_CHAT = max(EH_CHAT, int(self.sh * 0.60))
@@ -1225,6 +1279,7 @@ class App(Gtk.Application):
         pwin = Gtk.Window(application=self)
         pwin.set_default_size(CW + 28, CH + 14)
         LS.init_for_window(pwin)
+        LS.set_monitor(pwin, self.mobj)
         LS.set_layer(pwin, LS.Layer.OVERLAY)
         LS.set_anchor(pwin, LS.Edge.TOP, True)
         LS.set_anchor(pwin, LS.Edge.LEFT, True)
