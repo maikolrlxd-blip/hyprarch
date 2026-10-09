@@ -19,7 +19,7 @@ trabajar y funcionar en equipos modestos.
 - **Reportar un problema** (SUPER → «Reportar un problema»): crea un informe sin contraseñas ni nombres de Wi-Fi y, **solo si tú lo aceptas**, lo envía a los desarrolladores.
 
 ## Descargar y probar
-Descarga la última versión en [**Releases**](https://github.com/maikolrlxd-blip/hyprarch/releases) (la ISO va en 2 partes por el límite de 2 GB de GitHub; las instrucciones para juntarlas y el `SHA256SUMS.txt` están ahí).
+**[Descargar la ISO (un solo archivo)](https://hyprarch-download.maikolrlxd.workers.dev/hyprarch.iso)** o desde la [página del proyecto](https://maikolrlxd-blip.github.io/hyprarch/). En [Releases](https://github.com/maikolrlxd-blip/hyprarch/releases) está también por partes (límite de 2 GB de GitHub) con su `SHA256SUMS.txt`.
 También puedes compilarla tú mismo (abajo) o bajar el artefacto `hyprarch-iso-public` de **Actions → Build ISO**. Grábala en un USB con [Rufus](https://rufus.ie), [Ventoy](https://www.ventoy.net)
 o USBImager (se borra el USB) y arranca en modo UEFI. Guía paso a paso: [`docs/GUIA-PROBADORES.md`](docs/GUIA-PROBADORES.md).
 
