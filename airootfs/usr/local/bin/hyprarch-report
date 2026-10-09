@@ -78,6 +78,14 @@ tailf() { [[ -s $1 ]] && tail -n "${2:-60}" "$1"; }
   command -v glxinfo >/dev/null && glxinfo -B 2>/dev/null | grep -E 'OpenGL renderer|OpenGL version' | head -2
   sec "Sonido"
   wpctl status 2>/dev/null | head -24
+  sec "Sonido: detalle de las salidas (formato, buffer, estado)"
+  pw-dump 2>/dev/null | jq -r '.[] | select(.type=="PipeWire:Interface:Node") | select(.info.props["media.class"]=="Audio/Sink") | "\(.info.props["node.name"]) | estado=\(.info.state) | formato=\(.info.props["audio.format"] // "?") | rate=\(.info.props["audio.rate"] // "?") | periodo=\(.info.props["api.alsa.period-size"] // "?") | headroom=\(.info.props["api.alsa.headroom"] // "?") | batch-off=\(.info.props["api.alsa.disable-batch"] // "?")"' 2>/dev/null | head -8
+  pw-metadata -n settings 0 2>/dev/null | grep -E 'clock\.(quantum|rate|min-quantum)' | head -4
+  cat /proc/asound/card*/stream0 2>/dev/null | grep -E 'USB Audio|Format|Rates|Channels|Endpoint|Sync' | head -14
+  sec "Red: ¿hay dos gestores a la vez?"
+  systemctl is-active NetworkManager systemd-networkd iwd 2>/dev/null | paste -sd' '
+  sec "Chat de la isla (últimas líneas del registro)"
+  tailf "$HOME/.cache/hyprarch-buddy/island.log" 30
   sec "Red (tipos de conexión; sin nombres de redes)"
   nmcli -t -f DEVICE,TYPE,STATE dev 2>/dev/null
   sec "Servicios fallidos"

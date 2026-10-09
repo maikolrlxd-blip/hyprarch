@@ -136,7 +136,8 @@ hl.on("hyprland.start", function()
     -- Con el perfil lite no arranca (se decide antes de cargar nada); ~/.config/hyprarch/wbar = on/off lo fuerza.
     hl.exec_cmd("sh -c 'hyprarch-wbar || hyprarch-wbar-py'")
     -- La isla de Hyro: un botón arriba, centrado, que se despliega con una animación (esconde al de la esquina)
-    hl.exec_cmd("env GSK_RENDERER=cairo LD_PRELOAD=/usr/lib/libgtk4-layer-shell.so hyprarch-island")
+    -- (su salida queda en ~/.cache/hyprarch-buddy/island.log: el reporte la incluye para ver por qué falla un chat)
+    hl.exec_cmd("sh -c 'mkdir -p ~/.cache/hyprarch-buddy; exec env GSK_RENDERER=cairo LD_PRELOAD=/usr/lib/libgtk4-layer-shell.so hyprarch-island >>~/.cache/hyprarch-buddy/island.log 2>&1'")
     hl.exec_cmd("sh -c 'sleep 30; hyprarch-browser apply --quiet'")   -- si elegiste un navegador y faltaba Internet, se instala ahora
 end)
 

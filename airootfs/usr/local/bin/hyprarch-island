@@ -39,7 +39,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
 gi.require_version("Gtk4LayerShell", "1.0")
-from gi.repository import Gdk, GLib, Gtk, Gtk4LayerShell as LS  # noqa: E402
+from gi.repository import Gdk, GLib, Gtk, Pango, Gtk4LayerShell as LS  # noqa: E402
 
 RUN = (os.environ.get("XDG_RUNTIME_DIR") or sys.exit("falta XDG_RUNTIME_DIR"))
 lock = open(os.path.join(RUN, "hyprarch-island.lock"), "w")
@@ -313,6 +313,9 @@ def run(*cmd):
 
 
 AI_CONF = os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "hyprarch", "ai.conf")
+PERM_HINT = ("Estás dentro de la isla de hyprarch (sin terminal). Para controlar el PC usa `hyprarch-api` (acciones seguras). "
+             "Si algo necesita permiso, la persona verá una tarjeta con el botón «Permitir» en este mismo cuadro: no le pidas que "
+             "apruebe nada en una terminal ni que te escriba «sí». Responde en el idioma de la persona, breve.")
 PROV_NAMES = {"claude": "Claude", "codex": "Codex", "gemini": "Gemini", "ollama": "Ollama"}
 
 
@@ -399,7 +402,11 @@ class App(Gtk.Application):
         self.login_mode = False
         self.last_q = ""
         self.net_btn = None
-        self.at_home = True            # ¿la pastilla está en su hueco de la barra? (si arrastras el cuadro, se oculta)
+        self.allow_once = []           # permisos concedidos con la tarjeta (valen solo para la siguiente pregunta)
+        self.perm_specs = []
+        self.perm_h = 0
+        self.perm_row = self.perm_label = self.perm_allow = None
+        self.at_home = True            # ¿el cuadro del chat está en su sitio (debajo de la pastilla)? La pastilla NUNCA se mueve
         self.cur = (0, 0)
         self.d0 = (0, 0)
         self.last_press = 0.0
@@ -433,8 +440,7 @@ class App(Gtk.Application):
         self.exp_box.set_sensitive(kk > 0.9)
         self.exp_box.set_visible(kk > 0.4)
         busy = abs(tgt - ST["k"]) > 0.003 or abs(self.vel) > 0.02 or abs(deh) > 0.4   # solo se anima a pleno ritmo mientras se mueve
-        if self.at_home:                                                       # con el cuadro suelto la pastilla no se dibuja
-            self.canvas.queue_draw()
+        self.canvas.queue_draw()                                               # la pastilla (ventana propia, fija) siempre se dibuja
         if kk > 0.01 or busy:
             self.panel.set_visible(True)
             self.panel.queue_draw()
@@ -465,7 +471,7 @@ class App(Gtk.Application):
         if surf is None:
             return
         px, py, pw, ph = self.pill_rect(WIN_W)
-        reg = cairo.Region(cairo.RectangleInt(int(px) - 2, 0, int(pw) + 4, int(ph) + 4) if self.at_home else cairo.RectangleInt(0, 0, 0, 0))
+        reg = cairo.Region(cairo.RectangleInt(0, 0, 0, 0))                     # la pastilla ahora vive en su propia ventana fija
         qx, qy, qw, qh = self.panel_rect(WIN_W)
         if qh > 4:
             reg.union(cairo.RectangleInt(int(qx) - 3, int(qy) - 2, int(qw) + 6, int(qh) + 6))
@@ -511,8 +517,6 @@ class App(Gtk.Application):
 
     def draw_pill(self, _a, cr, W, H):
         """La pastilla (lienzo pequeño: es lo único que se repinta en reposo)."""
-        if not self.at_home:
-            return
         t = time.monotonic() - ST["t0"]
         kk = max(0.0, min(1.0, ST["k"]))
         col = MOODS.get(ST["mood"], MOODS["idle"])[0]
@@ -561,7 +565,6 @@ class App(Gtk.Application):
             ST["target"] = 1.0
             if self.custom:                                                # abre donde lo dejaste la última vez
                 self.at_home = False
-                self.cmp_box.set_visible(False)
                 self.place(*self.clamp(*self.custom))
             self.region_dirty = True
             ST["last_act"] = time.monotonic()
@@ -621,7 +624,6 @@ class App(Gtk.Application):
             return
         x, y = self.clamp(self.d0[0] + ox, self.d0[1] + oy)
         self.at_home = False
-        self.cmp_box.set_visible(False)
         self.place(x, y)
 
     def drag_end(self):
@@ -638,7 +640,6 @@ class App(Gtk.Application):
             pass
         self.place(*self.home)
         self.at_home = True
-        self.cmp_box.set_visible(True)
         self.region_dirty = True
 
     def go_home(self):
@@ -646,7 +647,6 @@ class App(Gtk.Application):
         if ST["target"] < 0.5:
             self.place(*self.home)
             self.at_home = True
-            self.cmp_box.set_visible(True)
             self.region_dirty = True
         return False
 
@@ -668,8 +668,8 @@ class App(Gtk.Application):
         """El cuadro crece con el texto (hasta un tope; después se desplaza) y vuelve a achicarse con «Nueva»."""
         if not self.chatting:
             return False
-        _mn, nat, _a, _b = self.view.measure(Gtk.Orientation.VERTICAL, EW - 24)
-        want = HEAD_H + nat + INPUT_H + 14
+        _mn, nat, _a, _b = self.view.measure(Gtk.Orientation.VERTICAL, EW - 52)       # (un poco más estrecho que el real: así el texto nunca queda cortado)
+        want = HEAD_H + nat + INPUT_H + 24 + (self.perm_h if (self.perm_row is not None and self.perm_row.get_visible()) else 0)
         ST["eh_t"] = float(max(150, min(EH_CHAT, want)))
         if not self.at_home:                                                # si crece estando suelto, que no se salga por abajo
             self.place(*self.clamp(*self.cur))
@@ -715,7 +715,8 @@ class App(Gtk.Application):
         ST.update(mood="thinking", label=MOODS["thinking"][1], last_act=time.monotonic())
         self.cmp_label.set_text(ST["label"])
         pid, acmd = ai_conf()
-        threading.Thread(target=self.worker, args=(q, gen, pid, acmd, self.sid), daemon=True).start()
+        allow, self.allow_once = list(self.allow_once), []
+        threading.Thread(target=self.worker, args=(q, gen, pid, acmd, self.sid, allow), daemon=True).start()
 
     @staticmethod
     def stop_proc(proc):
@@ -741,7 +742,7 @@ class App(Gtk.Application):
             self.sid = sid
         return False
 
-    def worker(self, q, gen, pid, acmd, sid):
+    def worker(self, q, gen, pid, acmd, sid, allow=()):
         """Pregunta a la IA elegida y pasa su respuesta a la isla a medida que llega (Claude: palabra a palabra)."""
         env = dict(os.environ)
         env["PATH"] = os.path.expanduser("~/.local/bin") + os.pathsep + env.get("PATH", "")
@@ -754,9 +755,12 @@ class App(Gtk.Application):
                 GLib.idle_add(self.show_net)
                 return
             if pid == "claude":
-                cmd = ["claude", "-p", q, "--output-format", "stream-json", "--include-partial-messages", "--verbose"]
+                cmd = ["claude", "-p", q, "--output-format", "stream-json", "--include-partial-messages", "--verbose",
+                       "--append-system-prompt", PERM_HINT]
                 if sid:
                     cmd += ["--resume", sid]
+                # sin terminal no hay a quién preguntar: lo seguro (la API de hyprarch y leer) ya viene permitido; lo demás sale en una tarjeta
+                cmd += ["--allowedTools", "Bash(hyprarch-api:*)", "Read", "Glob", "Grep"] + list(allow)
             elif pid == "codex":
                 cmd = ["codex", "exec", "--skip-git-repo-check", q]
             elif pid == "gemini":
@@ -799,6 +803,8 @@ class App(Gtk.Application):
                         gotten = gotten or bool(txt)
                         GLib.idle_add(self.append, txt, "ai", gen)
                 elif t == "result":
+                    if ev.get("permission_denials"):
+                        GLib.idle_add(self.show_perm, gen, ev["permission_denials"])
                     if ev.get("is_error") or not gotten:
                         GLib.idle_add(self.append, str(ev.get("result") or "Sin respuesta."), "err" if ev.get("is_error") else "ai", gen)
                         gotten = True
@@ -822,6 +828,42 @@ class App(Gtk.Application):
         finally:
             self.stop_proc(proc)
             GLib.idle_add(self.finish, rc, gen)
+
+    def show_perm(self, gen, denials):
+        """La IA quiso hacer algo que necesita permiso: aquí mismo sale una tarjeta con «Permitir» (nada se ejecuta sin tu clic)."""
+        if gen != self.gen or self.perm_row is None:
+            return False
+        specs, lines = [], []
+        for d in denials:
+            tn = d.get("tool_name", "?")
+            ti = d.get("tool_input") or {}
+            cmdline = ti.get("command") if isinstance(ti, dict) else None
+            if tn == "Bash" and isinstance(cmdline, str) and cmdline.strip():
+                c = cmdline.strip()
+                lines.append(c if len(c) < 64 else c[:61] + "…")
+                if "\n" not in c and "(" not in c and ")" not in c:        # solo se puede conceder un comando exacto y sencillo
+                    specs.append("Bash(%s)" % c)
+            else:
+                lines.append(str(tn))
+        self.perm_specs = specs
+        self.perm_label.set_text("Quiere ejecutar:  " + "  ·  ".join(lines[:2]) + ("" if specs else "   (no se puede permitir desde aquí)"))
+        self.perm_allow.set_visible(bool(specs))
+        self.perm_row.set_visible(True)
+        _mn, nat_h, _a, _b = self.perm_row.measure(Gtk.Orientation.VERTICAL, EW - 32)
+        self.perm_h = nat_h + 10                                            # el cuadro crece hacia abajo lo que mida la tarjeta
+        self.fit()
+        return False
+
+    def perm_answer(self, allow):
+        self.perm_row.set_visible(False)
+        self.perm_h = 0
+        if allow and self.perm_specs:
+            self.allow_once = list(self.perm_specs)
+            self.entry.set_text("Tienes permiso para ese comando. Continúa con lo que te pedí.")
+            self.send()
+        else:
+            self.append("Entendido: no se ejecuta.\n", "dim")
+            self.fit()
 
     def need_login(self, gen):
         """Claude sin sesión: el inicio de sesión se hace aquí mismo, sin terminal (se abre el navegador y se pega el código)."""
@@ -909,6 +951,10 @@ class App(Gtk.Application):
         self.login_proc = None
         self.login_mode = False
         self.net_btn.set_visible(False)
+        if self.perm_row is not None:
+            self.perm_row.set_visible(False)
+            self.perm_h = 0
+        self.allow_once = []
         self.gen += 1                                                       # lo que traiga la consulta anterior ya no cuenta
         self.stop_proc(self.proc)
         self.proc = None
@@ -953,6 +999,7 @@ class App(Gtk.Application):
         GLib.timeout_add(190, lambda: (run(*cmd), False)[1])          # primero se recoge, luego sale lo elegido
 
     def do_activate(self):
+        global EH_CHAT, WIN_H
         prov = Gtk.CssProvider()
         prov.load_from_data(CSS)
         Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), prov, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
@@ -963,6 +1010,10 @@ class App(Gtk.Application):
         LS.set_layer(win, LS.Layer.OVERLAY)
         mon = Gdk.Display.get_default().get_monitors().get_item(0).get_geometry()
         self.sw, self.sh = mon.width, mon.height
+        # el cuadro sigue creciendo HACIA ABAJO con la charla (hasta ~60 % de la pantalla) antes de ponerse a desplazar
+        EH_CHAT = max(EH_CHAT, int(self.sh * 0.60))
+        WIN_H = CH + GAP + EH_CHAT + PANEL_PAD + 40
+        win.set_default_size(WIN_W, WIN_H)
         self.home = ((self.sw - WIN_W) // 2, TOP)                    # casa: centrada arriba (hueco de la barra)
         self.custom = load_pos()                                     # sitio al que la persona arrastró el cuadro (si lo hizo)
         LS.set_anchor(win, LS.Edge.TOP, True)
@@ -977,7 +1028,7 @@ class App(Gtk.Application):
         base.set_size_request(WIN_W, WIN_H)
         ov.set_child(base)
         # DOS lienzos: la pastilla (pequeña, siempre) y el panel (solo cuando está desplegado). En reposo solo se repinta la pastilla.
-        canvas = Gtk.DrawingArea()
+        canvas = Gtk.DrawingArea()                          # la pastilla vive en OTRA ventana (fija en su hueco): al mover el chat NO se mueve
         canvas.set_content_width(CW + 28)
         canvas.set_content_height(CH + 14)
         canvas.set_halign(Gtk.Align.CENTER)
@@ -995,7 +1046,6 @@ class App(Gtk.Application):
         panel.set_visible(False)
         self.panel = panel
         ov.add_overlay(panel)
-        ov.add_overlay(canvas)
 
         cmp_box = Gtk.Box()
         cmp_box.set_halign(Gtk.Align.CENTER)
@@ -1007,8 +1057,7 @@ class App(Gtk.Application):
         self.cmp_label.set_hexpand(True)
         cmp_box.append(self.cmp_label)
         cmp_box.set_can_target(False)
-        self.cmp_box = cmp_box
-        ov.add_overlay(cmp_box)
+        self.cmp_box = cmp_box                          # (se muestra dentro de la ventana de la pastilla, más abajo)
 
         exp = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         exp.set_halign(Gtk.Align.CENTER)
@@ -1102,6 +1151,33 @@ class App(Gtk.Application):
         body.add_overlay(nb)
         exp.append(body)
 
+        perm = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)   # tarjeta de permiso: el texto se ajusta al ancho y los botones van debajo
+        perm.set_margin_start(16)
+        perm.set_margin_end(16)
+        perm.set_margin_bottom(6)
+        perm.set_size_request(EW - 32, -1)
+        pl = Gtk.Label(xalign=0.0, wrap=True)
+        pl.set_wrap_mode(Pango.WrapMode.WORD_CHAR)
+        pl.set_max_width_chars(38)
+        pl.set_width_chars(10)
+        pl.add_css_class("say")
+        pbtns = Gtk.Box(spacing=8)
+        pbtns.set_halign(Gtk.Align.END)
+        pa = Gtk.Button(label="Permitir")
+        pa.add_css_class("pill")
+        pa.add_css_class("sel")
+        pa.connect("clicked", lambda *_a: self.perm_answer(True))
+        pn = Gtk.Button(label="No")
+        pn.add_css_class("pill")
+        pn.connect("clicked", lambda *_a: self.perm_answer(False))
+        pbtns.append(pa)
+        pbtns.append(pn)
+        perm.append(pl)
+        perm.append(pbtns)
+        perm.set_visible(False)
+        self.perm_row, self.perm_label, self.perm_allow = perm, pl, pa
+        exp.append(perm)
+
         row = Gtk.Box(spacing=8)                       # el cuadro para escribir (siempre visible, abajo)
         row.set_size_request(-1, INPUT_H)
         row.set_margin_start(14)
@@ -1145,20 +1221,46 @@ class App(Gtk.Application):
         ov.add_overlay(exp)
         win.set_child(ov)
 
+        # ---- ventana de la pastilla: fija en su hueco del centro de arriba, SIEMPRE ahí (el chat se puede llevar a otro sitio)
+        pwin = Gtk.Window(application=self)
+        pwin.set_default_size(CW + 28, CH + 14)
+        LS.init_for_window(pwin)
+        LS.set_layer(pwin, LS.Layer.OVERLAY)
+        LS.set_anchor(pwin, LS.Edge.TOP, True)
+        LS.set_anchor(pwin, LS.Edge.LEFT, True)
+        LS.set_margin(pwin, LS.Edge.LEFT, int(self.home[0] + (WIN_W - (CW + 28)) / 2))
+        LS.set_margin(pwin, LS.Edge.TOP, TOP)
+        LS.set_exclusive_zone(pwin, -1)
+        LS.set_namespace(pwin, "hyprarch-island-pill")
+        LS.set_keyboard_mode(pwin, LS.KeyboardMode.NONE)
+        pov = Gtk.Overlay()
+        pov.set_child(canvas)
+        self.cmp_box.set_halign(Gtk.Align.CENTER)
+        self.cmp_box.set_valign(Gtk.Align.START)
+        pov.add_overlay(self.cmp_box)
+        pwin.set_child(pov)
+        self.pwin = pwin
         click = Gtk.GestureClick()
         click.set_button(1)
-        # clic en la pastilla = abrir/cerrar el panel (un clic en el panel no lo cierra)
-        click.connect("released", lambda _g, _n, _x, y: (self.collapse() if ST["target"] > 0.5 else self.expand()) if y < CH + 4 else None)
+        # clic en la pastilla = abrir/cerrar el panel
+        click.connect("released", lambda _g, _n, _x, _y: self.collapse() if ST["target"] > 0.5 else self.expand())
         canvas.add_controller(click)
         mo = Gtk.EventControllerMotion()
         mo.connect("enter", lambda *_a: ST.update(hover=True, last_act=time.monotonic()))
         mo.connect("leave", lambda *_a: ST.update(hover=False))
         canvas.add_controller(mo)
+
+        def pill_region(*_a):                              # solo la pastilla recibe clics (no los márgenes transparentes)
+            s = pwin.get_surface()
+            if s is not None:
+                s.set_input_region(cairo.Region(cairo.RectangleInt(14, 0, CW, CH + 2)))
+        pwin.connect("map", pill_region)
         keys = Gtk.EventControllerKey()
         keys.connect("key-pressed", lambda _c, kv, *_a: (self.collapse(), True)[1] if kv == Gdk.KEY_Escape else False)
         win.add_controller(keys)
 
         win.present()
+        pwin.present()
         if os.environ.get("HYPRARCH_ISLAND_OPEN"):                      # solo para pruebas: arranca ya expandida
             GLib.timeout_add(600, lambda: (self.expand(), False)[1])
         GLib.timeout_add(16, self.tick)

@@ -25,11 +25,44 @@ import unicodedata
 from pathlib import Path
 
 _T0 = float(os.environ.setdefault("HYPRARCH_T0", str(time.time())))   # para medir cuánto tarda en aparecer el menú (HYPRARCH_PERF)
+def _renderer():
+    """Render de GTK: en un equipo REAL con gráfica se usa la GPU (gl): a 1080p el render por software (cairo) daba solo ~12 cuadros/s.
+    En máquinas virtuales (sin GPU de verdad) sigue cairo. Se puede forzar con ~/.config/hyprarch/renderer (cairo o ngl)."""
+    try:
+        forced = open(os.path.expanduser("~/.config/hyprarch/renderer"), encoding="utf-8").read().strip().lower()
+        if forced in ("cairo", "ngl", "gl"):
+            return "gl" if forced in ("ngl", "gl") else "cairo"
+    except OSError:
+        pass
+    try:
+        if "hypervisor" in open("/proc/cpuinfo", encoding="utf-8", errors="replace").read():
+            return "cairo"
+    except OSError:
+        return "cairo"
+    if not os.path.exists("/dev/dri/renderD128"):
+        return "cairo"
+    # Red de seguridad: si la vez anterior con la GPU no llegó a dibujar nada (se cayó), se vuelve a cairo para siempre.
+    cdir = os.path.expanduser("~/.cache/hyprarch")
+    trying, failed = os.path.join(cdir, "gl-trying"), os.path.join(cdir, "gl-failed")
+    if os.path.exists(failed):
+        return "cairo"
+    try:
+        os.makedirs(cdir, exist_ok=True)
+        if os.path.exists(trying):
+            open(failed, "w").write("el render por GPU no llego a dibujar la ultima vez\n")
+            os.remove(trying)
+            return "cairo"
+        open(trying, "w").write("1")
+    except OSError:
+        return "cairo"
+    return "gl"
+
+
 if "gtk4-layer-shell" not in os.environ.get("LD_PRELOAD", "") and not (sys.argv[1:2] == ["frames"]):
     # se relanza ANTES de cargar el resto (así el arranque no hace el trabajo dos veces)
     _e = dict(os.environ)
     _e["LD_PRELOAD"] = (_e.get("LD_PRELOAD", "") + " /usr/lib/libgtk4-layer-shell.so").strip()
-    _e["GSK_RENDERER"] = "cairo"
+    _e["GSK_RENDERER"] = _renderer()
     os.execvpe(sys.executable, [sys.executable] + sys.argv, _e)
 
 def _load(name, modname):
@@ -841,7 +874,21 @@ def draw_scene(cr, w, h, S, pal, pal_full):
         draw_text(cr, "", sx + 22, sy + sh / 2 + 6, 15, A, pop, center=True)
         if S["query"]:
             shown = "•" * len(S["query"]) if S.get("mask") else S["query"]      # --password: puntos en vez de las letras
+            aw = sw - 44 - 28                                                  # ancho disponible dentro del recuadro
+            if text_w(cr, shown, 15) > aw:                                     # texto largo: se ve el FINAL (donde escribes) con «…» delante
+                lo, hi = 0, len(shown)
+                while lo < hi:
+                    mid = (lo + hi) // 2
+                    if text_w(cr, "…" + shown[mid:], 15) <= aw:
+                        hi = mid
+                    else:
+                        lo = mid + 1
+                shown = "…" + shown[lo:]
+            cr.save()
+            rrect(cr, sx + 2, sy + 2, sw - 4, sh - 4, 19)                      # nada se dibuja fuera del recuadro
+            cr.clip()
             draw_text(cr, shown, sx + 44, sy + sh / 2 + 6, 15, FG, pop)
+            cr.restore()
             ew = text_w(cr, shown, 15)
         else:
             draw_text(cr, S["placeholder"], sx + 44, sy + sh / 2 + 6, 14, DIM, pop)
@@ -1091,6 +1138,11 @@ def run(args):
                 ms = (time.perf_counter() - t_ini) * 1000.0
                 S["avg_ms"] = ms if "avg_ms" not in S else S["avg_ms"] * 0.9 + ms * 0.1
                 S["nfr"] = S.get("nfr", 0) + 1
+                if S["nfr"] == 1:
+                    try:
+                        os.remove(os.path.expanduser("~/.cache/hyprarch/gl-trying"))      # la GPU dibujó: no hace falta la red de seguridad
+                    except OSError:
+                        pass
                 if S["nfr"] == 1 and os.environ.get("HYPRARCH_PERF"):
                     print("perf: primer cuadro a los %.0f ms de lanzarse" % ((time.time() - _T0) * 1000), file=sys.stderr)
                 if S["nfr"] > 20 and not U.LITE and S["avg_ms"] > 16.0:
@@ -1234,9 +1286,9 @@ def run(args):
             if S["close_t0"] is not None:
                 S["closing"] = now - S["close_t0"]
                 if S["closing"] > U.CLOSE_T:
-                    _line = "%s %s %dx%d  pintar %.1f ms  %.1f cuadros/s  lite=%s" % (
+                    _line = "%s %s %dx%d  pintar %.1f ms  %.1f cuadros/s  lite=%s  render=%s" % (
                         time.strftime("%Y-%m-%d %H:%M:%S"), layout, S["size"][0], S["size"][1], S.get("avg_ms", 0.0),
-                        S.get("nfr", 0) / max(S["t"], 0.1), U.LITE)
+                        S.get("nfr", 0) / max(S["t"], 0.1), U.LITE, os.environ.get("GSK_RENDERER", "?"))
                     if os.environ.get("HYPRARCH_PERF"):          # medición: tiempo medio por cuadro y cuadros pintados
                         print("perf: " + _line, file=sys.stderr)
                     try:                                         # queda en el registro (lo lee hyprarch-report); se recorta a 40 líneas

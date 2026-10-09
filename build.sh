@@ -144,6 +144,12 @@ ln -sf /run/systemd/resolve/stub-resolv.conf "$AIR/etc/resolv.conf"
 
 # NetworkManager sustituye a iwd/systemd-networkd; sshd no hace falta en un live.
 find "$AIR/etc/systemd/system" \( -name 'iwd.service' -o -name 'systemd-networkd*' -o -name 'sshd.service' \) -prune -exec rm -rf {} +
+# Además se ENMASCARAN (enlace a /dev/null): en un PC real systemd-networkd seguía arrancando y se peleaba con NetworkManager por el Wi-Fi
+# (el registro se llenaba de «Foreign process NetworkManager changed sysctl…» y el Wi-Fi fallaba al desactivarse).
+mkdir -p "$AIR/etc/systemd/system"
+for u in systemd-networkd.service systemd-networkd.socket systemd-networkd-wait-online.service systemd-networkd-varlink.socket iwd.service; do
+  ln -sf /dev/null "$AIR/etc/systemd/system/$u"
+done
 
 # Arranque más rápido y liviano (pensado también para equipos modestos): se quitan del camino los servicios del live
 # que no hacen falta para usar el escritorio. pacman-init (13 s) solo se necesita al instalar: lo hace hyprarch-install.
