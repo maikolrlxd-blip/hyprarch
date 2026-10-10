@@ -400,7 +400,7 @@ class App(Gtk.Application):
         tiles.append(self.make_tile("theme", "", "Colores", "Cambiar tema", False,
                                     lambda: self.run_and_close("hyprarch-theme")))
         tiles.append(self.make_tile("lock", "", "Bloquear", "Pantalla", False,
-                                    lambda: self.run_and_close("hyprlock")))
+                                    lambda: self.run_and_close("hyprarch-lock")))
         for i, t in enumerate(tiles):
             grid.attach(t, i % 3, i // 3, 1, 1)
         panel.append(grid)

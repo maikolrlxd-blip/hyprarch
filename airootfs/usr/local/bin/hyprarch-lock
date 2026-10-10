@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Bloquea la pantalla. En el modo EN VIVO (USB) no hay contraseña, así que NO se bloquea (quedarías fuera); al instalar sí.
+if [[ -d /run/archiso ]]; then
+  command -v notify-send >/dev/null 2>&1 && notify-send -a hyprarch "Bloqueo desactivado en modo en vivo" "El USB no tiene contraseña; el bloqueo se activa al instalar hyprarch."
+  exit 0
+fi
+pidof hyprlock >/dev/null 2>&1 || exec hyprlock

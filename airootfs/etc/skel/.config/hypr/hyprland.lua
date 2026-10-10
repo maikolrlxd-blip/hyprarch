@@ -345,7 +345,7 @@ hl.bind(mod .. " + comma",  hl.dsp.exec_cmd("hyprarch-settings"))   -- Ajustes d
 hl.bind(mod .. " + S",      hl.dsp.exec_cmd("hyprarch-start"))   -- buscar apps, como en Windows (el shader CRT ya no tiene atajo: scripts/toggle-shader.sh)
 hl.bind(mod .. " + F1",     hl.dsp.exec_cmd(scripts .. "/keybinds.sh"))
 hl.bind(mod .. " + Escape", hl.dsp.exec_cmd(scripts .. "/powermenu.sh"))
-hl.bind(mod .. " + L",      hl.dsp.exec_cmd("hyprlock"))
+hl.bind(mod .. " + L",      hl.dsp.exec_cmd("hyprarch-lock"))
 hl.bind(mod .. " + V",         hl.dsp.exec_cmd(scripts .. "/clipboard.sh"))   -- historial del portapapeles (como en Windows)
 
 -- Ventanas
