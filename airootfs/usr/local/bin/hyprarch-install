@@ -273,7 +273,7 @@ arch-chroot /mnt systemctl enable NetworkManager systemd-resolved systemd-timesy
 arch-chroot /mnt hwclock --systohc || warn "no pude actualizar el reloj de hardware"
 
 # ---------- usuario ----------
-arch-chroot /mnt useradd -m -G wheel,audio,video,input,storage -s /bin/bash "$USERNAME"
+arch-chroot /mnt useradd -m -G wheel,audio,video,storage -s /bin/bash "$USERNAME"
 printf '%s:%s\n' "$USERNAME" "$PASSWORD" | arch-chroot /mnt chpasswd
 arch-chroot /mnt passwd -l root >/dev/null
 mkdir -p /mnt/etc/sudoers.d

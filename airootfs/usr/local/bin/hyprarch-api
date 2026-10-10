@@ -91,8 +91,11 @@ case "${1:-help}" in
     jq -cn --arg l "$l1 $l5 $l15" --arg m "$mem" --arg b "${bat:-}" --arg up "$(uptime -p 2>/dev/null)" \
       '{load:$l, memory_total_mb:($m|split(" ")[0]|tonumber), memory_used_mb:($m|split(" ")[1]|tonumber), battery:(if $b=="" then null else ($b|tonumber) end), uptime:$up}' ;;
   screenshot)
-    f=${2:-$HOME/captura-$(date +%Y%m%d-%H%M%S).png}
-    case $f in /*) ;; *) f=$PWD/$f ;; esac
+    # solo dentro de ~/Imágenes/Capturas, nombre simple y sin sobrescribir (grim trunca y sigue enlaces)
+    d=$HOME/Imágenes/Capturas; mkdir -p "$d"
+    n=$(basename -- "${2:-captura-$(date +%Y%m%d-%H%M%S)}"); n=${n%.png}; n=${n//[^A-Za-z0-9._-]/_}
+    f=$d/${n:-captura}.png
+    [ -e "$f" ] && f=$d/${n:-captura}-$(date +%s).png
     hyprarch-ctl grim "$f" 2>/dev/null && jq -cn --arg p "$f" '{ok:true,path:$p}' || fail "no se pudo capturar" ;;
   notify)  notify-send "${2:?título}" "${3:-}" && ok "enviada" ;;
   osd)     hyprarch-osd text "${2:?texto}" >/dev/null 2>&1 & ok "mostrado" ;;
