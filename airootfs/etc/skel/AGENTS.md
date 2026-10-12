@@ -23,6 +23,34 @@ Por SSH funciona igual (el comando entra solo a la sesión gráfica). Si necesit
 (ejecuta un comando dentro de la sesión de Hyprland).
 
 ## Dónde vive cada cosa
+### MCP para Claude Code, Codex y Gemini
+
+El servidor stdio `hyprarch-mcp` usa solo Python estándar, valida los argumentos,
+invoca `hyprarch-api` sin shell y no registra argumentos ni resultados. No inicia
+servidores de red. Regístralo desde una terminal como el usuario de la sesión:
+
+```sh
+claude mcp add --transport stdio --scope user hyprarch -- /usr/local/bin/hyprarch-mcp
+codex mcp add hyprarch -- /usr/local/bin/hyprarch-mcp
+gemini mcp add --scope user hyprarch /usr/local/bin/hyprarch-mcp
+```
+
+Comprueba con `claude mcp list`, `codex mcp list` o `gemini mcp list`. Para ofrecer
+solo consultas, registra en su lugar `/usr/bin/env HYPRARCH_MCP_READONLY=1
+/usr/local/bin/hyprarch-mcp` como comando y argumentos. El servidor completo
+incluye acciones de escritorio: conserva la confirmación del cliente para ellas
+(no uses `--trust` en Gemini). No proporciona un sistema de tarjetas por sí mismo.
+
+La isla carga exclusivamente `/usr/share/hyprarch/island-mcp.json`, en modo de
+solo lectura, y no hereda estos registros personales. Para acciones usa
+`/usr/local/bin/hyprarch-api`; para comandos libres o archivos externos espera
+la tarjeta. Una captura devuelve la ruta creada por la API: el MCP no acepta un
+destino de escritura arbitrario. Usa esa ruta devuelta, no una ruta supuesta.
+
+Referencias: [Claude MCP](https://code.claude.com/docs/en/mcp),
+[Codex MCP](https://developers.openai.com/codex/mcp/) y
+[Gemini CLI](https://geminicli.com/docs/cli/cli-reference/) (2026-10-12).
+
 - Modos y sus apps: `~/.config/hyprarch/modes/<modo>.conf` (una app por línea: `espacio|comando`; `0` = donde esté).
   Cámbialos con `hyprarch-mode add <modo> <comando> [espacio]` / `remove`. Los comandos no admiten `; & | $ \` < > ( ) { }`.
 - Preferencias: `~/.config/hyprarch/` (`style`, `mascot`, `buddy.conf`, `intro`, `lang`, `perf`…). Tema: `hyprarch-theme`.
@@ -32,6 +60,28 @@ Por SSH funciona igual (el comando entra solo a la sesión gráfica). Si necesit
 - Menús del sistema: `hyprarch-pick` (selector animado; **no uses fuzzel, fzf ni menús de terminal básicos**).
 
 ## Reglas (para cuidar a la persona y su equipo)
+La isla inicia Claude en `~/.local/share/hyprarch/island-work`, con fuentes de
+configuración vacías, `dontAsk`, herramientas restringidas y un hook propio.
+No preautoriza la lectura de HOME. Trabaja con archivos que la persona haya
+copiado deliberadamente a ese directorio. Para leer otra carpeta, solicita cada
+archivo mediante `Read` con su ruta absoluta: la isla muestra una tarjeta con la
+ruta y solo «Permitir» habilita esa llamada exacta en la siguiente consulta.
+Nunca pidas claves privadas, `.env` ni tokens. Los enlaces fuera de island-work
+también necesitan tarjeta. Un comando Bash autorizado puede acceder al sistema
+con los permisos del usuario: esta política de herramientas no es un sandbox
+de Linux. Explica siempre el alcance del comando en la tarjeta.
+
+Flags y hook contrastados con la [CLI de Claude](https://code.claude.com/docs/en/cli-reference),
+[permisos](https://code.claude.com/docs/en/permissions) y
+[hooks](https://code.claude.com/docs/en/hooks), el 2026-10-12. Si la versión
+instalada rechaza alguno, actualízala; no retires las restricciones para continuar.
+Se exige Claude Code **2.1.295 o posterior** por `onFailure: block`: si el hook
+falla o vence su plazo, la llamada se bloquea. Versiones anteriores no arrancan
+desde la isla.
+Se desactiva también la carga automática de CLAUDE.md, memoria y adjuntos `@`
+con las [variables documentadas](https://code.claude.com/docs/en/env-vars).
+Para aportar contexto solicita `Read` y espera la tarjeta cuando sea externo.
+
 1. **Pregunta antes de lo irreversible:** borrar archivos, formatear, cambiar contraseñas, tocar `/boot` o discos, enviar algo fuera del equipo.
 2. **No abras el equipo hacia internet** (túneles, servidores públicos, compartir pantalla) sin que la persona lo pida y lo apruebe.
 3. **No guardes ni muestres contraseñas, claves o tokens** en notas, registros o mensajes.

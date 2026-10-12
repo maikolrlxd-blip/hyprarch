@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "hyprarch": {
+      "type": "stdio",
+      "command": "/usr/local/bin/hyprarch-mcp",
+      "env": {
+        "HYPRARCH_API_BIN": "/usr/local/bin/hyprarch-api",
+        "HYPRARCH_API_PYTHON": "",
+        "HYPRARCH_MCP_READONLY": "1"
+      }
+    }
+  }
+}

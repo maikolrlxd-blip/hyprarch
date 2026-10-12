@@ -1,0 +1,383 @@
+#!/usr/bin/env python3
+"""Servidor MCP stdio para hyprarch-api. Solo biblioteca estandar."""
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+
+PROTOCOL = "2025-06-18"
+VERSIONS = {PROTOCOL, "2024-11-05"}
+API_BIN = os.environ.get("HYPRARCH_API_BIN", "hyprarch-api")
+# Portable test harness can invoke a mock script with the running interpreter.
+API_PYTHON = os.environ.get("HYPRARCH_API_PYTHON")
+READONLY = os.environ.get("HYPRARCH_MCP_READONLY") == "1"
+TIMEOUT = 20
+
+# (?![\s\S]) exige fin absoluto tanto en Python como en JSON Schema.
+TARGET_PATTERN = r"^(?:0x[0-9a-fA-F]+|(?!0x)[A-Za-z0-9._@+\-]+)(?![\s\S])"
+APP_PATTERN = r"^[^\x00-\x1f\x7f-\x9f\u2028\u2029\ud800-\udfff]+(?![\s\S])"
+
+# hyprarch-api no agrega -- antes de los argumentos de notify-send.
+NOTIFY_PATTERN = r"^(?!-)[^\x00\ud800-\udfff]*(?![\s\S])"
+
+
+def string_schema(pattern, maximum, minimum=1):
+    return {
+        "type": "string",
+        "minLength": minimum,
+        "maxLength": maximum,
+        "pattern": pattern,
+    }
+
+
+TARGET = string_schema(TARGET_PATTERN, 200)
+APP = string_schema(APP_PATTERN, 200)
+PERCENT = {"type": "integer", "minimum": 0, "maximum": 100}
+MODE = {
+    "type": "string",
+    "enum": ["gamer", "cine", "estudio", "trabajo", "normal"],
+}
+THEME = {
+    "type": "string",
+    "enum": ["cine", "estudio", "fresco", "gamer", "rojo", "trabajo", "verde"],
+}
+
+# sufijo, descripcion, argv fijo, propiedades, solo lectura
+SPECS = [
+    ("windows", "Lista ventanas / List windows", ("windows",), {}, True),
+    ("workspaces", "Lista espacios / List workspaces", ("workspaces",), {}, True),
+    ("active", "Ventana activa / Active window", ("active",), {}, True),
+    (
+        "focus", "Enfoca por clase o direccion / Focus by class or address",
+        ("focus",), {"target": TARGET}, False,
+    ),
+    (
+        "close", "Cierra por clase o direccion / Close by class or address",
+        ("close",), {"target": TARGET}, False,
+    ),
+    ("apps", "Lista aplicaciones / List applications", ("apps",), {}, True),
+    (
+        "open", "Abre una app instalada / Open an installed app",
+        ("open",), {"app": APP}, False,
+    ),
+    ("mode_get", "Consulta el modo / Get mode", ("mode",), {}, True),
+    (
+        "mode_set", "Cambia el modo / Set mode",
+        ("mode", "set"), {"mode": MODE}, False,
+    ),
+    (
+        "theme_set", "Cambia el tema / Set theme",
+        ("theme", "set"), {"theme": THEME}, False,
+    ),
+    ("volume_get", "Consulta volumen / Get volume", ("volume", "get"), {}, True),
+    (
+        "volume_set", "Ajusta volumen / Set volume",
+        ("volume", "set"), {"percent": PERCENT}, False,
+    ),
+    (
+        "brightness_set", "Ajusta brillo / Set brightness",
+        ("brightness", "set"), {"percent": PERCENT}, False,
+    ),
+    ("system", "Estado del equipo / System status", ("system",), {}, True),
+    (
+        "screenshot", "Captura PNG; devuelve ruta / Save PNG; return path",
+        ("screenshot",), {}, False,
+    ),
+    (
+        "notify", "Muestra una notificacion / Show a notification",
+        ("notify",),
+        {
+            "title": string_schema(NOTIFY_PATTERN, 200),
+            "text": string_schema(NOTIFY_PATTERN, 4000, 0),
+        },
+        False,
+    ),
+]
+
+TOOLS = {}
+COMMANDS = {}
+for suffix, description, command, properties, read_only in SPECS:
+    name = "hyprarch_" + suffix
+    COMMANDS[name] = command
+    TOOLS[name] = {
+        "name": name,
+        "description": description,
+        "inputSchema": {
+            "type": "object",
+            "properties": properties,
+            "required": list(properties),
+            "additionalProperties": False,
+        },
+    }
+
+AVAILABLE = {
+    "hyprarch_" + suffix
+    for suffix, _, _, _, read_only in SPECS
+    if not READONLY or read_only
+}
+
+
+class RPCError(Exception):
+    def __init__(self, code, message):
+        super().__init__(message)
+        self.code = code
+        self.message = message
+
+
+def invalid_params(message="Parametros invalidos"):
+    raise RPCError(-32602, message)
+
+
+def reject_constant(_):
+    raise ValueError("Constante JSON invalida")
+
+
+def parse_json(text):
+    return json.loads(text, parse_constant=reject_constant)
+
+
+def json_text(value):
+    return json.dumps(
+        value, ensure_ascii=True, allow_nan=False, separators=(",", ":")
+    )
+
+
+def error_response(request_id, code, message):
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "error": {"code": code, "message": message},
+    }
+
+
+def tool_result(text, failed=False):
+    return {
+        "content": [{"type": "text", "text": text}],
+        "isError": failed,
+    }
+
+
+def tool_failure(message):
+    return tool_result(json_text({"ok": False, "error": message}), True)
+
+
+def log_call(name, status, started):
+    # Nunca registrar argumentos, IDs, rutas, salida ni excepciones.
+    entry = {
+        "tool": name,
+        "status": status,
+        "duration_ms": round((time.monotonic() - started) * 1000),
+    }
+    print(json_text(entry), file=sys.stderr, flush=True)
+
+
+def validate_arguments(name, arguments):
+    schema = TOOLS[name]["inputSchema"]
+    properties = schema["properties"]
+
+    if not isinstance(arguments, dict) or set(arguments) != set(properties):
+        invalid_params("Argumentos faltantes o adicionales")
+
+    for key, rule in properties.items():
+        value = arguments[key]
+
+        if rule["type"] == "integer":
+            # bool es una subclase de int: no debe aceptarse.
+            if (
+                type(value) is not int
+                or not rule["minimum"] <= value <= rule["maximum"]
+            ):
+                invalid_params("Argumento " + key + ": entero entre 0 y 100")
+        else:
+            if not isinstance(value, str):
+                invalid_params("Argumento " + key + ": se esperaba texto")
+
+            if "enum" in rule:
+                if value not in rule["enum"]:
+                    invalid_params("Argumento " + key + ": valor no permitido")
+            elif not (
+                rule["minLength"] <= len(value) <= rule["maxLength"]
+                and re.fullmatch(rule["pattern"], value)
+            ):
+                invalid_params(
+                    "Argumento " + key + ": formato o longitud invalida"
+                )
+
+
+def call_tool(params):
+    started = time.monotonic()
+    name = params.get("name")
+    safe_name = name if isinstance(name, str) and name in TOOLS else "unknown"
+    status = "rejected"
+
+    try:
+        if not isinstance(name, str) or name not in AVAILABLE:
+            invalid_params("Herramienta desconocida o no disponible")
+
+        arguments = params.get("arguments", {})
+        validate_arguments(name, arguments)
+
+        argv = ([API_PYTHON, API_BIN] if API_PYTHON else [API_BIN]) + list(COMMANDS[name])
+        argv.extend(
+            str(arguments[key])
+            for key in TOOLS[name]["inputSchema"]["properties"]
+        )
+
+        status = "running"
+        process = subprocess.run(
+            argv,
+            shell=False,
+            timeout=TIMEOUT,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+
+        status = "exit_" + str(process.returncode)
+        try:
+            output = process.stdout.decode("utf-8").strip()
+            decoded = parse_json(output)
+        except (UnicodeError, ValueError, RecursionError):
+            status += "_invalid_json"
+            return tool_failure(
+                "hyprarch-api devolvio salida vacia o JSON invalido "
+                "(codigo " + str(process.returncode) + ")"
+            )
+
+        failed = process.returncode != 0 or (
+            isinstance(decoded, dict) and decoded.get("ok") is False
+        )
+        return tool_result(output, failed)
+
+    except subprocess.TimeoutExpired:
+        status = "timeout"
+        return tool_failure(
+            "Timeout: hyprarch-api excedio 20 segundos; "
+            "la accion podria haberse aplicado parcialmente"
+        )
+    except (OSError, ValueError):
+        status = "execution_error"
+        return tool_failure(
+            "No se pudo ejecutar hyprarch-api o preparar la captura"
+        )
+    finally:
+        log_call(safe_name, status, started)
+
+
+class Server:
+    def __init__(self):
+        self.initialized = False
+
+    def dispatch(self, method, params):
+        if method not in {"initialize", "ping", "tools/list", "tools/call"}:
+            raise RPCError(-32601, "Metodo no encontrado")
+
+        if not isinstance(params, dict):
+            invalid_params("params debe ser un objeto")
+
+        if "_meta" in params and not isinstance(params["_meta"], dict):
+            invalid_params("_meta debe ser un objeto")
+
+        if method == "initialize":
+            version = params.get("protocolVersion")
+            info = params.get("clientInfo")
+            if not (
+                isinstance(version, str)
+                and isinstance(params.get("capabilities"), dict)
+                and isinstance(info, dict)
+                and isinstance(info.get("name"), str)
+                and isinstance(info.get("version"), str)
+            ):
+                invalid_params(
+                    "initialize requiere protocolVersion, capabilities y clientInfo"
+                )
+            if self.initialized:
+                raise RPCError(-32600, "La sesion ya fue inicializada")
+
+            self.initialized = True
+            return {
+                "protocolVersion": version if version in VERSIONS else PROTOCOL,
+                "capabilities": {"tools": {}},
+                "serverInfo": {"name": "hyprarch-mcp", "version": "0.1.0"},
+            }
+
+        if method == "ping":
+            return {}
+
+        if not self.initialized:
+            raise RPCError(-32002, "Primero hay que inicializar la sesion")
+
+        if method == "tools/list":
+            if "cursor" in params:
+                invalid_params("La lista es completa; no hay cursores")
+            return {
+                "tools": [
+                    tool for name, tool in TOOLS.items()
+                    if name in AVAILABLE
+                ]
+            }
+
+        return call_tool(params)
+
+    def handle(self, message):
+        if not isinstance(message, dict):
+            return error_response(None, -32600, "Solicitud invalida")
+
+        request_id = message.get("id")
+        valid_id = type(request_id) in (str, int)
+
+        if (
+            message.get("jsonrpc") != "2.0"
+            or not isinstance(message.get("method"), str)
+            or "result" in message
+            or "error" in message
+            or ("id" in message and not valid_id)
+        ):
+            return error_response(
+                request_id if valid_id else None,
+                -32600,
+                "Solicitud invalida",
+            )
+
+        # Ninguna notificacion recibe respuesta ni ejecuta herramientas.
+        # Incluye notifications/initialized y notificaciones desconocidas.
+        if "id" not in message:
+            return None
+
+        try:
+            result = self.dispatch(
+                message["method"], message.get("params", {})
+            )
+            return {"jsonrpc": "2.0", "id": request_id, "result": result}
+        except RPCError as error:
+            return error_response(request_id, error.code, error.message)
+        except Exception:
+            print("hyprarch-mcp: internal_error", file=sys.stderr, flush=True)
+            return error_response(request_id, -32603, "Error interno")
+
+
+def main():
+    server = Server()
+
+    for line in sys.stdin.buffer:
+        try:
+            message = parse_json(line.decode("utf-8"))
+        except (UnicodeError, ValueError, RecursionError):
+            response = error_response(None, -32700, "JSON invalido")
+        else:
+            response = server.handle(message)
+
+        if response is not None:
+            data = (json_text(response) + "\n").encode("utf-8")
+            sys.stdout.buffer.write(data)
+            sys.stdout.buffer.flush()
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (BrokenPipeError, KeyboardInterrupt):
+        pass
