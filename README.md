@@ -29,7 +29,7 @@ trabajar y funcionar en equipos modestos.
 - **Modos** (gamer, cine, estudio, trabajo, normal) con efectos reales: rendimiento, avisos, tema, fondo y apps propias, configurables en una ventana.
 - **Escritorio propio**: barra, menú de inicio, centro de control, selector animado, sonidos, tema de colores con un solo acento.
 - **Pensado para equipos modestos**: perfil ligero automático, menús que se adaptan a la potencia disponible.
-- **Todos los idiomas** y asistente de primer arranque; instalador guiado **UEFI y BIOS clásico**, con cifrado de disco (LUKS) opcional.
+- **Eliges el idioma en el primer arranque** (interfaz propia en español e inglés; más idiomas en camino); instalador guiado **UEFI y BIOS clásico**, con cifrado de disco (LUKS) opcional.
 - **Reportar un problema** (SUPER → «Reportar un problema»): crea un informe sin contraseñas ni nombres de Wi-Fi y, **solo si tú lo aceptas**, lo envía a los desarrolladores.
 
 ## Descargar y probar
@@ -53,7 +53,7 @@ La ISO queda en `out/`. Con GitHub Actions: sube el repo, ejecuta **Build ISO** 
 | Gráficos **Intel** | Probado |
 | Gráficos **AMD** | Controladores libres incluidos (mesa/RADV); **pendiente de probar en equipo real** |
 | Gráficos **NVIDIA moderna** (GTX 16xx, RTX 20 y posteriores) | En vivo usa el controlador libre (nouveau/NVK). Al **instalar**, `hyprarch-install` pone el controlador propio `nvidia-open` y deja una entrada de **rescate gráfico** en el arranque. **Pendiente de probar en equipo real** |
-| NVIDIA antigua (GTX 10xx/9xx y anteriores) | Controlador libre (nouveau): funciona, con menos rendimiento en juegos |
+| NVIDIA antigua (GTX 10xx/9xx y anteriores) | Controlador libre (nouveau): debería funcionar, con menos rendimiento en juegos. Pendiente de probar |
 | Portátiles híbridos (Intel/AMD + NVIDIA) | La pantalla usa la gráfica integrada; `prime-run <juego>` usa la NVIDIA. Pendiente de probar |
 | Procesadores ARM | No soportado |
 
