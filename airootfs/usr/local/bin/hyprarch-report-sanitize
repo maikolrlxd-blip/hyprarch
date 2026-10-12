@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+"""Shared, best-effort text redaction for reports. No image redaction."""
+import getpass
+import ipaddress
+import os
+import re
+import socket
+import subprocess
+import sys
+
+
+def known_ssids():
+    try:
+        result = subprocess.run(
+            ["nmcli", "--escape", "no", "-g", "SSID", "device", "wifi", "list", "--rescan", "no"],
+            capture_output=True, text=True, timeout=5, check=False,
+        )
+        return [line for line in result.stdout.splitlines() if line and line != "--"]
+    except (OSError, subprocess.SubprocessError):
+        return []
+
+
+def sanitize(text, ssids=()):
+    # Redact credentials before identities (names may occur inside tokens).
+    text = re.sub(r"(?i)\bBearer\s+[^\s\"'<>]+", "Bearer <token>", text)
+    text = re.sub(r"\b(?:ghp_|github_pat_|sk-)[A-Za-z0-9_-]+", "<token>", text)
+    text = re.sub(r"(?i)\b(?:token|api[_-]?key|password|secret)\s*[=:]\s*[^\s&\"'<>]+", "<credencial>", text)
+    text = re.sub(r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", "<correo>", text)
+    text = re.sub(r"/home/[^/\s\"'<>]+", "/home/<usuario>", text)
+    for value in sorted(set(ssids), key=len, reverse=True):
+        text = text.replace(value, "<ssid>")
+    # Labels cover SSIDs from logs and user descriptions, including spaces.
+    text = re.sub(r"(?im)\b(?:ssid|wi-?fi(?:\s+network)?)\s*[:=]\s*[^\r\n]+", "SSID: <ssid>", text)
+    for word, replacement in ((getpass.getuser(), "<usuario>"), (socket.gethostname(), "<equipo>")):
+        if len(word) > 2 and word.lower() not in {"hyprarch", "localhost", "archiso", "arch", "live", "root"}:
+            text = re.sub(r"\b" + re.escape(word) + r"\b", replacement, text)
+    text = re.sub(r"\b(?:[0-9a-fA-F]{2}[:-]){5}[0-9a-fA-F]{2}\b", "<mac>", text)
+
+    def ipv6(match):
+        value = match[0]
+        address = value.rstrip(".")
+        try:
+            ipaddress.IPv6Address(address.split("%", 1)[0])
+            return "<ip>" + value[len(address):]
+        except ValueError:
+            return value
+
+    text = re.sub(r"(?<![\w:])[0-9a-fA-F:.]*:[0-9a-fA-F:.]+(?:%[\w.-]+)?(?![\w:])", ipv6, text)
+    return re.sub(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", "<ip>", text)
+
+
+if __name__ == "__main__":
+    sys.stdout.write(sanitize(sys.stdin.read(), known_ssids()))

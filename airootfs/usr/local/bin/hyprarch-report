@@ -6,24 +6,39 @@
 #   hyprarch-report --no-ui  (sin menús; para probar) genera el .zip y escribe su ruta
 #
 # El .zip tiene: reporte.txt (tu descripción, versión del sistema, procesador/memoria/gráfica/sonido/red SIN nombres de
-# redes Wi-Fi, rendimiento, registro de Hyprland y avisos del sistema), registros de hyprarch (apps, permisos, fluidez
-# de los menús) y, solo si lo aceptas, una captura de pantalla. NO incluye contraseñas ni archivos tuyos.
+# redes Wi-Fi y rendimiento). Registros libres solo con --include-logs; captura solo si lo aceptas.
+# El texto se filtra igual para ZIP y web. El filtro es heurístico: revisa antes de compartir;
+# no elimina datos personales de imágenes ni garantiza reconocer todos los secretos.
 # Nada se envía solo: tú decides a dónde va el archivo. Si esta ISO trae un servidor de reportes configurado
 # (/usr/share/hyprarch/report-endpoint), aparece la opción «Enviar a los desarrolladores»: te dice qué se manda, pide tu permiso
 # y, sin Internet, lo guarda en cola (~/.cache/hyprarch/report-queue) para reintentar (hyprarch-report --retry).
 set -u
 T() { command -v hyprarch-i18n >/dev/null 2>&1 && hyprarch-i18n "$1" "${2:-$1}" || printf '%s' "${2:-$1}"; }
 note() { command -v notify-send >/dev/null 2>&1 && notify-send -a hyprarch -t "${3:-9000}" "$1" "${2:-}"; }
-NOUI=0; [[ ${1:-} == --no-ui ]] && NOUI=1
+NOUI=0; INCLUDE_LOGS=0; RETRY=0
+for arg in "$@"; do
+  case $arg in
+    --no-ui) NOUI=1 ;;
+    --include-logs) INCLUDE_LOGS=1 ;;
+    --retry) RETRY=1 ;;
+    *) echo "Uso: hyprarch-report [--no-ui] [--include-logs] [--retry]" >&2; exit 2 ;;
+  esac
+done
+umask 077
 ENDPOINT=${HYPRARCH_REPORT_URL:-$(head -n1 /usr/share/hyprarch/report-endpoint 2>/dev/null | tr -d '[:space:]')}
 QUEUE="$HOME/.cache/hyprarch/report-queue"
 endpoint_ok() { [[ $ENDPOINT == https://* || $ENDPOINT =~ ^http://(127\.0\.0\.1|localhost|10\.0\.2\.2)(:[0-9]+)?(/|$) ]]; }
 post_payload() {   # archivo.json -> 0 si el servidor lo aceptó (imprime el número del reporte)
   local out
+  # Legacy queued reports were not sanitized: never resend them automatically.
+  python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1])).get("privacy_version") == 1 else 1)' "$1" || {
+    echo "Reporte antiguo sin filtro: genera uno nuevo y revisa la cola antes de reenviar." >&2
+    return 1
+  }
   out=$(curl -sS --max-time 40 -H 'content-type: application/json; charset=utf-8' --data-binary "@$1" "${ENDPOINT%/}/api/report" 2>/dev/null) || return 1
   python3 -c 'import json,sys; d=json.loads(sys.argv[1]); print(d["id"]) if d.get("ok") else sys.exit(1)' "$out" 2>/dev/null
 }
-if [[ ${1:-} == --retry ]]; then   # reenviar lo que quedó en cola
+if [[ $RETRY == 1 ]]; then   # reenviar lo que quedó en cola
   endpoint_ok || exit 0
   for f in "$QUEUE"/*.json; do [[ -f $f ]] || continue; if id=$(post_payload "$f"); then rm -f "$f"; echo "enviado #$id"; else echo "sin conexión: se queda en cola"; break; fi; done
   exit 0
@@ -56,6 +71,7 @@ tailf() { [[ -s $1 ]] && tail -n "${2:-60}" "$1"; }
   echo "# Reporte de hyprarch  ($(date -Is))"
   sec "Qué pasó"; echo "$desc"
   sec "Sistema"
+  # shellcheck source=/dev/null
   . /etc/os-release 2>/dev/null; echo "${PRETTY_NAME:-?}  | kernel $(uname -r)"
   [[ -d /run/archiso ]] && echo "Sesión: EN VIVO (USB/ISO)" || echo "Sesión: INSTALADO en disco"
   echo "ISO/versión: $(cat /usr/share/hyprarch/version 2>/dev/null || echo ?)"
@@ -65,31 +81,35 @@ tailf() { [[ -s $1 ]] && tail -n "${2:-60}" "$1"; }
   lscpu 2>/dev/null | grep -E 'Model name|^CPU\(s\)' | sed 's/  */ /g'
   free -m | sed -n 2p
   lspci 2>/dev/null | grep -Ei 'vga|3d|display|audio|network|wireless|ethernet' | cut -d' ' -f2-
-  [[ -d /sys/class/power_supply ]] && ls /sys/class/power_supply | tr '\n' ' ' && echo
+  if [[ -d /sys/class/power_supply ]]; then
+    find /sys/class/power_supply -mindepth 1 -maxdepth 1 -printf '%f '; echo
+  fi
   systemd-detect-virt 2>/dev/null | sed 's/^/virtualización: /'
   sec "Rendimiento"
   hyprarch-perf status 2>&1 | head -4
   command -v hyprarch-api >/dev/null && hyprarch-api system 2>&1
   uptime -p 2>/dev/null; systemd-analyze 2>/dev/null | head -1
-  sec "Fluidez de los menús (últimas aperturas: tiempo de pintado y cuadros por segundo)"
-  tailf "$HOME/.cache/hyprarch/pick-perf.log" 12
+
   sec "Pantalla y gráficos"
   hyprctl monitors 2>/dev/null | grep -E '^Monitor|@' | head -4
   command -v glxinfo >/dev/null && glxinfo -B 2>/dev/null | grep -E 'OpenGL renderer|OpenGL version' | head -2
   sec "Sonido"
-  wpctl status 2>/dev/null | head -24
+  wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null
   sec "Sonido: detalle de las salidas (formato, buffer, estado)"
   pw-dump 2>/dev/null | jq -r '.[] | select(.type=="PipeWire:Interface:Node") | select(.info.props["media.class"]=="Audio/Sink") | "\(.info.props["node.name"]) | estado=\(.info.state) | formato=\(.info.props["audio.format"] // "?") | rate=\(.info.props["audio.rate"] // "?") | periodo=\(.info.props["api.alsa.period-size"] // "?") | headroom=\(.info.props["api.alsa.headroom"] // "?") | batch-off=\(.info.props["api.alsa.disable-batch"] // "?")"' 2>/dev/null | head -8
   pw-metadata -n settings 0 2>/dev/null | grep -E 'clock\.(quantum|rate|min-quantum)' | head -4
   cat /proc/asound/card*/stream0 2>/dev/null | grep -E 'USB Audio|Format|Rates|Channels|Endpoint|Sync' | head -14
   sec "Red: ¿hay dos gestores a la vez?"
   systemctl is-active NetworkManager systemd-networkd iwd 2>/dev/null | paste -sd' '
-  sec "Chat de la isla (últimas líneas del registro)"
-  tailf "$HOME/.cache/hyprarch-buddy/island.log" 30
+
   sec "Red (tipos de conexión; sin nombres de redes)"
   nmcli -t -f DEVICE,TYPE,STATE dev 2>/dev/null
   sec "Servicios fallidos"
   systemctl --failed --no-legend 2>/dev/null | head -10
+  if (( INCLUDE_LOGS )); then
+  sec "Registros libres (adjuntos por petición explícita; revisar antes de compartir)"
+  tailf "$HOME/.cache/hyprarch/pick-perf.log" 12
+  tailf "$HOME/.cache/hyprarch-buddy/island.log" 30
   sec "Registro de apps del menú de inicio (últimas líneas)"
   tailf "$HOME/.cache/hyprarch/apps.log" 30
   sec "Registro de permisos de la IA (últimas líneas)"
@@ -98,7 +118,14 @@ tailf() { [[ -s $1 ]] && tail -n "${2:-60}" "$1"; }
   tail -n 60 "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/hypr/*/hyprland.log 2>/dev/null | tail -60
   sec "Avisos y errores del sistema (este arranque)"
   journalctl -b -p warning --no-pager 2>/dev/null | tail -60
-} > "$WORK/reporte.txt" 2>&1
+  fi
+} > "$WORK/reporte.txt" 2>/dev/null
+# Sanitize ONCE before ZIP creation. Web delivery reads these same bytes.
+SANITIZER=/usr/local/bin/hyprarch-report-sanitize
+python3 "$SANITIZER" < "$WORK/reporte.txt" > "$WORK/reporte.safe" || exit 1
+mv -- "$WORK/reporte.safe" "$WORK/reporte.txt"
+printf '%s' "$desc" | python3 "$SANITIZER" > "$WORK/description.txt" || exit 1
+desc=$(cat "$WORK/description.txt")
 
 if python3 - "$WORK" "$ZIP" <<'PY'
 import sys, zipfile, os
@@ -114,7 +141,7 @@ NOUI_SEND=0; if [[ $NOUI == 1 ]]; then if [[ ${HYPRARCH_REPORT_SEND:-} == 1 ]]; 
 # ---- entrega: no se envía nada solo; la persona elige
 usb_copy() {   # copia el .zip a cada USB conectado (si hay uno sin montar, se intenta montar con udisks)
   local out
-  out=$(python3 - "$ZIP" <<'PY'
+  if out=$(python3 - "$ZIP" <<'PY'
 import json, os, shutil, subprocess, sys
 zipf = sys.argv[1]
 def devs():
@@ -148,32 +175,27 @@ for n in devs():
                 pass
 sys.exit(0 if done else 1)
 PY
-  ) && note "$(T rep.usb 'Copiado al USB')" "$out" || note "$(T rep.nousb 'No encontré ningún USB')" "$(T rep.nousb.d 'Conéctalo, espera unos segundos y vuelve a elegir esta opción.')"
+  ); then
+    note "$(T rep.usb 'Copiado al USB')" "$out"
+  else
+    note "$(T rep.nousb 'No encontré ningún USB')" "$(T rep.nousb.d 'Conéctalo, espera unos segundos y vuelve a elegir esta opción.')"
+  fi
 }
 
 send_dev() {   # envía el reporte al servidor de los desarrolladores, con permiso
   endpoint_ok || { note "$(T rep.nosrv 'Envío no disponible')" "$(T rep.nosrv.d 'Esta versión no trae servidor de reportes. Copia el archivo a un USB.')"; return; }
   local ok=si
   if [[ ${HYPRARCH_REPORT_SEND:-} != 1 ]]; then ok=$(printf '%s\n' \
-      $'si\t'"$(T rep.s.yes 'Sí, enviar')"$'\t\t'"$(T rep.s.yes.d 'Descripción, datos del equipo (sin nombres de Wi-Fi, usuario ni contraseñas) y registros. Captura solo si la incluiste.')" \
+      $'si\t'"$(T rep.s.yes 'Sí, enviar')"$'\t\t'"$(T rep.s.yes.d 'Descripción y datos del equipo filtrados. Registros solo con --include-logs; la captura puede contener información personal.')" \
       $'no\t'"$(T rep.s.no 'No enviar')"$'\t\t'"$(T rep.s.no.d 'No sale nada de tu equipo')" |
     hyprarch-pick --layout orbit --title "$(T rep.s.ask '¿Enviar el reporte a los desarrolladores?')" 2>/dev/null) || return; fi
   [[ $ok == si ]] || return
   mkdir -p "$QUEUE"
   local payload; payload=$(mktemp "$QUEUE/.nuevo.XXXXXX") || return
   if ! python3 - "$WORK" "$payload" "$desc" <<'PY'
-import base64, getpass, json, os, platform, re, socket, subprocess, sys, secrets
+import base64, json, os, runpy, subprocess, sys, secrets
 work, out, desc = sys.argv[1:4]
 rep = open(os.path.join(work, "reporte.txt"), encoding="utf-8", errors="replace").read()
-# se quita lo que identifica a la persona: usuario, nombre del equipo, direcciones MAC e IP (en el informe Y en la descripción)
-def sanitize(s):
-    for word, repl in ((getpass.getuser(), "<usuario>"), (socket.gethostname(), "<equipo>")):
-        if word and len(word) > 2 and word.lower() not in ("hyprarch", "localhost", "archiso", "arch", "live", "root"):   # nombres genéricos NO se tapan: dañarían el diagnóstico
-            s = re.sub(r"\b" + re.escape(word) + r"\b", repl, s)
-    s = re.sub(r"\b(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}\b", "<mac>", s)
-    return re.sub(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", "<ip>", s)
-rep = sanitize(rep)
-desc = sanitize(desc)
 shot = ""
 p = os.path.join(work, "captura.png")
 if os.path.exists(p):
@@ -191,6 +213,8 @@ try:
     ver = open("/usr/share/hyprarch/version").read().strip()
 except OSError:
     pass
+sanitize = runpy.run_path("/usr/local/bin/hyprarch-report-sanitize")["sanitize"]
+ver = sanitize(ver)
 mode = "live" if os.path.isdir("/run/archiso") else ("uefi" if os.path.isdir("/sys/firmware/efi") else "bios")
 try:
     virt = subprocess.run(["systemd-detect-virt"], capture_output=True, text=True, timeout=5).stdout.strip()
@@ -199,7 +223,7 @@ except (OSError, subprocess.SubprocessError):
 if virt and virt != "none":
     mode += "+vm"
 json.dump({"description": desc, "report": rep, "screenshot": shot, "version": ver, "mode": mode,
-           "lang": os.environ.get("LANG", ""), "client": cid}, open(out, "w", encoding="utf-8"), ensure_ascii=False)
+           "lang": sanitize(os.environ.get("LANG", "")), "client": cid, "privacy_version": 1}, open(out, "w", encoding="utf-8"), ensure_ascii=False)
 PY
   then
     rm -f "$payload"

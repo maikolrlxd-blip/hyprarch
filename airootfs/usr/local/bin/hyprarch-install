@@ -30,10 +30,11 @@ say()  { printf '\n\033[1;32m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m!!\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[1;31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
 trap 'printf "\033[1;31mFalló en la línea %s. Instalación INCOMPLETA: no hay reanudación; para intentarlo otra vez se vuelve a formatear el disco.\033[0m\n" "$LINENO" >&2' ERR
-OWN_MNT=0; CLOSE_CRYPT=0
+OWN_MNT=0; CLOSE_CRYPT=0; SSH_PRIVATE=""
 cleanup() {   # desmonta solo lo que montó este instalador
   local rc=$?
   trap - EXIT
+  [[ -z $SSH_PRIVATE ]] || rm -rf -- "$SSH_PRIVATE"
   if (( OWN_MNT )) && mountpoint -q /mnt; then umount -R /mnt 2>/dev/null || warn "no pude desmontar /mnt"; fi
   if (( CLOSE_CRYPT )) && [[ -e /dev/mapper/cryptroot ]]; then cryptsetup close cryptroot 2>/dev/null || { warn "no pude cerrar cryptroot"; (( rc )) || rc=1; }; fi
   exit "$rc"
@@ -63,6 +64,43 @@ done
 
 (( YES == 0 )) || [[ -n $DISK ]] || die "--yes exige indicar --disk explícitamente."
 [[ $EUID -eq 0 ]] || die "ejecutalo como administrador: sudo hyprarch-install"
+# Open the supplied file ONCE, before prompts, networking or disk operations.
+# All later uses read this root-owned private snapshot, never the original path.
+SSH_SNAPSHOT=""
+if [[ -n $SSH_KEY ]]; then
+  command -v python3 >/dev/null || die "falta python3 para validar --ssh-key"
+  command -v ssh-keygen >/dev/null || die "falta ssh-keygen para validar --ssh-key"
+  SSH_PRIVATE=$(mktemp -d /run/hyprarch-ssh.XXXXXXXX) || die "no pude reservar la copia de la llave"
+  SSH_SNAPSHOT=$SSH_PRIVATE/key.pub
+  if ! python3 - "$SSH_KEY" "$SSH_SNAPSHOT" <<'PY'
+import os
+import re
+import stat
+import sys
+
+try:
+    fd = os.open(sys.argv[1], os.O_RDONLY | os.O_NONBLOCK)
+    with os.fdopen(fd, "rb") as source:
+        if not stat.S_ISREG(os.fstat(source.fileno()).st_mode):
+            raise ValueError("se requiere un archivo regular")
+        data = source.read(16385)
+    # One public key, no authorized_keys options, no private keys or second line.
+    match = re.fullmatch(
+        rb"(ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp(?:256|384|521)) "
+        rb"([A-Za-z0-9+/]+={0,2})(?: [^\x00-\x1f\x7f]*)?\r?\n?", data
+    )
+    if len(data) > 16384 or match is None:
+        raise ValueError("clave pública no válida")
+    key = match[1] + b" " + match[2] + b"\n"
+    fd = os.open(sys.argv[2], os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "wb") as target:
+        target.write(key)
+except (OSError, ValueError):
+    sys.exit(1)
+PY
+  then die "--ssh-key debe contener una sola clave pública SSH válida (ed25519, ECDSA o RSA)"; fi
+  ssh-keygen -l -f "$SSH_SNAPSHOT" >/dev/null 2>&1 || die "la clave pública SSH tiene un formato inválido"
+fi
 if [[ -d /sys/firmware/efi ]]; then BOOT_MODE=uefi; else BOOT_MODE=bios; fi
 [[ -r /usr/share/hyprarch/packages.txt ]] || die "falta /usr/share/hyprarch/packages.txt (¿ISO muy vieja?)."
 (( ENCRYPT == 0 )) || command -v cryptsetup >/dev/null || die "falta el comando cryptsetup (no se puede cifrar desde esta ISO)."
@@ -146,7 +184,6 @@ if (( ENCRYPT )); then
   fi
   (( ${#LUKS_PASS} >= 8 )) || die "la frase secreta del disco necesita al menos 8 caracteres."
 fi
-[[ -z $SSH_KEY || -r $SSH_KEY ]] || die "no puedo leer la llave $SSH_KEY"
 
 # ---------- confirmar ----------
 echo
@@ -166,7 +203,10 @@ else ESP=""; CRYPT=$(part 2); fi
 ROOT=$CRYPT
 
 # lo que se hereda de esta sesión (idioma, teclado, hora)
+# Host runtime files; they are absent from the source tree.
+# shellcheck source=/dev/null
 LOCALE=$(. /etc/locale.conf 2>/dev/null && echo "${LANG:-es_AR.UTF-8}") || LOCALE="es_AR.UTF-8"
+# shellcheck source=/dev/null
 KEYMAP=$(. /etc/vconsole.conf 2>/dev/null && echo "${KEYMAP:-la-latin1}") || KEYMAP="la-latin1"
 TZ_LINK=$(readlink -f /etc/localtime 2>/dev/null || true); TZ_LINK=${TZ_LINK#/usr/share/zoneinfo/}
 [[ -n $TZ_LINK && -e /usr/share/zoneinfo/$TZ_LINK ]] || TZ_LINK="UTC"
@@ -180,7 +220,9 @@ say "Comprobando el equipo antes de tocar el disco"
 timedatectl set-ntp true 2>/dev/null || true
 for _ in $(seq 1 30); do [[ $(timedatectl show -p NTPSynchronized --value 2>/dev/null) == yes ]] && break; sleep 1; done
 (( $(date +%Y) >= 2025 )) || die "el reloj del equipo está mal ($(date +%F)); las firmas de los paquetes fallarían."
-pacman-key --init >/dev/null 2>&1 && pacman-key --populate archlinux >/dev/null 2>&1 || die "no pude preparar las llaves de paquetes."
+if ! pacman-key --init >/dev/null 2>&1 || ! pacman-key --populate archlinux >/dev/null 2>&1; then
+  die "no pude preparar las llaves de paquetes."
+fi
 (( ENCRYPT == 0 )) || [[ ! -e /dev/mapper/cryptroot ]] || die "ya existe /dev/mapper/cryptroot (otro disco cifrado abierto); ciérralo antes de instalar. No se borró nada."
 check_disk      # revalidar justo antes de borrar
 
@@ -284,6 +326,8 @@ unset PASSWORD PASSWORD2
 
 if (( AUTOLOGIN )); then
   mkdir -p /mnt/etc/systemd/system/getty@tty1.service.d
+  # systemd expands TERM when starting agetty, not this shell.
+  # shellcheck disable=SC2016
   printf '[Service]\nExecStart=\nExecStart=-/sbin/agetty --noreset --noclear --autologin %s - ${TERM}\n' "$USERNAME" \
     > /mnt/etc/systemd/system/getty@tty1.service.d/autologin.conf
 fi
@@ -291,7 +335,7 @@ fi
 if [[ -n $SSH_KEY ]]; then
   warn "Modo desarrollo: se habilita SSH (solo con llave) para $USERNAME."
   install -d -m 700 "/mnt/home/$USERNAME/.ssh"
-  install -m 600 "$SSH_KEY" "/mnt/home/$USERNAME/.ssh/authorized_keys"
+  install -m 600 "$SSH_SNAPSHOT" "/mnt/home/$USERNAME/.ssh/authorized_keys"
   arch-chroot /mnt chown -R "$USERNAME:$USERNAME" "/home/$USERNAME/.ssh"
   mkdir -p /mnt/etc/ssh/sshd_config.d
   printf 'PasswordAuthentication no\nPermitRootLogin no\nPubkeyAuthentication yes\n' > /mnt/etc/ssh/sshd_config.d/20-hyprarch-dev.conf

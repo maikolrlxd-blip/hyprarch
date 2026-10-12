@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+"""PreToolUse policy: only island files/API, or the exact card approved call.
+
+This is a tool boundary, not an OS sandbox for an approved arbitrary command.
+"""
+import json
+import os
+from pathlib import Path
+import shlex
+import sys
+
+
+def permitted(name, args, work, grants):
+    if work.is_symlink():
+        return False
+    if {"tool_name": name, "tool_input": args} in grants:
+        return True
+    if name in {"mcp__hyprarch__hyprarch_" + suffix for suffix in
+                ("windows", "workspaces", "active", "apps", "mode_get", "volume_get", "system")}:
+        return True  # Only the read-only server from island-mcp.json is loaded.
+    if name in {"Read", "Glob", "Grep"}:
+        path = args.get("file_path" if name == "Read" else "path", str(work))
+        if not isinstance(path, str):
+            return False
+        target = Path(path).expanduser()
+        if not target.is_absolute():
+            target = work / target
+        # Following symlinks here prevents island-work links exposing HOME.
+        return target.resolve().is_relative_to(work.resolve())
+    if name == "Bash":
+        command = args.get("command", "")
+        # No expansions, redirections, pipelines or compound commands. Quotes
+        # are accepted, but even quoted metacharacters need a card.
+        if not isinstance(command, str) or any(c in command for c in "\n\r;&|$`<>\\()"):
+            return False
+        try:
+            argv = shlex.split(command)
+        except ValueError:
+            return False
+        return bool(argv) and argv[0] == "/usr/local/bin/hyprarch-api"
+    return False
+
+
+def main():
+    try:
+        event = json.load(sys.stdin)
+        name, args = event["tool_name"], event["tool_input"]
+        work = Path(os.environ["HYPRARCH_ISLAND_WORK"])
+        grants = json.loads(os.environ["HYPRARCH_ISLAND_GRANTS"])
+        allowed = isinstance(args, dict) and permitted(name, args, work, grants)
+        if not allowed:
+            # Also record denials locally: hook denials need not appear in
+            # Claude's result.permission_denials on every CLI version.
+            with open(os.environ["HYPRARCH_ISLAND_DENIALS"], "a", encoding="utf-8") as out:
+                out.write(json.dumps({"tool_name": name, "tool_input": args}) + "\n")
+        print(json.dumps({"hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "allow" if allowed else "deny",
+            "permissionDecisionReason": "Permitido por la isla" if allowed else "Requiere tarjeta de la isla; espera a la persona",
+        }}))
+    except Exception:
+        # Exit 2 blocks the tool even for malformed input / missing policy.
+        print("No se pudo verificar el permiso de la isla", file=sys.stderr)
+        sys.exit(2)
+
+
+if __name__ == "__main__":
+    main()
