@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Root live service: check IPC as the live user; print only a fixed marker.
+set -euo pipefail
+uid=$(id -u live)
+for (( attempt=0; attempt<90; attempt++ )); do
+  if runuser -u live -- env XDG_RUNTIME_DIR="/run/user/$uid" \
+      /usr/local/bin/hyprarch-ctl hyprctl monitors -j 2>/dev/null |
+      jq -e 'type == "array" and length > 0 and any(.[]; .width > 0 and .height > 0)' >/dev/null; then
+    printf 'HYPRARCH_DESKTOP_READY\n'
+    exit 0
+  fi
+  sleep 5
+done
+echo "Hyprland IPC did not become ready" >&2
+exit 1

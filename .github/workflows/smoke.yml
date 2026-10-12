@@ -1,0 +1,86 @@
+name: Smoke ISO
+
+on:
+  workflow_run:
+    workflows: ["Build ISO"]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  boot:
+    # Ejecutar únicamente builds exitosos de la rama predeterminada.
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.head_repository.full_name == github.repository &&
+          github.event.workflow_run.head_branch == github.event.repository.default_branch }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        firmware: [bios, uefi]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      # Sin asumir el nombre del artefacto; abajo se exige una única ISO.
+      - name: Descargar artefactos de Build ISO
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+          path: incoming
+
+      - name: Instalar dependencias
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            qemu-system-x86 ovmf python3 shellcheck
+
+      - name: Localizar ISO y verificar script
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' -t images < <(find incoming -type f -iname '*.iso' -print0)
+          if (( ${#images[@]} != 1 )); then
+            printf 'Se esperaba una ISO; encontradas: %s\n' "${#images[@]}" >&2
+            exit 1
+          fi
+          mkdir -p out
+          cp -- "${images[0]}" out/hyprarch.iso
+          bash -n tools/smoke_boot.sh
+          shellcheck tools/smoke_boot.sh
+
+      - name: Arrancar y observar durante ocho minutos
+        timeout-minutes: 10
+        shell: bash
+        env:
+          FIRMWARE: ${{ matrix.firmware }}
+          SMOKE_REQUIRE_HYPRARCH: "0"
+          # Ejemplo: HYPRARCH_DESKTOP_READY, emitido tras verificar la sesión.
+          SMOKE_READY_MARKER: "HYPRARCH_DESKTOP_READY"
+          SMOKE_GPU: virtio
+        run: |
+          set -euo pipefail
+          mkdir -p smoke-results
+          timeout --signal=TERM --kill-after=10s 510s \
+            bash tools/smoke_boot.sh out/hyprarch.iso "$FIRMWARE" \
+              "smoke-results/$FIRMWARE" \
+            2>&1 | tee "smoke-results/$FIRMWARE-check.log"
+
+      - name: Subir capturas y registros si falla
+        if: ${{ failure() || cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-${{ matrix.firmware }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            smoke-results/**/*.ppm
+            smoke-results/**/*.log
+          if-no-files-found: warn
+          retention-days: 7

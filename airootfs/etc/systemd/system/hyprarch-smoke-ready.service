@@ -1,0 +1,17 @@
+[Unit]
+Description=Report live Hyprland readiness on the serial console
+After=live-setup.service
+ConditionPathExists=/run/archiso
+ConditionPathExists=/dev/ttyS0
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/hyprarch-smoke-ready
+TimeoutStartSec=470
+StandardOutput=tty
+TTYPath=/dev/ttyS0
+TTYReset=no
+TTYVHangup=no
+
+[Install]
+WantedBy=multi-user.target

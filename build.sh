@@ -76,6 +76,11 @@ for e in "$ENTRY" "$PROFILE/efiboot/loader/entries/02-hyprarch-verbose.conf"; do
   sed -i 's/^options  \(.*\)$/options  \1 cow_spacesize=50%/' "$e"
 done
 echo "--- entrada principal:"; cat "$ENTRY"
+# Serial evidence for the independent BIOS/UEFI smoke workflow. tty0 remains
+# the primary console, so autologin still starts the graphical live session.
+while IFS= read -r -d '' bootconf; do
+  sed -i -E '/^[[:space:]]*(options|APPEND|linux)[[:space:]].*archisobasedir=/ s/$/ console=ttyS0,115200n8 console=tty0/' "$bootconf"
+done < <(find "$PROFILE/efiboot" "$PROFILE/syslinux" "$PROFILE/grub" -type f -print0)
 
 echo "==> Paquetes"
 grep -vE '^\s*(#|$)' packages.extra >> "$PROFILE/packages.x86_64"
@@ -124,7 +129,7 @@ else
     echo "ERROR: la edición pública contiene archivos de una IA/credenciales"; exit 1
   fi
 fi
-ls -l "$AIR/usr/local/bin/" | head -20
+find "$AIR/usr/local/bin/" -maxdepth 1 -type f -printf '%f\n' | head -20
 
 echo "==> Ocultando del lanzador las entradas inútiles"
 mkdir -p "$AIR/etc/skel/.local/share/applications"
@@ -164,6 +169,7 @@ enable() { # enable <ruta-de-la-unidad> <target>
   ln -sf "$unit" "$AIR/etc/systemd/system/$target.wants/$(basename "$unit")"
 }
 enable /etc/systemd/system/live-setup.service      multi-user.target
+enable /etc/systemd/system/hyprarch-smoke-ready.service multi-user.target
 enable /usr/lib/systemd/system/NetworkManager.service multi-user.target
 enable /usr/lib/systemd/system/systemd-resolved.service multi-user.target
 enable /usr/lib/systemd/system/bluetooth.service   multi-user.target
