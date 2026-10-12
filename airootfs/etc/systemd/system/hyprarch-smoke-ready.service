@@ -8,10 +8,7 @@ ConditionPathExists=/dev/ttyS0
 Type=oneshot
 ExecStart=/usr/local/bin/hyprarch-smoke-ready
 TimeoutStartSec=470
-StandardOutput=tty
-TTYPath=/dev/ttyS0
-TTYReset=no
-TTYVHangup=no
+StandardOutput=journal+console
 
 [Install]
 WantedBy=multi-user.target

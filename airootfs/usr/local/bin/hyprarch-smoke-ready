@@ -1,15 +1,24 @@
 #!/usr/bin/env bash
 # Root live service: check IPC as the live user; print only a fixed marker.
-set -euo pipefail
+# El marcador va al registro del kernel (/dev/kmsg, prioridad 3: sale por la consola
+# serie aunque agetty ocupe ttyS0) y, si se puede, directamente a /dev/ttyS0.
+set -uo pipefail
+say() {
+  printf '<3>%s\n' "$1" > /dev/kmsg 2>/dev/null || true
+  printf '%s\n' "$1" > /dev/ttyS0 2>/dev/null || true
+  printf '%s\n' "$1"
+}
 uid=$(id -u live)
+last=""
 for (( attempt=0; attempt<90; attempt++ )); do
-  if runuser -u live -- env XDG_RUNTIME_DIR="/run/user/$uid" \
-      /usr/local/bin/hyprarch-ctl hyprctl monitors -j 2>/dev/null |
-      jq -e 'type == "array" and length > 0 and any(.[]; .width > 0 and .height > 0)' >/dev/null; then
-    printf 'HYPRARCH_DESKTOP_READY\n'
+  out=$(runuser -u live -- env XDG_RUNTIME_DIR="/run/user/$uid" \
+      /usr/local/bin/hyprarch-ctl hyprctl monitors -j 2>&1)
+  if jq -e 'type == "array" and length > 0 and any(.[]; .width > 0 and .height > 0)' >/dev/null 2>&1 <<<"$out"; then
+    say "HYPRARCH_DESKTOP_READY"
     exit 0
   fi
+  last=${out:0:160}
   sleep 5
 done
-echo "Hyprland IPC did not become ready" >&2
+say "HYPRARCH_DESKTOP_NOT_READY: ${last//[^[:print:]]/ }"
 exit 1
