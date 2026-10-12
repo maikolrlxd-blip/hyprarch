@@ -328,12 +328,14 @@ EOF2
   fi
 else
   sed -i "s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT=\"quiet loglevel=3${GPU_CMDLINE:+ $GPU_CMDLINE}\"|; s|^GRUB_TIMEOUT=.*|GRUB_TIMEOUT=3|" /mnt/etc/default/grub
+  RESCUE_UUID=$ROOT_UUID; RESCUE_PREFIX=/boot
+  if (( ENCRYPT )); then RESCUE_UUID=$(blkid -s UUID -o value "$ESP"); RESCUE_PREFIX=""; fi   # BIOS+cifrado: /boot es partición aparte sin cifrar
   if [[ -n $GPU_CMDLINE ]]; then   # rescate gráfico (consola, sin el controlador NVIDIA propio)
     cat >> /mnt/etc/grub.d/40_custom <<EOF2
 menuentry 'hyprarch (rescate gráfico: consola)' {
-  search --no-floppy --fs-uuid --set=root $ROOT_UUID
-  linux /boot/vmlinuz-linux $ROOT_OPTS rw nomodeset module_blacklist=nvidia,nvidia_modeset,nvidia_uvm,nvidia_drm systemd.unit=multi-user.target
-  initrd /boot/initramfs-linux.img
+  search --no-floppy --fs-uuid --set=root $RESCUE_UUID
+  linux ${RESCUE_PREFIX}/vmlinuz-linux $ROOT_OPTS rw nomodeset module_blacklist=nvidia,nvidia_modeset,nvidia_uvm,nvidia_drm systemd.unit=multi-user.target
+  initrd ${RESCUE_PREFIX}/initramfs-linux.img
 }
 EOF2
   fi

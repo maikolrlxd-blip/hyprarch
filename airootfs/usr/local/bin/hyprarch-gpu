@@ -28,7 +28,7 @@ cards() {
     ven=$(sed -nE 's/.*\[([0-9a-f]{4}):[0-9a-f]{4}\].*/\1/p' <<<"$l" | tail -1)
     case $ven in 8086) v=intel ;; 1002) v=amd ;; 10de) v=nvidia ;; *) v=otro ;; esac
     desc=${l#*: }
-    chip=$(sed -E 's/^[^:]*:[[:space:]]*//; s/^(NVIDIA Corporation|Advanced Micro Devices, Inc\. \[AMD\/ATI\]|Intel Corporation)[[:space:]]+//' <<<"$desc" | awk '{print $1}')
+    chip=$(sed -E 's/^(NVIDIA Corporation|Advanced Micro Devices, Inc\. \[AMD\/ATI\]|Intel Corporation)[[:space:]]+//' <<<"$desc" | awk '{print $1}')
     printf '%s\t%s\t%s\t%s\n' "$addr" "$v" "$chip" "$desc"
   done
 }
@@ -56,11 +56,18 @@ scan() {
 scan
 
 driver_installed() { [[ -e /usr/lib/modprobe.d/nvidia-utils.conf ]] || pacman -Q nvidia-utils >/dev/null 2>&1; }
+nvidia_active() {   # ¿la NVIDIA está usando de verdad el controlador propio ahora?
+  local a=$NV_ADDR d
+  [[ -n $a ]] || return 1
+  [[ $a == *:*:* ]] || a="0000:$a"
+  d=$(readlink -e "/sys/bus/pci/devices/$a/driver") || return 1
+  [[ ${d##*/} == nvidia ]]
+}
 hybrid() { (( NV_OPEN || NV_OLD )) && (( HAS_INTEL || HAS_AMD )); }
 
 card_node() {   # /dev/dri/cardN de una dirección PCI (0000:00:02.0)
   local a=$1; [[ $a == *:*:* ]] || a="0000:$a"
-  readlink -f "/dev/dri/by-path/pci-${a}-card" 2>/dev/null
+  readlink -e "/dev/dri/by-path/pci-${a}-card" 2>/dev/null
 }
 
 case ${1:-status} in
@@ -74,35 +81,44 @@ case ${1:-status} in
     (( NV_OLD )) && echo "· NVIDIA antigua (GTX 10xx/9xx o anterior): controlador libre (nouveau); el propio para estas ya no viene en los repositorios oficiales"
     (( HAS_INTEL + HAS_AMD + NV_OPEN + NV_OLD )) || echo "· No detecto gráfica conocida (máquina virtual u otra): controlador genérico"
     hybrid && echo "· Portátil híbrido: la pantalla usa la gráfica integrada; para jugar con la NVIDIA: prime-run <programa>"
+    (( NV_OPEN && NV_OLD )) && echo "· NVIDIA moderna y antigua juntas: se conserva el controlador libre (nouveau) para no dejar la antigua sin imagen"
+    :
     ;;
   packages)
-    if (( NV_OPEN )); then
+    if (( NV_OPEN && !NV_OLD )); then
       echo "nvidia-open nvidia-utils nvidia-settings libva-nvidia-driver"
-      hybrid && echo "nvidia-prime"
+      if hybrid; then echo "nvidia-prime"; fi
     fi
+    :
     ;;
   modules)
-    (( NV_OPEN )) && echo "nvidia nvidia_modeset nvidia_uvm nvidia_drm"
+    (( NV_OPEN && !NV_OLD )) && echo "nvidia nvidia_modeset nvidia_uvm nvidia_drm"
+    :
     ;;
   cmdline)
-    (( NV_OPEN )) && echo "nvidia_drm.modeset=1 nvidia_drm.fbdev=1"
+    (( NV_OPEN && !NV_OLD )) && echo "nvidia_drm.modeset=1 nvidia_drm.fbdev=1"
+    :
     ;;
   env)
     ig=""; [[ -n $IGPU_ADDR ]] && ig=$(card_node "$IGPU_ADDR")
     nv=""; [[ -n $NV_ADDR ]] && nv=$(card_node "$NV_ADDR")
     if hybrid; then
       [[ -n $ig ]] && echo "AQ_DRM_DEVICES=$ig${nv:+:$nv}"          # la integrada manda la pantalla
-      (( HAS_INTEL )) && echo "LIBVA_DRIVER_NAME=iHD" || echo "LIBVA_DRIVER_NAME=radeonsi"
-    elif (( NV_OPEN )) && driver_installed; then
+      if (( !HAS_INTEL )); then echo "LIBVA_DRIVER_NAME=radeonsi"; fi
+    elif (( NV_OPEN && !NV_OLD )) && driver_installed && nvidia_active; then
       echo "LIBVA_DRIVER_NAME=nvidia"; echo "NVD_BACKEND=direct"
       echo "GBM_BACKEND=nvidia-drm"; echo "__GLX_VENDOR_LIBRARY_NAME=nvidia"
-    elif (( HAS_INTEL )); then echo "LIBVA_DRIVER_NAME=iHD"
+    elif (( HAS_INTEL )); then :
     elif (( HAS_AMD )); then echo "LIBVA_DRIVER_NAME=radeonsi"
     fi
     ;;
   quitar-nvidia)
     (( EUID == 0 )) || { echo "ejecútalo con sudo" >&2; exit 1; }
-    pacman -Rns --noconfirm nvidia-open nvidia-utils nvidia-settings libva-nvidia-driver nvidia-prime 2>/dev/null || true
+    remove_pkgs=()
+    for p in nvidia-open nvidia-utils nvidia-settings libva-nvidia-driver nvidia-prime; do
+      if pacman -Qq "$p" >/dev/null 2>&1; then remove_pkgs+=("$p"); fi
+    done
+    if (( ${#remove_pkgs[@]} )); then pacman -Rns --noconfirm "${remove_pkgs[@]}" || exit 1; fi
     rm -f /etc/modprobe.d/hyprarch-nvidia.conf
     sed -i -E '/^MODULES=/ s/ ?nvidia(_modeset|_uvm|_drm)?//g' /etc/mkinitcpio.conf
     mkinitcpio -P && echo "Listo: vuelve a arrancar con el menú normal; usará el controlador libre."
