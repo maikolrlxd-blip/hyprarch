@@ -3,13 +3,13 @@
 // Al publicar una versión nueva: cambia VERSION, FILE y los tamaños de PARTS (ver LEEME.md) y ejecuta `npx wrangler deploy`.
 const REPO = "maikolrlxd-blip/hyprarch";
 const VERSION = "v0.1.0-beta";
-const FILE = "hyprarch-public-2026.10.09-x86_64.iso";
+const FILE = "hyprarch-public-2026.10.12-x86_64.iso";
 const PARTS = [
   { name: FILE + ".part00", size: 1992294400 },
-  { name: FILE + ".part01", size: 685015040 },
+  { name: FILE + ".part01", size: 694452224 },
 ];
 const TOTAL = PARTS.reduce((a, p) => a + p.size, 0);
-const SHA256 = "f6576aff5a56e53efe1b06a4ffcfad743e582ecc742d837d1c14c8b9cf7fbd71";
+const SHA256 = "59143ec74e83fe9184ab131fe444b020fe710ac42411b48419a6aed64ee19b27";
 const url = (p) => `https://github.com/${REPO}/releases/download/${VERSION}/${p.name}`;
 
 function parseRange(h) {
