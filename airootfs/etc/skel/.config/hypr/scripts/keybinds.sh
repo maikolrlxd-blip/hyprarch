@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Hoja de atajos (SUPER + F1): rueda curva animada con buscador. Motor: hyprarch-pick.  SUPER = tecla Windows.
 # Formato: id <TAB> descripción <TAB> ícono <TAB> combinación (se ve a la derecha y también se puede buscar).
-cat <<'EOF' | hyprarch-pick --layout wheel --title "Atajos" --placeholder "¿Qué querés hacer? (ej. captura, cerrar)" >/dev/null
+cat <<'EOF' | hyprarch-pick --layout wheel --title "Atajos" --placeholder "¿Qué quieres hacer? (ej. captura, cerrar)" >/dev/null
 a	Terminal		SUPER + Enter
 b	Menú de inicio (apps y búsqueda)		SUPER (sola)
 c	Navegador		SUPER + B

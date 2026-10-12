@@ -58,12 +58,12 @@ while [[ $# -gt 0 ]]; do
     --luks-pass-file) LUKS_FILE=${2:?falta el archivo}; ENCRYPT=1; shift 2 ;;
     --yes)           YES=1; shift ;;
     -h|--help)       sed -n '2,/^set -euo/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'; exit 0 ;;
-    *)               die "opción desconocida: $1 (probá --help)" ;;
+    *)               die "opción desconocida: $1 (prueba --help)" ;;
   esac
 done
 
 (( YES == 0 )) || [[ -n $DISK ]] || die "--yes exige indicar --disk explícitamente."
-[[ $EUID -eq 0 ]] || die "ejecutalo como administrador: sudo hyprarch-install"
+[[ $EUID -eq 0 ]] || die "ejecútalo como administrador: sudo hyprarch-install"
 # Open the supplied file ONCE, before prompts, networking or disk operations.
 # All later uses read this root-owned private snapshot, never the original path.
 SSH_SNAPSHOT=""
@@ -103,6 +103,9 @@ PY
 fi
 if [[ -d /sys/firmware/efi ]]; then BOOT_MODE=uefi; else BOOT_MODE=bios; fi
 [[ -r /usr/share/hyprarch/packages.txt ]] || die "falta /usr/share/hyprarch/packages.txt (¿ISO muy vieja?)."
+for memory_config in /etc/systemd/zram-generator.conf /etc/sysctl.d/99-hyprarch.conf; do
+  [[ -r $memory_config ]] || die "falta $memory_config (no se puede conservar la configuración de memoria)."
+done
 (( ENCRYPT == 0 )) || command -v cryptsetup >/dev/null || die "falta el comando cryptsetup (no se puede cifrar desde esta ISO)."
 for c in sgdisk pacstrap genfstab arch-chroot mkfs.ext4 lsblk findmnt wipefs partprobe udevadm blkid pacman-key mount umount mountpoint flock timedatectl; do
   command -v "$c" >/dev/null || die "falta el comando $c"
@@ -113,7 +116,7 @@ ping -c1 -W3 archlinux.org >/dev/null 2>&1 || ping -c1 -W3 1.1.1.1 >/dev/null 2>
 # ---------- elegir el disco ----------
 exec 9>/run/hyprarch-install.lock
 flock -n 9 || die "ya hay otro instalador ejecutándose."
-mountpoint -q /mnt && die "/mnt ya está ocupado: desmontalo antes de instalar."
+mountpoint -q /mnt && die "/mnt ya está ocupado: desmóntalo antes de instalar."
 disk_same() {   # ¿sigue siendo el mismo disco que elegiste? (si lo desconectaron y otro ocupó el nombre, NO se toca nada)
   [[ -z ${DISK_SEQ:-} || $(cat "/sys/class/block/${DISK##*/}/diskseq" 2>/dev/null || echo x) == "$DISK_SEQ" ]] || return 1
   [[ $(lsblk -dno SERIAL,WWN "$DISK" 2>/dev/null | tr -s ' ' || true) == "$DISK_SERIAL" ]]
@@ -140,7 +143,7 @@ if [[ -z $DISK ]]; then
 fi
 [[ -b $DISK ]] || die "$DISK no es un disco."
 DISK=$(readlink -f -- "$DISK") || die "no pude resolver $DISK."   # /dev/disk/by-id/... -> /dev/sdX
-[[ $(lsblk -dno TYPE "$DISK") == disk ]] || die "$DISK no es un disco entero (usá /dev/sda, no /dev/sda1)."
+[[ $(lsblk -dno TYPE "$DISK") == disk ]] || die "$DISK no es un disco entero (usa /dev/sda, no /dev/sda1)."
 check_disk
 DISK_SEQ=$(cat "/sys/class/block/${DISK##*/}/diskseq" 2>/dev/null || true)   # identifica ESTE disco aunque otro tome el mismo nombre /dev/sdX
 DISK_SERIAL=$(lsblk -dno SERIAL,WWN "$DISK" 2>/dev/null | tr -s ' ' || true)
@@ -158,9 +161,9 @@ if [[ -n $PASS_FILE ]]; then
 else
   while :; do
     IFS= read -rsp "Contraseña de $USERNAME: " PASSWORD; echo
-    IFS= read -rsp "Repetila: " PASSWORD2; echo
+    IFS= read -rsp "Repítela: " PASSWORD2; echo
     [[ -n $PASSWORD && $PASSWORD == "$PASSWORD2" ]] && break
-    warn "no coinciden o está vacía, probá de nuevo."
+    warn "no coinciden o está vacía, prueba de nuevo."
   done
 fi
 [[ -n $PASSWORD ]] || die "la contraseña no puede estar vacía."
@@ -177,9 +180,9 @@ if (( ENCRYPT )); then
   else
     while :; do
       IFS= read -rsp "Frase secreta del disco (mínimo 8 caracteres; si la olvidas, NO hay forma de recuperar nada): " LUKS_PASS; echo
-      IFS= read -rsp "Repetila: " LUKS_PASS2; echo
+      IFS= read -rsp "Repítela: " LUKS_PASS2; echo
       [[ ${#LUKS_PASS} -ge 8 && $LUKS_PASS == "$LUKS_PASS2" ]] && break
-      warn "no coinciden o es muy corta, probá de nuevo."
+      warn "no coinciden o es muy corta, prueba de nuevo."
     done
   fi
   (( ${#LUKS_PASS} >= 8 )) || die "la frase secreta del disco necesita al menos 8 caracteres."
@@ -191,7 +194,7 @@ lsblk -o NAME,SIZE,TYPE,FSTYPE,LABEL,MODEL,SERIAL,WWN "$DISK"
 echo
 warn "SE BORRARÁ TODO EL CONTENIDO de $DISK (${SIZE_GB} GB). No se puede deshacer."
 if (( YES == 0 )); then
-  read -rp "Para continuar escribí exactamente la ruta del disco ($DISK): " ANS
+  read -rp "Para continuar escribe exactamente la ruta del disco ($DISK): " ANS
   [[ $ANS == "$DISK" ]] || die "cancelado, no se tocó nada."
 fi
 
@@ -278,6 +281,14 @@ rm -f /mnt/usr/local/bin/live-setup
 mkdir -p /mnt/usr/share/backgrounds
 cp -a /usr/share/hyprarch /mnt/usr/share/
 cp -a /usr/share/backgrounds/hyprarch-* /mnt/usr/share/backgrounds/ 2>/dev/null || true
+mkdir -p /mnt/usr/share/applications /mnt/etc/systemd /mnt/etc/sysctl.d
+for launcher in /usr/share/applications/hyprarch-*.desktop; do
+  [[ -f $launcher ]] || continue
+  cp -a "$launcher" /mnt/usr/share/applications/
+done
+# El sistema instalado necesita la misma swap comprimida y ajustes de memoria que el live.
+cp -a /etc/systemd/zram-generator.conf /mnt/etc/systemd/
+cp -a /etc/sysctl.d/99-hyprarch.conf /mnt/etc/sysctl.d/
 cp -a /etc/skel/. /mnt/etc/skel/
 mkdir -p /mnt/etc/modprobe.d /mnt/etc/wireplumber
 cp -a /etc/modprobe.d/hyprarch-audio.conf /mnt/etc/modprobe.d/ 2>/dev/null || true
@@ -406,4 +417,4 @@ OWN_MNT=0
 if (( CLOSE_CRYPT )); then cryptsetup close cryptroot || die "no pude cerrar el disco cifrado (cryptroot)."; CLOSE_CRYPT=0; fi
 say "Listo. hyprarch quedó instalado en $DISK (usuario: $USERNAME)."
 (( ENCRYPT )) && warn "Disco cifrado: al encender te pedirá la frase secreta. Si la olvidas no hay forma de recuperar los datos."
-echo "Apagá el equipo, sacá el USB (o el medio de instalación) y arrancá desde el disco."
+echo "Apaga el equipo, retira el USB (o el medio de instalación) y arranca desde el disco."

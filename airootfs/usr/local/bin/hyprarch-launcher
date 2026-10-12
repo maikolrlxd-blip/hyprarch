@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""hyprarch-launcher — el lanzador de aplicaciones (SUPER + D): un campo de burbujas flotantes con buscador.
+"""hyprarch-launcher — el lanzador alternativo de aplicaciones (ejecuta hyprarch-launcher): un campo de burbujas flotantes con buscador.
 
 Lee los .desktop del sistema, resuelve sus íconos reales y se los pasa a hyprarch-pick (--layout bubbles).
 Las aplicaciones más usadas flotan primero (historial en ~/.cache/hyprarch/launcher-history.json).
@@ -102,7 +102,7 @@ def main():
         lines.append("\t".join((a["id"], a["name"].replace("\t", " "), a["icon"], sub)))
     try:
         p = subprocess.run(["hyprarch-pick", "--layout", "bubbles", "--title", "Aplicaciones",
-                            "--placeholder", "Escribí el nombre de una aplicación…"],
+                            "--placeholder", "Escribe el nombre de una aplicación…"],
                            input="\n".join(lines), capture_output=True, text=True)
     except FileNotFoundError:
         print("falta hyprarch-pick", file=sys.stderr)

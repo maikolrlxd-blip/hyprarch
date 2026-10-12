@@ -338,6 +338,7 @@ WALL=verde
 EOF
   fi
   load_theme "$1" || return 1
+  # shellcheck disable=SC2015 # Cualquier generador fallido debe abortar la aplicación del tema.
   render_hypr && render_waybar && render_kitty && render_fuzzel \
     && render_mako && render_gtk && render_hyprlock && render_wallpaper \
     || { echo "Error generando los archivos del tema: no se aplicó." >&2; return 1; }
@@ -375,7 +376,7 @@ menu() {
       $'cine\tModo cine\t#ffb347\támbar sobre negro' \
       $'estudio\tModo estudio\t#4fd1c5\tcalma y foco' \
       $'trabajo\tModo trabajo\t#5ec2ff\tclaro y productivo' \
-      $'custom\tColor personalizado\t\tescribí un HEX' \
+      $'custom\tColor personalizado\t\tescribe un HEX' \
       $'toggle\tAlternar verde / rojo\t\t' |
     hyprarch-pick --layout wheel --title "Colores del sistema" --select "$cur" \
         --placeholder "Tema actual: ${cur}") || return 0
@@ -405,7 +406,7 @@ case "${1:-menu}" in
     if [[ ${1:-} =~ ^[a-z0-9_-]+$ && -f "$THEMES_DIR/$1.env" ]]; then
       apply "$1"
     else
-      echo "Uso: hyprarch-theme [menu|<tema>|custom|toggle|actual]   (temas: $(cd "$THEMES_DIR" 2>/dev/null && ls ./*.env 2>/dev/null | sed 's|./||;s|\.env||' | tr '\n' ' '))" >&2
+      echo "Uso: hyprarch-theme [menu|<tema>|custom|toggle|actual]   (temas: $(find "$THEMES_DIR" -maxdepth 1 -type f -name '*.env' -printf '%f\n' 2>/dev/null | sed 's/\.env$//' | sort | tr '\n' ' '))" >&2
       exit 1
     fi ;;
 esac

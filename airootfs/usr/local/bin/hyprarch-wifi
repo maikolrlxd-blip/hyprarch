@@ -50,6 +50,10 @@ cmd_list() {
 cmd_status() {
   local s
   if [[ -n $FAKE ]]; then echo "conectado: Casa-Wifi"; return 0; fi
+  if LC_ALL=C nmcli -t -f TYPE,STATE dev 2>/dev/null | grep -q '^ethernet:connected$'; then
+    echo "conectado: Red cableada (Ethernet)"
+    return 0
+  fi
   s=$(nmcli -t -f ACTIVE,SSID dev wifi 2>/dev/null | awk -F: '$1=="yes"{print $2; exit}')
   if [[ -n $s ]]; then echo "conectado: $s"; else
     case $(nmcli radio wifi 2>/dev/null) in enabled) echo "sin conexión (Wi-Fi encendido)" ;; *) echo "Wi-Fi apagado" ;; esac
@@ -83,6 +87,11 @@ signal_mood()  { local s=$1; [[ $s =~ ^[0-9]+$ ]] || s=0; if (( s >= 66 )); then
 
 panel() {
   local items act ssid sig sec desc state
+  if [[ -z $FAKE ]] && ! LC_ALL=C nmcli -t -f TYPE dev 2>/dev/null | grep -qx wifi; then
+    note "$(T set.wifi 'Wi-Fi y red')" "$(cmd_status)"
+    command -v nm-connection-editor >/dev/null && setsid -f nm-connection-editor >/dev/null 2>&1
+    return 0
+  fi
   if [[ -z $FAKE ]] && [[ $(nmcli radio wifi 2>/dev/null) != enabled ]]; then
     sel=$(printf '%s\n' $'on\tEncender el Wi-Fi\t#5ef2c8\tNo hay conexión inalámbrica ahora mismo\tsleepy' |
       hyprarch-pick --layout orbit --title "$(T wifi.title 'Redes Wi-Fi')") || return 0
@@ -94,7 +103,7 @@ panel() {
     [[ -n $ssid ]] || continue
     state=""
     [[ $act == '*' ]] && state="$(T wifi.current 'Conectada') · "
-    desc="${state}${sig} % · $([[ -n $sec ]] && echo "$(T wifi.secure 'con clave')" || echo "$(T wifi.open 'abierta')")"
+    desc="${state}${sig} % · $(if [[ -n $sec ]]; then T wifi.secure 'con clave'; else T wifi.open 'abierta'; fi)"
     items+="net:$ssid"$'\t'"${act:+● }$ssid"$'\t'"$(signal_color "${sig:-0}")"$'\t'"$desc"$'\t'"$(signal_mood "${sig:-0}")"$'\n'
   done < <(scan)
   items+=$'rescan\t↻  Buscar de nuevo\t\tActualiza la lista de redes\thappy\n'

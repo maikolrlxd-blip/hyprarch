@@ -129,9 +129,9 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("gsettings set org.gnome.desktop.interface color-scheme prefer-dark")
     hl.exec_cmd("gsettings set org.gnome.desktop.interface gtk-theme Adwaita-dark")
     hl.exec_cmd(scripts .. "/welcome.sh")
-    -- Hyro: la presencia de Claude en pantalla (necesita gtk4-layer-shell precargado)
-    -- (GSK_RENDERER=cairo: la ventanita es chica y así se redibuja bien también en máquinas virtuales)
-    hl.exec_cmd("env GSK_RENDERER=cairo LD_PRELOAD=/usr/lib/libgtk4-layer-shell.so claude-presence daemon")
+    -- La isla muestra el estado de Hyro; la presencia de la esquina solo se inicia si falta la isla.
+    -- Los comandos claude-presence set siguen disponibles sin su demonio gráfico.
+    hl.exec_cmd("sh -c 'command -v hyprarch-island >/dev/null || exec env GSK_RENDERER=cairo LD_PRELOAD=/usr/lib/libgtk4-layer-shell.so claude-presence daemon'")
     -- Botones de la ventana activa (minimizar, maximizar, cerrar). En C (~6 MB); si faltara, la versión de respaldo en Python.
     -- Con el perfil lite no arranca (se decide antes de cargar nada); ~/.config/hyprarch/wbar = on/off lo fuerza.
     hl.exec_cmd("sh -c 'hyprarch-wbar || hyprarch-wbar-py'")

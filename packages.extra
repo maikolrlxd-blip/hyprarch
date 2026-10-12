@@ -31,6 +31,8 @@ npm
 mesa
 vulkan-intel
 intel-media-driver
+libva-intel-driver
+mesa-utils
 vulkan-radeon
 libva-mesa-driver
 vulkan-nouveau

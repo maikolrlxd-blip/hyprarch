@@ -413,7 +413,7 @@ class App(Gtk.Application):
             panel.append(row)
         b = S["br"]
         if b is not None:
-            row, *_ = self.slider("", b, lambda x: self.debounced("br", lambda: sh("brightnessctl", "-c", "backlight", "set", f"{max(1, x)}%")))
+            row, *_ = self.slider("", b, lambda x: self.debounced("br", lambda: run_async(sh, "brightnessctl", "-c", "backlight", "set", f"{max(1, x)}%")))
             panel.append(row)
 
         # --- modos ---

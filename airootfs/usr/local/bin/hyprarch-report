@@ -117,7 +117,7 @@ tailf() { [[ -s $1 ]] && tail -n "${2:-60}" "$1"; }
   sec "Registro de Hyprland (últimas 60 líneas)"
   tail -n 60 "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/hypr/*/hyprland.log 2>/dev/null | tail -60
   sec "Avisos y errores del sistema (este arranque)"
-  journalctl -b -p warning --no-pager 2>/dev/null | tail -60
+  timeout 3s journalctl -b -p warning -n 60 --no-pager 2>/dev/null
   fi
 } > "$WORK/reporte.txt" 2>/dev/null
 # Sanitize ONCE before ZIP creation. Web delivery reads these same bytes.

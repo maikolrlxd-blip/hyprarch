@@ -99,7 +99,9 @@ launch_apps() {  # modo etiqueta
     [[ $line == *"|"* ]] || { ws=0; cmd=$line; }
     bin=$(exe_of "$cmd")
     safe_cmd "$cmd" || { echo "se ignora una línea no permitida en $1.conf" >&2; continue; }
-    [[ -n $bin ]] && command -v "$bin" >/dev/null 2>&1 || { missing+="${bin:-?} "; continue; }          # app no instalada: se avisa al final
+    if [[ -z $bin ]] || ! command -v "$bin" >/dev/null 2>&1; then
+      missing+="${bin:-?} "; continue   # app no instalada: se avisa al final
+    fi
     lua_exec "$cmd" "$ws" "$2"
   done < <(apps_of "$1")
   [[ -n ${missing:-} ]] && note "$(T mode.missing 'Faltan programas en este modo')" "${missing}— $(T mode.missing.d 'instálalos con hyprarch-apps (SUPER+I) o cambia las apps del modo.')"
@@ -218,12 +220,12 @@ edit_mode() {
     items=""
     while IFS= read -r line; do
       [[ -z $line ]] && continue
-      items+="rm:$line"$'\t'"$(pretty "$line")"$'\t'"$(tint "$m")"$'\t'"$(T mode.rm 'Tocá para quitarla de este modo')"$'\t'"serious"$'\n'
+      items+="rm:$line"$'\t'"$(pretty "$line")"$'\t'"$(tint "$m")"$'\t'"$(T mode.rm 'Toca para quitarla de este modo')"$'\t'"serious"$'\n'
     done < <(apps_of "$m")
     sel=$({ printf '%s' "$items"; printf '%s\n' \
         "theme"$'\t'"◆  $(T mode.theme 'Tema de este modo')"$'\t'"$(tint "$m")"$'\t'"$(theme_name "$(theme_of "$m")")"$'\thappy' \
         "wall"$'\t'"■  $(T mode.wall 'Fondo de este modo')"$'\t'"$(tint "$m")"$'\t'"$(w=$(opt_get "$m" wallpaper); if [[ -n $w ]]; then basename "$w"; else T mode.wall.def 'El que trae el tema'; fi)"$'\twink' \
-        "add"$'\t'"+  $(T mode.add 'Agregar una aplicación')"$'\t'"$(tint "$m")"$'\t'"$(T mode.add.d 'Elegí de las instaladas')"$'\thappy' \
+        "add"$'\t'"+  $(T mode.add 'Agregar una aplicación')"$'\t'"$(tint "$m")"$'\t'"$(T mode.add.d 'Elige de las instaladas')"$'\thappy' \
         "cmd"$'\t'"+  $(T mode.cmd 'Escribir un comando')"$'\t\t'"$(T mode.cmd.d 'Para cualquier programa o página web')"$'\twink' \
         "try"$'\t'"▶  $(T mode.try 'Activar este modo ahora')"$'\t\t'"$(T mode.try.d 'Prueba cómo queda')"$'\tsurprised' \
         "back"$'\t'"←  $(T ui.back 'Volver')"$'\t\t\tsleepy'; } |

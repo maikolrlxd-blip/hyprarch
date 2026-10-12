@@ -19,6 +19,7 @@ mkdir -p "$STATE"
 latest() { local f g=""; for f in "$STATE"/*.txt; do [[ -f $f ]] && g=$f; done; printf '%s' "$g"; }
 
 # La ventana de la terminal recibe todo como ARGUMENTOS (nunca se pega texto dentro del script): así ningún nombre de archivo o paquete se ejecuta.
+# shellcheck disable=SC2016 # Se expande al ejecutar bash -c, no al construir el texto.
 UPD_SCRIPT='snap=$1; pend=$2; printf "\n  Se guardó la lista de versiones actual para poder deshacer.\n\n"
 sudo pacman -Syu; rc=$?
 pacman -Q > "$pend.after" 2>/dev/null
@@ -27,6 +28,7 @@ if [ $rc -eq 0 ]; then echo; echo "  Listo."; else echo; echo "  Algo falló (c�
 if cmp -s "$pend" "$pend.after"; then rm -f "$pend"; else mv -f "$pend" "$snap"; fi
 rm -f "$pend.after"
 read -rp "  (Enter para cerrar) " _; exit $rc'
+# shellcheck disable=SC2016 # Se expande al ejecutar bash -c, no al construir el texto.
 UNDO_SCRIPT='list=$1; shift
 printf "\n  Se volverá a estas versiones:\n\n"; cat "$list"; echo
 read -rp "  ¿Seguir? [s/N] " r
@@ -48,7 +50,7 @@ do_update() {
 do_undo() {
   local snap; snap=$(latest)
   [[ -n $snap ]] || { note "$(T upd.title 'Actualizar')" "$(T upd.nosnap 'No hay ninguna actualización guardada que deshacer.')"; exit 0; }
-  local list name old cur f c diff=0
+  local list name old clean_old cur f c diff=0
   local -a files=() missing=()
   declare -A now
   while read -r name cur; do now[$name]=$cur; done < <(pacman -Q 2>/dev/null)   # una sola consulta (cientos de paquetes)
@@ -57,7 +59,8 @@ do_undo() {
     cur=${now[$name]:-}
     [[ -n $cur && $cur != "$old" ]] || continue
     diff=$((diff + 1))
-    f=""; for c in /var/cache/pacman/pkg/"$name"-"$old"-*.pkg.tar.*; do [[ -f $c && $c != *.sig ]] && f=$c; done
+    clean_old=${old#*:}   # epoch forma parte de la versión, pero no del nombre del archivo
+    f=""; for c in /var/cache/pacman/pkg/"$name"-"$clean_old"-*.pkg.tar.*; do [[ -f $c && $c != *.sig ]] && f=$c; done
     if [[ -n $f ]]; then files+=("$f"); echo "$name $cur -> $old" >> "$list"; else missing+=("$name"); fi
   done < "$snap"
   if ((diff == 0)); then

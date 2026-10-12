@@ -84,6 +84,13 @@ done < <(find "$PROFILE/efiboot" "$PROFILE/syslinux" "$PROFILE/grub" -type f -pr
 
 echo "==> Paquetes"
 grep -vE '^\s*(#|$)' packages.extra >> "$PROFILE/packages.x86_64"
+# Resuelve la lista completa antes de compilar o descargar el contenido de la ISO.
+# Las bases de paquetes ya se actualizaron con -Syu; -Sp no instala ni descarga paquetes.
+mapfile -t ISO_PKGS < <(grep -vE '^\s*(#|$)' "$PROFILE/packages.x86_64")
+pacman -Sp --config "$PROFILE/pacman.conf" -- "${ISO_PKGS[@]}" >/dev/null || {
+  echo "ERROR: no se pudieron resolver los paquetes del perfil; revisa packages.extra." >&2
+  exit 1
+}
 # Lista de paquetes para el INSTALADOR (hyprarch-install los pasa a pacstrap junto con base y linux).
 # Solo los de hyprarch: nada de lo propio del medio live (archiso, syslinux, grub...).
 mkdir -p "$AIR/usr/share/hyprarch"

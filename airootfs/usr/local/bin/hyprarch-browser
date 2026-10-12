@@ -103,17 +103,16 @@ open_browser() {
   id=$(chosen)
   is_installed "$id" || id=firefox
   c=$(cmd_of "$id")
-  # lo mismo (la misma dirección, o ninguna) abierto hace menos de 15 s: no se abre otra ventana (un PC lento hacía que se pulsara de nuevo)
+  # Evita el doble clic durante 2 s, sin bloquear nuevas ventanas durante todo el arranque.
   local f; f="${XDG_RUNTIME_DIR:-/tmp}/hyprarch-browser-open-$(printf '%s' "$*" | md5sum | cut -c1-8)"
-  if [[ -f $f ]] && (($(date +%s) - $(stat -c %Y "$f") < 15)); then exit 0; fi
+  if [[ -f $f ]] && (($(date +%s) - $(stat -c %Y "$f") < 2)); then exit 0; fi
   : > "$f"
   # shellcheck disable=SC2086
   exec setsid -f $c "$@" >/dev/null 2>&1
 }
 
 pick() {
-  local cur id
-  cur=$(chosen)
+  local id
   id=$(printf '%s\n' \
       $'firefox\tFirefox\t\t'"$(T br.have 'Ya incluido · liviano · recomendado')" \
       $'chromium\tChromium\t\t'"$(T br.pkg 'Se instala al elegirlo · base de Chrome sin Google')" \

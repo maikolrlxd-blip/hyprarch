@@ -52,8 +52,8 @@ case $cmd in
 
   pick)
     command -v hyprarch-pick >/dev/null 2>&1 || { echo "falta hyprarch-pick" >&2; exit 1; }
-    title=$(hyprarch-i18n w.lang.ask "Elegí tu idioma")
-    ph=$(hyprarch-i18n ui.search "Escribí para buscar…")
+    title=$(hyprarch-i18n w.lang.ask "Elige tu idioma")
+    ph=$(hyprarch-i18n ui.search "Escribe para buscar…")
     sel=$("$0" list | hyprarch-pick --layout wheel --title "$title" --placeholder "$ph") || exit 1
     [[ -n $sel ]] && "$0" set "$sel" ;;
 
