@@ -54,3 +54,8 @@ La sesión de Claude que corre en el PC del usuario encontró `C:\Users\maiko\Do
 - `maps\valle-abierto\` (el .rbxl y "Valle abierto - revision.blend") y `Slime Rush - QA rondas.rbxl`.
 **Hecho antes de esta corrección y ahora obsoleto:** todo lo que dice "se perdió" en este repo, y los árboles 0.5.0 y el kit v0.2.0 de la nube (rechazados por el usuario; no integrar).
 **Roblox Studio:** hay 7 ventanas abiertas (QA rondas, EngineFixture-travel-v2, Valle abierto, HUD012-clean, HUD012-mobilefix-clean, RouteFixture-v1, RouteFixture-v2); varias son copias de prueba (fixtures). Nadie cierra nada sin que Maikol lo apruebe y sin copia de seguridad previa.
+
+## 2026-10-22 — Claude (nube) programó la Capa 1 de la prueba jugable
+- `src/Combat.lua` (puñetazo: alcance 7, 2 golpes/s, 100 hp, 20 de daño, empuje; al llegar a 0 llama a `Rules:knockOut`) + `tests/run_combat.lua` (5 pruebas de combate y una partida completa de 12 bots, determinista). Total: 34 + 7 pruebas ok (`python3 slime-rush-juego/tests/run_tests.py`).
+- `server/GameServer.server.lua` y `client/Hud.client.lua`: adaptador PROVISIONAL a Roblox (isla de 512, suelo plano, esferas/cajas de colores, HUD de texto; E recoger, F golpear, G saquear, H depositar). **Solo se comprobó la sintaxis; NO se ha probado en Studio.** `default.project.json` ya los mapea (ServerScriptService y StarterPlayerScripts).
+- Codex: parte de esto en vez de rehacerlo. Tu trabajo: abrirlo con Rojo, corregir lo que falle en Studio, reemplazar el suelo plano por el terreno real (sin Terrain de fábrica), medir FPS, y avisar con captura.
