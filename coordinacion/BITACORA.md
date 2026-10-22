@@ -9,7 +9,7 @@
 4. Roblox Studio: solo los que de verdad necesites (ver `PARA-CODEX.md`).
 
 ## Qué pasó
-- **Reinicio del PC del usuario (2026-10-22):** se perdieron los archivos originales del juego (.rbxl de arena y valle, .blend de personajes y árboles, Laboratorio Slime) y la memoria local. **Nada de lo que Codex tenía en su carpeta `...\Codex\...\slime-rush` existe ya**, salvo copias que el usuario recupere.
+- **Reinicio del PC del usuario (2026-10-22):** se perdieron programas y la memoria local de Claude, **pero los archivos de Codex SÍ existen** (lo comprobó la sesión del PC): `C:\Users\maiko\Documents\Codex\2026-10-21\c\outputs\slime-rush\` con los .blend de árboles v01–v04 (el estilo ORIGINAL 0.4.0 que pide el usuario), `Slime Rush - Characters.blend`, el valle (`maps\valle-abierto\`) y `QA rondas.rbxl`. **Antes se dio por perdido por error; corregido.**
 - **Giro de diseño (hoy):** el usuario cambió de idea. Slime Rush v2 = **mundo grande generado por semilla** (exploración, recursos, cofres ocultos, slimes y accesorios raros, robo, carrera a la meta). El mapa fijo y la lava del diseño anterior **quedan en pausa**. Detalle y decisiones abiertas: `slime-rush-juego/DISENO-v2.md`.
 - **Todos los modelos se hacen con Blender** (regla del usuario).
 
@@ -46,3 +46,11 @@ Escribe en `coordinacion/DE-CODEX.md` (o por el Taller: `taller_task_update` con
 3. Cargar `src/` con Rojo y probar que `World.generate(seed)` corre en Luau (mismo resultado que en Lua puro) y mide el tiempo.
 4. Conectar `Rules` al combate real (derrota → `knockOut`; saqueo → `lootDowned`; depósito) con el servidor como autoridad.
 5. Un solo Roblox Studio abierto (ver `PARA-CODEX.md`).
+
+## Corrección importante (2026-10-22, tarde) — los archivos de Codex existen
+La sesión de Claude que corre en el PC del usuario encontró `C:\Users\maiko\Documents\Codex\2026-10-21\c\outputs\slime-rush\`:
+- `art\trees\models\`: **"Slime Rush - Arboles cartoon v01…v04.blend"** y "Bosque - estudio de escala v04.blend" → **el estilo ORIGINAL 0.4.0** que el usuario quiere. **Los árboles 0.6.0 deben partir de `v04.blend`**, no de cero.
+- `art\slimes\models\Slime Rush - Characters.blend` (los 3 slimes).
+- `maps\valle-abierto\` (el .rbxl y "Valle abierto - revision.blend") y `Slime Rush - QA rondas.rbxl`.
+**Hecho antes de esta corrección y ahora obsoleto:** todo lo que dice "se perdió" en este repo, y los árboles 0.5.0 y el kit v0.2.0 de la nube (rechazados por el usuario; no integrar).
+**Roblox Studio:** hay 7 ventanas abiertas (QA rondas, EngineFixture-travel-v2, Valle abierto, HUD012-clean, HUD012-mobilefix-clean, RouteFixture-v1, RouteFixture-v2); varias son copias de prueba (fixtures). Nadie cierra nada sin que Maikol lo apruebe y sin copia de seguridad previa.

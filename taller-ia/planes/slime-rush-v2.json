@@ -25,7 +25,7 @@
    "needs": "modelado 3D dificil",
    "asset": "Arboles Slime Rush",
    "status": "todo",
-   "detail": "Los 0.5.0 fueron RECHAZADOS (lisos, de un solo color, 'plastilina'). Volver al estilo 0.4.0: copas anchas de hojas en capas, troncos gruesos retorcidos con surcos, mate. Arreglar SOLO los huecos negros y el plato plano. Corteza y hojas con TEXTURA pintada (veta, pinceladas, variación de color), facetado limpio, nada de superficies subdivididas lisas. Todo en Blender. Referencia: renders de 0.4.0 que el usuario mostró."
+   "detail": "Los 0.5.0 fueron RECHAZADOS (lisos, de un solo color, 'plastilina'). Volver al estilo 0.4.0: copas anchas de hojas en capas, troncos gruesos retorcidos con surcos, mate. Arreglar SOLO los huecos negros y el plato plano. Corteza y hojas con TEXTURA pintada (veta, pinceladas, variación de color), facetado limpio, nada de superficies subdivididas lisas. Todo en Blender. Referencia: renders de 0.4.0 que el usuario mostró. PARTIR DE 'Slime Rush - Arboles cartoon v04.blend' (en Documents\\Codex\\...\\art\\trees\\models\\), que ya es el estilo original."
   },
   {
    "title": "Generador de isla con semilla, volcán y botes (Luau puro) + 34 pruebas",
@@ -114,11 +114,12 @@
    "detail": "Genesis solo vive en ese historial."
   },
   {
-   "title": "Buscar copias del juego perdido (OneDrive, USB, Obsidian Sync)",
-   "assignee": "humano",
+   "title": "Copias del juego: ENCONTRADAS en Documents\\Codex\\2026-10-21\\c\\outputs\\slime-rush",
+   "assignee": "opus",
    "needs": "",
    "asset": "Slime Rush",
-   "detail": "Carpeta slime-rush, .blend de personajes, 'Laboratorio Slime'. Con v2 el mapa fijo ya no importa; los slimes/árboles/arte sí."
+   "detail": "La sesión del PC halló los .blend de árboles v01–v04 (estilo original 0.4.0), Characters.blend, el valle y QA rondas. Falta una COPIA DE SEGURIDAD fuera de esa carpeta.",
+   "status": "done"
   },
   {
    "title": "Prueba con 2+ clientes: derrota, saqueo, cofres, depósito, volcán y colapso",
@@ -175,6 +176,13 @@
    "needs": "",
    "asset": "PC",
    "detail": "La sesión del PC las contó y NO cerró ninguna. Que liste cuál ventana tiene cada archivo y cuáles tienen cambios sin guardar; Maikol decide cuáles cerrar."
+  },
+  {
+   "title": "Copia de seguridad de la carpeta Codex (copiar, no mover) antes de tocar o cerrar nada",
+   "assignee": "opus",
+   "needs": "",
+   "asset": "PC",
+   "detail": "robocopy/Copy-Item de C:\\Users\\maiko\\Documents\\Codex\\2026-10-21 a C:\\Users\\maiko\\Backups\\Codex-2026-10-22; verificar número de archivos y tamaño. Recomendar además subirla a OneDrive."
   }
  ]
 }

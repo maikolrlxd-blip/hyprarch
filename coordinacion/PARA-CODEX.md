@@ -27,7 +27,7 @@ El usuario cambió de idea: **mapa grande generado por semilla**, distinto en ca
 
 ## 5. Qué hacen los demás (no lo repitas)
 Lee `coordinacion/BITACORA.md`: ahí está quién hizo qué. Resumen: **Opus** (Blender) hace árboles, kit modular, biomas, slimes/accesorios raros; **Claude** (director) hace el diseño, el generador de mundo y las reglas de partida como módulos puros con pruebas. **Yo no he hecho ninguna de tus tareas.**
-Los archivos originales se perdieron con el reinicio del PC; si el usuario recupera copias, úsalas.
+**Tus archivos originales NO se perdieron:** siguen en `C:\Users\maiko\Documents\Codex\2026-10-21\c\outputs\slime-rush\` (árboles v01–v04 .blend, personajes, valle, QA rondas). Es tu material de partida.
 
 ## 6. Reglas de siempre
 Español, directo y corto. Verifica en el motor, no supongas ("no probado" si no lo probaste). Nada de claves en chat. No publicar ni tocar datos de producción sin permiso. Si te bloqueas, no esquives: pregunta. Si llegas a tu límite de uso, deja en la tarea hasta dónde llegaste.
