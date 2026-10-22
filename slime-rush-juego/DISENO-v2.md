@@ -91,3 +91,11 @@ El jugador **no es un slime redondo**: tiene un **cuerpo humanoide hecho de slim
 2. **Un brazo robado se puede volver a perder** (y volver a robar).
 3. **Un solo brazo = la velocidad de ataque baja a la mitad** (de 2 golpes/s a 1; el daño por golpe no cambia). Con 0 brazos no se ataca con las manos.
 Para Rules.lua/Codex: parámetros `attack_rate_base=2`, `attack_rate_per_arm=1` (2 brazos→2/s, 1→1/s, 0→0); pierna perdida: velocidad de movimiento reducida y salto a una pierna; sin extremidades: estado `limbless` (saqueable, el slime defiende).
+
+## PRIORIDAD DE MECÁNICAS (Maikol: "son demasiadas") — vigente
+Todo lo anterior se conserva como idea, pero se construye **por capas**. Una capa nueva solo entra cuando la anterior divierte.
+- **Capa 1 (prueba jugable):** isla, explorar, recoger recursos y cofres, llegar a la meta, tiempo y colapso simple, puntos. Un solo slime con UNA habilidad (puñetazo). Quedar inconsciente y saquear.
+- **Capa 2:** los otros dos slimes (Rayo, Miga) con una habilidad cada uno; botes y llegada.
+- **Capa 3:** volcán y desastres; cofres raros y accesorios.
+- **Capa 4:** cuerpo humanoide personalizable y extremidades (perder, robar, fusión del slime).
+- **Capa 5:** habilidades 2 y 3 de cada slime; sensación de juego (efectos/sonido).
