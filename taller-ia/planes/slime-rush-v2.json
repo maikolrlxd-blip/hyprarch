@@ -4,19 +4,20 @@
  "criterio": "mundo generado por semilla; arte en Blender (opus); reglas y generador puros con pruebas (claude); integración, robo y rendimiento en Studio (chatgpt); crítica e interfaz (antigravity); decisiones (humano)",
  "tasks": [
   {
-   "title": "APROBAR el diseño v2 (mundo generado, robo, cofres, carrera a la meta)",
-   "assignee": "humano",
+   "title": "Diseño v2: respuestas del usuario aplicadas (falta confirmar 'una sola llegada' y la duración)",
+   "assignee": "claude",
    "needs": "",
    "asset": "Slime Rush v2",
-   "detail": "Lee slime-rush-juego/DISENO-v2.md y responde las decisiones abiertas (duración, cuánto se roba, lava, tamaño, qué pasa con lo no depositado). Hasta entonces nada de lo que dependa se programa."
+   "detail": "DISENO-v2.md ya refleja: robo por inconsciencia, volcán con erupción asegurada, 24 jugadores, colapso con desastres e historia de botes. Pendiente del humano: duración total y 'una sola llegada'.",
+   "status": "done"
   },
   {
-   "title": "Dirección de arte de biomas + kit modular + prototipo de generación en Blender",
+   "title": "KIT completo en Blender: terreno por teselas, playa, botes, desierto, bosque, roca, volcán, cofres, meta, desastres",
    "assignee": "opus",
    "needs": "modelado 3D dificil",
    "asset": "Kit y mundo Slime Rush",
    "status": "doing",
-   "detail": "5–6 biomas con paleta HEX; kit modular (rocas, arbustos, nodos de recurso, cofres común/musgoso/dorado/oculto, ruinas-pista, puente, META); prototipo bpy con semilla en 1024x1024 studs; 3 semillas renderizadas. Carpeta slime-rush-arte/mapa-v02/. TODO en Blender."
+   "detail": "TODO en Blender, NADA básico de Roblox Studio. Lista en DISENO-v2.md §7. Entregar por tandas pequeñas con commit. Primera tanda ya en slime-rush-arte/mapa-v02/kit/ (rocas, arbustos, cristales, 3 cofres) — falta todo lo demás."
   },
   {
    "title": "Árboles 0.5.0 en Blender (hojas en masas redondeadas, sin huecos negros)",
@@ -27,25 +28,27 @@
    "detail": "3 variantes + LOD1, .blend/.glb/.fbx, render con figura de escala, conteo real de triángulos. Carpeta slime-rush-arte/arboles-v05/. Son parte del kit del mundo."
   },
   {
-   "title": "Generador de mundo con semilla en Luau (biomas, recursos, cofres, raros) con pruebas",
+   "title": "Generador de isla con semilla, volcán y botes (Luau puro) + 34 pruebas",
    "assignee": "claude",
    "needs": "programar",
    "asset": "Mundo Slime Rush",
-   "detail": "Módulo puro (sin API de Roblox) testeado fuera de Studio: semilla -> mapa de biomas/alturas, meta, aparición equidistante, colocación Poisson, cofres ocultos, tabla de raros, normalización de valor por cuadrante. Carpeta slime-rush-juego/. DEPENDE del diseño aprobado solo en parámetros; la estructura ya se puede hacer."
+   "detail": "Hecho y probado en slime-rush-juego/src/World.lua (y Rules.lua). Falta integrarlo en Studio (tarea del ingeniero).",
+   "status": "done"
   },
   {
-   "title": "Reglas de partida: fases, regreso a la meta, bonos de llegada, puntuación (módulo puro + pruebas)",
+   "title": "Reglas de partida: fases, inconsciencia y saqueo, volcán, colapso, bonos de llegada (Luau puro + pruebas)",
    "assignee": "claude",
    "needs": "programar",
    "asset": "Reglas Slime Rush",
-   "detail": "Máquina de estados (generación, exploración, regreso, fin, resultados), bonos 1º/2º/3º..., 'pierdes lo no depositado', validaciones del servidor. Carpeta slime-rush-juego/."
+   "detail": "Hecho y probado en slime-rush-juego/src/Rules.lua. Falta conectarlo al combate real y a la UI en Studio.",
+   "status": "done"
   },
   {
-   "title": "Robo y depósito en la meta (canal de depósito, inmunidad, mochila limitada)",
+   "title": "Combate, derrota e inconsciencia, saqueo y depósito en la meta (en Studio)",
    "assignee": "chatgpt",
    "needs": "programar",
    "asset": "Slime Rush v2",
-   "detail": "DESPUÉS de aprobar el diseño. Implementar en Roblox según DISENO-v2.md §4, con el servidor como autoridad. Probar con 2+ clientes."
+   "detail": "Conectar Rules:knockOut / lootDowned / startDeposit / finishDeposit al combate y a la interfaz. El servidor es la autoridad. Animación de caído y barra de despertar."
   },
   {
    "title": "Cofres y nodos de recurso: apertura, tablas de botín, pistas de cofres ocultos",
@@ -55,11 +58,11 @@
    "detail": "DESPUÉS de aprobar el diseño y del kit de arte. Servidor decide un solo ganador por cofre; un solo Studio salvo pruebas de 2 clientes."
   },
   {
-   "title": "Terreno por voxels desde la semilla en Studio (rendimiento y Streaming)",
+   "title": "Terreno de la isla con MODELOS PROPIOS (teselas de Blender o mallas por trozos), sin Terrain de fábrica",
    "assignee": "chatgpt",
    "needs": "programar",
    "asset": "Mundo Slime Rush",
-   "detail": "Construir el terreno por trozos sin congelar el servidor; materiales de colores cartoon; Streaming. Mide tiempo de generación y FPS."
+   "detail": "Verificar en Studio la opción A (teselas de 48 studs) y B (EditableMesh por trozos). Mide tiempo de generación y FPS; Streaming."
   },
   {
    "title": "Slimes raros y accesorios raros: modelos en Blender + tabla de aparición",
@@ -118,11 +121,46 @@
    "detail": "Carpeta slime-rush, .blend de personajes, 'Laboratorio Slime'. Con v2 el mapa fijo ya no importa; los slimes/árboles/arte sí."
   },
   {
-   "title": "Prueba con DOS clientes: disputa de cofre, robo, depósito y entrada tardía",
+   "title": "Prueba con 2+ clientes: derrota, saqueo, cofres, depósito, volcán y colapso",
    "assignee": "chatgpt",
    "needs": "programar",
    "asset": "Slime Rush v2",
    "detail": "Al final, con todo integrado. Aquí sí 2 clientes; ciérralos al terminar."
+  },
+  {
+   "title": "Intro: animación de llegada de los botes y desembarco (Blender + Studio)",
+   "assignee": "opus",
+   "needs": "modelado 3D dificil",
+   "asset": "Intro Slime Rush",
+   "detail": "Modelos de bote (4–6 diseños) con clips de navegar y atracar; el generador ya da la posición de bote y de playa por jugador (spawns[i].boat y spawns[i]). Luego el ingeniero lo monta en cámara y secuencia."
+  },
+  {
+   "title": "Volcán y erupción: modelos y efectos propios (cono, lava que crece, ceniza)",
+   "assignee": "opus",
+   "needs": "modelado 3D dificil",
+   "asset": "Volcan",
+   "detail": "Reglas listas: Rules:enterCrater, lavaRadius(now), inLava. Falta el arte y la integración."
+  },
+  {
+   "title": "Desastres del colapso: modelos propios (tornado, grietas, tormenta, rayo, hundimiento)",
+   "assignee": "opus",
+   "needs": "modelado 3D dificil",
+   "asset": "Desastres",
+   "detail": "Rules:disasterSchedule() entrega la lista determinista de eventos con tiempo y posición. Nada de partículas básicas por defecto: mallas propias."
+  },
+  {
+   "title": "Integrar el colapso y el volcán en Studio con la lista de desastres",
+   "assignee": "chatgpt",
+   "needs": "programar",
+   "asset": "Slime Rush v2",
+   "detail": "Después del arte. Sincronizar tiempos con el servidor y que quien no depositó pierda todo."
+  },
+  {
+   "title": "Crítica de la historia: guion de la intro y del torneo (botes, dinero y fama)",
+   "assignee": "antigravity",
+   "needs": "escribir",
+   "asset": "Historia",
+   "detail": "Texto corto de presentación, nombre del torneo, tono. Debe caber en la animación de llegada."
   }
  ]
 }

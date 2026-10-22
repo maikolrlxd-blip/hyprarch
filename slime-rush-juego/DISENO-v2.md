@@ -1,55 +1,61 @@
-# Slime Rush v2 — mundo generado, exploración, robo y carrera a la meta
+# Slime Rush v2 — la isla del Gran Torneo
 
-> **Estado:** propuesta del director, pendiente de aprobación del usuario. Lo que dijo Maikol está marcado **[Maikol]**; lo que propongo yo, **[Propuesta]**. Nada de esto está probado en Roblox Studio.
-> Reemplaza el enfoque anterior de "mapa fijo + lava" (arena/valle). Los archivos de ese enfoque se perdieron con el reinicio del PC.
+> **Estado:** diseño vigente con las respuestas del usuario (2026-10-22). **[Maikol]** = lo dijo él; **[Propuesta]** = propuesta del director, ajustable. Nada está probado en Roblox Studio todavía (la lógica sí: 34 pruebas en Lua puro).
 
-## 1. La idea en una frase
-**[Maikol]** Un mapa grande que cambia en cada partida (como Minecraft: una semilla crea el mundo). Los jugadores exploran, consiguen recursos, se roban entre ellos y acampan en la meta para robar. Hay tiempo límite; pasado cierto punto se puede volver a la meta y todos deben llegar antes de que se acabe; los primeros en llegar ganan bonificación. **La mayoría de los puntos salen de lo que encuentras en el mapa.**
+## 0. Regla de arte (obligatoria)
+**Todo hecho con modelos propios en Blender. Nada básico de Roblox Studio** (ni bloques/Parts, ni Terrain de fábrica con sus materiales por defecto, ni Toolbox). Cada aspecto del mundo —**hasta la playa, los botes y los cactus del desierto**— es un modelo con textura propia, mismo estilo cartoon mate. Ver §7.
 
-## 2. Línea de tiempo de una partida **[Propuesta: tiempos ajustables]**
+## 1. Historia **[Maikol]**
+Los concursantes **vienen del extranjero en botes** a una isla misteriosa para el **Gran Torneo**: quien consiga más botín gana **mucho dinero y se hace famoso**. Empieza con una **animación de llegada**: los botes navegan hasta las playas y cada jugador desembarca en su punto de la costa.
+
+## 2. La idea **[Maikol]**
+Isla **grande**, **distinta en cada partida** (como Minecraft: una semilla crea el mundo), para **20 jugadores o más** (diseñado para **24**). Se explora, se recolectan recursos, hay **cofres ocultos**, **slimes raros** (casi nunca aparecen) y **accesorios raros**. Pasado cierto tiempo **se abre el regreso a la meta** y todos deben volver antes de que se acabe; los primeros en llegar reciben **bonificación** (1º, 2º, 3º…), pero **la mayoría de los puntos salen de lo que encuentras en el mapa**.
+
+## 3. Línea de tiempo **[Propuesta; la duración total "aún no se sabe", se decide más adelante]**
 | Fase | Tiempo | Qué pasa |
 |---|---|---|
-| Generación y entrada | ~10 s | El servidor elige la semilla y construye el mundo; entrada animada de todos, cuenta 3-2-1 |
-| Exploración | 0:00 → 6:00 | Se recolecta, se abren cofres, se caza lo raro, se roba |
-| **Regreso habilitado** | 6:00 → 10:00 | Se abre la meta (aviso + marcador visible); se puede volver a depositar y cobrar bono de llegada |
-| Fin | 10:00 | Quien no depositó **pierde lo que lleva** (se queda en el suelo/devuelve al mundo) |
+| Generación y llegada | ~15 s | El servidor elige la semilla y construye la isla; animación de los botes; cuenta 3-2-1 |
+| Exploración | 0:00 → 6:00 | Recolectar, abrir cofres, cazar raros, derrotar y saquear |
+| **Regreso habilitado** | 6:00 → 10:00 | La meta se abre (aviso y marcador); se puede depositar y cobrar el bono de llegada |
+| **Colapso** | 10:00 → 10:30 | **Desastres naturales**: terremotos que abren el suelo, tornados, tormenta con rayos, erupción, y la isla se hunde |
 | Resultados | ~8 s | Puntos, bonos y raros destacados |
+Todos los tiempos son constantes (`Rules.DEFAULT`).
 
-## 3. De dónde salen los puntos **[Propuesta]** (meta: ≥ 80 % del total viene del mapa)
-| Fuente | Ejemplo de valor | Frecuencia |
+## 4. Puntos **[Propuesta]** (en simulación con 24 bots, los bonos son ≈ 8 % del total)
+| Fuente | Valor | Frecuencia |
 |---|---|---|
-| Recursos comunes repartidos (cristales, bayas, minerales) | 1–5 | Muchos |
-| Cofres comunes / musgosos | 20 / 40 | Bastantes, a la vista o con pista |
-| **Cofres ocultos** (enterrados, tras ruinas, en cuevas) | 60–150 | Pocos, buscados con indicios |
-| **Slime raro** (apareces rara vez) | 100–300 | Muy raro |
-| **Accesorio raro** (sombrero, alitas…) | 60–200 (+ se conserva como cosmético) | Raro |
-| Bono de llegada a la meta | 1º +150 · 2º +100 · 3º +60 · 4º +30 · resto +10 | Fijo, **máx. ~20 %** del total |
+| Recursos comunes (bayas 1 · cristales 3 · minerales 5) | 1–5 | Muchísimos |
+| Cofres: común 20 · musgoso 40 · dorado 140 · **oculto 90** (enterrado, con pista) | presupuesto fijo | 80 en total: 32/16/16/16 |
+| **Slime raro** (Dorado 250 · Cristal 180 · Sombra 300 · Arcoíris 400) | 180–400 | Muy raro: 0–5 por partida |
+| **Accesorio raro** (sombrero, alitas, corona…) | 80–160 (y se conserva como cosmético) | Bono de suerte en cofres |
+| Bono de llegada | 1º +150 · 2º +100 · 3º +60 · 4º +30 · resto +10 | Fijo |
 
-Los valores son semilla de ajuste: se equilibran con partidas de prueba, no a ojo.
+## 5. Combate, robo y la meta
+**[Maikol]** *"Que no se robe por golpe: al **derrotar** a alguien queda **inconsciente en el piso por un tiempo**, y ahí le puedes robar."* También: *"se campea en la meta para robar"*; lo robable es **lo que recolectaste en la partida**.
+**[Propuesta de reglas]** (implementadas y probadas):
+- Derrotar (el combate vive en el juego) → el rival queda **inconsciente 12 s**: no puede actuar y se corta su depósito.
+- Un jugador inconsciente puede ser **saqueado**: 1–2 objetos al azar por saqueo, con 1,2 s de espera entre saqueos. Lo que no cabe en tu mochila cae al suelo.
+- Al despertar tiene **8 s de inmunidad** (no se puede encadenar derrotas).
+- Los objetos **ligados** (slimes y accesorios raros) piden **2 saqueos seguidos** en 3 s.
+- Mochila de 12 objetos. **Una sola llegada**: al depositar (canal de 2 s) terminas tu partida a salvo.
+- **Campear la meta** es una estrategia válida: quien llega a depositar puede ser derrotado y saqueado.
 
-## 4. Robo y la meta **[Maikol: "campean en la meta para robar"; "te pueden robar lo que recolectaste en la partida"]**
-**[Propuesta de reglas]**
-- Lo que llevas en la **mochila** es robable. Lo **depositado** en la meta está a salvo.
-- Robar = golpe/embestida: quita **1–2 objetos** (aleatorios, no todo) de la mochila del rival y pasan a la tuya. Los robados también son robables.
-- **Contrajuego** para que acampar no sea imbatible: el depósito en la meta es un **canal de ~2 s** (se interrumpe si te golpean); después de que te roben tienes **6 s de inmunidad** y empujón de escape; la mochila tiene capacidad limitada (más botín = más lento).
-- Lo raro puede ser **ligado** (un slime raro te sigue y cuesta 2 golpes quitarlo).
-- Si te caes del mapa/mueres **sueltas** parte de lo que llevas.
+## 6. Volcán y desastres **[Maikol]**
+- **Volcán:** *"puede llegar a generarse"* (en ~60 % de las islas, en roca/montaña alta, lejos de la meta). **Si alguien se tira al cráter, la erupción queda asegurada** y la **lava sube lentamente** desde el cráter, **sin cubrir todo el mapa**: crece 1,2 studs/s hasta un tope (≤ 220) que **nunca alcanza la meta** (probado). Complica sin hacer imposible. Quien se lanza pierde lo que llevaba.
+- **Colapso final:** *"si se acaba el tiempo y no llegaste pierdes todo, porque empiezan los desastres naturales: terremotos que abren el suelo, tornados, tormentas, erupciones; la isla colapsa."* Se genera una lista **determinista** de desastres (4 terremotos, 3 tornados, tormenta, 18 rayos, erupción si hay volcán, y el hundimiento) para animarlos.
 
-## 5. Generación del mundo **[Propuesta técnica]**
-- El servidor elige una **semilla** por partida (`Random.new(seed)` + `math.noise` desplazado por la semilla). Misma semilla = mismo mundo: permite repetir, comparar y depurar.
-- **Tamaño:** ~1024 × 1024 studs (grande pero no inmenso). Terreno por voxels (`Terrain`) con materiales de colores cartoon, en trozos para no congelar el servidor; Streaming activado.
-- **Biomas** (bosque, pradera/colinas, lago/costa, cueva/roca, desierto, montaña): dos ruidos de baja frecuencia (humedad, temperatura) + elevación; transiciones suaves.
-- **Meta:** en una plaza plana y legible (centro o borde, según semilla); **aparición** de los jugadores repartida y equidistante.
-- **Colocación:** muestreo de Poisson por bioma para recursos, árboles y rocas; cofres con separación mínima y reglas (los ocultos: cuevas, tras ruinas, enterrados con indicio sutil); raros con probabilidad pequeña por bioma.
-- **Justicia:** el valor total de botín por cuadrante se normaliza (±10 %) para que ninguna zona de aparición sea mejor.
-- **Arte:** kit modular hecho en **Blender** (rocas, arbustos, cofres, nodos de recurso, ruinas, meta). El generador instancia piezas, no hace un mapa único a mano.
+## 7. Mundo generado y arte **[Propuesta técnica]**
+- **Isla** de 1536 × 1536 studs (cuadrado que la contiene), costa irregular, mar alrededor, **meta en una plaza plana al centro**, **24 apariciones en playas** repartidas alrededor y su **bote** mar adentro (para la animación). Misma semilla = mismo mundo.
+- **Biomas de tierra:** pradera, bosque, desierto, roca/cueva, montaña, lago (+ mar). Cofres y recursos repartidos por sectores para que **ninguna zona sea mejor** (desviación ≤ 21 % en 30 semillas).
+- **Arte 100 % Blender** (kit modular): terreno por teselas propias (llano, pendiente, acantilado, orilla, playa) con texturas propias; **playa** (arena, espuma, conchas, rocas, palmeras, muelle); **botes** (4–6 diseños con animación de llegar); **desierto** (cactus, dunas, rocas rojizas, cráneos, oasis); bosque (árboles, arbustos, flores, hongos, troncos); roca/cueva (rocas, cristales, boca de cueva); **volcán** (cono, lava, ceniza); **cofres** y **nodos de recurso**; **meta**; **desastres con modelos propios** (embudo de tornado, grietas, nube de tormenta, rayos, columna de erupción); slimes y accesorios raros.
+- **Cómo ensamblar el terreno (decisión técnica pendiente de verificar en Studio):** el generador entrega una rejilla de 128 × 128 alturas y biomas (celdas de 12 studs). Opción A: teselas de Blender de 48 studs ensambladas según la rejilla. Opción B: mallas construidas en tiempo de ejecución con el terreno por trozos y texturas propias (depende de disponibilidad de `EditableMesh` en el juego publicado). **No se usará el Terrain de fábrica.**
 
-## 6. Qué se hace y quién **[Propuesta de reparto]**
-Ver tablero del Taller IA (`taller-ia/planes/slime-rush.json`). Resumen: Opus → kit de arte, biomas, árboles, slimes/accesorios raros (Blender); Claude (director) → este diseño, generador de mundo y reglas de partida en Luau con pruebas; Codex → integración en Studio, robo/depósito, cofres, rendimiento y pruebas con 2+ clientes; Antigravity → crítica visual, diseño de interfaz y de los accesorios raros.
-
-## 7. Decisiones abiertas (necesito tu respuesta)
-1. **Duración** de la partida y cuándo se abre el regreso (propongo 10 min y regreso a los 6).
-2. **Cuánto se roba** por golpe (1–2 objetos vs. un % de la mochila vs. todo).
-3. **¿Mantener la lava** del diseño anterior como presión de tiempo o sustituirla por el cierre a los 10:00?
-4. **Tamaño** del mapa y jugadores por partida (propongo 1024 × 1024 y hasta 8–12).
-5. **Qué pasa con lo que no depositaste** al acabar el tiempo (se pierde vs. se conserva a mitad).
+## 8. Decisiones
+| # | Tema | Estado |
+|---|---|---|
+| 1 | Duración total | **Por decidir más adelante** (hoy 10 min + 30 s de colapso, ajustable) |
+| 2 | Robo | **Decidido [Maikol]:** derrotar → inconsciente → saquear (sin robo por golpe) |
+| 3 | Lava | **Decidido [Maikol]:** volcán que puede aparecer; erupción asegurada si alguien salta al cráter; lava lenta y limitada |
+| 4 | Tamaño y jugadores | **Decidido [Maikol]:** grande, **24 jugadores** (20 o más) |
+| 5 | Tiempo agotado | **Decidido [Maikol]:** pierdes todo; desastres y colapso de la isla |
+| 6 | Una sola llegada | **[Propuesta]** (por confirmar) |

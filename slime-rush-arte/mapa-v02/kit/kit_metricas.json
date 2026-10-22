@@ -1,0 +1,641 @@
+{
+ "version": "0.2.0",
+ "unidad": "1 unidad = 1 stud",
+ "piezas": {
+  "antorcha_a": {
+   "triangulos": 164,
+   "tam_studs": [
+    1.81,
+    1.9,
+    7.77
+   ],
+   "materiales": [
+    "SR_madera",
+    "SR_roca_osc",
+    "SR_llama",
+    "SR_dorado"
+   ]
+  },
+  "arbusto_a": {
+   "triangulos": 400,
+   "tam_studs": [
+    7.02,
+    7.73,
+    6.41
+   ],
+   "materiales": [
+    "SR_follaje",
+    "SR_follaje_claro",
+    "SR_hierba"
+   ]
+  },
+  "arbusto_b": {
+   "triangulos": 320,
+   "tam_studs": [
+    7.31,
+    8.63,
+    6.55
+   ],
+   "materiales": [
+    "SR_follaje_claro",
+    "SR_hierba",
+    "SR_follaje"
+   ]
+  },
+  "arbusto_c": {
+   "triangulos": 620,
+   "tam_studs": [
+    7.02,
+    8.16,
+    6.14
+   ],
+   "materiales": [
+    "SR_hierba",
+    "SR_follaje",
+    "SR_follaje_claro",
+    "SR_coral"
+   ]
+  },
+  "boca_cueva_a": {
+   "triangulos": 338,
+   "tam_studs": [
+    42.94,
+    81.0,
+    26.17
+   ],
+   "materiales": [
+    "SR_roca",
+    "SR_hierba",
+    "SR_roca_osc",
+    "SR_roca_clara"
+   ]
+  },
+  "boca_cueva_b": {
+   "triangulos": 182,
+   "tam_studs": [
+    37.12,
+    81.0,
+    25.72
+   ],
+   "materiales": [
+    "SR_roca",
+    "SR_hierba",
+    "SR_roca_osc",
+    "SR_madera",
+    "SR_llama"
+   ]
+  },
+  "cactus_a": {
+   "triangulos": 336,
+   "tam_studs": [
+    7.72,
+    4.4,
+    13.26
+   ],
+   "materiales": [
+    "SR_follaje",
+    "SR_dorado",
+    "SR_arena_osc"
+   ]
+  },
+  "cactus_b": {
+   "triangulos": 268,
+   "tam_studs": [
+    5.91,
+    4.31,
+    9.76
+   ],
+   "materiales": [
+    "SR_follaje",
+    "SR_rosa",
+    "SR_arena_osc"
+   ]
+  },
+  "cofre_comun": {
+   "triangulos": 768,
+   "tam_studs": [
+    4.4,
+    3.76,
+    4.26
+   ],
+   "materiales": [
+    "SR_madera",
+    "SR_madera_osc",
+    "SR_dorado"
+   ]
+  },
+  "cofre_enterrado": {
+   "triangulos": 1024,
+   "tam_studs": [
+    12.17,
+    11.48,
+    4.1
+   ],
+   "materiales": [
+    "SR_madera",
+    "SR_madera_osc",
+    "SR_dorado",
+    "SR_tierra",
+    "SR_roca_clara"
+   ]
+  },
+  "cofre_musgoso": {
+   "triangulos": 1468,
+   "tam_studs": [
+    7.55,
+    5.9,
+    4.82
+   ],
+   "materiales": [
+    "SR_madera_osc",
+    "SR_roca_osc",
+    "SR_roca_clara",
+    "SR_musgo",
+    "SR_crema",
+    "SR_coral"
+   ]
+  },
+  "cofre_raro": {
+   "triangulos": 858,
+   "tam_studs": [
+    7.2,
+    7.2,
+    5.95
+   ],
+   "materiales": [
+    "SR_dorado",
+    "SR_madera_osc",
+    "SR_cristal",
+    "SR_roca_clara"
+   ]
+  },
+  "duna_a": {
+   "triangulos": 1008,
+   "tam_studs": [
+    40.0,
+    26.0,
+    6.04
+   ],
+   "materiales": [
+    "SR_arena"
+   ]
+  },
+  "duna_b": {
+   "triangulos": 1008,
+   "tam_studs": [
+    28.0,
+    18.0,
+    3.88
+   ],
+   "materiales": [
+    "SR_arena"
+   ]
+  },
+  "flores_a": {
+   "triangulos": 304,
+   "tam_studs": [
+    3.34,
+    3.88,
+    2.07
+   ],
+   "materiales": [
+    "SR_follaje_claro",
+    "SR_crema",
+    "SR_dorado",
+    "SR_hierba_clara"
+   ]
+  },
+  "flores_b": {
+   "triangulos": 304,
+   "tam_studs": [
+    4.05,
+    2.48,
+    2.36
+   ],
+   "materiales": [
+    "SR_follaje_claro",
+    "SR_dorado",
+    "SR_madera",
+    "SR_hierba_clara"
+   ]
+  },
+  "flores_c": {
+   "triangulos": 304,
+   "tam_studs": [
+    3.85,
+    4.48,
+    2.32
+   ],
+   "materiales": [
+    "SR_follaje_claro",
+    "SR_rosa",
+    "SR_dorado",
+    "SR_hierba_clara"
+   ]
+  },
+  "hierba_parche_a": {
+   "triangulos": 108,
+   "tam_studs": [
+    5.83,
+    5.07,
+    2.31
+   ],
+   "materiales": [
+    "SR_follaje_claro",
+    "SR_hierba_clara"
+   ]
+  },
+  "hierba_parche_b": {
+   "triangulos": 168,
+   "tam_studs": [
+    8.21,
+    5.44,
+    2.23
+   ],
+   "materiales": [
+    "SR_follaje_claro",
+    "SR_hierba_clara"
+   ]
+  },
+  "hongo_grande_a": {
+   "triangulos": 320,
+   "tam_studs": [
+    8.46,
+    8.38,
+    9.51
+   ],
+   "materiales": [
+    "SR_crema",
+    "SR_coral"
+   ]
+  },
+  "hongo_grande_b": {
+   "triangulos": 960,
+   "tam_studs": [
+    14.01,
+    10.7,
+    11.49
+   ],
+   "materiales": [
+    "SR_crema",
+    "SR_coral"
+   ]
+  },
+  "meta_arco": {
+   "triangulos": 2440,
+   "tam_studs": [
+    30.43,
+    4.49,
+    27.75
+   ],
+   "materiales": [
+    "SR_roca",
+    "SR_roca_clara",
+    "SR_madera",
+    "SR_crema",
+    "SR_madera_osc",
+    "SR_slime",
+    "SR_coral",
+    "SR_dorado",
+    "SR_llama"
+   ],
+   "triangulos_lod1": 976
+  },
+  "meta_banco": {
+   "triangulos": 722,
+   "tam_studs": [
+    11.2,
+    11.2,
+    12.8
+   ],
+   "materiales": [
+    "SR_roca",
+    "SR_madera",
+    "SR_dorado",
+    "SR_madera_osc",
+    "SR_cristal",
+    "SR_crema"
+   ]
+  },
+  "meta_plataforma": {
+   "triangulos": 6776,
+   "tam_studs": [
+    63.0,
+    63.0,
+    4.3
+   ],
+   "materiales": [
+    "SR_roca_clara",
+    "SR_tierra",
+    "SR_roca",
+    "SR_dorado",
+    "SR_crema"
+   ],
+   "triangulos_lod1": 2710
+  },
+  "palmera_a": {
+   "triangulos": 866,
+   "tam_studs": [
+    18.89,
+    19.86,
+    24.92
+   ],
+   "materiales": [
+    "SR_madera_clara",
+    "SR_follaje",
+    "SR_follaje_claro",
+    "SR_madera"
+   ]
+  },
+  "palmera_b": {
+   "triangulos": 866,
+   "tam_studs": [
+    18.28,
+    20.29,
+    19.92
+   ],
+   "materiales": [
+    "SR_madera_clara",
+    "SR_follaje",
+    "SR_follaje_claro",
+    "SR_madera"
+   ]
+  },
+  "portal_salida": {
+   "triangulos": 856,
+   "tam_studs": [
+    20.6,
+    12.0,
+    20.6
+   ],
+   "materiales": [
+    "SR_roca_clara",
+    "SR_portal",
+    "SR_cristal",
+    "SR_roca"
+   ]
+  },
+  "puente_tramo_a": {
+   "triangulos": 1296,
+   "tam_studs": [
+    16.07,
+    7.55,
+    1.22
+   ],
+   "materiales": [
+    "SR_madera_clara",
+    "SR_madera",
+    "SR_madera_osc"
+   ]
+  },
+  "puente_tramo_b": {
+   "triangulos": 1696,
+   "tam_studs": [
+    16.1,
+    8.1,
+    6.3
+   ],
+   "materiales": [
+    "SR_madera_clara",
+    "SR_madera",
+    "SR_madera_osc"
+   ],
+   "triangulos_lod1": 678
+  },
+  "rampa_natural_a": {
+   "triangulos": 2432,
+   "tam_studs": [
+    16.53,
+    9.36,
+    8.01
+   ],
+   "materiales": [
+    "SR_tierra",
+    "SR_hierba"
+   ],
+   "triangulos_lod1": 972
+  },
+  "rampa_natural_b": {
+   "triangulos": 320,
+   "tam_studs": [
+    20.13,
+    7.74,
+    6.87
+   ],
+   "materiales": [
+    "SR_roca_clara",
+    "SR_roca"
+   ]
+  },
+  "recurso_ambar": {
+   "triangulos": 640,
+   "tam_studs": [
+    5.91,
+    5.24,
+    3.69
+   ],
+   "materiales": [
+    "SR_roca",
+    "SR_ambar"
+   ]
+  },
+  "recurso_cristal": {
+   "triangulos": 212,
+   "tam_studs": [
+    6.15,
+    5.87,
+    8.11
+   ],
+   "materiales": [
+    "SR_roca",
+    "SR_cristal"
+   ]
+  },
+  "recurso_gema": {
+   "triangulos": 480,
+   "tam_studs": [
+    6.09,
+    5.13,
+    4.91
+   ],
+   "materiales": [
+    "SR_roca",
+    "SR_musgo",
+    "SR_gema"
+   ]
+  },
+  "roca_gran_a": {
+   "triangulos": 416,
+   "tam_studs": [
+    15.42,
+    18.59,
+    15.32
+   ],
+   "materiales": [
+    "SR_roca",
+    "SR_roca_clara",
+    "SR_musgo"
+   ]
+  },
+  "roca_gran_b": {
+   "triangulos": 416,
+   "tam_studs": [
+    19.87,
+    18.97,
+    12.82
+   ],
+   "materiales": [
+    "SR_roca",
+    "SR_roca_clara",
+    "SR_musgo"
+   ]
+  },
+  "roca_med_a": {
+   "triangulos": 288,
+   "tam_studs": [
+    9.7,
+    7.43,
+    4.41
+   ],
+   "materiales": [
+    "SR_roca",
+    "SR_roca_clara",
+    "SR_musgo"
+   ]
+  },
+  "roca_med_b": {
+   "triangulos": 288,
+   "tam_studs": [
+    9.95,
+    7.52,
+    4.37
+   ],
+   "materiales": [
+    "SR_roca",
+    "SR_roca_clara",
+    "SR_musgo"
+   ]
+  },
+  "roca_peq_a": {
+   "triangulos": 80,
+   "tam_studs": [
+    2.89,
+    2.55,
+    1.3
+   ],
+   "materiales": [
+    "SR_roca"
+   ]
+  },
+  "roca_peq_b": {
+   "triangulos": 80,
+   "tam_studs": [
+    3.07,
+    2.54,
+    1.26
+   ],
+   "materiales": [
+    "SR_roca"
+   ]
+  },
+  "ruina_arco_a": {
+   "triangulos": 2944,
+   "tam_studs": [
+    12.72,
+    3.6,
+    15.53
+   ],
+   "materiales": [
+    "SR_roca_clara",
+    "SR_roca",
+    "SR_musgo",
+    "SR_dorado"
+   ],
+   "triangulos_lod1": 1176
+  },
+  "ruina_arco_b": {
+   "triangulos": 2380,
+   "tam_studs": [
+    14.83,
+    8.02,
+    16.06
+   ],
+   "materiales": [
+    "SR_roca_clara",
+    "SR_roca",
+    "SR_musgo",
+    "SR_dorado"
+   ],
+   "triangulos_lod1": 952
+  },
+  "ruina_pilar_a": {
+   "triangulos": 648,
+   "tam_studs": [
+    4.28,
+    3.29,
+    8.61
+   ],
+   "materiales": [
+    "SR_roca",
+    "SR_roca_clara",
+    "SR_dorado",
+    "SR_musgo"
+   ]
+  },
+  "tronco_caido_a": {
+   "triangulos": 548,
+   "tam_studs": [
+    20.8,
+    5.85,
+    6.57
+   ],
+   "materiales": [
+    "SR_madera",
+    "SR_madera_clara",
+    "SR_musgo"
+   ]
+  },
+  "tronco_caido_b": {
+   "triangulos": 848,
+   "tam_studs": [
+    14.88,
+    5.26,
+    5.24
+   ],
+   "materiales": [
+    "SR_madera",
+    "SR_madera_clara",
+    "SR_musgo",
+    "SR_crema",
+    "SR_coral"
+   ]
+  },
+  "valla_a": {
+   "triangulos": 312,
+   "tam_studs": [
+    8.8,
+    0.81,
+    4.6
+   ],
+   "materiales": [
+    "SR_madera",
+    "SR_madera_clara"
+   ]
+  },
+  "valla_b": {
+   "triangulos": 312,
+   "tam_studs": [
+    9.66,
+    0.81,
+    4.68
+   ],
+   "materiales": [
+    "SR_madera",
+    "SR_madera_clara"
+   ]
+  }
+ },
+ "total_lod0": 40392,
+ "total_lod1": 7464,
+ "n_piezas": 47
+}

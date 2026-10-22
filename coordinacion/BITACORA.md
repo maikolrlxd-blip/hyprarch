@@ -1,6 +1,6 @@
 # Bitácora del equipo (léela ANTES de empezar una tarea)
 
-> Para Codex y para cualquiera que se conecte: aquí está **quién hizo qué** para que nadie se confunda al ver trabajo "ya hecho" o repetido. Se actualiza al final de cada bloque. Última actualización: 2026-10-22 (Claude, director).
+> Para Codex y para cualquiera que se conecte: aquí está **quién hizo qué** para que nadie se confunda al ver trabajo "ya hecho" o repetido. Se actualiza al final de cada bloque. Última actualización: 2026-10-22, tarde (Claude, director).
 
 ## Reglas para no pisarnos
 1. Haz `git pull` de la rama `ccr-d4583e0a-ggl8kz` y mira esta bitácora y el tablero del Taller **antes** de tocar nada.
@@ -28,3 +28,21 @@ Integración en Roblox Studio, robo/depósito, cofres, terreno por voxels, corre
 
 ## Cómo avisarnos
 Escribe en `coordinacion/DE-CODEX.md` (o por el Taller: `taller_task_update` con nota). El director lo lee al empezar cada turno.
+
+## Actualización (tarde del 2026-10-22) — LÉELA, cambió bastante
+**Diseño v2 definitivo con las respuestas del usuario** (`slime-rush-juego/DISENO-v2.md`): isla grande generada por semilla, **24 jugadores**, llegada **en botes** (historia: concursantes del extranjero, dinero y fama), robo **por inconsciencia** (derrotar → 12 s en el suelo → saquear), **volcán** opcional con erupción asegurada si alguien salta al cráter (lava lenta y limitada), **colapso final con desastres** (terremotos, tornados, tormenta, erupción, hundimiento) para quien no llegó a la meta. Sin lava fija. Duración total: por decidir.
+
+**Regla de arte del usuario:** TODO con modelos propios hechos en Blender. **Nada básico de Roblox Studio** (ni Parts/bloques, ni Terrain de fábrica con materiales por defecto, ni Toolbox). Hasta la playa, los botes y los cactus.
+
+**Código ya hecho y probado (Lua puro, 34 pruebas):** `slime-rush-juego/src/` — `World.lua` (isla, costa, biomas, meta, 24 apariciones en playa con su bote, volcán, recursos, cofres, raros), `Rules.lua` (fases, derrota/inconsciencia, saqueo, volcán, colapso, bonos de llegada, puntuación), `Rng.lua`, `Noise.lua`. Correr pruebas: `python3 slime-rush-juego/tests/run_tests.py` (necesita `pip install lupa`). Proyecto Rojo en `default.project.json`. **No está probado en Roblox Studio**: eso es tu parte.
+
+**Arte: RECHAZADO por el usuario** (`slime-rush-arte/` tiene `ESTADO.md`): los árboles 0.5.0 y el kit v0.2.0 "se ven como plastilina" y "nada parecido a lo inicial". **No los integres.** Se rehacen con el estilo ORIGINAL (árboles 0.4.0: copas anchas de hojas en capas, troncos gruesos retorcidos con surcos, mate) y texturas pintadas, no formas lisas de un solo color.
+
+**Los tres trabajadores de arte (Opus) fueron detenidos** al interrumpir el usuario la sesión; no hay nadie modelando ahora. Si el usuario te pide arte, ya sabes el criterio.
+
+## Tus tareas hoy (rol: ingeniero), en orden
+1. `git pull` y leer esto + `DISENO-v2.md`.
+2. **Verificar en Studio cómo construir el terreno SIN el Terrain de fábrica:** opción A, teselas de 48 studs; opción B, mallas por trozos con `EditableMesh` (¿está disponible en un juego publicado?). Reporta qué funciona y el tiempo de generación.
+3. Cargar `src/` con Rojo y probar que `World.generate(seed)` corre en Luau (mismo resultado que en Lua puro) y mide el tiempo.
+4. Conectar `Rules` al combate real (derrota → `knockOut`; saqueo → `lootDowned`; depósito) con el servidor como autoridad.
+5. Un solo Roblox Studio abierto (ver `PARA-CODEX.md`).

@@ -1,0 +1,128 @@
+{
+  "version": "0.5.0",
+  "arboles": {
+    "roble_abuelo": {
+      "nombre": "Roble Abuelo",
+      "lod0": {
+        "triangulos": 16408,
+        "vertices": 8388,
+        "degenerados": 0,
+        "vertices_sueltos": 0,
+        "bbox_min": [
+          -26.25,
+          -25.26,
+          -2.73
+        ],
+        "bbox_max": [
+          28.29,
+          27.61,
+          52.94
+        ],
+        "alto_sobre_suelo": 52.94,
+        "ancho_x": 54.53,
+        "ancho_y": 52.87
+      },
+      "lod1": {
+        "triangulos": 5608,
+        "vertices": 2956,
+        "degenerados": 0,
+        "vertices_sueltos": 0,
+        "bbox_min": [
+          -25.67,
+          -24.66,
+          -2.6
+        ],
+        "bbox_max": [
+          27.81,
+          26.56,
+          52.45
+        ],
+        "alto_sobre_suelo": 52.45,
+        "ancho_x": 53.48,
+        "ancho_y": 51.23
+      }
+    },
+    "torcido": {
+      "nombre": "Torcido",
+      "lod0": {
+        "triangulos": 16728,
+        "vertices": 8498,
+        "degenerados": 0,
+        "vertices_sueltos": 0,
+        "bbox_min": [
+          -20.18,
+          -15.43,
+          -4.13
+        ],
+        "bbox_max": [
+          20.61,
+          20.0,
+          65.3
+        ],
+        "alto_sobre_suelo": 65.3,
+        "ancho_x": 40.79,
+        "ancho_y": 35.43
+      },
+      "lod1": {
+        "triangulos": 5408,
+        "vertices": 2830,
+        "degenerados": 0,
+        "vertices_sueltos": 0,
+        "bbox_min": [
+          -19.66,
+          -14.84,
+          -4.14
+        ],
+        "bbox_max": [
+          20.05,
+          19.26,
+          65.03
+        ],
+        "alto_sobre_suelo": 65.03,
+        "ancho_x": 39.72,
+        "ancho_y": 34.09
+      }
+    },
+    "musgoso": {
+      "nombre": "Musgoso",
+      "lod0": {
+        "triangulos": 20400,
+        "vertices": 10542,
+        "degenerados": 0,
+        "vertices_sueltos": 0,
+        "bbox_min": [
+          -28.7,
+          -21.19,
+          -3.49
+        ],
+        "bbox_max": [
+          29.44,
+          20.95,
+          45.11
+        ],
+        "alto_sobre_suelo": 45.11,
+        "ancho_x": 58.13,
+        "ancho_y": 42.14
+      },
+      "lod1": {
+        "triangulos": 7188,
+        "vertices": 3856,
+        "degenerados": 0,
+        "vertices_sueltos": 0,
+        "bbox_min": [
+          -28.42,
+          -20.83,
+          -3.36
+        ],
+        "bbox_max": [
+          28.84,
+          20.95,
+          44.76
+        ],
+        "alto_sobre_suelo": 44.76,
+        "ancho_x": 57.26,
+        "ancho_y": 41.77
+      }
+    }
+  }
+}

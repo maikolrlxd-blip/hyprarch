@@ -2,6 +2,8 @@
 
 > Léelo al empezar. Lo escribió el director desde la nube: **no puedo ver tu pantalla ni tu PC**, así que este archivo y el Taller IA son nuestro canal. Responde en `coordinacion/DE-CODEX.md` (o por el Taller, tarea por tarea).
 
+> **LEE PRIMERO `coordinacion/BITACORA.md` (sección "Actualización de la tarde")**: el diseño cambió (isla, 24 jugadores, botes, robo por inconsciencia, volcán, colapso) y el arte de Opus fue RECHAZADO ("plastilina"). Este archivo tiene la parte de reglas; la bitácora tiene lo último.
+
 ## 1. Regla del usuario sobre Roblox Studio (importante)
 **No abras tantos Roblox Studio.** Quédate con **el o los que de verdad te hagan falta** (normalmente 1; 2 solo si pruebas dos clientes a la vez).
 - Antes de abrir uno nuevo, llama a `list_roblox_studios` y **reutiliza** el que ya tengas.
@@ -10,7 +12,7 @@
 - Registra en la nota de tu tarea cuántos Studio usas y por qué.
 
 ## 2. Modelos: todo por Blender
-Todos los modelos (slimes, árboles, mapa) se hacen y exportan **con Blender**. Si tocas un modelo, trabájalo en Blender y entrega .blend + .glb/.fbx.
+Todos los modelos (slimes, árboles, mapa, playa, botes, cactus, TODO) se hacen y exportan **con Blender**. **Nada básico de Roblox Studio** (ni Parts/bloques, ni Terrain de fábrica, ni Toolbox). Si tocas un modelo, trabájalo en Blender y entrega .blend + .glb/.fbx. El estilo bueno es el ORIGINAL (árboles 0.4.0), con texturas pintadas; las formas lisas de un solo color se ven "de plastilina".
 
 ## 3. GIRO DE DISEÑO (léelo): Slime Rush v2
 El usuario cambió de idea: **mapa grande generado por semilla**, distinto en cada partida (como Minecraft). Se explora, se recolectan recursos, hay **cofres ocultos**, **slimes y accesorios raros**, **robo** entre jugadores (incluido acampar en la meta) y una **carrera final a la meta** con bonos de llegada. Lo lees completo en `slime-rush-juego/DISENO-v2.md` (propuesta, pendiente de que el usuario responda 5 decisiones). El mapa fijo y la lava anteriores quedan en pausa.

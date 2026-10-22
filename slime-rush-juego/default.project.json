@@ -1,0 +1,10 @@
+{
+  "name": "SlimeRush",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "SlimeRush": { "$path": "src" }
+    }
+  }
+}
