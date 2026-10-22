@@ -20,3 +20,9 @@ Pedido de Maikol (2026-10-22). Quien lo ejecuta: la sesión **Coordinador de Cod
 
 ## Nota (Maikol): el juego será tipo roguelike
 Se rejuegan muchas veces con armas distintas: las animaciones de arma importan mucho (sensación de cada disparo). Además del modelo, entregar un `armas-animaciones.md` con la duración de cada clip y qué partes se mueven.
+
+## Cámara: se puede jugar en PRIMERA y en TERCERA persona (Maikol)
+- Las armas se ven de cerca (primera persona) y desde fuera (tercera): modelarlas con detalle para verse bien a cámara pegada (mira, corredera, cargador, textura pintada nítida), aún dentro del presupuesto de triángulos.
+- Entregar por arma: (a) **modelo de mundo** (en la mano del personaje, tercera persona) y (b) **viewmodel** (primera persona): mismas partes, pivote y escala pensados para colgarse de la cámara, sin partes ocultas inútiles.
+- Las animaciones (Equipar/Disparo/Recargar/Reposo) deben funcionar en ambos; si los brazos del viewmodel van aparte, entregar unos brazos simples estilo Roblox (R15) con los mismos clips.
+- El zombi se verá de lejos y muy de cerca: texturas coherentes y sin costuras visibles.
