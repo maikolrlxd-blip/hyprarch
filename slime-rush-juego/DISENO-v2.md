@@ -59,3 +59,10 @@ Todos los tiempos son constantes (`Rules.DEFAULT`).
 | 4 | Tamaño y jugadores | **Decidido [Maikol]:** grande, **24 jugadores** (20 o más) |
 | 5 | Tiempo agotado | **Decidido [Maikol]:** pierdes todo; desastres y colapso de la isla |
 | 6 | Una sola llegada | **[Propuesta]** (por confirmar) |
+
+## Habilidades de slime (ideas de Maikol, 2026-10-22)
+Nombres tentativos (no los puso él): Resorte = **Bongo**, Montura = **Rayo**, Divide = **Miga**.
+- **Bongo (resorte):** (1) se enrolla en el brazo y da un puñetazo que lanza al enemigo (contra suelo, pared o solo volando); (2) se pone en el suelo y te impulsa; (3) lo mandas a atacar: rebota por paredes/árboles/techo y se lanza al enemigo.
+- **Rayo (montura rápida):** (1) te montas unos segundos; (2) lleva un objeto, dinero o **un jugador (también inconsciente: confirmado "sí")** hacia donde quiera el dueño (rescatar, lanzar, empujar o secuestrar para saquear); (3) acelera y se estrella contra el enemigo.
+- **Miga (se divide):** (1) lanza 3 partes que se regeneran (mantener = apuntar; clic = al más cercano); (2) partes en manos y pies para escalar cualquier superficie o anclarse al suelo contra tornado/tormenta; (3) tapa heridas (cura) y reduce el daño en esas partes. Las partes son un recurso compartido: cuanto más usas 1-2-3, menos tienes.
+- **Cuerpo de slime (decisión de Maikol):** todos los jugadores juegan con cuerpo de slime; sus cuerpos reales se quedan en el inicio (botes/muelle). Heridas = gel, no sangre, para escenas dramáticas sin clasificación +18. Propuesta pendiente de confirmar: al colapso, quien no llegó se derrite. Ojo: la clasificación de Roblox también depende de la intensidad de la violencia, no solo de la sangre.
