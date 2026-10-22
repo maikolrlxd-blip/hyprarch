@@ -29,5 +29,9 @@ El usuario cambió de idea: **mapa grande generado por semilla**, distinto en ca
 Lee `coordinacion/BITACORA.md`: ahí está quién hizo qué. Resumen: **Opus** (Blender) hace árboles, kit modular, biomas, slimes/accesorios raros; **Claude** (director) hace el diseño, el generador de mundo y las reglas de partida como módulos puros con pruebas. **Yo no he hecho ninguna de tus tareas.**
 **Tus archivos originales NO se perdieron:** siguen en `C:\Users\maiko\Documents\Codex\2026-10-21\c\outputs\slime-rush\` (árboles v01–v04 .blend, personajes, valle, QA rondas). Es tu material de partida.
 
-## 6. Reglas de siempre
+## 6. Dos órdenes permanentes del usuario (valen para ti también)
+- **Mantén el Obsidian (el cerebro) al día:** al cerrar cada bloque anota diario, estado, lo reutilizable y lecciones (ver `taller-ia/PROTOCOLO.md`, sección "mantener el cerebro"). Si no tienes acceso al vault, dale el texto al director.
+- **Un solo chat con el usuario:** pregúntame a mí (director) por el Taller o en `coordinacion/DE-CODEX.md`; yo se lo pregunto al usuario y te devuelvo su respuesta. Las acciones irreversibles solo con su confirmación explícita.
+
+## 7. Reglas de siempre
 Español, directo y corto. Verifica en el motor, no supongas ("no probado" si no lo probaste). Nada de claves en chat. No publicar ni tocar datos de producción sin permiso. Si te bloqueas, no esquives: pregunta. Si llegas a tu límite de uso, deja en la tarea hasta dónde llegaste.

@@ -15,6 +15,17 @@ Este chat **ya existe**: el Taller no crea chats nuevos, solo conecta los que ya
 7. **Formatos:** modelos `.glb` (preferido), `.gltf`, `.fbx`; animaciones dentro del mismo archivo (un clip por acción); imágenes `.png/.jpg`.
 8. **Seguridad:** nunca publiques claves ni datos personales. El humano decide lo que sale a internet.
 
+## Regla para TODAS las IAs: mantener el cerebro (Obsidian) al día
+El usuario tiene un **vault de Obsidian** (el "cerebro", repo privado `base-conocimiento`) y su orden permanente es que **nada se quede solo en el chat**. Esto vale para **todas** las IAs (Claude en la nube, Claude en el PC, Codex, Antigravity, trabajadores):
+- **Antes de empezar:** lee `LEEME PRIMERO.md` del vault y solo la nota del área que necesites (no carpetas enteras).
+- **Al cerrar cada bloque de trabajo** anota: el **diario del día** (`90 Diario/AAAA-MM-DD`), el **estado del proyecto** (se sobrescribe), lo **reutilizable** en `20 Conocimiento/` y las **lecciones** en `30 Aprendizajes/`. Sigue el formato de `00 Inicio/Como mantener esta base`.
+- Marca lo **verificado** frente a lo **supuesto**; nunca escribas que algo funciona si no lo probaste.
+- **Antes de subir revisa que no haya claves ni datos personales.**
+- Si no tienes acceso al vault, entrégale el texto al director, que lo escribe.
+
+## Canal con el usuario: un solo chat
+El usuario **no quiere vigilar varios chats**. La persona de contacto es el **director** (el chat principal). Las demás IAs **informan y preguntan al director** (por el Taller o por mensaje entre sesiones), **no al usuario**, salvo que él les hable directamente. Cuando necesites un permiso, manda al director la pregunta clara y espera: el director se la hace al usuario en el chat principal y te devuelve su respuesta literal. **Las acciones irreversibles** (cerrar programas, instalar, borrar, publicar, tocar cuentas) **solo se ejecutan con una confirmación explícita del usuario**, que el director te reenvía tal cual.
+
 ## Skills
 Si tienes skills instaladas (`herramientas/instalar-skills.*`), **úsalas cuando apliquen**: diseño y animación (`impeccable`, `taste-skill`, `emil-design-eng`), depuración y revisión (`debugging-and-error-recovery`, `code-review-and-quality`), seguridad, y vídeo (`remotion-*`, `hyperframes`). En Codex se invocan con `$nombre` o `/skills`; Claude y Antigravity las cargan según su descripción.
 
