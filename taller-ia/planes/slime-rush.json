@@ -1,0 +1,106 @@
+{
+ "plan": "Slime Rush",
+ "autor": "claude (director)",
+ "criterio": "cada IA recibe lo que mejor le encaja; todas saben programar, así que el código se reparte por carga; lo difícil de 3D va a opus; Studio a chatgpt; ojo visual a antigravity",
+ "tasks": [
+  {
+   "title": "Árboles 0.5.0: hojas en masas redondeadas (sin huecos negros)",
+   "assignee": "opus",
+   "needs": "modelado 3D dificil",
+   "asset": "Arboles Slime Rush",
+   "status": "doing",
+   "detail": "3 variantes (Roble Abuelo, Torcido, Musgoso). Hojas como clústeres gordos con relleno verde oscuro, copa con volumen inferior, troncos gruesos con raíces y musgo. Entrega .glb + render con figura de escala + conteo REAL de triángulos. Ya en marcha.\nPOR QUÉ opus: es la corrección de forma más difícil y la que más ha fallado."
+  },
+  {
+   "title": "Bongo: animación de resorte gruesa con la cara visible",
+   "assignee": "opus",
+   "needs": "modelado 3D dificil",
+   "asset": "Bongo",
+   "detail": "Hoy el cuerpo se vuelve una cinta fina en espiral y pierde los ojos. Debe ser un resorte blando que conserve el volumen y mantenga los ojos visibles todo el clip. Entrega el clip SpringForm en .glb y un render de 3 fotogramas.\nPOR QUÉ opus: deformación de cuerpo entero con rig, lo más delicado."
+  },
+  {
+   "title": "Rayo y Miga: correcciones de forma",
+   "assignee": "chatgpt",
+   "needs": "modelado 3D dificil",
+   "asset": "Razas Slime Rush",
+   "detail": "Rayo: cuerpo más alto (hoy parece una tortilla) y alas más grandes y pegadas. Miga: bajar la masa frontal que tapa la boca. Conserva el estilo y las 4 masas. Publica render antes/después.\nPOR QUÉ chatgpt: Codex creó estos modelos originales; son ajustes acotados."
+  },
+  {
+   "title": "Integrar UN árbol en Studio y probar",
+   "assignee": "chatgpt",
+   "needs": "programar",
+   "asset": "Arboles Slime Rush",
+   "detail": "DESPUÉS de la tarea de árboles 0.5.0. Importar una variante en una copia temporal: escala real vs figura de 6 studs, colisión simple solo en el tronco, follaje sin colisión, densidad menor y pasos a puente/banco/cueva despejados. Captura real del motor.\nPOR QUÉ chatgpt: tiene la conexión con Studio y ya probó rutas físicas."
+  },
+  {
+   "title": "Cámara del lobby y pantalla de resultados (superficie azul)",
+   "assignee": "chatgpt",
+   "needs": "programar",
+   "asset": "Slime Rush",
+   "detail": "En Results una superficie azul llena la vista. Encontrar la causa (no suponerla) y corregir. Comprobar en Play."
+  },
+  {
+   "title": "Prueba con DOS clientes: disputa de cristal, monedas, entrada tardía",
+   "assignee": "chatgpt",
+   "needs": "programar",
+   "asset": "Slime Rush",
+   "detail": "Pendiente de verdad: disputa de un cristal, monedas independientes, ingreso tardío y salida/reentrada. Registrar evidencia."
+  },
+  {
+   "title": "Crítica visual de razas y árboles contra la referencia",
+   "assignee": "antigravity",
+   "needs": "critica visual",
+   "asset": "Arboles Slime Rush",
+   "detail": "Compara las entregas con 'A Bizarre Run' (hojas legibles, verdes/tierras, mate, volúmenes marcados). Lista de fallos concretos: qué, dónde, cómo arreglarlo. Sin gustos sueltos.\nPOR QUÉ antigravity: contexto largo e imágenes."
+  },
+  {
+   "title": "Diseñar el selector de color RGB y la entrada animada de los slimes",
+   "assignee": "antigravity",
+   "needs": "UI e imagenes",
+   "asset": "UI Slime Rush",
+   "detail": "Mockup del selector (vista previa del tono, compra con monedas o Robux, sin tirada pagada) y del guion de la entrada 3-2-1. Entrega imágenes + especificación; luego pasa a implementación (también puede programarla si el director lo pide)."
+  },
+  {
+   "title": "Documentar todo el plan y las decisiones en Obsidian",
+   "assignee": "claude",
+   "needs": "escribir",
+   "asset": "",
+   "detail": "Orden permanente del usuario: registrar en la base. Actualizar Slime Rush, el Taller IA y esta división de roles."
+  },
+  {
+   "title": "Recuperar la historia de Genesis desde el chat 'Linux' y anotarla en la base",
+   "assignee": "claude",
+   "needs": "investigar",
+   "asset": "Genesis",
+   "detail": "Genesis solo vive en ese historial; leerlo completo y dejar una nota con diseño, resultados y pendientes."
+  },
+  {
+   "title": "Revisar y aprobar entregas; resumen corto al humano",
+   "assignee": "claude",
+   "needs": "revisar codigo",
+   "asset": "",
+   "detail": "Máx. 3 vueltas de corrección por pieza. La aprobación final es del humano."
+  },
+  {
+   "title": "Buscar copias del juego perdido (OneDrive, USB, Obsidian Sync)",
+   "assignee": "humano",
+   "needs": "",
+   "asset": "Slime Rush",
+   "detail": "Carpeta slime-rush y los .rbxl (arena, valle), el .blend de personajes y 'Laboratorio Slime'. Si existen copias, nos ahorran reconstruir mapas y arte."
+  },
+  {
+   "title": "Reconstruir arena compacta y valle abierto si no hay copias",
+   "assignee": "",
+   "needs": "programar",
+   "asset": "Slime Rush",
+   "detail": "Solo si el humano no encuentra copias. Cualquiera con hueco puede tomarla; el director la asigna según carga."
+  },
+  {
+   "title": "Integrar FBX/rig/clips reales de los 3 slimes (después de las correcciones de forma)",
+   "assignee": "",
+   "needs": "programar",
+   "asset": "Razas Slime Rush",
+   "detail": "Luego entrada 3D, habilidades, combate y retorno de Miga. El director asigna cuando las formas estén aprobadas."
+  }
+ ]
+}

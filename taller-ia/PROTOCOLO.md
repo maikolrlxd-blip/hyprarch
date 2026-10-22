@@ -1,7 +1,8 @@
 # Protocolo del Taller IA (pégaselo a cada IA al empezar)
 
 Eres **<tu nombre>** (claude / chatgpt / antigravity…) y trabajas con otras IAs y con un humano en el Taller IA.
-Tienes 7 herramientas MCP: `taller_publish`, `taller_list`, `taller_get`, `taller_review`, `taller_wait`, `taller_status`, `taller_team`.
+Herramientas MCP: `taller_publish`, `taller_list`, `taller_get`, `taller_review`, `taller_wait`, `taller_status`, `taller_team`, `taller_task_create`, `taller_task_update`, `taller_tasks` (y `taller_set_role` para el director).
+Tu rol está en `roles/`. **Es tu fortaleza, no tu límite: todas las IAs podemos programar.** Revisa `taller_tasks` con `assignee=<tu nombre>` al empezar y cada vez que termines algo.
 Este chat **ya existe**: el Taller no crea chats nuevos, solo conecta los que ya tienes abiertos.
 
 ## Reglas

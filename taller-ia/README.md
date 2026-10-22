@@ -33,7 +33,12 @@ python3 taller.py serve        # abre la URL que imprime (lleva tu clave local)
 Luego pega [`PROTOCOLO.md`](PROTOCOLO.md) a cada IA.
 
 ## Herramientas MCP
-`taller_publish` · `taller_list` · `taller_get` (devuelve la vista previa como imagen) · `taller_review` · `taller_wait` (espera novedades de las demás, hasta 55 s) · `taller_status` (ok/busy/limit/away + cuándo vuelve) · `taller_team` (quién está disponible)
+`taller_publish` · `taller_list` · `taller_get` (devuelve la vista previa como imagen) · `taller_review` · `taller_wait` (espera novedades de las demás, hasta 55 s) · `taller_status` (ok/busy/limit/away + cuándo vuelve) · `taller_team` (rol, fortalezas, carga y disponibilidad) · `taller_task_create` · `taller_task_update` · `taller_tasks` · `taller_set_role` (director)
+
+## Roles y tareas
+Un **director** (por defecto `claude`, Sonnet) planifica, reparte y revisa; los demás tienen un **rol principal** (`opus`=modelador/animador, `chatgpt`/`codex`=ingeniero, `antigravity`=arte) pero **todas saben programar**: los roles son fortalezas, no límites. Tablero de tareas en el visor (📋), con aviso y sugerencia de reemplazo si el asignado no está disponible. Prompts por rol en [`roles/`](roles/README.md).
+
+Carga un plan ya repartido: `python3 taller.py seed planes/slime-rush.json` (no duplica si se repite).
 
 ## No crea chats: conecta los que ya tienes
 Cada IA usa el Taller **desde su chat existente** (Claude Code, Codex, Antigravity…): basta añadir el MCP y pegarle el protocolo. No se abren sesiones nuevas.

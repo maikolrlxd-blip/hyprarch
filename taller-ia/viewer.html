@@ -25,6 +25,11 @@ aside,section{overflow:auto;min-height:0}
 #bar{display:flex;gap:10px;align-items:center;padding:8px 12px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
 select,button,textarea{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font:inherit}
 button{cursor:pointer}button:hover{border-color:var(--mint)}button.go{background:var(--mint);color:#04130c;border-color:var(--mint);font-weight:600}
+#board{position:absolute;inset:0;background:var(--bg);overflow:auto;padding:12px;display:none;z-index:2}
+#board.on{display:block}#cols{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:10px;margin-top:10px}
+.col h4{margin:0 0 6px;font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.6px}
+.task{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--c,#667);border-radius:8px;padding:8px;margin-bottom:6px;font-size:13px;cursor:pointer}
+.task small{color:var(--dim)}.role{color:var(--dim);font-size:11px;margin-left:4px}
 #stage{flex:1;position:relative;min-height:240px}
 #stage canvas,#stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 #msg{position:absolute;inset:0;display:grid;place-items:center;color:var(--dim);text-align:center;padding:20px;pointer-events:none}
@@ -46,8 +51,8 @@ button{cursor:pointer}button:hover{border-color:var(--mint)}button.go{background
 <header><h1>Taller <b>IA</b></h1><span id="who" style="color:var(--dim)"></span><div id="team"></div><div id="live"><i></i><span>conectando…</span></div></header>
 <aside id="list"></aside>
 <section id="main">
-  <div id="bar"><b id="title">—</b><span id="status"></span><select id="ver"></select><span id="desc" style="color:var(--dim)"></span></div>
-  <div id="stage"><div id="msg">Esperando que una IA publique algo…<br>Se actualiza solo.</div></div>
+  <div id="bar"><b id="title">—</b><span id="status"></span><select id="ver"></select><button id="tb">📋 Tareas</button><span id="desc" style="color:var(--dim)"></span></div>
+  <div id="stage"><div id="board"><b>Tareas del equipo</b> <button id="nt">+ Tarea</button><div id="cols"></div></div><div id="msg">Esperando que una IA publique algo…<br>Se actualiza solo.</div></div>
   <div id="clips"></div>
 </section>
 <aside id="side">
@@ -178,13 +183,29 @@ async function team(){
     const ago = now - (c.last_seen || 0); let st = c.state || 'ok'; if (st === 'ok' && ago > 180) st = 'stale';
     const d = document.createElement('div'); d.className = 'tm ' + st;
     d.title = (c.note || '') + (c.reset_at ? ' — vuelve ' + c.reset_at : '') + `\nvisto hace ${ago < 90 ? Math.round(ago) + ' s' : Math.round(ago/60) + ' min'}\nClic para cambiar el estado a mano`;
-    d.innerHTML = `<i></i><b style="color:${colorOf(who)}">${esc(who)}</b> ${LABEL[st]}${st === 'limit' && c.reset_at ? ' · ' + esc(c.reset_at) : ''}`;
+    d.innerHTML = `<i></i><b style="color:${colorOf(who)}">${esc(who)}</b>${c.role ? '<span class="role">' + esc(c.role) + '</span>' : ''} ${LABEL[st]}${st === 'limit' && c.reset_at ? ' · ' + esc(c.reset_at) : ''}`;
     d.onclick = async () => { const s = prompt(`Estado de ${who}: ok, busy, limit o away`, c.state || 'ok'); if (!s) return;
       const reset = s === 'limit' ? (prompt('¿Cuándo vuelve? (opcional, ej. hoy 01:00)') || '') : '';
-      const r = await post('/api/presence', {name: who, state: s.trim(), reset_at: reset}); if (r.error) alert(r.error); team(); };
+      const role = prompt('Rol principal de ' + who + ' (director, modelador, animador, ingeniero, artista; vacío = sin cambios). Recuerda: todas pueden programar.') || '';
+      const r = await post('/api/presence', {name: who, state: s.trim(), reset_at: reset, role: role.trim() || undefined}); if (r.error) alert(r.error); team(); };
     box.appendChild(d); });
 }
 setInterval(() => team().catch(()=>{}), 15000);
+
+// ---------- tablero de tareas ----------
+const COLS = [['todo','Por hacer'],['doing','En curso'],['review','En revisión'],['done','Hecho'],['blocked','Bloqueado']];
+async function board(){
+  const {tasks, roles} = await api('/api/tasks'); const box = $('cols');
+  box.style.gridTemplateColumns = `repeat(${COLS.length},minmax(150px,1fr))`;
+  box.innerHTML = COLS.map(([k, label]) => `<div class="col"><h4>${label} (${tasks.filter(t => t.status === k).length})</h4>` +
+    tasks.filter(t => t.status === k).map(t => `<div class="task" data-id="${t.id}" style="--c:${t.assignee ? colorOf(t.assignee) : '#667'}"><b>#${t.id} ${esc(t.title)}</b><br><small>${t.assignee ? esc(t.assignee) : 'sin asignar'}${t.asset ? ' · ' + esc(t.asset) : ''}${t.needs ? ' · 🔧 ' + esc(t.needs) : ''}</small>${t.detail ? '<br><small>' + esc(t.detail).slice(0,140) + '</small>' : ''}${t.notes.length ? '<br><small>💬 ' + esc(t.notes.at(-1).text).slice(0,100) + '</small>' : ''}</div>`).join('') + '</div>').join('');
+  box.querySelectorAll('.task').forEach(el => el.onclick = async () => {
+    const id = Number(el.dataset.id); const s = prompt('Mover tarea #' + id + ' a: todo, doing, review, done o blocked'); if (!s) return;
+    const r = await post('/api/task', {id, status: s.trim()}); if (r.error) alert(r.error); board(); });
+}
+$('tb').onclick = () => { const b = $('board'); b.classList.toggle('on'); if (b.classList.contains('on')) board(); };
+$('nt').onclick = async () => { const title = prompt('Título de la tarea'); if (!title) return; const who = prompt('¿Para quién? (nombre de la IA, vacío = sin asignar)') || '';
+  const r = await post('/api/task', {title, assignee: who.trim()}); if (r.error) alert(r.error); board(); };
 
 // ---------- tiempo real ----------
 function connect(){
@@ -193,7 +214,7 @@ function connect(){
   es.onerror = () => { live.className = ''; live.lastChild.textContent = 'reconectando…'; };
   es.onmessage = async m => {
     const e = JSON.parse(m.data); lastNew = new Date(e.ts*1000 - 1500).toISOString().slice(0,19);
-    await refreshList(); team().catch(()=>{});
+    await refreshList(); team().catch(()=>{}); if ($('board').classList.contains('on')) board().catch(()=>{});
     if (e.asset === current) { const wasLast = ver && ver.v === meta.versions.at(-1).v; await open(current, e.type === 'publish' && wasLast ? undefined : ver && ver.v); }
     else if (!current) await open(e.asset);
   };

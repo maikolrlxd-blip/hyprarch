@@ -104,13 +104,120 @@ def emit(type_, asset, author, summary, v=None):  # llamar dentro de lock()
 
 STATES = ("ok", "busy", "limit", "away")
 
+ROLES = {
+    "director": ("Director / planificador", ["planificar", "repartir tareas", "revisar y corregir", "integrar", "informar al humano"]),
+    "modelador": ("Modelador 3D", ["modelado 3D dificil", "topologia", "correcciones de forma", "rigs"]),
+    "animador": ("Animador", ["animaciones", "clips", "rigs", "movimiento y tiempos"]),
+    "ingeniero": ("Ingeniero", ["Luau y codigo de Roblox", "Studio/Blender por MCP", "integracion y pruebas", "revision de codigo"]),
+    "artista": ("Direccion de arte", ["critica visual", "referencias", "UI e imagenes", "investigacion de contexto largo"]),
+}
+COMMON = ["programar", "revisar codigo", "investigar", "escribir"]  # TODAS las IAs saben esto
+DEFAULT_ROLE = {"claude": "director", "opus": "modelador", "chatgpt": "ingeniero", "codex": "ingeniero", "antigravity": "artista"}
+TSTATUS = ("todo", "doing", "review", "done", "blocked")
+
+
+def tasks_all():
+    p = DIR / "tasks.json"
+    return json.loads(p.read_text("utf-8")) if p.exists() else []
+
+
+def _save_tasks(ts):
+    tmp = DIR / "tasks.tmp"
+    tmp.write_text(json.dumps(ts, ensure_ascii=False, indent=1), "utf-8")
+    os.replace(tmp, DIR / "tasks.json")
+
+
+def role_of(who):
+    return presence_all().get(who, {}).get("role") or DEFAULT_ROLE.get(who, "")
+
+
+def availability(who):
+    c = presence_all().get(who)
+    if not c:
+        return False
+    return c.get("state", "ok") == "ok" and time.time() - c.get("last_seen", 0) < 180
+
+
+def skills_of(who):
+    """Fortaleza del rol + habilidades comunes + las que el director/humano le haya anadido."""
+    c = presence_all().get(who, {})
+    r = c.get("role") or DEFAULT_ROLE.get(who, "")
+    return sorted(set(ROLES.get(r, ("", []))[1]) | set(COMMON) | set(c.get("skills", [])))
+
+
+def load_of(who):
+    return sum(1 for t in tasks_all() if t["assignee"] == who and t["status"] in ("todo", "doing", "review", "blocked"))
+
+
+def alternatives(assignee, needs=""):
+    """Quien puede cubrir: cualquiera disponible que sepa lo que pide la tarea (todas saben programar),
+    ordenado primero por afinidad con el rol del asignado y luego por menos carga."""
+    want = {needs.lower()} if needs else set(skills_of(assignee))
+    cands = []
+    for w in presence_all():
+        if w == assignee or not availability(w):
+            continue
+        ov = len({x.lower() for x in skills_of(w)} & want)
+        if ov:
+            cands.append((-ov, load_of(w), w))
+    return [w for _, _, w in sorted(cands)]
+
+
+def task_create(author, title, detail="", assignee="", asset="", needs=""):
+    if not title.strip():
+        raise ValueError("falta el titulo")
+    if assignee and not AUTHOR_RE.match(assignee):
+        raise ValueError("assignee invalido")
+    if assignee and assignee != author and role_of(author) != "director" and author != "humano":
+        raise ValueError("solo el director (o el humano) puede asignar tareas a otras IAs; deja assignee vacio o pon el tuyo")
+    with lock():
+        ts = tasks_all()
+        t = {"id": (max([x["id"] for x in ts]) + 1) if ts else 1, "title": title[:120], "detail": detail[:2000],
+             "assignee": assignee, "asset": asset, "needs": needs[:40], "status": "todo", "by": author, "notes": [],
+             "created": time.strftime("%Y-%m-%dT%H:%M:%S"), "updated": time.strftime("%Y-%m-%dT%H:%M:%S")}
+        ts.append(t)
+        _save_tasks(ts)
+        emit("task", asset, author, f"tarea #{t['id']} '{t['title']}'" + (f" -> {assignee}" if assignee else " (sin asignar)"))
+    warn = ""
+    if assignee and assignee != "humano" and not availability(assignee):
+        alt = alternatives(assignee, needs)
+        warn = f" AVISO: {assignee} no esta disponible ahora (limite, ocupada o sin senal)." + (f" Pueden cubrir (por afinidad y menos carga): {', '.join(alt)}." if alt else " No hay nadie mas disponible con esa habilidad.")
+    return t, warn
+
+
+def task_update(author, tid, status=None, note="", assignee=None):
+    with lock():
+        ts = tasks_all()
+        t = next((x for x in ts if x["id"] == tid), None)
+        if not t:
+            raise ValueError(f"no existe la tarea #{tid}")
+        is_dir = role_of(author) == "director" or author == "humano"
+        if assignee is not None and assignee != t["assignee"]:
+            if not is_dir:
+                raise ValueError("solo el director (o el humano) puede reasignar")
+            t["assignee"] = assignee
+        elif not is_dir and t["assignee"] not in ("", author):
+            raise ValueError(f"la tarea #{tid} es de {t['assignee']}")
+        elif not is_dir and not t["assignee"]:
+            t["assignee"] = author  # quien toma una tarea libre se la queda
+        if status:
+            if status not in TSTATUS:
+                raise ValueError("status debe ser " + ", ".join(TSTATUS))
+            t["status"] = status
+        if note:
+            t["notes"].append({"by": author, "text": note[:500], "ts": time.strftime("%Y-%m-%dT%H:%M:%S")})
+        t["updated"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+        _save_tasks(ts)
+        emit("task", t["asset"], author, f"tarea #{tid} '{t['title']}' -> {t['status']}" + (f" ({note})" if note else ""))
+    return t
+
 
 def presence_all():
     p = DIR / "presence.json"
     return json.loads(p.read_text("utf-8")) if p.exists() else {}
 
 
-def touch(who, state=None, note=None, reset_at=None, by=None):
+def touch(who, state=None, note=None, reset_at=None, by=None, role=None, skills=None):
     """Latido: cada llamada de una IA actualiza 'visto por ultima vez'. Si cambia el estado, emite un evento."""
     if state is not None and state not in STATES:
         raise ValueError("state debe ser ok, busy, limit o away")
@@ -119,6 +226,14 @@ def touch(who, state=None, note=None, reset_at=None, by=None):
         cur = pr.get(who, {"state": "ok", "note": "", "reset_at": ""})
         old = cur.get("state")
         cur["last_seen"] = round(time.time(), 1)
+        if role:
+            if role not in ROLES:
+                raise ValueError("rol invalido: " + ", ".join(ROLES))
+            cur["role"] = role
+        if skills is not None:
+            cur["skills"] = [str(x)[:30] for x in skills][:12]
+        if not role and not cur.get("role") and who in DEFAULT_ROLE:
+            cur["role"] = DEFAULT_ROLE[who]
         if state is not None:
             cur.update(state=state, note=(note or "")[:200], reset_at=(reset_at or "")[:60], by=by or who)
         pr[who] = cur
@@ -314,14 +429,43 @@ def tools(me):
         out = {}
         for who, c in presence_all().items():
             ago = now - c.get("last_seen", 0)
-            out[who] = {"estado": c.get("state", "ok"), "nota": c.get("note", ""), "vuelve": c.get("reset_at", ""),
-                        "visto_hace_s": int(ago), "disponible": c.get("state") == "ok" and ago < 180}
+            r = c.get("role", "")
+            out[who] = {"rol_principal": r, "fortalezas": ROLES.get(r, ("", []))[1], "sabe_ademas": [x for x in skills_of(who) if x not in ROLES.get(r, ("", []))[1]],
+                        "tareas_abiertas": load_of(who), "estado": c.get("state", "ok"), "nota": c.get("note", ""),
+                        "vuelve": c.get("reset_at", ""), "visto_hace_s": int(ago), "disponible": c.get("state") == "ok" and ago < 180}
         return json.dumps(out, ensure_ascii=False, indent=1)
+
+    def t_set_role(a):
+        if role_of(me) != "director":
+            raise ValueError("solo el director (o el humano, en el visor) cambia roles")
+        touch(a["who"], by=me, role=a.get("role"), skills=a.get("skills"))
+        return f"{a['who']}: rol {role_of(a['who']) or '-'}, sabe {', '.join(skills_of(a['who']))}."
+
+    def t_task_create(a):
+        t, warn = task_create(me, a["title"], a.get("detail", ""), a.get("assignee", ""), a.get("asset", ""), a.get("needs", ""))
+        return f"Tarea #{t['id']} creada" + (f" y asignada a {t['assignee']}." if t["assignee"] else " (sin asignar).") + warn
+
+    def t_task_update(a):
+        t = task_update(me, int(a["id"]), a.get("status"), a.get("note", ""), a.get("assignee"))
+        return f"Tarea #{t['id']}: {t['status']} (asignada a {t['assignee'] or 'nadie'})."
+
+    def t_tasks(a):
+        ts = [t for t in tasks_all() if (not a.get("assignee") or t["assignee"] == a["assignee"]) and (not a.get("status") or t["status"] == a["status"])]
+        return json.dumps(ts, ensure_ascii=False, indent=1)
 
     return {
         "taller_status": (t_status, "Avisa tu estado al equipo: ok, busy (ocupada), limit (llegaste al limite de uso; pon reset_at si sabes cuando vuelve) o away. LLAMALO en cuanto veas un aviso de limite de uso o te quede poco.",
                           sch({"state": S("ok|busy|limit|away"), "note": S("detalle breve"), "reset_at": S("cuando vuelve, p. ej. 'hoy 01:00' (opcional)")}, ["state"])),
-        "taller_team": (t_team, "Quien esta disponible, ocupado o con limite de uso. Consultalo antes de repartir trabajo.", sch({}, [])),
+        "taller_team": (t_team, "Equipo: rol, que sabe hacer cada IA y si esta disponible, ocupada o con limite de uso. Consultalo antes de repartir trabajo.", sch({}, [])),
+        "taller_set_role": (t_set_role, "(Director) Cambia el rol principal y/o anade habilidades a una IA. Los roles son fortalezas, no limites: todas pueden programar.",
+                            sch({"who": S("nombre de la IA"), "role": S("director|modelador|animador|ingeniero|artista"), "skills": {"type": "array", "items": {"type": "string"}, "description": "habilidades extra"}}, ["who"])),
+        "taller_task_create": (t_task_create, "Crea una tarea. Solo el DIRECTOR (o el humano) puede asignarla a otra IA; las demas solo a si mismas o sin asignar. Avisa si el asignado no esta disponible y sugiere reemplazos (cualquiera que sepa lo necesario; todas saben programar).",
+                               sch({"title": S("titulo corto"), "detail": S("que hay que entregar y criterios de 'hecho'"), "assignee": S("nombre de la IA (opcional)"),
+                                    "asset": S("recurso del taller relacionado (opcional)"),
+                                    "needs": S("habilidad que exige, p. ej. 'programar' o 'modelado 3D dificil' (opcional; sirve para sugerir reemplazos)")}, ["title"])),
+        "taller_task_update": (t_task_update, "Actualiza una tarea: status todo|doing|review|done|blocked, nota, o (solo director) reasignar con assignee.",
+                               sch({"id": N("numero de tarea"), "status": S("todo|doing|review|done|blocked"), "note": S("nota"), "assignee": S("nueva IA (solo director)")}, ["id"])),
+        "taller_tasks": (t_tasks, "Lista tareas; filtra por assignee o status. Mira las tuyas con assignee=<tu nombre>.", sch({"assignee": S("filtrar"), "status": S("filtrar")}, [])),
         "taller_publish": (t_publish, "Publica una NUEVA VERSION de un modelo (.glb/.gltf/.fbx), animacion, imagen o nota. Adjunta preview_path (un render PNG) para que las demas IAs puedan VERLO.",
                            sch({"name": S("nombre del recurso (misma name = nueva version)"), "file_path": S("ruta local del archivo"),
                                 "content_base64": S("alternativa a file_path"), "filename": S("con content_base64"),
@@ -363,9 +507,26 @@ def mcp_handle(me, req):
     raise NotImplementedError(m)
 
 
-def run_mcp(me):
+def run_seed(path):
+    """Carga un plan de tareas (como director). No duplica: omite titulos ya existentes."""
+    data = json.loads(Path(path).read_text("utf-8"))
+    made = 0
+    for t in data["tasks"]:
+        if any(x["title"] == t["title"] for x in tasks_all()):
+            continue
+        task, warn = task_create("claude", t["title"], t.get("detail", ""), t.get("assignee", ""), t.get("asset", ""), t.get("needs", ""))
+        if t.get("status", "todo") != "todo":
+            task_update("claude", task["id"], t["status"])
+        made += 1
+        print(f"#{task['id']:>2} {task['assignee'] or '(sin asignar)':<12} {task['title']}")
+    print(f"{made} tareas cargadas en {DIR}")
+
+
+def run_mcp(me, role=None):
     if not AUTHOR_RE.match(me):
         sys.exit("--as debe ser corto: letras minusculas, numeros, - o _")
+    if role or me in DEFAULT_ROLE:
+        touch(me, role=role)
     for line in sys.stdin:
         if not line.strip():
             continue
@@ -425,6 +586,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, load(unquote(u.path[12:])))
             if u.path == "/api/presence":
                 return self._send(200, presence_all())
+            if u.path == "/api/tasks":
+                return self._send(200, {"tasks": tasks_all(), "roles": {k: {"label": v[0], "skills": v[1]} for k, v in ROLES.items()}, "common": COMMON})
             if u.path == "/api/events":
                 return self._send(200, events(int(parse_qs(u.query).get("since", ["0"])[0])))
             if u.path == "/api/stream":
@@ -498,11 +661,17 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == "/api/comment":
                 m, _ = review("humano", body["name"], body.get("version"), body.get("verdict", "comment"), body["comment"])
                 return self._send(200, {"ok": True})
+            if self.path == "/api/task":
+                if body.get("id"):
+                    task_update("humano", int(body["id"]), body.get("status"), body.get("note", ""), body.get("assignee"))
+                else:
+                    task_create("humano", body["title"], body.get("detail", ""), body.get("assignee", ""), body.get("asset", ""))
+                return self._send(200, {"ok": True})
             if self.path == "/api/presence":
                 who = str(body["name"])
                 if not AUTHOR_RE.match(who):
                     raise ValueError("nombre invalido")
-                touch(who, body["state"], body.get("note"), body.get("reset_at"), by="humano")
+                touch(who, body.get("state"), body.get("note"), body.get("reset_at"), by="humano", role=body.get("role"), skills=body.get("skills"))
                 return self._send(200, {"ok": True})
             if self.path in ("/api/approve", "/api/reset"):
                 human_set(body["name"], self.path[5:])
@@ -535,7 +704,15 @@ if __name__ == "__main__":
     s = sub.add_parser("serve")
     s.add_argument("--port", type=int, default=8770)
     s.add_argument("--mcp-http", action="store_true", help="habilita /mcp por HTTP (para ChatGPT web/escritorio)")
+    sd = sub.add_parser("seed")
+    sd.add_argument("plan", help="archivo JSON con tareas, p. ej. planes/slime-rush.json")
     m = sub.add_parser("mcp")
     m.add_argument("--as", dest="me", required=True, help="nombre de esta IA: claude, chatgpt, antigravity...")
+    m.add_argument("--role", choices=list(ROLES), help="rol (por defecto segun el nombre: claude=director, opus=modelador, chatgpt/codex=ingeniero, antigravity=artista)")
     a = ap.parse_args()
-    run_mcp(a.me) if a.cmd == "mcp" else run_serve(a.port, a.mcp_http)
+    if a.cmd == "seed":
+        run_seed(a.plan)
+    elif a.cmd == "mcp":
+        run_mcp(a.me, a.role)
+    else:
+        run_serve(a.port, a.mcp_http)
