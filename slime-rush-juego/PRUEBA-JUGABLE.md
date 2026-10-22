@@ -30,3 +30,5 @@ FPS, latencia al dar golpes, tamaño de la isla vs. tiempo de recorrido, puntos 
 
 ## Siguiente decisión según resultado
 Si divierte: arte definitivo por bloques (botes, volcán, árboles) y subir a 24 jugadores/isla grande. Si no: ajustar reglas antes de hacer más arte.
+
+**Actualización:** la Capa 1 será además el primer juego publicable (ver `LANZAMIENTO-TEMPRANO.md`).

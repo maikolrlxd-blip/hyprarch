@@ -42,3 +42,6 @@ Si tienes skills instaladas (`herramientas/instalar-skills.*`), **úsalas cuando
 - **Planifica y revisa:** una IA rápida (p. ej. Claude Sonnet).
 - **Modela y anima lo difícil:** la IA más potente (p. ej. Claude Opus, Codex con Blender).
 - **Segunda opinión visual / diseño:** Antigravity (Gemini) o ChatGPT.
+
+## Regla de Maikol (2026-10-22): probar SIEMPRE en Roblox Studio
+Todo cambio de código o de arte que vaya al juego se prueba en Roblox Studio (Play con 1–2 clientes) antes de darlo por hecho. Las pruebas en Lua puro no bastan: sirven para la lógica, no para Roblox. Quien no tenga acceso a Studio (Claude de la nube) lo deja marcado "SIN PROBAR EN STUDIO" y pide la prueba a la sesión del PC o a Codex; el reporte lleva errores literales del Output, captura y FPS. Un solo Studio de prueba, en copia aparte; nunca tocar los Studio de otro sin permiso.

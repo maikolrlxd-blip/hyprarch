@@ -146,8 +146,8 @@ local function syncDownedMovement(plr, downed)
 end
 
 E.Collect.OnServerEvent:Connect(function(plr, kind, objId)
+	if type(objId) ~= "number" or objId % 1 ~= 0 then return end -- nunca confiar en lo que manda el cliente
 	local id, p = ids[plr], pos(plr); if not id or not p then return end
-	if type(objId) ~= "number" or objId % 1 ~= 0 then return end
 	if kind == "node" then
 		local ok, res = rules:collectNode(id, objId, p, now())
 		if ok and nodeParts[objId] then nodeParts[objId]:Destroy() end
@@ -160,16 +160,14 @@ E.Collect.OnServerEvent:Connect(function(plr, kind, objId)
 end)
 
 E.Punch.OnServerEvent:Connect(function(plr, targetUserId)
-	local id, p, h = ids[plr], pos(plr); if not id or not p then return end
 	if type(targetUserId) ~= "number" then return end
+	local id, p, h = ids[plr], pos(plr); if not id or not p then return end
 	local target = Players:GetPlayerByUserId(targetUserId); local tid = target and ids[target]
 	local tp, th = pos(target or plr); if not tid or not tp then return end
 	local ok, res = combat:punch(id, tid, p, tp, now())
 	if ok then
 		if th then th.AssemblyLinearVelocity = Vector3.new(res.push.x * 4, 25, res.push.z * 4) end
-		if res.knocked_out then
-			syncDownedMovement(target, rules:isDowned(tid, now()))
-		end
+		if res.knocked_out then syncDownedMovement(target, rules:isDowned(tid, now())) end
 		E.Info:FireClient(target, res.knocked_out and "¡Estás inconsciente!" or ("Recibiste un golpe, vida " .. res.hp))
 		E.Info:FireClient(plr, res.knocked_out and "¡Lo derrotaste! Puedes saquearlo" or "Golpe")
 	else E.Info:FireClient(plr, res)
@@ -198,7 +196,8 @@ end)
 -- Bucle de estado: fase, tiempo restante, mochila y vida de cada jugador, una vez por segundo
 task.spawn(function()
 	while #Players:GetPlayers() < 1 do task.wait(1) end
-	task.wait(15); rules:start(now()); started = true
+	task.wait(15) -- tiempo para que entren los demas jugadores de la prueba
+	rules:start(now()); started = true
 	local stormAnnounced = false
 	while true do
 		local t, ph = now(), rules:phase(now())
