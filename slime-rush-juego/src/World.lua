@@ -53,13 +53,24 @@ function World.sector(dx, dz)
 	else return az >= ax and 7 or 8 end
 end
 
+-- Sector (1..8) de un punto visto desde el muelle: abanico de 22.5 grados que mira tierra adentro (sin trigonometria).
+-- u = hacia adentro, v = lateral; lo que queda detras de la meta se asigna al sector extremo.
+function World.sectorOf(world, x, z)
+	local g, d = world.goal, world.dock
+	local dx, dz = x - g.x, z - g.z
+	local u, v = dx * d.inward.x + dz * d.inward.z, dx * -d.inward.z + dz * d.inward.x
+	if u <= 0 then return v < 0 and 1 or 8 end
+	local t = v / u
+	if t < -2.4142 then return 1 elseif t < -1 then return 2 elseif t < -0.4142 then return 3 elseif t < 0 then return 4
+	elseif t < 0.4142 then return 5 elseif t < 1 then return 6 elseif t < 2.4142 then return 7 else return 8 end
+end
+
 function World.generate(seed, over)
 	local cfg = merge(World.DEFAULT, over)
 	local base = Rng.new(seed)
 	local sElev, sTemp, sHum, sCoast = base:int(1, 60000), base:int(1, 60000), base:int(1, 60000), base:int(1, 60000)
 	local size, cx = cfg.size, cfg.size / 2
-	local world = { seed = seed, cfg = cfg, size = size,
-		goal = { x = cx, z = cx, y = cfg.plaza_height, radius = cfg.goal_radius } }
+	local world = { seed = seed, cfg = cfg, size = size, goal = { x = cx, z = cx, y = cfg.plaza_height, radius = cfg.goal_radius } }
 
 	-- Mascara de isla: 1 en el interior, 0 en el mar; la costa es irregular (ruido) pero casi circular.
 	local function island(x, z)
@@ -67,6 +78,24 @@ function World.generate(seed, over)
 		local dn = math.sqrt((nx - 0.5) ^ 2 + (nz - 0.5) ^ 2) * 2
 		local coastR = 0.80 + (Noise.fbm(nx * 2.3, nz * 2.3, sCoast, 3, 2, 0.5) - 0.5) * 0.16
 		return smooth(clamp((coastR - dn) / 0.20, 0, 1)), dn, coastR
+	end
+	-- MUELLE = META: un solo punto de desembarco en la costa (angulo por semilla). La meta es la plaza justo tierra adentro
+	-- del muelle; el recorrido va desde la orilla (m ~ 0.52) hasta el mar (m ~ 0.30) y la plaza donde m >= 0.74.
+	do
+		local ad = base:fork("dock"):range(0, 6.283185307)
+		local ux, uz = math.cos(ad), math.sin(ad)
+		local rSea, rShore, rGoal
+		for r = size * 0.5, size * 0.05, -2 do
+			local m = island(cx + ux * r, cx + uz * r)
+			if not rSea and m >= 0.12 then rSea = r end
+			if not rShore and m >= 0.52 then rShore = r end
+			if m >= 0.74 then rGoal = r; break end
+		end
+		rShore = rShore or size * 0.40; rSea = rSea or rShore + 60
+		rGoal = math.max(size * 0.08, rShore - cfg.goal_radius * 1.8) -- la plaza queda tierra adentro, con margen de playa
+		world.goal.x, world.goal.z = cx + ux * rGoal, cx + uz * rGoal
+		world.dock = { x = cx + ux * rShore, z = cx + uz * rShore, angle = ad, out = { x = ux, z = uz }, inward = { x = -ux, z = -uz },
+			sea = { x = cx + ux * rSea, z = cx + uz * rSea } }
 	end
 	local function height(x, z)
 		local nx, nz = x / size, z / size
@@ -78,7 +107,7 @@ function World.generate(seed, over)
 		-- playa: franja costera que NUNCA queda anegada, para que todos los botes tengan donde desembarcar
 		local beach = 4.5 * smooth(clamp((m - 0.46) / 0.06, 0, 1)) * (1 - smooth(clamp((m - 0.80) / 0.15, 0, 1)))
 		if beach > 0 then h = math.max(h, beach) end
-		local dc = dist2(x, z, cx, cx)
+		local dc = dist2(x, z, world.goal.x, world.goal.z)
 		local r1, r2 = cfg.goal_radius, cfg.goal_radius * 2.6
 		local w = 1 - smooth(clamp((dc - r1) / (r2 - r1), 0, 1)) -- plaza plana alrededor de la meta
 		return h * (1 - w) + cfg.plaza_height * w
@@ -106,25 +135,29 @@ function World.generate(seed, over)
 		local b = biome(x, z, h)
 		return b ~= "lago" and b ~= "mar"
 	end
-	local function farFromGoal(x, z, k) return dist2(x, z, cx, cx) > cfg.goal_radius * (k or 1.6) end
+	local function farFromGoal(x, z, k) return dist2(x, z, world.goal.x, world.goal.z) > cfg.goal_radius * (k or 1.6) end
 	world.walkable = walkable
-
-	-- Apariciones en la COSTA (llegan en botes): a cada angulo, de afuera hacia adentro, la primera tierra firme.
-	local rs = base:fork("spawns")
-	world.spawns = {}
-	local a0 = rs:range(0, 6.283185307)
-	for i = 1, cfg.players do
-		local a = a0 + (i - 1) * 6.283185307 / cfg.players
-		local ca, sa = math.cos(a), math.sin(a)
-		local found
-		for r = size * 0.50, size * 0.12, -6 do
-			local x, z = cx + ca * r, cx + sa * r
-			if walkable(x, z) then
-				found = { x = x, z = z, y = height(x, z), boat = { x = cx + ca * (r + cfg.boat_offset), z = cx + sa * (r + cfg.boat_offset) } }
-				break
-			end
+	do -- el extremo del muelle: primer punto de agua mar adentro desde la orilla (ahora que hay walkable)
+		local d = world.dock
+		local r0 = dist2(d.x, d.z, cx, cx)
+		for r = r0, size * 0.7, 4 do
+			local x, z = cx + d.out.x * r, cx + d.out.z * r
+			if not walkable(x, z) then d.sea = { x = cx + d.out.x * (r + 12), z = cx + d.out.z * (r + 12) }; break end
 		end
-		world.spawns[i] = found or { x = cx + 40, z = cx + 40, y = cfg.plaza_height, boat = { x = cx + 240, z = cx + 40 } }
+	end
+
+	-- Apariciones: TODOS desembarcan en el mismo muelle y se reunen en la meta (anillo dentro de la plaza). Los botes
+	-- esperan mar adentro frente al muelle, en dos filas, para la escena de llegada.
+	world.spawns = {}
+	local d = world.dock
+	local lat = { x = -d.out.z, z = d.out.x }
+	for i = 1, cfg.players do
+		local a = (i - 1) * 6.283185307 / cfg.players
+		local sx, sz = world.goal.x + math.cos(a) * cfg.goal_radius * 0.55, world.goal.z + math.sin(a) * cfg.goal_radius * 0.55
+		local row, col = (i - 1) // 12, (i - 1) % 12
+		local off, lt = cfg.boat_offset + row * 24, (col - 5.5) * 18
+		world.spawns[i] = { x = sx, z = sz, y = cfg.plaza_height,
+			boat = { x = d.sea.x + d.out.x * off + lat.x * lt, z = d.sea.z + d.out.z * off + lat.z * lt } }
 	end
 
 	-- Volcan (opcional): en roca/montana alta, lejos de la meta y de la costa; el cráter se talla en el terreno.
@@ -135,7 +168,7 @@ function World.generate(seed, over)
 			local x, z = rv:range(0.12 * size, 0.88 * size), rv:range(0.12 * size, 0.88 * size)
 			local h = height(x, z)
 			local b = biome(x, z, h)
-			local d = dist2(x, z, cx, cx)
+			local d = dist2(x, z, world.goal.x, world.goal.z)
 			if (b == "roca" or b == "montana") and h >= 44 and h <= 90 and d >= size * 0.22 and island(x, z) > 0.8 then
 				local cap = math.min(cfg.volcano_max_lava, d - cfg.goal_radius * 1.5 - cfg.crater_radius - 40) -- la lava NUNCA llega a la meta
 				if cap > 60 then
@@ -184,6 +217,14 @@ function World.generate(seed, over)
 	end
 	for _ = 1, cfg.node_count do try_node(rn) end
 
+	-- Punto al azar dentro del abanico del sector s (polares alrededor de la meta): theta en [-90+22.5(s-1), +22.5] grados.
+	local function inSector(rng, sct)
+		local th, rr2 = math.rad(-90 + 22.5 * (sct - 1) + rng:next() * 22.5), rng:range(60, size * 0.9)
+		local d, g = world.dock, world.goal
+		return g.x + rr2 * (d.inward.x * math.cos(th) + -d.inward.z * math.sin(th)),
+			g.z + rr2 * (d.inward.z * math.cos(th) + d.inward.x * math.sin(th))
+	end
+
 	-- Cofres: comun / musgoso / dorado visibles y oculto con pista (marcador a 14-24 studs), repartidos por sectores.
 	local rc = base:fork("chests")
 	world.chests = {}
@@ -198,11 +239,12 @@ function World.generate(seed, over)
 		for ci = 1, sp.n do
 			local target = order[(ci - 1) % 8 + 1]
 			for attempt = 1, 800 do
-				local x, z = rc:range(24, size - 24), rc:range(24, size - 24)
+				local x, z
+				if attempt < 600 then x, z = inSector(rc, target) else x, z = rc:range(24, size - 24), rc:range(24, size - 24) end
 				local b = biome(x, z)
 				local sep = attempt < 500 and 55 or 25
 				local ok = walkable(x, z) and farFromGoal(x, z, 2.0) and clearOfVolcano(x, z) and (sp.biomes[b] or 0) > 0
-				if ok and attempt < 600 then ok = World.sector(x - cx, z - cx) == target end
+				if ok and attempt < 600 then ok = World.sectorOf(world, x, z) == target end
 				if ok then for _, c in ipairs(world.chests) do if dist2(x, z, c.x, c.z) < sep then ok = false; break end end end
 				if ok then
 					-- Presupuesto FIJO de gemas por tipo de cofre (justicia); el accesorio raro es un bono de suerte aparte.
@@ -258,7 +300,7 @@ function World.generate(seed, over)
 	local function sector_totals()
 		local tot = {}
 		for s = 1, 8 do tot[s] = 0 end
-		local function add(o, v) local s = World.sector(o.x - cx, o.z - cx); tot[s] = tot[s] + v end
+		local function add(o, v) local s = World.sectorOf(world, o.x, o.z); tot[s] = tot[s] + v end
 		for _, n in ipairs(world.nodes) do if not n.removed then add(n, n.value) end end
 		for _, c in ipairs(world.chests) do add(c, c.value) end
 		return tot
@@ -271,13 +313,13 @@ function World.generate(seed, over)
 			if tot[s] > mean * (1 + cfg.fair_band) then
 				local worst
 				for _, n in ipairs(world.nodes) do
-					if not n.removed and World.sector(n.x - cx, n.z - cx) == s and (not worst or n.value < worst.value) then worst = n end
+					if not n.removed and World.sectorOf(world, n.x, n.z) == s and (not worst or n.value < worst.value) then worst = n end
 				end
 				if worst then worst.removed = true; changed = true end
 			elseif tot[s] < mean * (1 - cfg.fair_band) then
 				for _ = 1, 400 do
-					local x, z = rf:range(24, size - 24), rf:range(24, size - 24)
-					if World.sector(x - cx, z - cx) == s and walkable(x, z) and farFromGoal(x, z, 1.5) and clearOfVolcano(x, z) then
+					local x, z = inSector(rf, s)
+					if World.sectorOf(world, x, z) == s and walkable(x, z) and farFromGoal(x, z, 1.5) and clearOfVolcano(x, z) then
 						world.nodes[#world.nodes + 1] = { id = #world.nodes + 1, kind = "cristal", value = 3, x = x, z = z, y = height(x, z), biome = biome(x, z) }
 						changed = true; break
 					end

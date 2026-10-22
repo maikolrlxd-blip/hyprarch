@@ -108,6 +108,10 @@ Todo lo anterior se conserva como idea, pero se construye **por capas**. Una cap
 5. **Aviso final:** cuando queda poco tiempo suenan **altavoces del muelle** y aparece un **contador arriba**.
 6. **Colapso:** quien no llegó **muere/se derrite** porque la isla es consumida por un desastre (volcán, tormenta, tornado…).
 
+### Decisiones tomadas (Maikol)
+- **Muelle = meta: CONFIRMADO.** Un solo muelle en la costa (ángulo por semilla); la plaza de la meta queda tierra adentro; todos aparecen en la plaza; los botes esperan mar adentro frente al muelle. Implementado en `World.lua` (`world.dock`, `world.goal`, `World.sectorOf`: sectores = abanico de 22,5° visto desde el muelle).
+- **Cuerpos reales en el muelle:** no se pueden tocar ni saquear; quedan ahí "supervisados" por NPCs (escenografía).
+
 ### Preguntas abiertas que salen del guion
 - **¿La meta y el muelle son el mismo lugar?** Hoy el generador pone la meta como plaza en el centro y los botes en las playas (24 apariciones). El guion habla de UN muelle de desembarco y de volver ahí. Propuesta: muelle = meta, en la costa, con todos saliendo desde el mismo punto (más justo y simple). Pendiente de confirmar; implica cambiar World.lua.
 - **Los cuerpos reales caídos en el muelle:** ¿se pueden tocar/saquear? (propuesta: no, son solo escenografía y puntuación de "quién llegó").

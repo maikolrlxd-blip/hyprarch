@@ -72,19 +72,19 @@ test("la meta esta en una plaza plana, seca y transitable", function()
 		truthy(w.walkable(w.goal.x + 5, w.goal.z + 5))
 	end
 end)
-test("llegada en botes: cada jugador aparece en la COSTA y su bote parte mar adentro", function()
-	for _, seed in ipairs({1, 42, 777, 2026}) do
+test("muelle = meta: un solo muelle en la costa, todos aparecen en la plaza y los botes esperan en el mar", function()
+	for _, seed in ipairs({1, 42, 777, 2026, 9, 31337}) do
 		local w = World.generate(seed)
 		eq(#w.spawns, w.cfg.players)
-		local mn, mx = 1e9, 0
+		truthy(w.dock, "falta el muelle")
+		truthy(not w.walkable(w.dock.sea.x, w.dock.sea.z), "el extremo del muelle debe estar en el agua")
+		local dd = dist(w.dock, w.goal); truthy(dd > w.goal.radius and dd < 220, "el muelle debe quedar cerca de la meta: " .. dd)
 		for _, s in ipairs(w.spawns) do
-			truthy(w.walkable(s.x, s.z), "aparicion en agua/montana")
-			truthy(s.boat, "falta el bote")
-			truthy(dist(s.boat, w.goal) > dist(s, w.goal), "el bote debe estar mas lejos que la costa")
-			truthy(not w.walkable(s.boat.x, s.boat.z), "el bote no esta en el agua")
-			local d = dist(s, w.goal); mn, mx = math.min(mn, d), math.max(mx, d)
+			truthy(dist(s, w.goal) <= w.goal.radius, "aparicion fuera de la plaza")
+			truthy(w.walkable(s.x, s.z), "aparicion en agua")
+			truthy(s.boat and not w.walkable(s.boat.x, s.boat.z), "el bote debe estar en el agua")
+			truthy(dist(s.boat, w.goal) > dist(s, w.goal), "el bote debe estar mas lejos que la plaza")
 		end
-		truthy(mx / mn < 2.0, "apariciones muy desiguales: " .. mn .. " a " .. mx)
 	end
 end)
 test("recursos y cofres: transitables, fuera de la plaza y bien separados", function()
@@ -348,7 +348,7 @@ test("la MAYORIA de los puntos salen del mapa, no de los bonos de llegada (simul
 			local sec, mine = (p - 1) % 8 + 1, {}
 			for _, it in ipairs(list) do
 				local o = it.kind == "c" and w.chests[it.id] or w.nodes[it.id]
-				if World.sector(o.x - w.goal.x, o.z - w.goal.z) == sec then mine[#mine + 1] = it end
+				if World.sectorOf(w, o.x, o.z) == sec then mine[#mine + 1] = it end
 			end
 			table.sort(mine, function(a, b) return a.v > b.v end)
 			for _, it in ipairs(mine) do
