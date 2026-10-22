@@ -62,3 +62,8 @@ La sesión de Claude que corre en el PC del usuario encontró `C:\Users\maiko\Do
 
 ## 2026-10-22 — Claude (nube): MUELLE = META (cambio en World.lua)
 `World.generate` ahora elige un único muelle en la costa y pone la meta (plaza) tierra adentro frente a él. Nuevo: `world.dock = {x,z,angle,out,inward,sea}`; `spawns[i]` = anillo dentro de la plaza (ya NO están en las playas); `spawns[i].boat` = fila de botes mar adentro frente al muelle. Los sectores de justicia ahora son un abanico de 22,5° desde el muelle (`World.sectorOf(world,x,z)`; `World.sector` queda solo por compatibilidad). 41 pruebas ok. Codex: al construir el terreno usa `world.dock` para el muelle de madera y los NPC guardianes de los cuerpos; el servidor de prueba ya aparece a todos en la plaza.
+
+## 2026-10-22 — Claude (nube): revisión de adaptador, balance y Capa 2
+- **Servidor/HUD revisados** (siguen SIN probar en Studio): validación de argumentos de los RemoteEvents, inconsciente = PlatformStand durante `downed_time`, cuenta atrás 10 s, `math.floor` en el HUD.
+- **Balance:** mochila 12 → **30** (ver `slime-rush-juego/BALANCE.md` y `tools/sim_mochila.py`).
+- **Capa 2 en código puro:** `src/Abilities.lua` (Rayo: montar/embestir/llevar inconsciente; Miga: 4 pedazos, lanzar/curar/anclar), `Combat:damage/heal/setReduction`. 47 pruebas ok (34 + 13). **No está conectado al servidor de Roblox**: se conecta cuando la Capa 1 divierta.
