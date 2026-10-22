@@ -16,16 +16,16 @@
    "assignee": "opus",
    "needs": "modelado 3D dificil",
    "asset": "Kit y mundo Slime Rush",
-   "status": "doing",
-   "detail": "TODO en Blender, NADA básico de Roblox Studio. Lista en DISENO-v2.md §7. Entregar por tandas pequeñas con commit. Primera tanda ya en slime-rush-arte/mapa-v02/kit/ (rocas, arbustos, cristales, 3 cofres) — falta todo lo demás."
+   "status": "todo",
+   "detail": "TODO en Blender, NADA básico de Roblox Studio. El kit v0.2.0 fue RECHAZADO ('plastilina'): rehacer con facetado limpio y textura pintada a mano (pinceladas, veta, variación de color), no formas lisas de un solo color. Lista de piezas en DISENO-v2.md §7. Entregar por tandas pequeñas con commit."
   },
   {
-   "title": "Árboles 0.5.0 en Blender (hojas en masas redondeadas, sin huecos negros)",
+   "title": "Árboles 0.6.0: estilo ORIGINAL (0.4.0) con texturas pintadas — sin 'plastilina'",
    "assignee": "opus",
    "needs": "modelado 3D dificil",
    "asset": "Arboles Slime Rush",
-   "status": "doing",
-   "detail": "3 variantes + LOD1, .blend/.glb/.fbx, render con figura de escala, conteo real de triángulos. Carpeta slime-rush-arte/arboles-v05/. Son parte del kit del mundo."
+   "status": "todo",
+   "detail": "Los 0.5.0 fueron RECHAZADOS (lisos, de un solo color, 'plastilina'). Volver al estilo 0.4.0: copas anchas de hojas en capas, troncos gruesos retorcidos con surcos, mate. Arreglar SOLO los huecos negros y el plato plano. Corteza y hojas con TEXTURA pintada (veta, pinceladas, variación de color), facetado limpio, nada de superficies subdivididas lisas. Todo en Blender. Referencia: renders de 0.4.0 que el usuario mostró."
   },
   {
    "title": "Generador de isla con semilla, volcán y botes (Luau puro) + 34 pruebas",
@@ -161,6 +161,20 @@
    "needs": "escribir",
    "asset": "Historia",
    "detail": "Texto corto de presentación, nombre del torneo, tono. Debe caber en la animación de llegada."
+  },
+  {
+   "title": "Instalar Blender en el PC (necesita permiso de Maikol)",
+   "assignee": "humano",
+   "needs": "",
+   "asset": "PC",
+   "detail": "El PC no tiene Blender (revisado por la sesión del PC). Opción: winget install BlenderFoundation.Blender o el portable oficial verificando el hash. Sin Blender en el PC, el arte solo se puede hacer en la nube (bpy 5.0.1)."
+  },
+  {
+   "title": "Cerrar ventanas sobrantes de Roblox Studio: hay 7 y la regla dice UNA",
+   "assignee": "humano",
+   "needs": "",
+   "asset": "PC",
+   "detail": "La sesión del PC las contó y NO cerró ninguna. Que liste cuál ventana tiene cada archivo y cuáles tienen cambios sin guardar; Maikol decide cuáles cerrar."
   }
  ]
 }
