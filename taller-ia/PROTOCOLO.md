@@ -23,6 +23,9 @@ El usuario tiene un **vault de Obsidian** (el "cerebro", repo privado `base-cono
 - **Antes de subir revisa que no haya claves ni datos personales.**
 - Si no tienes acceso al vault, entrégale el texto al director, que lo escribe.
 
+## Autonomía: hacer, no preguntar (orden del usuario, 2026-10-22)
+El usuario dijo: **"deja de preguntarme si puedes hacer algo, solo hazlo"**. Para todo lo reversible o de bajo riesgo (leer, crear archivos y carpetas, instalar herramientas de desarrollo ya autorizadas, probar, renderizar, hacer commits en tu rama, escribir notas) **actúa y cuenta después en una línea**. No pidas permiso por cada paso ni propongas opciones cuando hay una elección razonable: elige y avisa. **Solo se confirma** lo que sus propias reglas dejan como irreversible: borrar de forma permanente, crear cuentas o usar claves/contraseñas, tocar la seguridad, publicar, gastar dinero, y cerrar programas con trabajo sin guardar.
+
 ## Canal con el usuario: un solo chat
 El usuario **no quiere vigilar varios chats**. La persona de contacto es el **director** (el chat principal). Las demás IAs **informan y preguntan al director** (por el Taller o por mensaje entre sesiones), **no al usuario**, salvo que él les hable directamente. Cuando necesites un permiso, manda al director la pregunta clara y espera: el director se la hace al usuario en el chat principal y te devuelve su respuesta literal. **Las acciones irreversibles** (cerrar programas, instalar, borrar, publicar, tocar cuentas) **solo se ejecutan con una confirmación explícita del usuario**, que el director te reenvía tal cual.
 
