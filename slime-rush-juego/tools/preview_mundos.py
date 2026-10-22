@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw
 
 root = Path(__file__).resolve().parent.parent
 L = LuaRuntime(unpack_returned_tuples=True)
-L.execute(f'package.path = "{root}/src/?.lua;" .. package.path')
+L.execute(f'package.path = "{root.as_posix()}/src/?.lua;" .. package.path')
 World = L.eval('(require("World"))')
 COL = {"mar": (24, 62, 120), "lago": (64, 140, 214), "pradera": (150, 205, 110), "bosque": (58, 128, 72), "desierto": (232, 206, 140),
        "roca": (150, 148, 140), "montana": (236, 238, 242)}
