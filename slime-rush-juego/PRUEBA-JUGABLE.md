@@ -7,6 +7,7 @@ Objetivo: saber en pocas horas **si la partida divierte**, antes de invertir en 
 - Fases de Rules.lua: cuenta atrás → explorar → regreso → colapso (versión corta: explorar 120 s, regreso 60 s, colapso 20 s).
 - Recursos (nodos) y 3 cofres; inconsciencia + saqueo; meta con depósito; puntuación final.
 - 1 desastre (tormenta/terremoto simple) y volcán opcional **no** en esta prueba.
+- Animaciones, efectos, sonidos e impactos: DESPUÉS (ver SENSACION.md). Solo lo mínimo para entender qué pasó.
 - Arte: formas simples de colores (provisional). Los modelos del kit v03 NO son requisito.
 
 ## Quién hace qué

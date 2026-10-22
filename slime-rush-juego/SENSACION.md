@@ -1,5 +1,7 @@
 # Sensación de juego (animación, efectos, sonido, impactos) — Slime Rush v2
-Regla: cada acción importante lleva **anticipación → impacto → reacción**, con sonido y efecto en el mismo instante. Para la prueba jugable solo lo de la columna "P" (provisional, simple); el resto después.
+**ESTADO: PENDIENTE PARA DESPUÉS (decisión de Maikol). No entra en la prueba jugable ni se hace ahora.** Esta lista es solo un recordatorio.
+
+Regla: cada acción importante lleva **anticipación → impacto → reacción**, con sonido y efecto en el mismo instante. Cuando llegue el momento, empezar por la columna "P".
 
 | Acción | Animación | Efecto | Sonido | Impacto (juego) | P |
 |---|---|---|---|---|---|
