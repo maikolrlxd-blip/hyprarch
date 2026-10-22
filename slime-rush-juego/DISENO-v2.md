@@ -64,5 +64,55 @@ Todos los tiempos son constantes (`Rules.DEFAULT`).
 Nombres tentativos (no los puso él): Resorte = **Bongo**, Montura = **Rayo**, Divide = **Miga**.
 - **Bongo (resorte):** (1) se enrolla en el brazo y da un puñetazo que lanza al enemigo (contra suelo, pared o solo volando); (2) se pone en el suelo y te impulsa; (3) lo mandas a atacar: rebota por paredes/árboles/techo y se lanza al enemigo.
 - **Rayo (montura rápida):** (1) te montas unos segundos; (2) lleva un objeto, dinero o **un jugador (también inconsciente: confirmado "sí")** hacia donde quiera el dueño (rescatar, lanzar, empujar o secuestrar para saquear); (3) acelera y se estrella contra el enemigo.
-- **Miga (se divide):** (1) lanza 3 partes que se regeneran (mantener = apuntar; clic = al más cercano); (2) partes en manos y pies para escalar cualquier superficie o anclarse al suelo contra tornado/tormenta; (3) tapa heridas (cura) y reduce el daño en esas partes. Las partes son un recurso compartido: cuanto más usas 1-2-3, menos tienes.
+- **Miga (se divide):** (1) lanza 4 partes (antes anotadas como 3; confirmado 4) que se regeneran (mantener = apuntar; clic = al más cercano); (2) partes en manos y pies para escalar cualquier superficie o anclarse al suelo contra tornado/tormenta; (3) tapa heridas (cura) y reduce el daño en esas partes. Las partes son un recurso compartido: cuanto más usas 1-2-3, menos tienes.
 - **Cuerpo de slime (decisión de Maikol):** todos los jugadores juegan con cuerpo de slime; sus cuerpos reales se quedan en el inicio (botes/muelle). Heridas = gel, no sangre, para escenas dramáticas sin clasificación +18. Propuesta pendiente de confirmar: al colapso, quien no llegó se derrite. Ojo: la clasificación de Roblox también depende de la intensidad de la violencia, no solo de la sangre.
+
+## Apariencia de los jugadores (Maikol, 2026-10-22)
+El jugador **no es un slime redondo**: tiene un **cuerpo humanoide hecho de slime, personalizable** (color, forma, accesorios). Es el "cuerpo de slime" de la isla; el cuerpo real queda en el inicio/botes. Los slimes con habilidades (Bongo, Rayo, Miga) son criaturas aparte que se unen al jugador. Pendiente de confirmar con Maikol: qué se personaliza (color/textura/ojos/accesorios raros), y cómo se ve el cuerpo al perder gel (heridas, derretirse). Implicación técnica: humanoide R15 con malla/materiales de slime (translúcido, mate), compatible con animaciones estándar.
+
+## Aclaraciones de Maikol (2026-10-22, 2)
+- **Compañeros:** Bongo, Rayo y Miga conservan su forma de slime normal; los jugadores son humanoides de slime.
+- **Personalización:** color, ojos, altura, anchura y accesorios.
+- **Partes del cuerpo:** al recibir daño se pierden partes (p. ej. un brazo). Se reemplazan **robándoselas a otro jugador mientras lo saqueas y sigue inconsciente**.
+- **Miga:** con sus **4 pedazos** (antes se anotaron 3; confirmar cuántos) puede darte una extremidad nueva. Si quieres usar tus habilidades, tienes que deshacer la extremidad de slime (los pedazos vuelven a ser recurso).
+- Pendiente de definir: qué hace cada parte perdida (brazo = sin habilidad de ese lado/menos mochila, pierna = más lento…), si un brazo robado es del color del otro jugador, cuánto dura, y el tope de partes. Ojo con la clasificación de Roblox: mostrar la pérdida de partes como "gel que se desprende" y sin gore.
+
+## Reglas de extremidades (Maikol, 2026-10-22, 3) — CONFIRMADO
+- **Miga = 4 pedazos.**
+- **Color:** la extremidad robada conserva el color del dueño original.
+- **Ojo:** pequeño, perderlo casi no tiene mecánica.
+- **Pie/pierna:** saltas con una pierna y vas más lento.
+- **Brazo:** menos capacidad de atacar (un solo brazo).
+- Se puede perder **todo**. Sin ninguna extremidad quedas en el suelo, quieto, y **tu slime se une a ti y lo pierdes durante esa partida**; a cambio te da **dos extremidades a elección: brazo+pierna, dos piernas o dos brazos**.
+- Pendiente de afinar: cuántas extremidades tiene el humanoide (2 brazos + 2 piernas), si "sin extremidades" cuenta como inconsciente para el saqueo, cuánto dura la penalización de un brazo (¿baja daño/alcance/velocidad de ataque?) y si un brazo robado se puede volver a perder.
+
+## Extremidades: respuestas finales (Maikol, 2026-10-22, 4)
+1. **Sin extremidades = en el suelo y se puede saquear/robar.** Dos opciones: (a) sacrificar al slime (fusión, 2 extremidades a elección) o (b) quedarte quieto: si alguien se acerca, **tu slime lo ataca por ti**; si lo derrota, el slime te trae tus partes de vuelta.
+2. **Un brazo robado se puede volver a perder** (y volver a robar).
+3. **Un solo brazo = la velocidad de ataque baja a la mitad** (de 2 golpes/s a 1; el daño por golpe no cambia). Con 0 brazos no se ataca con las manos.
+Para Rules.lua/Codex: parámetros `attack_rate_base=2`, `attack_rate_per_arm=1` (2 brazos→2/s, 1→1/s, 0→0); pierna perdida: velocidad de movimiento reducida y salto a una pierna; sin extremidades: estado `limbless` (saqueable, el slime defiende).
+
+## PRIORIDAD DE MECÁNICAS (Maikol: "son demasiadas") — vigente
+Todo lo anterior se conserva como idea, pero se construye **por capas**. Una capa nueva solo entra cuando la anterior divierte.
+- **Capa 1 (prueba jugable):** isla, explorar, recoger recursos y cofres, llegar a la meta, tiempo y colapso simple, puntos. Un solo slime con UNA habilidad (puñetazo). Quedar inconsciente y saquear.
+- **Capa 2:** los otros dos slimes (Rayo, Miga) con una habilidad cada uno; botes y llegada.
+- **Capa 3:** volcán y desastres; cofres raros y accesorios.
+- **Capa 4:** cuerpo humanoide personalizable y extremidades (perder, robar, fusión del slime).
+- **Capa 5:** habilidades 2 y 3 de cada slime; sensación de juego (efectos/sonido).
+
+## GUION de una partida (Maikol, 2026-10-22) — guía narrativa vigente
+1. **Desembarco:** acaba el tiempo de preparación y todos los jugadores desembarcan en el **muelle**. De cada cuerpo real sale una **réplica de slime** (el humanoide con el que se juega) y el cuerpo real cae al suelo. La **animación de salir del cuerpo depende de la que tenga equipada cada jugador** (cosmético/personalizable).
+2. **Reunión en la meta:** todos van a la meta y, tras unos segundos de cuenta atrás, comienza el juego y todos salen corriendo.
+3. **Isla entera, libertad total:** cada uno va por donde quiera (bosque, desierto, montaña, volcán…).
+4. **Ejemplo de combate (contrajuego):** en el bosque, alguien ataca por la espalda con **Rayo** (embestida). La víctima usa **Bongo** para saltar y esquivar y luego activa el **golpe resorte** y le da al atacante. → el combate necesita esquivas con habilidades, no solo daño.
+5. **Aviso final:** cuando queda poco tiempo suenan **altavoces del muelle** y aparece un **contador arriba**.
+6. **Colapso:** quien no llegó **muere/se derrite** porque la isla es consumida por un desastre (volcán, tormenta, tornado…).
+
+### Decisiones tomadas (Maikol)
+- **Muelle = meta: CONFIRMADO.** Un solo muelle en la costa (ángulo por semilla); la plaza de la meta queda tierra adentro; todos aparecen en la plaza; los botes esperan mar adentro frente al muelle. Implementado en `World.lua` (`world.dock`, `world.goal`, `World.sectorOf`: sectores = abanico de 22,5° visto desde el muelle).
+- **Cuerpos reales en el muelle:** no se pueden tocar ni saquear; quedan ahí "supervisados" por NPCs (escenografía).
+
+### Preguntas abiertas que salen del guion
+- **¿La meta y el muelle son el mismo lugar?** Hoy el generador pone la meta como plaza en el centro y los botes en las playas (24 apariciones). El guion habla de UN muelle de desembarco y de volver ahí. Propuesta: muelle = meta, en la costa, con todos saliendo desde el mismo punto (más justo y simple). Pendiente de confirmar; implica cambiar World.lua.
+- **Los cuerpos reales caídos en el muelle:** ¿se pueden tocar/saquear? (propuesta: no, son solo escenografía y puntuación de "quién llegó").
+- **Duración de la cuenta atrás en la meta** (propuesta: 10 s).
