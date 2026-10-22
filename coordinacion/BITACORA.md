@@ -67,3 +67,10 @@ La sesión de Claude que corre en el PC del usuario encontró `C:\Users\maiko\Do
 - **Servidor/HUD revisados** (siguen SIN probar en Studio): validación de argumentos de los RemoteEvents, inconsciente = PlatformStand durante `downed_time`, cuenta atrás 10 s, `math.floor` en el HUD.
 - **Balance:** mochila 12 → **30** (ver `slime-rush-juego/BALANCE.md` y `tools/sim_mochila.py`).
 - **Capa 2 en código puro:** `src/Abilities.lua` (Rayo: montar/embestir/llevar inconsciente; Miga: 4 pedazos, lanzar/curar/anclar), `Combat:damage/heal/setReduction`. 47 pruebas ok (34 + 13). **No está conectado al servidor de Roblox**: se conecta cuando la Capa 1 divierta.
+
+## 2026-10-22 14:13–14:17 — PRIMERA PRUEBA REAL EN STUDIO CON 2 CLIENTES (sesión del PC, copia merge-copia)
+- **Simulación SR_TEST en Luau (Studio): 52 PASS, 0 FAIL** (incluye depósito con éxito y "quien no llega lo pierde todo").
+- **Play, servidor + 2 clientes:** aparición en la plaza OK; fases PREPARADOS→EXPLORAR(120)→REGRESAR(60)→TORMENTA(20)→FIN OK; **F** OK (cadencia, "muy lejos", 5 golpes = derrotado, 6º "ya está inconsciente", derrotado inmóvil); **G** OK pero con víctima sin objetos ("0 objetos"); **H** OK en la ventana de regreso (puesto 1, 150 puntos); pantalla FIN en texto: "1. Jugador 2: 150 / 2. Jugador 1: 0 (no llegó)".
+- **No probado:** E con 2 clientes, saqueo que transfiere objetos en el motor, FPS con 2 clientes.
+- **Output:** sin errores de GameServer/Hud/Rules/Combat. Rojo del ChatScript de Roblox (SetCore CoreGuiChatConnections) = de Roblox, no nuestro. ContentId rbxassetid://203785492 = de Studio. Generación total 994 ms con 2 clientes (463 y 278 en pruebas previas).
+- **Fallos de UX a arreglar (Codex):** F golpea al más cercano aunque esté inconsciente; el HUD muestra "Label" antes del primer estado; el cuadro de resultados no tiene contraste; el colapso solo oscurece el cielo (sin drama) y nadie "muere".
