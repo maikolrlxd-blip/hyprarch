@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 # Reinstala las skills de Claude de Maikol, con las versiones (commits) fijadas y revisadas el 2026-10-22.
-# Uso: ./instalar-skills.sh [carpeta_destino]      (por defecto ~/.claude/skills)
+# Uso: ./instalar-skills.sh [carpeta_destino]
+#   Sin argumento instala en las TRES IAs (mismo formato SKILL.md):
+#     Claude Code        ~/.claude/skills
+#     Codex / ChatGPT    ~/.agents/skills                  (doc oficial de OpenAI)
+#     Antigravity        ~/.gemini/antigravity/skills      (codelab oficial de Google)
 # Solo clona (sparse) y copia; NO ejecuta nada de lo descargado. Excluye scripts/ de impeccable
 # (ese lanzador descarga y ejecuta un binario) y los corpus de prueba.
 set -euo pipefail
-DEST="${1:-$HOME/.claude/skills}"
+if [ $# -ge 1 ]; then TARGETS=("$1"); else
+  TARGETS=("$HOME/.claude/skills" "$HOME/.agents/skills" "$HOME/.gemini/antigravity/skills"); fi
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
-mkdir -p "$DEST"
+DEST="$TMP/out"; mkdir -p "$DEST"   # se prepara una vez y luego se copia a cada IA
 
 # repo | commit fijado | rutas (sparse) | origen -> se copia cada carpeta nombrada
 get() {  # get <repo> <sha> <ruta_sparse...>
@@ -51,5 +56,11 @@ d=$(get heygen-com/hyperframes 4371981b740d92f70e520cfbec34db68a1c93434 skills)
 for s in figma hyperframes hyperframes-cli hyperframes-registry media-use remotion-to-hyperframes slideshow; do put "$d/skills/$s"; done
 
 echo
-echo "Listo en $DEST  ($(find "$DEST" -maxdepth 2 -name SKILL.md | wc -l) skills). Reinicia Claude Code para que las cargue."
+N=$(find "$DEST" -maxdepth 2 -name SKILL.md | wc -l)
+for t in "${TARGETS[@]}"; do
+  mkdir -p "$t"
+  for s in "$DEST"/*/; do n=$(basename "$s"); rm -rf "$t/$n"; cp -r "$s" "$t/$n"; done
+  echo "Listo: $N skills en $t"
+done
+echo "Reinicia cada IA (Claude Code, Codex, Antigravity) para que las cargue."
 echo "PRIVACIDAD: 'media-use' de HyperFrames manda estadisticas de uso a PostHog. Para apagarlo: DO_NOT_TRACK=1 (o HYPERFRAMES_NO_TELEMETRY=1)."

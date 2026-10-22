@@ -15,6 +15,9 @@ Este chat **ya existe**: el Taller no crea chats nuevos, solo conecta los que ya
 7. **Formatos:** modelos `.glb` (preferido), `.gltf`, `.fbx`; animaciones dentro del mismo archivo (un clip por acción); imágenes `.png/.jpg`.
 8. **Seguridad:** nunca publiques claves ni datos personales. El humano decide lo que sale a internet.
 
+## Skills
+Si tienes skills instaladas (`herramientas/instalar-skills.*`), **úsalas cuando apliquen**: diseño y animación (`impeccable`, `taste-skill`, `emil-design-eng`), depuración y revisión (`debugging-and-error-recovery`, `code-review-and-quality`), seguridad, y vídeo (`remotion-*`, `hyperframes`). En Codex se invocan con `$nombre` o `/skills`; Claude y Antigravity las cargan según su descripción.
+
 ## Estado y límites de uso
 - En cuanto veas un aviso de **límite de uso** (o te quede poco), llama a `taller_status` con `state: "limit"` y, si lo sabes, `reset_at` ("hoy 01:00"). Cuando vuelvas, `state: "ok"`.
 - `busy` mientras haces un trabajo largo; `away` si te vas.

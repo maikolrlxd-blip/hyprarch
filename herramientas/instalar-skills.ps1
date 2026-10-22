@@ -1,10 +1,15 @@
 # Reinstala las skills de Claude de Maikol en Windows, con las versiones (commits) fijadas y revisadas el 2026-10-22.
 # Uso (PowerShell):  powershell -ExecutionPolicy Bypass -File instalar-skills.ps1
+# Sin -Dest instala en las TRES IAs (mismo formato SKILL.md):
+#   Claude Code      %USERPROFILE%\.claude\skills
+#   Codex / ChatGPT  %USERPROFILE%\.agents\skills              (doc oficial de OpenAI)
+#   Antigravity      %USERPROFILE%\.gemini\antigravity\skills  (codelab oficial de Google)
 # Requiere Git. Solo clona (sparse) y copia; NO ejecuta nada de lo descargado.
 # Excluye scripts\ de impeccable (ese lanzador descarga y ejecuta un binario) y los corpus de prueba.
-param([string]$Dest = "$env:USERPROFILE\.claude\skills")
+param([string[]]$Targets = @("$env:USERPROFILE\.claude\skills", "$env:USERPROFILE\.agents\skills", "$env:USERPROFILE\.gemini\antigravity\skills"))
 $ErrorActionPreference = "Stop"
 $Tmp = Join-Path $env:TEMP ("skills_" + [guid]::NewGuid().ToString("N"))
+$Dest = Join-Path $Tmp "out"   # se prepara una vez y luego se copia a cada IA
 New-Item -ItemType Directory -Force -Path $Tmp, $Dest | Out-Null
 
 function Get-Repo($repo, $sha, [string[]]$paths) {
@@ -50,7 +55,16 @@ Write-Host "HyperFrames"
 $d = Get-Repo "heygen-com/hyperframes" "4371981b740d92f70e520cfbec34db68a1c93434" @("skills")
 foreach ($s in "figma","hyperframes","hyperframes-cli","hyperframes-registry","media-use","remotion-to-hyperframes","slideshow") { Put-Skill "$d\skills\$s" }
 
-Remove-Item -Recurse -Force $Tmp -ErrorAction SilentlyContinue
 $n = (Get-ChildItem $Dest -Directory | Where-Object { Test-Path "$($_.FullName)\SKILL.md" }).Count
-Write-Host "`nListo en $Dest ($n skills). Reinicia Claude Code para que las cargue."
+foreach ($t in $Targets) {
+    New-Item -ItemType Directory -Force -Path $t | Out-Null
+    foreach ($s in Get-ChildItem $Dest -Directory) {
+        $to = Join-Path $t $s.Name
+        if (Test-Path $to) { Remove-Item -Recurse -Force $to }
+        Copy-Item -Recurse $s.FullName $to
+    }
+    Write-Host "Listo: $n skills en $t"
+}
+Remove-Item -Recurse -Force $Tmp -ErrorAction SilentlyContinue
+Write-Host "Reinicia cada IA (Claude Code, Codex, Antigravity) para que las cargue."
 Write-Host "PRIVACIDAD: 'media-use' de HyperFrames manda estadisticas de uso a PostHog. Para apagarlo: setx DO_NOT_TRACK 1" -ForegroundColor Cyan

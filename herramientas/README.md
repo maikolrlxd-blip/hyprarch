@@ -1,7 +1,7 @@
 # Herramientas
 
 ## `instalar-skills.ps1` / `instalar-skills.sh`
-Reinstalan las 30 skills de Claude de Maikol (Agent Skills ×4, Emil Kowalski ×5, taste-skill, impeccable, Remotion ×12, HyperFrames ×7) con commits fijados y revisados el 2026-10-22.
+Reinstalan las 30 skills de Maikol **para las tres IAs** (Claude Code → `~/.claude/skills`, Codex/ChatGPT → `~/.agents/skills`, Antigravity → `~/.gemini/antigravity/skills`; todas usan el formato `SKILL.md`) (Agent Skills ×4, Emil Kowalski ×5, taste-skill, impeccable, Remotion ×12, HyperFrames ×7) con commits fijados y revisados el 2026-10-22.
 - Windows: `powershell -ExecutionPolicy Bypass -File instalar-skills.ps1`
 - Linux/Mac: `./instalar-skills.sh`
 
