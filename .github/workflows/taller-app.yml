@@ -1,0 +1,43 @@
+name: Build Taller IA (Windows)
+on:
+  push:
+    paths: ['taller-ia/**', '.github/workflows/taller-app.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install pyinstaller pillow
+      - name: Icono
+        working-directory: taller-ia
+        run: python make_icon.py
+      - name: Compilar (app con ventana + servidor MCP)
+        run: |
+          ADD=(--add-data "taller-ia/viewer.html;." --add-data "taller-ia/vendor;vendor" --add-data "taller-ia/roles;roles" --add-data "taller-ia/planes;planes" --add-data "taller-ia/PROTOCOLO.md;.")
+          pyinstaller --noconfirm --onefile --windowed --name TallerIA --icon taller-ia/icon.ico "${ADD[@]}" taller-ia/app.py
+          pyinstaller --noconfirm --onefile --name taller-mcp --icon taller-ia/icon.ico "${ADD[@]}" taller-ia/taller.py
+      - name: Probar el ejecutable (protocolo MCP)
+        run: |
+          printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' | TALLER_DIR="$RUNNER_TEMP/t" ./dist/taller-mcp.exe mcp --as claude | tail -1 | grep -q taller_publish
+      - name: Empaquetar
+        run: |
+          mkdir TallerIA && cp dist/TallerIA.exe dist/taller-mcp.exe TallerIA/
+          cp taller-ia/README.md TallerIA/LEEME.md
+          powershell -Command "Compress-Archive -Path TallerIA -DestinationPath TallerIA-Windows.zip"
+      - uses: actions/upload-artifact@v4
+        with: { name: TallerIA-Windows, path: TallerIA-Windows.zip }
+      - name: Publicar release "taller-ia"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete taller-ia --cleanup-tag --yes || true
+          gh release create taller-ia TallerIA-Windows.zip --target "$GITHUB_SHA" --title "Taller IA para Windows (última versión)" \
+            --notes "Descarga TallerIA-Windows.zip, descomprímelo (los dos .exe juntos) y abre TallerIA.exe."

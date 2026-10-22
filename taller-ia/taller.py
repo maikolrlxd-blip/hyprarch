@@ -23,7 +23,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-HERE = Path(__file__).resolve().parent
+HERE = Path(getattr(sys, "_MEIPASS", None) or Path(__file__).resolve().parent)  # _MEIPASS = recursos dentro del .exe
 DIR = Path(os.environ.get("TALLER_DIR", Path.home() / ".taller-ia"))
 MAX_ROUNDS = int(os.environ.get("TALLER_MAX_ROUNDS", "6"))
 MAX_BYTES = 200 * 1024 * 1024
@@ -507,19 +507,65 @@ def mcp_handle(me, req):
     raise NotImplementedError(m)
 
 
-def run_seed(path):
-    """Carga un plan de tareas (como director). No duplica: omite titulos ya existentes."""
+AIS = [("claude", "Claude (director)"), ("opus", "Claude Opus (modelador / animador)"),
+       ("chatgpt", "Codex / ChatGPT (ingeniero)"), ("antigravity", "Antigravity (direccion de arte)")]
+
+
+def mcp_command(name):
+    """Comando exacto para que una IA lance el servidor MCP del Taller (ruta real de ESTA instalacion)."""
+    if getattr(sys, "frozen", False):
+        return [str(Path(sys.executable).parent / ("taller-mcp.exe" if os.name == "nt" else "taller-mcp")), "mcp", "--as", name]
+    return [sys.executable, str(Path(__file__).resolve()), "mcp", "--as", name]
+
+
+def connect_info():
+    out = []
+    for name, label in AIS:
+        cmd = mcp_command(name)
+        if name in ("claude", "opus"):
+            q = lambda x: '"' + x + '"' if " " in x else x
+            kind, text = "Pega esto en la terminal, DENTRO de la carpeta del chat de esta IA:", "claude mcp add taller -- " + " ".join(q(x) for x in cmd)
+        elif name == "chatgpt":
+            kind, text = "Agrega esto al final de ~/.codex/config.toml (en Windows: C:\\Users\\TU_USUARIO\\.codex\\config.toml) y reinicia Codex:", \
+                f"[mcp_servers.taller]\ncommand = {json.dumps(cmd[0])}\nargs = {json.dumps(cmd[1:])}"
+        else:
+            kind, text = "En Antigravity: servidores MCP > configuracion (mcp_config.json) y pega (el menu exacto puede variar):", \
+                json.dumps({"mcpServers": {"taller": {"command": cmd[0], "args": cmd[1:]}}}, indent=1)
+        out.append({"name": name, "label": label, "role": DEFAULT_ROLE.get(name, ""), "kind": kind, "text": text})
+    return out
+
+
+def prompt_text(role):
+    if role not in ROLES:
+        raise ValueError("rol invalido")
+    name = next((n for n, r in DEFAULT_ROLE.items() if r == role), role)
+    parts = [f"Tu nombre en el Taller IA es `{name}` y tu rol principal es **{ROLES[role][0]}**. "
+             f"Es tu fortaleza, no tu limite: todas las IAs podemos programar.\n"]
+    for f in ("PROTOCOLO.md", f"roles/{role}.md"):
+        pth = HERE / f
+        if pth.is_file():
+            parts.append(pth.read_text("utf-8"))
+    return "\n\n".join(parts)
+
+
+def seed_file(path, quiet=True):
     data = json.loads(Path(path).read_text("utf-8"))
     made = 0
     for t in data["tasks"]:
         if any(x["title"] == t["title"] for x in tasks_all()):
             continue
-        task, warn = task_create("claude", t["title"], t.get("detail", ""), t.get("assignee", ""), t.get("asset", ""), t.get("needs", ""))
+        task, _ = task_create("claude", t["title"], t.get("detail", ""), t.get("assignee", ""), t.get("asset", ""), t.get("needs", ""))
         if t.get("status", "todo") != "todo":
             task_update("claude", task["id"], t["status"])
         made += 1
-        print(f"#{task['id']:>2} {task['assignee'] or '(sin asignar)':<12} {task['title']}")
-    print(f"{made} tareas cargadas en {DIR}")
+        if not quiet:
+            print(f"#{task['id']:>2} {task['assignee'] or '(sin asignar)':<12} {task['title']}")
+    return made
+
+
+def run_seed(path):
+    """Carga un plan de tareas (como director). No duplica: omite titulos ya existentes."""
+    print(f"{seed_file(path, quiet=False)} tareas cargadas en {DIR}")
 
 
 def run_mcp(me, role=None):
@@ -584,6 +630,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, assets_summary())
             if u.path.startswith("/api/assets/"):
                 return self._send(200, load(unquote(u.path[12:])))
+            if u.path == "/api/connect":
+                return self._send(200, connect_info())
+            if u.path == "/api/prompt":
+                return self._send(200, {"text": prompt_text(parse_qs(u.query).get("role", [""])[0])})
             if u.path == "/api/presence":
                 return self._send(200, presence_all())
             if u.path == "/api/tasks":
@@ -609,6 +659,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, f.read_bytes(), ctype)
         except KeyError as e:
             return self._send(404, {"error": str(e)})
+        except ValueError as e:
+            return self._send(400, {"error": str(e)})
         self._send(404, {"error": "no encontrado"})
 
     def _stream(self, since):
@@ -661,6 +713,11 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == "/api/comment":
                 m, _ = review("humano", body["name"], body.get("version"), body.get("verdict", "comment"), body["comment"])
                 return self._send(200, {"ok": True})
+            if self.path == "/api/seed":
+                plan = HERE / "planes" / (re.sub(r"[^a-z0-9-]", "", str(body.get("plan", "slime-rush"))) + ".json")
+                if not plan.is_file():
+                    raise ValueError("plan no encontrado")
+                return self._send(200, {"ok": True, "tareas_nuevas": seed_file(plan)})
             if self.path == "/api/task":
                 if body.get("id"):
                     task_update("humano", int(body["id"]), body.get("status"), body.get("note", ""), body.get("assignee"))
@@ -681,7 +738,7 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, {"error": "no encontrado"})
 
 
-def run_serve(port, mcp_http):
+def make_server(port, mcp_http=False):
     DIR.mkdir(parents=True, exist_ok=True)
     kp = DIR / "key.txt"
     if not kp.exists():
@@ -690,10 +747,14 @@ def run_serve(port, mcp_http):
             kp.chmod(0o600)
     Handler.key, Handler.port = kp.read_text().strip(), port
     Handler.mcp_http = "chatgpt" if mcp_http else ""
-    srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    print(f"Taller IA: http://127.0.0.1:{port}/?k={Handler.key}\nDatos: {DIR}")
+    return ThreadingHTTPServer(("127.0.0.1", port), Handler), f"http://127.0.0.1:{port}/?k={Handler.key}"
+
+
+def run_serve(port, mcp_http):
+    srv, url = make_server(port, mcp_http)
+    print(f"Taller IA: {url}\nDatos: {DIR}")
     if mcp_http:
-        print(f"MCP por HTTP activo en /mcp (Authorization: Bearer <token>; ?as=nombre). NO lo expongas a internet sin que tu lo decidas.")
+        print("MCP por HTTP activo en /mcp (Authorization: Bearer <token>; ?as=nombre). NO lo expongas a internet sin que tu lo decidas.")
     with contextlib.suppress(KeyboardInterrupt):
         srv.serve_forever()
 

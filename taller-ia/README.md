@@ -10,7 +10,15 @@ Antigravity ──┘      versiones · revisiones · eventos     3D + animacion
 
 Sin dependencias (Python 3 estándar). three.js va incluido, funciona sin internet.
 
-## Arrancar
+## App de Windows (lo más fácil)
+1. Descarga **https://github.com/maikolrlxd-blip/hyprarch/releases/download/taller-ia/TallerIA-Windows.zip** y descomprímelo (deja los dos `.exe` juntos).
+2. Doble clic en **TallerIA.exe**: se abre en su propia ventana (usa el Edge que ya trae Windows).
+3. Toca **🔌 Conectar IAs**: por cada IA te da el comando/ajuste con tu ruta ya puesta y sus instrucciones para copiar.
+4. En 📋 Tareas, **⬇ Cargar plan Slime Rush** carga el reparto ya hecho.
+
+No está firmado: Windows SmartScreen puede avisar ("Más información" → "Ejecutar de todas formas"), y algún antivirus puede marcarlo por error (es un programa Python empaquetado). Si prefieres no usar el `.exe`, abajo está la forma con Python.
+
+## Arrancar con Python (sin .exe)
 ```
 python3 taller.py serve        # abre la URL que imprime (lleva tu clave local)
 ```

@@ -25,6 +25,8 @@ aside,section{overflow:auto;min-height:0}
 #bar{display:flex;gap:10px;align-items:center;padding:8px 12px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
 select,button,textarea{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font:inherit}
 button{cursor:pointer}button:hover{border-color:var(--mint)}button.go{background:var(--mint);color:#04130c;border-color:var(--mint);font-weight:600}
+dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px;max-width:760px;width:92vw;max-height:86vh;overflow:auto}dialog::backdrop{background:#000a}
+.ai{border:1px solid var(--line);border-left:4px solid var(--c);border-radius:10px;padding:10px;margin-bottom:10px}.ai pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;white-space:pre-wrap;word-break:break-all;font-size:12px;margin:6px 0}
 #board{position:absolute;inset:0;background:var(--bg);overflow:auto;padding:12px;display:none;z-index:2}
 #board.on{display:block}#cols{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:10px;margin-top:10px}
 .col h4{margin:0 0 6px;font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.6px}
@@ -51,8 +53,8 @@ button{cursor:pointer}button:hover{border-color:var(--mint)}button.go{background
 <header><h1>Taller <b>IA</b></h1><span id="who" style="color:var(--dim)"></span><div id="team"></div><div id="live"><i></i><span>conectando…</span></div></header>
 <aside id="list"></aside>
 <section id="main">
-  <div id="bar"><b id="title">—</b><span id="status"></span><select id="ver"></select><button id="tb">📋 Tareas</button><span id="desc" style="color:var(--dim)"></span></div>
-  <div id="stage"><div id="board"><b>Tareas del equipo</b> <button id="nt">+ Tarea</button><div id="cols"></div></div><div id="msg">Esperando que una IA publique algo…<br>Se actualiza solo.</div></div>
+  <div id="bar"><b id="title">—</b><span id="status"></span><select id="ver"></select><button id="tb">📋 Tareas</button><button id="cb">🔌 Conectar IAs</button><span id="desc" style="color:var(--dim)"></span></div>
+  <div id="stage"><div id="board"><b>Tareas del equipo</b> <button id="nt">+ Tarea</button><button id="sd" title="Carga las tareas ya repartidas del plan de Slime Rush">⬇ Cargar plan Slime Rush</button><div id="cols"></div></div><div id="msg">Esperando que una IA publique algo…<br>Se actualiza solo.</div></div>
   <div id="clips"></div>
 </section>
 <aside id="side">
@@ -62,6 +64,8 @@ button{cursor:pointer}button:hover{border-color:var(--mint)}button.go{background
     <div class="row"><button id="send" class="go">Comentar</button><button id="chg">Pedir cambios</button><button id="ok">✔ Aprobar (final)</button><button id="more" title="Dar mas rondas a las IAs">+ rondas</button></div>
   </div>
 </aside>
+<dialog id="dlg"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">Conectar tus IAs al Taller</b><button id="dx">✕</button></div>
+<p style="color:var(--dim);margin:6px 0 12px">Cada IA se conecta <b>desde su chat que ya tienes abierto</b> (no se crean chats nuevos). Por cada una: <b>1)</b> copia el comando/ajuste y aplícalo, <b>2)</b> pégale sus instrucciones.</p><div id="dbody"></div></dialog>
 <script type="module">
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
@@ -191,6 +195,22 @@ async function team(){
     box.appendChild(d); });
 }
 setInterval(() => team().catch(()=>{}), 15000);
+
+// ---------- conectar IAs ----------
+$('cb').onclick = async () => {
+  const list = await api('/api/connect'); const body = $('dbody'); body.innerHTML = '';
+  list.forEach(a => { const d = document.createElement('div'); d.className = 'ai'; d.style.setProperty('--c', colorOf(a.name));
+    d.innerHTML = `<b style="color:${colorOf(a.name)}">${esc(a.label)}</b> <span class="role">nombre: ${esc(a.name)} · rol: ${esc(a.role)}</span>
+      <div style="color:var(--dim);font-size:13px;margin-top:6px">1) ${esc(a.kind)}</div><pre>${esc(a.text)}</pre>
+      <button data-c="1">Copiar conexión</button> <button data-p="1" class="go">2) Copiar instrucciones para esta IA</button> <span class="ok" style="color:var(--mint)"></span>`;
+    const ok = d.querySelector('.ok'); const say = t => { ok.textContent = t; setTimeout(() => ok.textContent = '', 2500); };
+    d.querySelector('[data-c]').onclick = () => navigator.clipboard.writeText(a.text).then(() => say('¡Copiado!'));
+    d.querySelector('[data-p]').onclick = async () => { const r = await api('/api/prompt?role=' + a.role); await navigator.clipboard.writeText(r.text); say('¡Copiado! Pégalo en el chat de ' + a.name); };
+    body.appendChild(d); });
+  $('dlg').showModal();
+};
+$('dx').onclick = () => $('dlg').close();
+$('sd').onclick = async () => { const r = await post('/api/seed', {plan:'slime-rush'}); if (r.error) alert(r.error); else alert(r.tareas_nuevas + ' tareas nuevas cargadas'); board(); };
 
 // ---------- tablero de tareas ----------
 const COLS = [['todo','Por hacer'],['doing','En curso'],['review','En revisión'],['done','Hecho'],['blocked','Bloqueado']];
