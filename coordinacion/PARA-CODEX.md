@@ -35,3 +35,6 @@ Lee `coordinacion/BITACORA.md`: ahí está quién hizo qué. Resumen: **Opus** (
 
 ## 7. Reglas de siempre
 Español, directo y corto. Verifica en el motor, no supongas ("no probado" si no lo probaste). Nada de claves en chat. No publicar ni tocar datos de producción sin permiso. Si te bloqueas, no esquives: pregunta. Si llegas a tu límite de uso, deja en la tarea hasta dónde llegaste.
+
+## NUEVO (prioridad): prueba jugable
+Lee `slime-rush-juego/PRUEBA-JUGABLE.md`. Haz primero esto con formas simples: isla pequeña desde World.generate, Rules.lua conectado, Bongo/Rayo/Miga mínimas. Sin arte final. Informa en BITACORA.md con captura y FPS.
