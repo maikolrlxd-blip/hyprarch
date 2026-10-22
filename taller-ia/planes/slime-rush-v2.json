@@ -1,0 +1,128 @@
+{
+ "plan": "Slime Rush v2",
+ "autor": "claude (director)",
+ "criterio": "mundo generado por semilla; arte en Blender (opus); reglas y generador puros con pruebas (claude); integración, robo y rendimiento en Studio (chatgpt); crítica e interfaz (antigravity); decisiones (humano)",
+ "tasks": [
+  {
+   "title": "APROBAR el diseño v2 (mundo generado, robo, cofres, carrera a la meta)",
+   "assignee": "humano",
+   "needs": "",
+   "asset": "Slime Rush v2",
+   "detail": "Lee slime-rush-juego/DISENO-v2.md y responde las decisiones abiertas (duración, cuánto se roba, lava, tamaño, qué pasa con lo no depositado). Hasta entonces nada de lo que dependa se programa."
+  },
+  {
+   "title": "Dirección de arte de biomas + kit modular + prototipo de generación en Blender",
+   "assignee": "opus",
+   "needs": "modelado 3D dificil",
+   "asset": "Kit y mundo Slime Rush",
+   "status": "doing",
+   "detail": "5–6 biomas con paleta HEX; kit modular (rocas, arbustos, nodos de recurso, cofres común/musgoso/dorado/oculto, ruinas-pista, puente, META); prototipo bpy con semilla en 1024x1024 studs; 3 semillas renderizadas. Carpeta slime-rush-arte/mapa-v02/. TODO en Blender."
+  },
+  {
+   "title": "Árboles 0.5.0 en Blender (hojas en masas redondeadas, sin huecos negros)",
+   "assignee": "opus",
+   "needs": "modelado 3D dificil",
+   "asset": "Arboles Slime Rush",
+   "status": "doing",
+   "detail": "3 variantes + LOD1, .blend/.glb/.fbx, render con figura de escala, conteo real de triángulos. Carpeta slime-rush-arte/arboles-v05/. Son parte del kit del mundo."
+  },
+  {
+   "title": "Generador de mundo con semilla en Luau (biomas, recursos, cofres, raros) con pruebas",
+   "assignee": "claude",
+   "needs": "programar",
+   "asset": "Mundo Slime Rush",
+   "detail": "Módulo puro (sin API de Roblox) testeado fuera de Studio: semilla -> mapa de biomas/alturas, meta, aparición equidistante, colocación Poisson, cofres ocultos, tabla de raros, normalización de valor por cuadrante. Carpeta slime-rush-juego/. DEPENDE del diseño aprobado solo en parámetros; la estructura ya se puede hacer."
+  },
+  {
+   "title": "Reglas de partida: fases, regreso a la meta, bonos de llegada, puntuación (módulo puro + pruebas)",
+   "assignee": "claude",
+   "needs": "programar",
+   "asset": "Reglas Slime Rush",
+   "detail": "Máquina de estados (generación, exploración, regreso, fin, resultados), bonos 1º/2º/3º..., 'pierdes lo no depositado', validaciones del servidor. Carpeta slime-rush-juego/."
+  },
+  {
+   "title": "Robo y depósito en la meta (canal de depósito, inmunidad, mochila limitada)",
+   "assignee": "chatgpt",
+   "needs": "programar",
+   "asset": "Slime Rush v2",
+   "detail": "DESPUÉS de aprobar el diseño. Implementar en Roblox según DISENO-v2.md §4, con el servidor como autoridad. Probar con 2+ clientes."
+  },
+  {
+   "title": "Cofres y nodos de recurso: apertura, tablas de botín, pistas de cofres ocultos",
+   "assignee": "chatgpt",
+   "needs": "programar",
+   "asset": "Slime Rush v2",
+   "detail": "DESPUÉS de aprobar el diseño y del kit de arte. Servidor decide un solo ganador por cofre; un solo Studio salvo pruebas de 2 clientes."
+  },
+  {
+   "title": "Terreno por voxels desde la semilla en Studio (rendimiento y Streaming)",
+   "assignee": "chatgpt",
+   "needs": "programar",
+   "asset": "Mundo Slime Rush",
+   "detail": "Construir el terreno por trozos sin congelar el servidor; materiales de colores cartoon; Streaming. Mide tiempo de generación y FPS."
+  },
+  {
+   "title": "Slimes raros y accesorios raros: modelos en Blender + tabla de aparición",
+   "assignee": "opus",
+   "needs": "modelado 3D dificil",
+   "asset": "Raros Slime Rush",
+   "detail": "3–4 slimes raros (silueta clara y 'brillo' distinto) y 6–8 accesorios (sombreros, alitas, coronas...). Las probabilidades y su lógica las integra el ingeniero."
+  },
+  {
+   "title": "Rayo y Miga: correcciones de forma (Blender)",
+   "assignee": "chatgpt",
+   "needs": "modelado 3D dificil",
+   "asset": "Razas Slime Rush",
+   "detail": "Rayo más alto y alas más grandes y pegadas; Miga: bajar la masa frontal que tapa la boca. Render antes/después."
+  },
+  {
+   "title": "Bongo: animación de resorte gruesa con la cara visible (Blender)",
+   "assignee": "opus",
+   "needs": "modelado 3D dificil",
+   "asset": "Bongo",
+   "detail": "Resorte blando que conserve volumen y mantenga los ojos visibles todo el clip."
+  },
+  {
+   "title": "Crítica visual de biomas, kit, árboles y slimes contra la referencia",
+   "assignee": "antigravity",
+   "needs": "critica visual",
+   "asset": "Kit y mundo Slime Rush",
+   "detail": "Compara con 'A Bizarre Run' (hojas legibles, verdes/tierras, mate). Fallos concretos: qué, dónde, cómo arreglarlo."
+  },
+  {
+   "title": "Diseñar interfaz: marcador de tiempo y regreso, mochila, depósito, aviso de robo, resultados",
+   "assignee": "antigravity",
+   "needs": "UI e imagenes",
+   "asset": "UI Slime Rush",
+   "detail": "Mockups legibles en móvil (320x568) y escritorio. Incluye el aviso 'la meta se abrió' y el podio de llegada."
+  },
+  {
+   "title": "Documentar el giro a v2 y el reparto en Obsidian",
+   "assignee": "claude",
+   "needs": "escribir",
+   "asset": "",
+   "detail": "Orden permanente del usuario: registrar todo en la base."
+  },
+  {
+   "title": "Recuperar la historia de Genesis desde el chat 'Linux' y anotarla en la base",
+   "assignee": "claude",
+   "needs": "investigar",
+   "asset": "Genesis",
+   "detail": "Genesis solo vive en ese historial."
+  },
+  {
+   "title": "Buscar copias del juego perdido (OneDrive, USB, Obsidian Sync)",
+   "assignee": "humano",
+   "needs": "",
+   "asset": "Slime Rush",
+   "detail": "Carpeta slime-rush, .blend de personajes, 'Laboratorio Slime'. Con v2 el mapa fijo ya no importa; los slimes/árboles/arte sí."
+  },
+  {
+   "title": "Prueba con DOS clientes: disputa de cofre, robo, depósito y entrada tardía",
+   "assignee": "chatgpt",
+   "needs": "programar",
+   "asset": "Slime Rush v2",
+   "detail": "Al final, con todo integrado. Aquí sí 2 clientes; ciérralos al terminar."
+  }
+ ]
+}

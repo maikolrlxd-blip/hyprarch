@@ -54,7 +54,7 @@ dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);bo
 <aside id="list"></aside>
 <section id="main">
   <div id="bar"><b id="title">—</b><span id="status"></span><select id="ver"></select><button id="tb">📋 Tareas</button><button id="cb">🔌 Conectar IAs</button><span id="desc" style="color:var(--dim)"></span></div>
-  <div id="stage"><div id="board"><b>Tareas del equipo</b> <button id="nt">+ Tarea</button><button id="sd" title="Carga las tareas ya repartidas del plan de Slime Rush">⬇ Cargar plan Slime Rush</button><div id="cols"></div></div><div id="msg">Esperando que una IA publique algo…<br>Se actualiza solo.</div></div>
+  <div id="stage"><div id="board"><b>Tareas del equipo</b> <button id="nt">+ Tarea</button><button id="sd" title="Carga las tareas ya repartidas del plan de Slime Rush v2">⬇ Cargar plan Slime Rush v2</button><div id="cols"></div></div><div id="msg">Esperando que una IA publique algo…<br>Se actualiza solo.</div></div>
   <div id="clips"></div>
 </section>
 <aside id="side">
@@ -210,7 +210,7 @@ $('cb').onclick = async () => {
   $('dlg').showModal();
 };
 $('dx').onclick = () => $('dlg').close();
-$('sd').onclick = async () => { const r = await post('/api/seed', {plan:'slime-rush'}); if (r.error) alert(r.error); else alert(r.tareas_nuevas + ' tareas nuevas cargadas'); board(); };
+$('sd').onclick = async () => { const r = await post('/api/seed', {plan:'slime-rush-v2'}); if (r.error) alert(r.error); else alert(r.tareas_nuevas + ' tareas nuevas cargadas'); board(); };
 
 // ---------- tablero de tareas ----------
 const COLS = [['todo','Por hacer'],['doing','En curso'],['review','En revisión'],['done','Hecho'],['blocked','Bloqueado']];

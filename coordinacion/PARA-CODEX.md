@@ -12,15 +12,20 @@
 ## 2. Modelos: todo por Blender
 Todos los modelos (slimes, árboles, mapa) se hacen y exportan **con Blender**. Si tocas un modelo, trabájalo en Blender y entrega .blend + .glb/.fbx.
 
-## 3. Tus tareas (rol: ingeniero; mira `taller-ia/planes/slime-rush.json`)
-1. **Rayo y Miga: correcciones de forma** (Blender). Rayo más alto y alas más grandes y pegadas; Miga: bajar la masa frontal que tapa la boca. Render antes/después.
-2. **Integrar UN árbol en Studio y probar** (cuando llegue `slime-rush-arte/arboles-v05/`): escala vs figura de 6 studs, colisión simple solo en el tronco, follaje sin colisión, densidad menor, pasos despejados. Captura real del motor.
-3. **Cámara del lobby / Results** (superficie azul): encuentra la causa, no la supongas.
-4. **Prueba con DOS clientes** (disputa de cristal, monedas independientes, entrada tardía). Aquí sí 2 Studio/clientes; ciérralos al terminar.
+## 3. GIRO DE DISEÑO (léelo): Slime Rush v2
+El usuario cambió de idea: **mapa grande generado por semilla**, distinto en cada partida (como Minecraft). Se explora, se recolectan recursos, hay **cofres ocultos**, **slimes y accesorios raros**, **robo** entre jugadores (incluido acampar en la meta) y una **carrera final a la meta** con bonos de llegada. Lo lees completo en `slime-rush-juego/DISENO-v2.md` (propuesta, pendiente de que el usuario responda 5 decisiones). El mapa fijo y la lava anteriores quedan en pausa.
 
-## 4. Qué está pasando mientras no tienes uso
-- Dos trabajadores Opus (con Blender) entregan en el repo: **árboles 0.5.0** en `slime-rush-arte/arboles-v05/` y **el mapa nuevo** (el anterior era "feísimo") en `slime-rush-arte/mapa-v02/`. Revísalos antes de integrarlos.
-- Los archivos originales (.rbxl, .blend) se perdieron con el reinicio del PC. Si el usuario recupera copias, úsalas.
+**Antes de programar nada que dependa del diseño, espera a que esté aprobado** (tarea del humano en el Taller).
 
-## 5. Reglas de siempre
+## 4. Tus tareas (rol: ingeniero) — plan `taller-ia/planes/slime-rush-v2.json`
+1. **Terreno por voxels desde la semilla** en Studio (rendimiento y Streaming): ya se puede preparar; mide tiempo de generación y FPS.
+2. **Robo y depósito en la meta** y **cofres/nodos de recurso**: *después* de la aprobación del diseño y del kit de arte.
+3. **Rayo y Miga: correcciones de forma** (Blender).
+4. **Prueba con DOS clientes** al final (aquí sí 2 Studio/clientes; ciérralos al terminar).
+
+## 5. Qué hacen los demás (no lo repitas)
+Lee `coordinacion/BITACORA.md`: ahí está quién hizo qué. Resumen: **Opus** (Blender) hace árboles, kit modular, biomas, slimes/accesorios raros; **Claude** (director) hace el diseño, el generador de mundo y las reglas de partida como módulos puros con pruebas. **Yo no he hecho ninguna de tus tareas.**
+Los archivos originales se perdieron con el reinicio del PC; si el usuario recupera copias, úsalas.
+
+## 6. Reglas de siempre
 Español, directo y corto. Verifica en el motor, no supongas ("no probado" si no lo probaste). Nada de claves en chat. No publicar ni tocar datos de producción sin permiso. Si te bloqueas, no esquives: pregunta. Si llegas a tu límite de uso, deja en la tarea hasta dónde llegaste.
