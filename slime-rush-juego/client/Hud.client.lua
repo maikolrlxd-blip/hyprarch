@@ -17,7 +17,7 @@ State.OnClientEvent:Connect(function(s)
 		local out = "FIN\n"; for _, r in ipairs(s.results) do out = out .. r.place .. ". Jugador " .. r.id .. ": " .. r.score .. (r.arrived and "" or " (no llegó)") .. "\n" end
 		msg.Size = UDim2.new(0, 420, 0, 28 * (#s.results + 1)); msg.Text = out; return
 	end
-	main.Text = string.format("%s · %ds · Mochila %d · Vida %s%s", s.phase, s.t, s.items, tostring(s.hp), s.downed and " · INCONSCIENTE" or "")
+	main.Text = string.format("%s · %ds · Mochila %d · Vida %s%s", s.phase, math.floor(s.t), s.items, tostring(s.hp), s.downed and " · INCONSCIENTE" or "")
 end)
 Info.OnClientEvent:Connect(function(t) msg.Text = tostring(t) end)
 

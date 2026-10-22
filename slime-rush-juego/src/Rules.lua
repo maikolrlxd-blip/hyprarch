@@ -10,7 +10,7 @@ Rules.DEFAULT = {
 	-- Tiempos (la duracion total esta por decidir; todo ajustable)
 	countdown = 3, explore = 360, return_window = 240, collapse = 30, results = 8, -- el regreso se abre a los 6:00
 	arrival_bonus = { 150, 100, 60, 30 }, arrival_default = 10,                      -- 1o, 2o, 3o, 4o, resto
-	backpack = 12,                                                                   -- capacidad de la mochila
+	backpack = 30,                                                                   -- capacidad de la mochila
 	-- Combate: al DERROTAR a alguien queda inconsciente en el suelo y se le puede saquear
 	downed_time = 12,                                                                -- segundos inconsciente
 	wake_immunity = 8,                                                               -- inmunidad al despertar

@@ -8,7 +8,7 @@ local World, Rules, Combat = require(SR.World), require(SR.Rules), require(SR.Co
 local SEED = tonumber(workspace:GetAttribute("Seed")) or 1234
 local TEST = { size = 512, node_count = 120, players = 8 }  -- isla pequeña para la prueba
 local world = World.generate(SEED, TEST)
-local rules = Rules.new(world, { countdown = 3, explore = 120, return_window = 60, collapse = 20 }, SEED)
+local rules = Rules.new(world, { countdown = 10, explore = 120, return_window = 60, collapse = 20 }, SEED)
 local combat = Combat.new(rules)
 
 local function remote(name) local r = Instance.new("RemoteEvent"); r.Name = name; r.Parent = RS; return r end
@@ -51,6 +51,7 @@ Players.PlayerAdded:Connect(function(plr)
 end)
 
 E.Collect.OnServerEvent:Connect(function(plr, kind, objId)
+	if type(objId) ~= "number" or objId % 1 ~= 0 then return end -- nunca confiar en lo que manda el cliente
 	local id, p = ids[plr], pos(plr); if not id or not p then return end
 	if kind == "node" then
 		local ok, res = rules:collectNode(id, objId, p, now())
@@ -63,19 +64,31 @@ E.Collect.OnServerEvent:Connect(function(plr, kind, objId)
 	end
 end)
 
+-- Inconsciente = el cuerpo cae y no puede moverse hasta despertar (la regla de tiempo vive en Rules)
+local function setDowned(plr, on)
+	local c = plr.Character; local hum = c and c:FindFirstChildOfClass("Humanoid")
+	if hum then hum.PlatformStand = on end
+end
+
 E.Punch.OnServerEvent:Connect(function(plr, targetUserId)
+	if type(targetUserId) ~= "number" then return end
 	local id, p, h = ids[plr], pos(plr); if not id or not p then return end
 	local target = Players:GetPlayerByUserId(targetUserId); local tid = target and ids[target]
 	local tp, th = pos(target or plr); if not tid or not tp then return end
 	local ok, res = combat:punch(id, tid, p, tp, now())
 	if ok then
 		if th then th.AssemblyLinearVelocity = Vector3.new(res.push.x * 4, 25, res.push.z * 4) end
+		if res.knocked_out then
+			setDowned(target, true)
+			task.delay(rules.cfg.downed_time + 0.1, function() setDowned(target, false) end)
+		end
 		E.Info:FireClient(target, res.knocked_out and "¡Estás inconsciente!" or ("Recibiste un golpe, vida " .. res.hp))
 		E.Info:FireClient(plr, res.knocked_out and "¡Lo derrotaste! Puedes saquearlo" or "Golpe")
 	end
 end)
 
 E.Loot.OnServerEvent:Connect(function(plr, targetUserId)
+	if type(targetUserId) ~= "number" then return end
 	local id, p = ids[plr], pos(plr); local target = Players:GetPlayerByUserId(targetUserId)
 	local tid, tp = target and ids[target], target and pos(target); if not id or not p or not tid or not tp then return end
 	local ok, res = rules:lootDowned(id, tid, p, tp, now())
@@ -83,6 +96,7 @@ E.Loot.OnServerEvent:Connect(function(plr, targetUserId)
 end)
 
 E.Deposit.OnServerEvent:Connect(function(plr, step)
+	if step ~= "start" and step ~= "finish" then return end
 	local id, p = ids[plr], pos(plr); if not id or not p then return end
 	local ok, res
 	if step == "start" then ok, res = rules:startDeposit(id, p, now()); E.Info:FireClient(plr, ok and "Depositando… quédate en la meta" or res)
@@ -95,7 +109,8 @@ end)
 -- Bucle de estado: fase, tiempo restante, mochila y vida de cada jugador, una vez por segundo
 task.spawn(function()
 	while #Players:GetPlayers() < 1 do task.wait(1) end
-	task.wait(5); rules:start(now()); started = true
+	task.wait(15) -- tiempo para que entren los demas jugadores de la prueba
+	rules:start(now()); started = true
 	while true do
 		local t, ph = now(), rules:phase(now())
 		for plr, id in pairs(ids) do
