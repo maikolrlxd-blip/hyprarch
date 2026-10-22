@@ -99,3 +99,16 @@ Todo lo anterior se conserva como idea, pero se construye **por capas**. Una cap
 - **Capa 3:** volcán y desastres; cofres raros y accesorios.
 - **Capa 4:** cuerpo humanoide personalizable y extremidades (perder, robar, fusión del slime).
 - **Capa 5:** habilidades 2 y 3 de cada slime; sensación de juego (efectos/sonido).
+
+## GUION de una partida (Maikol, 2026-10-22) — guía narrativa vigente
+1. **Desembarco:** acaba el tiempo de preparación y todos los jugadores desembarcan en el **muelle**. De cada cuerpo real sale una **réplica de slime** (el humanoide con el que se juega) y el cuerpo real cae al suelo. La **animación de salir del cuerpo depende de la que tenga equipada cada jugador** (cosmético/personalizable).
+2. **Reunión en la meta:** todos van a la meta y, tras unos segundos de cuenta atrás, comienza el juego y todos salen corriendo.
+3. **Isla entera, libertad total:** cada uno va por donde quiera (bosque, desierto, montaña, volcán…).
+4. **Ejemplo de combate (contrajuego):** en el bosque, alguien ataca por la espalda con **Rayo** (embestida). La víctima usa **Bongo** para saltar y esquivar y luego activa el **golpe resorte** y le da al atacante. → el combate necesita esquivas con habilidades, no solo daño.
+5. **Aviso final:** cuando queda poco tiempo suenan **altavoces del muelle** y aparece un **contador arriba**.
+6. **Colapso:** quien no llegó **muere/se derrite** porque la isla es consumida por un desastre (volcán, tormenta, tornado…).
+
+### Preguntas abiertas que salen del guion
+- **¿La meta y el muelle son el mismo lugar?** Hoy el generador pone la meta como plaza en el centro y los botes en las playas (24 apariciones). El guion habla de UN muelle de desembarco y de volver ahí. Propuesta: muelle = meta, en la costa, con todos saliendo desde el mismo punto (más justo y simple). Pendiente de confirmar; implica cambiar World.lua.
+- **Los cuerpos reales caídos en el muelle:** ¿se pueden tocar/saquear? (propuesta: no, son solo escenografía y puntuación de "quién llegó").
+- **Duración de la cuenta atrás en la meta** (propuesta: 10 s).
