@@ -9,3 +9,6 @@ No ejecutan nada de lo descargado. `impeccable` se instala sin su carpeta `scrip
 Probado: la versión `.sh` (30 skills instaladas). La versión `.ps1` **no se ha probado en Windows**.
 
 Nota: HyperFrames cambió de estructura desde octubre: hoy el repo oficial trae 7 skills (no las 21 que se instalaron antes).
+
+## `instalar-herramientas.ps1`
+Reinstala con `winget` los programas que había antes del reinicio: Python, Git, GitHub CLI, Node, VS Code, Obsidian, Blender, shellcheck, Lua, Rufus, VirtualBox, más `ruff` y Codex CLI. **No probado en Windows**; los identificadores de `winget` pueden necesitar ajuste. Claude Code se instala aparte (el comando sale al final del script).
