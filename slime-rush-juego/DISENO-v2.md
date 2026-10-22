@@ -85,3 +85,9 @@ El jugador **no es un slime redondo**: tiene un **cuerpo humanoide hecho de slim
 - **Brazo:** menos capacidad de atacar (un solo brazo).
 - Se puede perder **todo**. Sin ninguna extremidad quedas en el suelo, quieto, y **tu slime se une a ti y lo pierdes durante esa partida**; a cambio te da **dos extremidades a elección: brazo+pierna, dos piernas o dos brazos**.
 - Pendiente de afinar: cuántas extremidades tiene el humanoide (2 brazos + 2 piernas), si "sin extremidades" cuenta como inconsciente para el saqueo, cuánto dura la penalización de un brazo (¿baja daño/alcance/velocidad de ataque?) y si un brazo robado se puede volver a perder.
+
+## Extremidades: respuestas finales (Maikol, 2026-10-22, 4)
+1. **Sin extremidades = en el suelo y se puede saquear/robar.** Dos opciones: (a) sacrificar al slime (fusión, 2 extremidades a elección) o (b) quedarte quieto: si alguien se acerca, **tu slime lo ataca por ti**; si lo derrota, el slime te trae tus partes de vuelta.
+2. **Un brazo robado se puede volver a perder** (y volver a robar).
+3. **Un solo brazo = la velocidad de ataque baja a la mitad** (de 2 golpes/s a 1; el daño por golpe no cambia). Con 0 brazos no se ataca con las manos.
+Para Rules.lua/Codex: parámetros `attack_rate_base=2`, `attack_rate_per_arm=1` (2 brazos→2/s, 1→1/s, 0→0); pierna perdida: velocidad de movimiento reducida y salto a una pierna; sin extremidades: estado `limbless` (saqueable, el slime defiende).
