@@ -13,7 +13,7 @@
 body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto,sans-serif;height:100vh;display:grid;grid-template-columns:240px 1fr 340px;grid-template-rows:auto 1fr}
 header{grid-column:1/-1;display:flex;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line)}
 header h1{font-size:16px;margin:0;letter-spacing:.5px}header h1 b{color:var(--mint)}
-#live{margin-left:auto;font-size:12px;color:var(--dim)}#live i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bad);margin-right:6px}#live.on i{background:var(--mint);box-shadow:0 0 8px var(--mint)}
+#team{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}.tm{font-size:12px;border:1px solid var(--line);border-radius:99px;padding:2px 10px;cursor:pointer;background:var(--panel)}.tm i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--c)}.tm.ok{--c:var(--mint)}.tm.busy{--c:var(--warn)}.tm.limit{--c:var(--bad);border-color:var(--bad)}.tm.away,.tm.stale{--c:#6b7a8c}#live{font-size:12px;color:var(--dim)}#live i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bad);margin-right:6px}#live.on i{background:var(--mint);box-shadow:0 0 8px var(--mint)}
 aside,section{overflow:auto;min-height:0}
 #list{border-right:1px solid var(--line);padding:8px}
 .item{padding:10px;border:1px solid transparent;border-radius:10px;cursor:pointer;margin-bottom:6px}
@@ -43,7 +43,7 @@ button{cursor:pointer}button:hover{border-color:var(--mint)}button.go{background
 </style>
 </head>
 <body>
-<header><h1>Taller <b>IA</b></h1><span id="who" style="color:var(--dim)"></span><div id="live"><i></i><span>conectando…</span></div></header>
+<header><h1>Taller <b>IA</b></h1><span id="who" style="color:var(--dim)"></span><div id="team"></div><div id="live"><i></i><span>conectando…</span></div></header>
 <aside id="list"></aside>
 <section id="main">
   <div id="bar"><b id="title">—</b><span id="status"></span><select id="ver"></select><span id="desc" style="color:var(--dim)"></span></div>
@@ -170,6 +170,22 @@ $('send').onclick = send('comment'); $('chg').onclick = send('changes');
 $('ok').onclick = async () => { if (current && confirm('¿Aprobar "' + current + '" como versión final?')) await post('/api/approve', {name:current}); };
 $('more').onclick = async () => { if (current) await post('/api/reset', {name:current}); };
 
+// ---------- panel de equipo (quien esta disponible / con limite) ----------
+const LABEL = {ok:'disponible', busy:'ocupada', limit:'LÍMITE de uso', away:'ausente', stale:'sin señal'};
+async function team(){
+  const pr = await api('/api/presence'); const now = Date.now()/1000; const box = $('team'); box.innerHTML = '';
+  Object.entries(pr).forEach(([who, c]) => {
+    const ago = now - (c.last_seen || 0); let st = c.state || 'ok'; if (st === 'ok' && ago > 180) st = 'stale';
+    const d = document.createElement('div'); d.className = 'tm ' + st;
+    d.title = (c.note || '') + (c.reset_at ? ' — vuelve ' + c.reset_at : '') + `\nvisto hace ${ago < 90 ? Math.round(ago) + ' s' : Math.round(ago/60) + ' min'}\nClic para cambiar el estado a mano`;
+    d.innerHTML = `<i></i><b style="color:${colorOf(who)}">${esc(who)}</b> ${LABEL[st]}${st === 'limit' && c.reset_at ? ' · ' + esc(c.reset_at) : ''}`;
+    d.onclick = async () => { const s = prompt(`Estado de ${who}: ok, busy, limit o away`, c.state || 'ok'); if (!s) return;
+      const reset = s === 'limit' ? (prompt('¿Cuándo vuelve? (opcional, ej. hoy 01:00)') || '') : '';
+      const r = await post('/api/presence', {name: who, state: s.trim(), reset_at: reset}); if (r.error) alert(r.error); team(); };
+    box.appendChild(d); });
+}
+setInterval(() => team().catch(()=>{}), 15000);
+
 // ---------- tiempo real ----------
 function connect(){
   const es = new EventSource('/api/stream'); const live = $('live');
@@ -177,12 +193,12 @@ function connect(){
   es.onerror = () => { live.className = ''; live.lastChild.textContent = 'reconectando…'; };
   es.onmessage = async m => {
     const e = JSON.parse(m.data); lastNew = new Date(e.ts*1000 - 1500).toISOString().slice(0,19);
-    await refreshList();
+    await refreshList(); team().catch(()=>{});
     if (e.asset === current) { const wasLast = ver && ver.v === meta.versions.at(-1).v; await open(current, e.type === 'publish' && wasLast ? undefined : ver && ver.v); }
     else if (!current) await open(e.asset);
   };
 }
-refreshList().then(connect).catch(e => { $('msg').textContent = 'Error: ' + e; });
+team().catch(()=>{}); refreshList().then(connect).catch(e => { $('msg').textContent = 'Error: ' + e; });
 </script>
 </body>
 </html>

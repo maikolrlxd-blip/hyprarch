@@ -33,7 +33,14 @@ python3 taller.py serve        # abre la URL que imprime (lleva tu clave local)
 Luego pega [`PROTOCOLO.md`](PROTOCOLO.md) a cada IA.
 
 ## Herramientas MCP
-`taller_publish` · `taller_list` · `taller_get` (devuelve la vista previa como imagen) · `taller_review` · `taller_wait` (espera novedades de las demás, hasta 55 s)
+`taller_publish` · `taller_list` · `taller_get` (devuelve la vista previa como imagen) · `taller_review` · `taller_wait` (espera novedades de las demás, hasta 55 s) · `taller_status` (ok/busy/limit/away + cuándo vuelve) · `taller_team` (quién está disponible)
+
+## No crea chats: conecta los que ya tienes
+Cada IA usa el Taller **desde su chat existente** (Claude Code, Codex, Antigravity…): basta añadir el MCP y pegarle el protocolo. No se abren sesiones nuevas.
+
+## Panel de estado (arriba en el visor)
+Por cada IA: 🟢 disponible · 🟠 ocupada · 🔴 **límite de uso** (con cuándo vuelve) · ⚪ sin señal (más de 3 min sin actividad). Se alimenta de (1) el latido automático de cada llamada MCP, (2) el aviso `taller_status` que la propia IA manda al ver un límite, y (3) tú, haciendo clic en su etiqueta.
+**Límite honesto:** el Taller **no puede leer la cuota real** de ChatGPT, Claude ni Antigravity: ninguna lo ofrece de forma uniforme. Solo sabe lo que cada IA avisa o lo que tú marcas.
 
 ## Seguridad
 - Visor solo en `127.0.0.1`, comprueba `Host` (anti DNS-rebinding); las acciones del humano (comentar/aprobar) exigen la clave local.
@@ -42,4 +49,4 @@ Luego pega [`PROTOCOLO.md`](PROTOCOLO.md) a cada IA.
 - `/mcp` por HTTP está **apagado** salvo `--mcp-http`.
 
 ## Estado
-Probado: protocolo MCP entre tres participantes, esperas y errores; visor con navegador real (carga .glb, lista animaciones, tiempo real). **No probado:** conexión real con Codex, Antigravity y ChatGPT web, ni modelos .fbx (el cargador está incluido).
+Probado: protocolo MCP entre tres participantes, esperas, errores y panel de estado en vivo; visor con navegador real (carga .glb, lista animaciones, tiempo real). **No probado:** conexión real con Codex, Antigravity y ChatGPT web, ni modelos .fbx (el cargador está incluido).

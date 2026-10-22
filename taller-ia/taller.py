@@ -102,6 +102,34 @@ def emit(type_, asset, author, summary, v=None):  # llamar dentro de lock()
     return e
 
 
+STATES = ("ok", "busy", "limit", "away")
+
+
+def presence_all():
+    p = DIR / "presence.json"
+    return json.loads(p.read_text("utf-8")) if p.exists() else {}
+
+
+def touch(who, state=None, note=None, reset_at=None, by=None):
+    """Latido: cada llamada de una IA actualiza 'visto por ultima vez'. Si cambia el estado, emite un evento."""
+    if state is not None and state not in STATES:
+        raise ValueError("state debe ser ok, busy, limit o away")
+    with lock():
+        pr = presence_all()
+        cur = pr.get(who, {"state": "ok", "note": "", "reset_at": ""})
+        old = cur.get("state")
+        cur["last_seen"] = round(time.time(), 1)
+        if state is not None:
+            cur.update(state=state, note=(note or "")[:200], reset_at=(reset_at or "")[:60], by=by or who)
+        pr[who] = cur
+        tmp = DIR / "presence.tmp"
+        tmp.write_text(json.dumps(pr, ensure_ascii=False), "utf-8")
+        os.replace(tmp, DIR / "presence.json")
+        if state is not None and state != old:
+            emit("status", "", who, f"{who} ahora: {state}" + (f" ({note})" if note else "") + (f" — vuelve {reset_at}" if reset_at else ""))
+    return cur
+
+
 def check_name(name):
     if not NAME_RE.match(name or ""):
         raise ValueError("nombre invalido: usa letras, numeros, espacio . _ - (max 64)")
@@ -264,7 +292,11 @@ def tools(me):
     def t_wait(a):
         since = int(a.get("since", 0))
         end = time.time() + min(float(a.get("timeout_s", 50)), 55)
+        beat = 0
         while True:
+            beat += 1
+            if beat % 25 == 0:
+                touch(me)
             new = [e for e in events(since) if e["author"] != me]
             if new:
                 return json.dumps({"eventos": new, "ultimo_id": new[-1]["id"],
@@ -273,7 +305,23 @@ def tools(me):
                 return json.dumps({"eventos": [], "ultimo_id": max(since, last_id()), "nota": "Sin novedades; vuelve a llamar a taller_wait."})
             time.sleep(0.4)
 
+    def t_status(a):
+        c = touch(me, a["state"], a.get("note"), a.get("reset_at"))
+        return f"Tu estado queda en '{c['state']}'. Las demas IAs y el humano lo ven en el panel."
+
+    def t_team(a):
+        now = time.time()
+        out = {}
+        for who, c in presence_all().items():
+            ago = now - c.get("last_seen", 0)
+            out[who] = {"estado": c.get("state", "ok"), "nota": c.get("note", ""), "vuelve": c.get("reset_at", ""),
+                        "visto_hace_s": int(ago), "disponible": c.get("state") == "ok" and ago < 180}
+        return json.dumps(out, ensure_ascii=False, indent=1)
+
     return {
+        "taller_status": (t_status, "Avisa tu estado al equipo: ok, busy (ocupada), limit (llegaste al limite de uso; pon reset_at si sabes cuando vuelve) o away. LLAMALO en cuanto veas un aviso de limite de uso o te quede poco.",
+                          sch({"state": S("ok|busy|limit|away"), "note": S("detalle breve"), "reset_at": S("cuando vuelve, p. ej. 'hoy 01:00' (opcional)")}, ["state"])),
+        "taller_team": (t_team, "Quien esta disponible, ocupado o con limite de uso. Consultalo antes de repartir trabajo.", sch({}, [])),
         "taller_publish": (t_publish, "Publica una NUEVA VERSION de un modelo (.glb/.gltf/.fbx), animacion, imagen o nota. Adjunta preview_path (un render PNG) para que las demas IAs puedan VERLO.",
                            sch({"name": S("nombre del recurso (misma name = nueva version)"), "file_path": S("ruta local del archivo"),
                                 "content_base64": S("alternativa a file_path"), "filename": S("con content_base64"),
@@ -307,6 +355,7 @@ def mcp_handle(me, req):
         if name not in T:
             raise KeyError(name)
         try:
+            touch(me)
             out = T[name][0](p.get("arguments") or {})
             return {"content": out if isinstance(out, list) else [{"type": "text", "text": out}]}
         except Exception as e:
@@ -374,6 +423,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, assets_summary())
             if u.path.startswith("/api/assets/"):
                 return self._send(200, load(unquote(u.path[12:])))
+            if u.path == "/api/presence":
+                return self._send(200, presence_all())
             if u.path == "/api/events":
                 return self._send(200, events(int(parse_qs(u.query).get("since", ["0"])[0])))
             if u.path == "/api/stream":
@@ -446,6 +497,12 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if self.path == "/api/comment":
                 m, _ = review("humano", body["name"], body.get("version"), body.get("verdict", "comment"), body["comment"])
+                return self._send(200, {"ok": True})
+            if self.path == "/api/presence":
+                who = str(body["name"])
+                if not AUTHOR_RE.match(who):
+                    raise ValueError("nombre invalido")
+                touch(who, body["state"], body.get("note"), body.get("reset_at"), by="humano")
                 return self._send(200, {"ok": True})
             if self.path in ("/api/approve", "/api/reset"):
                 human_set(body["name"], self.path[5:])
