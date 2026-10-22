@@ -26,7 +26,7 @@ TEXTURAS = {
 }
 for n, (cols, kw) in TEXTURAS.items():
     p = os.path.join(TEX, n + ".png")
-    if not os.path.exists(p): pintura.pintar(p, cols, **kw)
+    if not os.path.exists(p): pintura.pintar(p, cols, borde=0.04, **kw)
 
 # ---------- utilidades ----------
 def limpiar():
@@ -107,7 +107,7 @@ class MB:
             n = f.normal; ax = max(range(3), key=lambda i: abs(n[i]))
             for l in f.loops:
                 c = l.vert.co; a, b = [(1, 2), (0, 2), (0, 1)][ax]
-                l[uv].uv = (c[a] * 0.9, c[b] * 0.9)
+                l[uv].uv = (c[a] * 0.16, c[b] * 0.16)
         bm.to_mesh(me); bm.free()
         ob = bpy.data.objects.new(nombre, me); bpy.context.collection.objects.link(ob); return ob
 
@@ -153,133 +153,137 @@ def ola(ob, amp, per, fase=0.0, n=48):
 # ---------- modelos ----------
 R = random.Random(7)
 
-def casco(b, largo, ancho, alto, tex, quilla=0.25):
-    """casco por secciones, 5 puntos por seccion (quilla, 2 pantoques, 2 bordas)."""
-    N = 7; sec = []
+def anillo(c, tan, r, lados, rot=0.0, costilla=0.0):
+    """anillo facetado perpendicular a la tangente; costilla alterna el radio (cactus)."""
+    t = Vector(tan).normalized(); u = Vector((0, 1, 0)) if abs(t.y) < 0.9 else Vector((1, 0, 0))
+    u = (u - t * u.dot(t)).normalized(); v = t.cross(u).normalized(); pts = []
+    for i in range(lados):
+        a = rot + 2 * math.pi * i / lados; rr = r * (1 + (costilla if i % 2 else 0.0))
+        pts.append(tuple(Vector(c) + u * rr * math.cos(a) + v * rr * math.sin(a)))
+    return pts + [pts[0]]
+
+def tubo(b, ruta, radios, lados, mt, costilla=0.0, tapa_fin=True):
+    """tubo siguiendo una ruta de puntos; radios por punto."""
+    secs = []
+    for k, c in enumerate(ruta):
+        if k == 0: t = Vector(ruta[1]) - Vector(ruta[0])
+        elif k == len(ruta) - 1: t = Vector(ruta[-1]) - Vector(ruta[-2])
+        else: t = Vector(ruta[k + 1]) - Vector(ruta[k - 1])
+        secs.append(anillo(c, t, radios[k], lados, costilla=costilla))
+    b.loft(secs, mt, cerrar=True)
+
+def casco(b, largo, ancho, alto, mt, mt_int="madera", mt_borda=None):
+    """casco macizo y cerrado: 10 secciones, anillo de 9 puntos (quilla, pantoque, borda, interior). proa en punta, popa con espejo."""
+    N = 10; secs = []
     for k in range(N):
         t = k / (N - 1); x = -largo / 2 + largo * t
-        w = ancho / 2 * (math.sin(math.pi * (0.1 + 0.85 * t)) ** 0.6) * (1 if t < 0.85 else 0.55 + (1 - t) * 3)
-        w = max(w, 0.05); h = alto * (1 + 0.4 * t ** 2)
-        sec.append([(x, 0, quilla * (1 - t * 0.2)), (x, -w * 0.75, h * 0.35), (x, -w, h), (x, w, h), (x, w * 0.75, h * 0.35), (x, 0, quilla * (1 - t * 0.2))])
-    # secciones cerradas como lazo: ultimo punto repite el primero
-    sec = [s for s in sec]
-    b.loft(sec, tex, cerrar=False)
-    # cubierta interior
-    b.loft([[ (x, -w * 0.9, h * 0.97), (x, w * 0.9, h * 0.97)] for (x, _, _), (_, w, h) in
-            [ (s[2], (0, abs(s[2][1]), s[2][2])) for s in sec]][:], "madera", cerrar=False)
+        w = ancho / 2 * (1.0 if t < 0.55 else max(0.05, 1 - ((t - 0.55) / 0.45) ** 1.6))
+        sheer = alto * (1 + 0.55 * t ** 2.2)            # la proa sube
+        kl = alto * 0.0 + 0.15 * (1 - t)                  # la quilla sube hacia la proa
+        kz = kl + 0.0
+        g = 0.18 * w                                       # grosor de borda
+        pts = [(x, 0, kz), (x, -w * .8, kz + sheer * .28), (x, -w, sheer), (x, -w + g, sheer),
+               (x, -w + g, kz + sheer * .45), (x, w - g, kz + sheer * .45), (x, w - g, sheer), (x, w, sheer),
+               (x, w * .8, kz + sheer * .28)]
+        secs.append(pts + [pts[0]])
+    b.loft(secs, mt, cerrar=True)
 
 def bote_remos():
-    b = MB(); casco(b, 4.2, 1.6, 0.7, "madera", quilla=0.05)
-    for x in (-0.8, 0.3, 1.2): b.box((x, 0, 0.55), (0.35, 1.4, 0.07), "madera")
-    b.box((1.9, 0, 0.9), (0.2, 0.2, 0.4), "metal")     # farol
-    root = vacio("BoteRemos"); ob = b.build("BoteRemos_casco", ["madera"]); ob.parent = root
-    r = MB(); r.box((0, 0, 0), (1.9, 0.08, 0.08), "madera"); r.box((0.95, 0, 0), (0.5, 0.3, 0.04), "madera")
+    b = MB(); L = 9.0; casco(b, L, 3.4, 1.4, "madera")
+    for x in (-2.2, 0.2, 2.4): b.box((x, 0, 1.45), (0.7, 3.0, 0.16), "madera")
+    b.box((L / 2 - 1.1, 0, 2.2), (0.35, 0.35, 1.0), "metal"); b.box((L / 2 - 1.1, 0, 2.8), (0.55, 0.55, 0.5), "flor")  # farol
     for sg in (-1, 1):
-        o = r.build("Remo" + ("I" if sg < 0 else "D"), ["madera"]) if False else None
-    return root
+        b.box((0.2, sg * 2.6, 2.0), (4.2, 0.17, 0.17), "madera", rot=0.15 * sg)          # remos
+        b.box((2.4, sg * 2.8, 2.0), (1.1, 0.5, 0.08), "madera", rot=0.15 * sg)
+    root = vacio("BoteRemos"); ob = b.build("BoteRemos_casco"); ob.parent = root; return root
 
 def lancha():
-    b = MB(); casco(b, 6.0, 2.2, 0.9, "casco", quilla=0.05)
-    b.box((0.4, 0, 1.4), (1.8, 1.6, 1.0), "casco2")          # cabina
-    b.box((0.4, 0, 2.0), (2.1, 1.9, 0.12), "metal")          # techo
-    b.box((-2.6, 0, 0.9), (0.5, 0.6, 0.7), "metal")          # motor
-    b.box((-2.8, 0, 0.25), (0.2, 0.2, 0.8), "metal")
-    root = vacio("Lancha"); ob = b.build("Lancha_casco", ["casco", "casco2", "metal", "madera"]); ob.parent = root
-    return root
+    b = MB(); L = 15.0; casco(b, L, 5.2, 2.0, "casco")
+    b.box((-0.6, 0, 3.3), (4.6, 3.8, 2.3), "casco2")       # cabina
+    b.box((-0.6, 0, 4.6), (5.2, 4.4, 0.3), "metal")        # techo
+    b.box((1.7, 0, 3.4), (0.15, 3.2, 1.2), "metal")        # parabrisas
+    b.box((-7.9, 0, 1.7), (1.2, 1.5, 1.6), "metal")        # motor
+    b.box((-8.2, 0, 0.3), (0.35, 0.4, 2.0), "metal")
+    for x in (-4.2, 3.6): b.box((x, 0, 2.2), (0.35, 4.6, 0.12), "madera")   # bancos
+    root = vacio("Lancha"); ob = b.build("Lancha_casco"); ob.parent = root; return root
 
 def velero():
-    b = MB(); casco(b, 5.2, 1.9, 0.8, "casco2", quilla=0.05)
-    b.box((0, 0, 3.0), (0.14, 0.14, 5.6), "madera")          # mastil
-    b.add([(0.1, 0, 5.4), (0.1, 0, 1.2), (2.2, 0, 1.2)], [[0, 1, 2], [2, 1, 0]], "vela")
-    b.add([(-0.1, 0, 5.2), (-0.1, 0, 1.2), (-1.8, 0, 1.2)], [[0, 2, 1], [1, 2, 0]], "vela")
-    b.box((0.5, 0, 1.15), (2.6, 0.1, 0.1), "madera")
-    root = vacio("Velero"); ob = b.build("Velero_casco", ["casco2", "madera", "vela"]); ob.parent = root
-    return root
+    b = MB(); L = 12.0; casco(b, L, 4.2, 1.8, "casco2")
+    b.box((0.5, 0, 6.5), (0.28, 0.28, 11.0), "madera")      # mastil
+    b.box((-1.2, 0, 2.9), (4.6, 0.2, 0.2), "madera")        # botavara
+    b.add([(0.7, 0, 11.6), (0.7, 0, 3.4), (5.8, 0, 3.4)], [[0, 1, 2], [2, 1, 0]], "vela")    # foque
+    b.add([(0.3, 0, 11.0), (0.3, 0, 3.2), (-3.2, 0, 3.2)], [[0, 2, 1], [1, 2, 0]], "vela")   # mayor
+    b.box((4.6, 0, 2.2), (2.0, 1.2, 0.18), "madera")
+    root = vacio("Velero"); ob = b.build("Velero_casco"); ob.parent = root; return root
 
 def saguaro(seed=1):
-    r = random.Random(seed); b = MB()
-    b.lathe([(0.45, 0), (0.62, 0.4), (0.55, 2.5), (0.5, 4.2), (0.3, 4.8), (0.0, 4.9)], 8, "cactus", 0.04, r)
-    # costillas: ya vienen del facetado a 8 lados
-    def tubo(pts, rad, mt):
-        sec = []
-        for (x, y, z), rr in zip(pts, rad):
-            sec.append([(x, y + rr * math.cos(t), z + rr * math.sin(t)) if False else (x + rr * math.cos(t) * 0.0, y + rr * math.cos(t), z + rr * math.sin(t)) for t in [2 * math.pi * i / 7 for i in range(7)] + [0]])
-        b.loft(sec, mt, cerrar=False)
-    for sg, h in ((-1, 2.0), (1, 2.9)):
-        # codo horizontal (a lo largo de X) y luego sube; se hace con dos tubos facetados
-        sec = []
-        for k in range(4):
-            x = sg * (0.4 + 0.35 * k); sec.append([(x, 0.22 * math.cos(t), h + 0.22 * math.sin(t)) for t in [2 * math.pi * i / 7 for i in range(7)] + [0]])
-        b.loft(sec, "cactus", cerrar=False)
-        xs = sg * 1.45; sec = []
-        for k in range(5):
-            z = h + 0.35 * k * 1.0; rr = 0.24 if k < 4 else 0.1
-            sec.append([(xs + rr * math.cos(t), rr * math.sin(t), z) for t in [2 * math.pi * i / 7 for i in range(7)] + [0]])
-        b.loft(sec, "cactus", cerrar=False)
-        b.lathe([(0.0, 0.0)], 3, "cactus") if False else None
-    root = vacio("Saguaro%d" % seed); ob = b.build("Saguaro_%d_cuerpo" % seed, ["cactus"]); ob.parent = root
-    return root
+    r = random.Random(seed); b = MB(); H = 10.0 + seed
+    tubo(b, [(0, 0, -0.2), (0, 0, 0.8), (0.1, 0, H * .45), (0, 0, H * .85), (0, 0, H)], [1.5, 1.2, 1.0, 0.9, 0.0], 12, "cactus", costilla=-0.14)
+    for sg, h, largo in ((-1, H * .38, 3.6), (1, H * .55, 4.2)):
+        ruta = [(sg * .6, 0, h), (sg * 2.0, 0.1, h + .1), (sg * (largo - .3), 0.1, h + 1.2),
+                (sg * largo, 0.1, h + 3.2), (sg * largo, 0.1, h + 5.0), (sg * largo, 0.1, h + 5.6)]
+        tubo(b, ruta, [.62, .62, .6, .58, .5, 0.0], 10, "cactus", costilla=-0.14)
+    for i in range(14):                                       # espinas = motas claras en las costillas
+        a = r.uniform(0, 6.28); z = r.uniform(1, H * .8)
+        b.box((0.95 * math.cos(a), 0.95 * math.sin(a), z), (.12, .12, .5), "concha", rot=a)
+    root = vacio("Saguaro%d" % seed); ob = b.build("Saguaro_%d_cuerpo" % seed); ob.parent = root; return root
 
 def cactus_barril():
     r = random.Random(3); b = MB()
-    b.lathe([(0.3, 0), (0.85, 0.3), (0.95, 0.9), (0.7, 1.5), (0.35, 1.7), (0, 1.75)], 10, "cactus", 0.03, r)
-    b.lathe([(0.12, 1.7), (0.16, 1.9), (0, 2.0)], 5, "flor")
-    root = vacio("CactusBarril"); ob = b.build("CactusBarril_cuerpo", ["cactus", "flor"]); ob.parent = root; return root
+    tubo(b, [(0, 0, 0), (0, 0, .5), (0, 0, 2.0), (0, 0, 3.4), (0, 0, 3.9)], [1.1, 1.9, 2.0, 1.5, 0.0], 14, "cactus", costilla=-0.22)
+    for i in range(7):
+        a = 2 * math.pi * i / 7; b.box((.55 * math.cos(a), .55 * math.sin(a), 3.75), (.55, .55, .3), "flor", rot=a)   # flores
+    root = vacio("CactusBarril"); ob = b.build("CactusBarril_cuerpo"); ob.parent = root; return root
 
 def nopal():
-    b = MB(); r = random.Random(5)
-    def pala(c, rz, w, h):
-        a = math.radians(rz); ca, sa = math.cos(a), math.sin(a)
-        pts = []
-        for k in range(8):
-            t = 2 * math.pi * k / 8; x = w * math.cos(t) * 0.5; z = h * (0.5 + 0.5 * math.sin(t))
-            pts.append((c[0] + x * ca, c[1] + x * sa, c[2] + z))
-        for t in (0.09, -0.09):
-            pass
-        n = len(pts); fr = [(x - 0.09 * sa, y + 0.09 * ca, z) for x, y, z in pts]; bk = [(x + 0.09 * sa, y - 0.09 * ca, z) for x, y, z in pts]
-        b.add(fr + bk, [list(range(n)), [2 * n - 1 - i for i in range(n)]] +
-              [[i, (i + 1) % n, n + (i + 1) % n, n + i] for i in range(n)], "cactus")
-    pala((0, 0, 0), 0, 1.5, 1.7); pala((0.4, 0, 1.4), 25, 1.2, 1.4); pala((-0.5, 0.1, 1.2), -20, 1.1, 1.3)
-    root = vacio("Nopal"); ob = b.build("Nopal_cuerpo", ["cactus"]); ob.parent = root; return root
+    b = MB()
+    def pala(c, rz, w, h, inc=0.0):
+        a = math.radians(rz); ca, sa = math.cos(a), math.sin(a); pts = []
+        for k in range(10):
+            t = 2 * math.pi * k / 10; x = w * math.cos(t) * .5; z = h * (0.5 + 0.5 * math.sin(t))
+            pts.append((c[0] + x * ca, c[1] + x * sa, c[2] + z + abs(x) * inc))
+        n = len(pts); th = .22
+        fr = [(x - th * sa, y + th * ca, z) for x, y, z in pts]; bk = [(x + th * sa, y - th * ca, z) for x, y, z in pts]
+        b.add(fr + bk, [list(range(n)), [2 * n - 1 - i for i in range(n)]] + [[i, (i + 1) % n, n + (i + 1) % n, n + i] for i in range(n)], "cactus")
+        b.box((c[0], c[1], c[2] + h * .8), (.12, .12, .5), "concha")
+    pala((0, 0, 0), 0, 3.2, 3.6); pala((.9, .1, 3.0), 28, 2.6, 3.0); pala((-1.1, .1, 2.7), -24, 2.4, 2.8); pala((.2, 0, 5.4), 8, 2.0, 2.2)
+    root = vacio("Nopal"); ob = b.build("Nopal_cuerpo"); ob.parent = root; return root
 
 def palmera():
-    r = random.Random(9); b = MB(); alto = 7.0
-    # tronco curvo con anillos
-    perfil_segs = 9; sec = []
-    for k in range(perfil_segs + 1):
-        t = k / perfil_segs; cx = 0.9 * t * t * 1.2; z = alto * t; rad = 0.42 - 0.18 * t + (0.08 if k % 2 == 0 else 0)
-        sec.append([(cx + rad * math.cos(a), rad * math.sin(a), z) for a in [2 * math.pi * i / 7 for i in range(7)] + [0]])
-    b.loft(sec, "palma_t", cerrar=False)
-    top = (0.9 * 1.2, 0, alto)
-    for i in range(9):
-        a = 2 * math.pi * i / 9 + r.uniform(-.2, .2)
-        b.blade((top[0], top[1], top[2] - 0.1), (math.cos(a), math.sin(a), 0.55), 3.8 + r.uniform(0, .6), 1.25, "fronda", curva=0.9, seg=5)
-    for i in range(3):
-        a = 2.1 * i
-        b.lathe([(0.0, 0), (0.3, 0.2), (0.28, 0.5), (0.0, 0.62)], 6, "coco", 0.03, r)
-    root = vacio("Palmera"); ob = b.build("Palmera_cuerpo", ["palma_t", "fronda", "coco"]); ob.parent = root; return root
+    r = random.Random(9); b = MB(); H = 13.0
+    ruta = [(1.8 * (k / 10) ** 2 * 2.0, 0.0, H * k / 10) for k in range(11)]
+    tubo(b, ruta, [.95 - .4 * k / 10 + (.1 if k % 3 == 0 else 0) for k in range(11)], 8, "palma_t")
+    top = ruta[-1]
+    for i in range(12):
+        a = 2 * math.pi * i / 12 + r.uniform(-.15, .15); alz = 0.75 if i % 2 else 0.35
+        b.blade((top[0], top[1], top[2] - .2), (math.cos(a), math.sin(a), alz), 8.0 + r.uniform(0, 1.2), 3.0, "fronda", curva=1.0, seg=7)
+    for i in range(4):
+        a = 1.6 * i; b.lathe([(0.0, 0), (.6, .4), (.55, 1.0), (0.0, 1.25)], 7, "coco", 0.03, r)
+        b.v[-1:] = b.v[-1:]
+    # cocos colgando bajo la corona: se reubican trasladando sus vertices
+    nv = 4 * (4 * 7); base = len(b.v) - nv
+    for i in range(4):
+        a = 1.6 * i; dx, dy = math.cos(a) * .9, math.sin(a) * .9
+        for j in range(base + i * 28, base + (i + 1) * 28):
+            x, y, z = b.v[j]; b.v[j] = (x + top[0] + dx, y + top[1] + dy, z + top[2] - 1.8)
+    root = vacio("Palmera"); ob = b.build("Palmera_cuerpo"); ob.parent = root; return root
 
 def piezas_playa():
-    out = []
-    b = MB(); r = random.Random(11)
-    # concha de abanico
+    out = []; b = MB()
     for k in range(9):
         a0 = -0.9 + 1.8 * k / 9; a1 = -0.9 + 1.8 * (k + 1) / 9
-        b.add([(0, 0, 0), (0.8 * math.sin(a0), 0.8 * math.cos(a0), 0.25), (0.8 * math.sin(a1), 0.8 * math.cos(a1), 0.25 + (0.04 if k % 2 else 0))], [[0, 1, 2], [2, 1, 0]], "concha")
-    o = b.build("Concha", ["concha"]); rt = vacio("Concha"); o.parent = rt; out.append(rt)
-    b = MB()
-    b.add([(0, 0, 0.1)] + [((0.25 if i % 2 else 0.9) * math.cos(2 * math.pi * i / 10), (0.25 if i % 2 else 0.9) * math.sin(2 * math.pi * i / 10), 0.0) for i in range(10)],
+        b.add([(0, 0, 0), (2.4 * math.sin(a0), 2.4 * math.cos(a0), .8), (2.4 * math.sin(a1), 2.4 * math.cos(a1), .8 + (.15 if k % 2 else 0))], [[0, 1, 2], [2, 1, 0]], "concha")
+    o = b.build("Concha"); rt = vacio("Concha"); o.parent = rt; out.append(rt)
+    b = MB(); R2 = 2.6
+    b.add([(0, 0, .5)] + [((.7 if i % 2 else 2.6) * math.cos(2 * math.pi * i / 10), (.7 if i % 2 else 2.6) * math.sin(2 * math.pi * i / 10), 0.0) for i in range(10)],
           [[0, 1 + i, 1 + (i + 1) % 10] for i in range(10)] + [[1 + (i + 1) % 10, 1 + i, 0] for i in range(10)], "estrella")
-    o = b.build("EstrellaMar", ["estrella"]); rt = vacio("EstrellaMar"); o.parent = rt; out.append(rt)
-    b = MB(); b.lathe([(0.45, 0), (0.5, 1.5), (0.4, 3.0), (0.3, 3.4)], 7, "palma_t", 0.08, R, 0)
-    b.lathe([(0.4, 0), (0.1, 0.0)], 7, "palma_t") if False else None
-    o = b.build("TroncoVarado", ["palma_t"]); o.rotation_euler = (0, math.pi / 2, 0.3); rt = vacio("TroncoVarado"); o.parent = rt; out.append(rt)
-    b = MB()
-    b.box((0, 0, 0.55), (4.0, 1.2, 0.12), "madera")
-    for x in (-1.6, -0.4, 0.8, 1.7):
-        b.box((x, -0.55, -0.2), (0.22, 0.22, 1.5), "madera"); b.box((x, 0.55, -0.2), (0.22, 0.22, 1.5), "madera")
-    for x in [-1.9 + 0.38 * i for i in range(11)]: b.box((x, 0, 0.62), (0.3, 1.25, 0.05), "madera")
-    o = b.build("Muelle", ["madera"]); rt = vacio("Muelle"); o.parent = rt; out.append(rt)
+    o = b.build("EstrellaMar"); rt = vacio("EstrellaMar"); o.parent = rt; out.append(rt)
+    b = MB(); tubo(b, [(0, 0, 0), (3, 0, .1), (6, 0, 0), (9, 0, .2)], [1.1, 1.0, .9, .8], 8, "palma_t")
+    o = b.build("TroncoVarado"); rt = vacio("TroncoVarado"); o.parent = rt; out.append(rt)
+    b = MB(); b.box((0, 0, 1.6), (12, 3.4, .35), "madera")
+    for x in (-5, -1.6, 1.8, 5): b.box((x, -1.5, -.6), (.6, .6, 4.2), "madera"); b.box((x, 1.5, -.6), (.6, .6, 4.2), "madera")
+    for x in [-5.6 + 1.05 * i for i in range(11)]: b.box((x, 0, 1.85), (.85, 3.6, .15), "madera")
+    o = b.build("Muelle"); rt = vacio("Muelle"); o.parent = rt; out.append(rt)
     return out
 
 def mecer(ob, amp=0.04, n=72):
@@ -290,7 +294,7 @@ def mecer(ob, amp=0.04, n=72):
 def atracar(ob, n=90):
     """llega desde -X (lejos) y se frena en 0 con un cabeceo; luego queda."""
     x0 = ob.location.x
-    clip(ob, "Atracar", n, {("location", 0): [(1, x0 - 14), (60, x0 + 0.4), (n, x0)],
+    clip(ob, "Atracar", n, {("location", 0): [(1, x0 - 40), (60, x0 + 1.2), (n, x0)],
                             ("rotation_euler", 1): [(1, 0.0), (45, 0.07), (70, -0.04), (n, 0.0)]}, bucle=False)
 
 # ---------- ensamblado y salida ----------
@@ -299,8 +303,9 @@ def escena_luz():
     sc.render.resolution_x = 900; sc.render.resolution_y = 600
     w = bpy.data.worlds.new("w"); w.use_nodes = True; w.node_tree.nodes["Background"].inputs[0].default_value = (0.78, 0.88, 0.95, 1); w.node_tree.nodes["Background"].inputs[1].default_value = 0.9
     sc.world = w
-    s = bpy.data.lights.new("sol", "SUN"); s.energy = 3.5; o = bpy.data.objects.new("sol", s); bpy.context.collection.objects.link(o); o.rotation_euler = (math.radians(50), 0, math.radians(35))
+    s = bpy.data.lights.new("sol", "SUN"); s.energy = 4.2; s.color = (1.0, 0.93, 0.80); o = bpy.data.objects.new("sol", s); bpy.context.collection.objects.link(o); o.rotation_euler = (math.radians(50), 0, math.radians(35))
     cam = bpy.data.cameras.new("c"); co = bpy.data.objects.new("c", cam); bpy.context.collection.objects.link(co); sc.camera = co
+    s2 = bpy.data.lights.new('rel', 'SUN'); s2.energy = 1.2; s2.color = (0.75, 0.85, 1.0); o2 = bpy.data.objects.new('rel', s2); bpy.context.collection.objects.link(o2); o2.rotation_euler = (math.radians(60), 0, math.radians(-140))
     return co
 
 def figura6():
@@ -308,12 +313,18 @@ def figura6():
     b.lathe([(1.2, 0), (1.6, 1.5), (1.5, 3.2), (1.0, 4.5)], 8, "casco2"); b.lathe([(0.9, 4.5), (1.0, 5.2), (0.0, 6.0)], 8, "flor")
     ob = b.build("Figura6", ["casco2", "flor"]); return ob
 
-def render_hoja(nombre, objs, dist=14, alt=7):
-    cam = bpy.context.scene.camera
-    bpy.context.scene.frame_set(60)
-    cam.location = (dist, -dist, alt); d = Vector((0, 0, 1.5)) - cam.location
+def render_hoja(nombre, objs, dist=None, alt=None):
+    sc = bpy.context.scene; cam = sc.camera; sc.frame_set(60)
+    pts = []
+    for r in objs:
+        for o in [r] + list(r.children_recursive):
+            if o.type == "MESH": pts += [o.matrix_world @ Vector(c) for c in o.bound_box]
+    lo = Vector((min(p.x for p in pts), min(p.y for p in pts), 0)); hi = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
+    c = (lo + hi) / 2; ext = max((hi - lo).x, (hi - lo).y, hi.z) * 0.8 + 4
+    cam.data.lens = 40
+    cam.location = c + Vector((ext * 1.0, -ext * 1.25, ext * 0.55)); d = Vector((c.x, c.y, hi.z * 0.4)) - cam.location
     cam.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
-    bpy.context.scene.render.filepath = os.path.join(REN, nombre + ".png"); bpy.ops.render.render(write_still=True)
+    sc.render.filepath = os.path.join(REN, nombre + ".png"); bpy.ops.render.render(write_still=True)
 
 def main():
     informe = {}
@@ -326,21 +337,22 @@ def main():
         limpiar(); _mats.clear()
         root = fn()
         if anim == "Flotar":
-            ola(root, 0.12, 48); atracar(root)
+            ola(root, 0.35, 48); atracar(root)
         else:
             mecer(root, 0.03 if "palm" not in nombre else 0.025)
         informe[nombre] = tris(); exportar(nombre)
         co = escena_luz(); f = figura6()
-        f.location = (-4.5 if 'palm' not in nombre else -5.5, 1.5, 0); 
-        bpy.ops.mesh.primitive_plane_add(size=40, location=(0, 0, -0.02))
+        f.location = (-9, 3, 0)
+        root_objs = [root, f]; 
+        bpy.ops.mesh.primitive_plane_add(size=300, location=(0, 0, -0.02))
         pl = bpy.context.object; pl.data.materials.append(mat("arena"))
-        render_hoja(nombre, [root], dist=12 if "palm" not in nombre else 17, alt=6)
+        render_hoja(nombre, [root, f])
     piezas = None
     limpiar(); _mats.clear(); piezas = piezas_playa()
-    for i, p in enumerate(piezas): p.location = (i * 5 - 7, 0, 0)
+    for i, p in enumerate(piezas): p.location = (i * 9 - 14, 0, 0)
     informe["piezas_playa"] = tris(); exportar("piezas_playa")
-    co = escena_luz(); bpy.ops.mesh.primitive_plane_add(size=40, location=(0, 0, -0.02)); bpy.context.object.data.materials.append(mat("arena"))
-    render_hoja("piezas_playa", piezas, dist=14, alt=6)
+    co = escena_luz(); bpy.ops.mesh.primitive_plane_add(size=300, location=(0, 0, -0.02)); bpy.context.object.data.materials.append(mat("arena"))
+    render_hoja("piezas_playa", piezas)
     print("TRIANGULOS", informe)
 
 main()
