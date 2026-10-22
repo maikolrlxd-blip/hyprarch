@@ -12,8 +12,11 @@ Pedido de Maikol (2026-10-22). Quien lo ejecuta: la sesión **Coordinador de Cod
 - **Escala Roblox:** 1 stud ≈ 0,28 m; una persona R15 mide ~5,2 studs. Revisar al exportar: Studio importó una roca ~100 veces más grande por la escala del FBX; fijar unidades/escala de exportación y comprobar en una copia de Studio.
 - Estilo: formas facetadas limpias + texturas **pintadas a mano** (nada de color liso ni "plastilina"), mate, sin brillos. Referencia de aspecto: árboles v04 de Slime Rush.
 - Presupuesto: armas 300–800 tris cada una; zombi ≤ 3.000; piezas del mapa ≤ 1.500 cada una (cada MeshPart < 20.000 tris).
-- Armas: origen en la empuñadura, ejes de Roblox, partes móviles separadas (corredera, cargador, bomba de la escopeta) + clips opcionales: Reposo, Disparo (retroceso), Recarga.
+- Armas: origen en la empuñadura, ejes de Roblox, partes móviles separadas (corredera, cargador, bomba de la escopeta) + clips OBLIGATORIOS (juego tipo roguelike): **Equipar**, **Disparo** (retroceso y expulsión de casquillo), **Recargar** (cargador y corredera; en la escopeta: **Bombear** y meter cartuchos uno a uno), **Reposo**. Nombres exactos de clips en español, cortos (≤ 1 s los de disparo), en bucle solo Reposo.
 - Zombi: rig compatible con R15 si es posible (si no, esqueleto simple con nombres claros) + clips Reposo, Caminar, Atacar, Caer.
 - Exportar GLB/FBX + .blend + render de comprobación junto a una figura de 6 studs. Autocrítica sin adornos en un ESTADO.md por entrega ("qué falla" primero).
 - Carpeta de trabajo: `apocalipsis-arte\` (sesión del PC); commit local pequeño por entrega; el push lo decide Maikol.
 - Contenido: todo apto para Roblox (sin gore, armas genéricas, sin marcas ni logos).
+
+## Nota (Maikol): el juego será tipo roguelike
+Se rejuegan muchas veces con armas distintas: las animaciones de arma importan mucho (sensación de cada disparo). Además del modelo, entregar un `armas-animaciones.md` con la duración de cada clip y qué partes se mueven.
