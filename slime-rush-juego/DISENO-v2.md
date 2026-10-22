@@ -64,7 +64,7 @@ Todos los tiempos son constantes (`Rules.DEFAULT`).
 Nombres tentativos (no los puso él): Resorte = **Bongo**, Montura = **Rayo**, Divide = **Miga**.
 - **Bongo (resorte):** (1) se enrolla en el brazo y da un puñetazo que lanza al enemigo (contra suelo, pared o solo volando); (2) se pone en el suelo y te impulsa; (3) lo mandas a atacar: rebota por paredes/árboles/techo y se lanza al enemigo.
 - **Rayo (montura rápida):** (1) te montas unos segundos; (2) lleva un objeto, dinero o **un jugador (también inconsciente: confirmado "sí")** hacia donde quiera el dueño (rescatar, lanzar, empujar o secuestrar para saquear); (3) acelera y se estrella contra el enemigo.
-- **Miga (se divide):** (1) lanza 3 partes que se regeneran (mantener = apuntar; clic = al más cercano); (2) partes en manos y pies para escalar cualquier superficie o anclarse al suelo contra tornado/tormenta; (3) tapa heridas (cura) y reduce el daño en esas partes. Las partes son un recurso compartido: cuanto más usas 1-2-3, menos tienes.
+- **Miga (se divide):** (1) lanza 4 partes (antes anotadas como 3; confirmado 4) que se regeneran (mantener = apuntar; clic = al más cercano); (2) partes en manos y pies para escalar cualquier superficie o anclarse al suelo contra tornado/tormenta; (3) tapa heridas (cura) y reduce el daño en esas partes. Las partes son un recurso compartido: cuanto más usas 1-2-3, menos tienes.
 - **Cuerpo de slime (decisión de Maikol):** todos los jugadores juegan con cuerpo de slime; sus cuerpos reales se quedan en el inicio (botes/muelle). Heridas = gel, no sangre, para escenas dramáticas sin clasificación +18. Propuesta pendiente de confirmar: al colapso, quien no llegó se derrite. Ojo: la clasificación de Roblox también depende de la intensidad de la violencia, no solo de la sangre.
 
 ## Apariencia de los jugadores (Maikol, 2026-10-22)
@@ -76,3 +76,12 @@ El jugador **no es un slime redondo**: tiene un **cuerpo humanoide hecho de slim
 - **Partes del cuerpo:** al recibir daño se pierden partes (p. ej. un brazo). Se reemplazan **robándoselas a otro jugador mientras lo saqueas y sigue inconsciente**.
 - **Miga:** con sus **4 pedazos** (antes se anotaron 3; confirmar cuántos) puede darte una extremidad nueva. Si quieres usar tus habilidades, tienes que deshacer la extremidad de slime (los pedazos vuelven a ser recurso).
 - Pendiente de definir: qué hace cada parte perdida (brazo = sin habilidad de ese lado/menos mochila, pierna = más lento…), si un brazo robado es del color del otro jugador, cuánto dura, y el tope de partes. Ojo con la clasificación de Roblox: mostrar la pérdida de partes como "gel que se desprende" y sin gore.
+
+## Reglas de extremidades (Maikol, 2026-10-22, 3) — CONFIRMADO
+- **Miga = 4 pedazos.**
+- **Color:** la extremidad robada conserva el color del dueño original.
+- **Ojo:** pequeño, perderlo casi no tiene mecánica.
+- **Pie/pierna:** saltas con una pierna y vas más lento.
+- **Brazo:** menos capacidad de atacar (un solo brazo).
+- Se puede perder **todo**. Sin ninguna extremidad quedas en el suelo, quieto, y **tu slime se une a ti y lo pierdes durante esa partida**; a cambio te da **dos extremidades a elección: brazo+pierna, dos piernas o dos brazos**.
+- Pendiente de afinar: cuántas extremidades tiene el humanoide (2 brazos + 2 piernas), si "sin extremidades" cuenta como inconsciente para el saqueo, cuánto dura la penalización de un brazo (¿baja daño/alcance/velocidad de ataque?) y si un brazo robado se puede volver a perder.
