@@ -69,3 +69,10 @@ Nombres tentativos (no los puso él): Resorte = **Bongo**, Montura = **Rayo**, D
 
 ## Apariencia de los jugadores (Maikol, 2026-10-22)
 El jugador **no es un slime redondo**: tiene un **cuerpo humanoide hecho de slime, personalizable** (color, forma, accesorios). Es el "cuerpo de slime" de la isla; el cuerpo real queda en el inicio/botes. Los slimes con habilidades (Bongo, Rayo, Miga) son criaturas aparte que se unen al jugador. Pendiente de confirmar con Maikol: qué se personaliza (color/textura/ojos/accesorios raros), y cómo se ve el cuerpo al perder gel (heridas, derretirse). Implicación técnica: humanoide R15 con malla/materiales de slime (translúcido, mate), compatible con animaciones estándar.
+
+## Aclaraciones de Maikol (2026-10-22, 2)
+- **Compañeros:** Bongo, Rayo y Miga conservan su forma de slime normal; los jugadores son humanoides de slime.
+- **Personalización:** color, ojos, altura, anchura y accesorios.
+- **Partes del cuerpo:** al recibir daño se pierden partes (p. ej. un brazo). Se reemplazan **robándoselas a otro jugador mientras lo saqueas y sigue inconsciente**.
+- **Miga:** con sus **4 pedazos** (antes se anotaron 3; confirmar cuántos) puede darte una extremidad nueva. Si quieres usar tus habilidades, tienes que deshacer la extremidad de slime (los pedazos vuelven a ser recurso).
+- Pendiente de definir: qué hace cada parte perdida (brazo = sin habilidad de ese lado/menos mochila, pierna = más lento…), si un brazo robado es del color del otro jugador, cuánto dura, y el tope de partes. Ojo con la clasificación de Roblox: mostrar la pérdida de partes como "gel que se desprende" y sin gore.
