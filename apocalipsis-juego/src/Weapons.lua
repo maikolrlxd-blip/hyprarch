@@ -124,6 +124,12 @@ function Weapons:damage(dist, headshot)
 	return d.damage * m
 end
 
+-- Municion de reserva comprada en la tienda (tope: 4 cargadores)
+function Weapons:addReserve(n)
+	local tope = self.def.mag * 6
+	local antes = self.reserve; self.reserve = math.min(tope, self.reserve + n); return self.reserve - antes
+end
+
 function Weapons:inspect(now)
 	if self.reloading or now < self.ready then return false, "ocupada" end
 	self.ready = now + 0.1

@@ -3,6 +3,7 @@
 local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
 local Collection = game:GetService("CollectionService")
+local ServerStorage = game:GetService("ServerStorage")
 local Luto = RS:WaitForChild("Luto")
 local Weapons, Impactos, Disparo = require(Luto.Weapons), require(Luto.Impactos), require(Luto.Disparo)
 
@@ -78,6 +79,7 @@ R.Disparar.OnServerEvent:Connect(function(plr, aim)
 				local zona = Disparo.zona(res.Instance.Name)
 				local spec = Impactos.resolve(s.actual, zona, res.Distance, n)
 				if spec then
+					modelo:SetAttribute("UltimoAtacante", plr.UserId) -- para pagar la recompensa al que lo mate
 					hum:TakeDamage(spec.dano)
 					local rootE = modelo:FindFirstChild("HumanoidRootPart")
 					if rootE and not rootE.Anchored then rootE:ApplyImpulse(Vector3.new(d.x, 0, d.z) * spec.reaccion.empuje * rootE.AssemblyMass) end
@@ -89,4 +91,18 @@ R.Disparar.OnServerEvent:Connect(function(plr, aim)
 		end
 	end
 	enviarEstado(plr)
+end)
+
+-- Enlaces con Partida.server.lua (tienda y reinicio)
+local bf = Instance.new("BindableFunction"); bf.Name = "LUTO_AnadirMunicion"; bf.Parent = ServerStorage
+bf.OnInvoke = function(plr, cargadores)
+	local s = estado[plr]; if not s then return 0 end
+	local w = s.armas[s.actual]; local n = w:addReserve(w.def.mag * cargadores); enviarEstado(plr); return n
+end
+local be = Instance.new("BindableEvent"); be.Name = "LUTO_ReiniciarArmas"; be.Parent = ServerStorage
+be.Event:Connect(function()
+	for plr, s in pairs(estado) do
+		for i, id in ipairs(ARMAS) do s.armas[id] = Weapons.new(id, plr.UserId * 10 + i + math.floor(now())) end
+		s.actual = "pistola"; s.armas.pistola:equip(now()); enviarEstado(plr)
+	end
 end)

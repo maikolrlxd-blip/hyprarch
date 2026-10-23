@@ -1,4 +1,4 @@
-local Weapons = require("Weapons"); local Impactos = require("Impactos"); local Disparo = require("Disparo")
+local Weapons = require("Weapons"); local Impactos = require("Impactos"); local Disparo = require("Disparo"); local Oleadas, Partida, Tienda = require("Oleadas"), require("Partida"), require("Tienda")
 local passed, failed = 0, 0
 local function test(name, fn)
 	local ok, err = pcall(fn)
@@ -109,6 +109,55 @@ test("escopeta de 8 perdigones: todas las direcciones salen dentro del cono de d
 	for _, p in ipairs(r.pellets) do
 		local d = Disparo.direccion({ x = 0, y = 0, z = -1 }, p.yaw, p.pitch); local ang = math.deg(math.acos(-d.z)); truthy(ang <= w.def.spread + 0.01, "fuera del cono: " .. ang)
 	end
+end)
+
+print("== Oleadas, partida y tienda")
+test("oleadas escalan y hay jefe cada 15 rondas (tipos al azar, determinista)", function()
+	local c1, c10 = Oleadas.config(1, 5), Oleadas.config(10, 5)
+	truthy(c10.cantidad > c1.cantidad and c10.hp > c1.hp and c10.velocidad > c1.velocidad)
+	truthy(not c1.esJefe and not Oleadas.config(14, 5).esJefe)
+	local j = Oleadas.config(15, 5); truthy(j.esJefe and j.jefe.hp >= 2500 and j.jefe.escala > 1)
+	eq(Oleadas.config(15, 5).jefe.tipo, Oleadas.config(15, 5).jefe.tipo)
+	truthy(Oleadas.config(30, 5).jefe.hp > j.jefe.hp)
+	truthy(Oleadas.config(200, 5).cantidad <= 80 and Oleadas.config(200, 5).velocidad <= 14)
+end)
+test("partida: pausa inicial, rondas y reaparicion si queda un companero vivo", function()
+	local p = Partida.new(3); p:addPlayer("a"); p:addPlayer("b"); truthy(p:comenzar(0))
+	eq(#p:actualizar(5), 0)
+	local ev = p:actualizar(8); eq(ev[1].tipo, "inicio_ronda"); eq(p.ronda, 1); eq(p.estado, "ronda")
+	eq(p:jugadorMuerto("a", 20).fin, false)
+	for i = 1, p.config.cantidad do p:registrarAparicion(); p:zombiMuerto("b", false, 30 + i) end
+	eq(p.estado, "intermision")
+	local ev2 = p:actualizar(30 + p.config.cantidad + 10)
+	eq(ev2[1].tipo, "revivir"); eq(ev2[1].ids[1], "a"); eq(ev2[2].tipo, "inicio_ronda"); eq(p.ronda, 2)
+end)
+test("partida: si mueren todos termina y paga moneda del lobby segun la ronda", function()
+	local p = Partida.new(3); p:addPlayer("a"); p:addPlayer("b"); p:comenzar(0); p:actualizar(8)
+	p.rondaMax = 6; eq(p:jugadorMuerto("a", 20).fin, false)
+	local r = p:jugadorMuerto("b", 21); truthy(r.fin); eq(r.rondaMax, 6); eq(r.monedasLobby, math.floor(5 ^ 1.3)); eq(p.estado, "fin")
+end)
+test("monedas por zombi muerto al que mato; el jefe paga mas y cuenta", function()
+	local p = Partida.new(3); p:addPlayer("a"); p.estado = "ronda"; p.ronda = 15; p.config = Oleadas.config(15, 3); p.restantes = 5; p.aparecidos = 0
+	local pago = p:zombiMuerto("a", false, 1); eq(pago, p.config.recompensa); eq(p.players.a.monedas, pago)
+	local pj = p:zombiMuerto("a", true, 2); eq(pj, p.config.jefe.recompensa); eq(p.jefes, 1)
+end)
+test("jefe aparece al final de la ronda", function()
+	local p = Partida.new(3); p:addPlayer("a"); p:comenzar(0)
+	for r = 1, 15 do p:actualizar(1000 * r); p.estado = "intermision"; p.t_next = 0 end
+	p:actualizar(99999); eq(p.ronda, 16)
+	p = Partida.new(3); p:addPlayer("a"); p.estado = "ronda"; p.ronda = 15; p.config = Oleadas.config(15, 3); p.aparecidos = p.config.cantidad
+	truthy(p:esAparicionJefe()); p.aparecidos = 0; truthy(not p:esAparicionJefe())
+end)
+test("tienda: precio sube con la ronda, descuenta y rechaza si faltan monedas", function()
+	local p = Partida.new(3); p:addPlayer("a"); p:comenzar(0); p:actualizar(8)
+	local ok, why = Tienda.comprar(p, "a", "municion", 1); truthy(not ok and why:find("insuficientes"))
+	p.players.a.monedas = 200
+	local ok2, r = Tienda.comprar(p, "a", "municion", 1); truthy(ok2); eq(r.precio, 50); eq(p.players.a.monedas, 150)
+	truthy(Tienda.precio("municion", 20) > 50); eq(select(2, Tienda.comprar(p, "a", "nada", 1)), "articulo desconocido")
+end)
+test("arma: la municion de reserva comprada tiene tope", function()
+	local w = Weapons.new("pistola", 1); w.reserve = 0; eq(w:addReserve(30), 30); eq(w.reserve, 30)
+	eq(w:addReserve(1000), 90 - 30)
 end)
 
 print("== Tiempo para matar (zombi de 100 de vida)")

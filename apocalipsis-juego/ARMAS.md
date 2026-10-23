@@ -30,3 +30,10 @@ Proyecto Rojo propio: `apocalipsis-juego/default.project.json` (ReplicatedStorag
 - `client/ImpactoFX.lua`: partículas, mancha de sangre estilizada y **agujero de bala** que se pega a la pieza golpeada y desaparece (mapa: 40 s, tope 150; enemigo: 8 s, tope 40).
 - `server/Maniquies.server.lua`: 4 maniquíes de bloques (piezas con nombres R15, 100 de vida, etiqueta "Zombi") para probar sin el zombi.
 Falta: sonidos (subirlos a Roblox), animaciones "Golpeado" y de las armas en el personaje, el zombi real y la prueba en Studio.
+
+## Partida jugable mínima de Luto (provisional, SIN PROBAR EN STUDIO)
+Para probar todo junto: abrir `apocalipsis-juego/default.project.json` con Rojo en un place vacío y pulsar Play (1 a 4 clientes).
+- **Qué pasa:** 8 s de espera → ronda 1; los zombis (rigs R15 verdes, sin animación de caminar) salen del borde de una arena de 420×420 y te persiguen; matar da monedas; entre rondas hay 10 s; la tienda (2 bloques junto al centro: munición y curación, ProximityPrompt) gasta monedas; si mueres reapareces al empezar la siguiente ronda solo si queda un compañero vivo; si mueren todos sale la pantalla FIN con la ronda y la moneda del lobby y a los 12 s empieza otra partida. Jefe (más grande, 2 tipos al azar) cada 15 rondas.
+- **Código puro probado (26 pruebas):** `src/Oleadas.lua`, `src/Partida.lua`, `src/Tienda.lua` (+ Weapons, Impactos, Disparo).
+- **Roblox (no probado):** `server/Partida.server.lua`, `client/Partida.client.lua`, `server/Armas.server.lua`, `client/Armas.client.lua`, `client/ImpactoFX.lua`. `server/Maniquies.server.lua` solo se activa con `workspace:SetAttribute("LUTO_Maniquies", true)`.
+- **Falta:** el mapa real y el zombi de Blender (ahora son bloques/rigs por defecto), animaciones de caminar y de las armas, sonidos subidos a Roblox, lobby y tienda de clases/armas con la moneda del lobby, balance real.

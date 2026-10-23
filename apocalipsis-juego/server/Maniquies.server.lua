@@ -1,4 +1,5 @@
 -- PROVISIONAL (solo para probar el disparo antes de tener el zombi): maniquies de bloques con nombres de piezas R15, vida 100 y la etiqueta "Zombi".
+if workspace:GetAttribute("LUTO_Maniquies") ~= true then return end -- solo si se activa a mano (para probar sin oleadas)
 local Collection = game:GetService("CollectionService")
 local COLOR = Color3.fromRGB(150, 160, 140)
 
