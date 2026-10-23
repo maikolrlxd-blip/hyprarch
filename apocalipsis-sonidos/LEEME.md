@@ -1,0 +1,4 @@
+# Sonidos de armas (sintetizados por código)
+`python3 sonidos.py` genera `wav/` (13 sonidos mono 44,1 kHz, 828 KB en total), `hoja.png` (forma de onda + espectrograma de cada uno) y `manifiesto.json`.
+Sonidos: disparo de pistola, escopeta y subfusil; clic de arma vacía; equipar, recargar (pistola y subfusil); bombeo y cartucho de la escopeta; impacto sordo en zombi (sin sonido de carne) y marcador de impacto.
+**Importante:** quien los generó (Claude de la nube) NO puede oírlos. Solo se revisó la forma de onda y el espectrograma: no hay clics ni cortes, el pico está normalizado a 0,9 y todos tienen fundido de salida. **Maikol tiene que escucharlos** y decir cuáles suenan raros (flojos, chirriantes, falsos) para ajustarlos. Son un punto de partida: se pueden sustituir por sonidos hechos a mano o de una librería con licencia.
