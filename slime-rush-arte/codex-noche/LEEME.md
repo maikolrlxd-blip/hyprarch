@@ -25,3 +25,6 @@ Origen: C:\Users\maiko\Documents\Codex\2026-10-21\c\ (carpetas previews). Hojas 
 37-39 v06 y 40-42 v07: roca grande redondeada con plantas y flores; cascada continua en columna de rayas azules.
 43-45 v08 (final, copiada a outputs\...\cascada-rocas): "sin franja" (se quitó la banda de la cascada); 45 con árbol y muñeco para escala.
 Falla que se ve en todas: la roca es una bola redondeada, agua de rayas rectas, fondo plano verde.
+
+## Mediodía 22/10 (Codex)
+46 Codex-Studio-Capa1-Play-1cliente-FPS60 (12:04): Studio con Capa 1 jugando: isla de bloques de colores (amarillo = plaza/meta), personaje estándar, HUD de texto, contador FPS ~60, Output: SR_QA seed=1234 world=4ms total=278ms tiles=1024 nodes=43 chests=3; un aviso naranja de ContentId rbxassetid://203785492 (tipo de asset no coincide).
