@@ -21,3 +21,12 @@ Pendiente de decidir con Maikol: moneda/precio de cada arma, munición comprable
 
 ## Impactos en enemigos (Luto)
 `src/Impactos.lua` (puro, 5 pruebas ok): zona (cabeza/torso/brazo/pierna) → daño, reacción ("Golpeado", probabilidad de tambalearse, empuje), efecto de partículas, sonido (`impacto_zombi`, `marcador_impacto`) y mancha que se desvanece (tope de 60). Sangre ESTILIZADA con opción de apagarla (chispas neutras). `client/ImpactoFX.lua` dibuja los efectos en Roblox: **SIN PROBAR EN STUDIO**. Faltan: el zombi con su animación "Golpeado", subir los audios a Roblox, el disparo real con raycast y la zona de impacto (cabeza/torso...), todo ello por conectar.
+
+## Disparo real y agujeros de bala (Luto) — SIN PROBAR EN STUDIO
+Proyecto Rojo propio: `apocalipsis-juego/default.project.json` (ReplicatedStorage.Luto = src, ServerScriptService.LutoServidor = server, StarterPlayerScripts.LutoCliente = client).
+- `src/Disparo.lua` (puro, 5 pruebas ok): dirección de cada bala con dispersión, zona del cuerpo por nombre de pieza (R15 y R6) y especificación de los **agujeros de bala** (hueco oscuro con borde astillado; en el enemigo, marca roja que dura menos).
+- `server/Armas.server.lua`: el servidor es la autoridad: equipar, disparar (rayo desde la cabeza con la dirección del cliente + dispersión), recargar, inspeccionar, daño por zona y aviso a los clientes.
+- `client/Armas.client.lua`: clic = disparar (mantener = automática), R recargar, F inspeccionar, 1/2/3 cambiar de arma; HUD de munición y mira.
+- `client/ImpactoFX.lua`: partículas, mancha de sangre estilizada y **agujero de bala** que se pega a la pieza golpeada y desaparece (mapa: 40 s, tope 150; enemigo: 8 s, tope 40).
+- `server/Maniquies.server.lua`: 4 maniquíes de bloques (piezas con nombres R15, 100 de vida, etiqueta "Zombi") para probar sin el zombi.
+Falta: sonidos (subirlos a Roblox), animaciones "Golpeado" y de las armas en el personaje, el zombi real y la prueba en Studio.

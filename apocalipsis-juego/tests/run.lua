@@ -1,4 +1,4 @@
-local Weapons = require("Weapons"); local Impactos = require("Impactos")
+local Weapons = require("Weapons"); local Impactos = require("Impactos"); local Disparo = require("Disparo")
 local passed, failed = 0, 0
 local function test(name, fn)
 	local ok, err = pcall(fn)
@@ -84,6 +84,31 @@ test("reserva de manchas: tope y reemplazo de la mas vieja", function()
 	for i = 1, 3 do eq(Impactos.agregarMancha(res, { i = i }, i), nil) end
 	local old = Impactos.agregarMancha(res, { i = 4 }, 4); eq(old.mancha.i, 1)
 	eq(Impactos.vivas(res, 5, 20), 3); eq(Impactos.vivas(res, 100, 20), 0)
+end)
+
+print("== Disparo real")
+test("direccion sin desvio = punteria; con desvio mantiene longitud 1 y el angulo pedido", function()
+	local d0 = Disparo.direccion({ x = 0, y = 0, z = -1 }, 0, 0); near(d0.z, -1, 1e-9)
+	local d = Disparo.direccion({ x = 0, y = 0, z = -2 }, 3, 4)
+	near(math.sqrt(d.x ^ 2 + d.y ^ 2 + d.z ^ 2), 1, 1e-9)
+	local ang = math.deg(math.acos(-d.z)); truthy(ang > 4.5 and ang < 5.5, "angulo " .. ang)
+end)
+test("direccion funciona apuntando recto arriba (sin dividir por cero)", function()
+	local d = Disparo.direccion({ x = 0, y = 1, z = 0 }, 2, 0); near(math.sqrt(d.x ^ 2 + d.y ^ 2 + d.z ^ 2), 1, 1e-9); truthy(d.y > 0.99)
+end)
+test("zonas R15 y R6; piezas desconocidas = torso", function()
+	eq(Disparo.zona("Head"), "cabeza"); eq(Disparo.zona("LeftLowerArm"), "brazo"); eq(Disparo.zona("RightFoot"), "pierna")
+	eq(Disparo.zona("Torso"), "torso"); eq(Disparo.zona("Sombrero"), "torso")
+end)
+test("agujeros: tamano por arma, marca en enemigo dura menos y es roja", function()
+	local m, e = Disparo.agujero("escopeta", false), Disparo.agujero("escopeta", true)
+	near(m.tam, 0.3, 1e-9); truthy(e.vida < m.vida); truthy(e.color_centro[1] > m.color_centro[1])
+end)
+test("escopeta de 8 perdigones: todas las direcciones salen dentro del cono de dispersion", function()
+	local w = Weapons.new("escopeta", 11); w:equip(0); local ok, r = w:fire(1, false); truthy(ok)
+	for _, p in ipairs(r.pellets) do
+		local d = Disparo.direccion({ x = 0, y = 0, z = -1 }, p.yaw, p.pitch); local ang = math.deg(math.acos(-d.z)); truthy(ang <= w.def.spread + 0.01, "fuera del cono: " .. ang)
+	end
 end)
 
 print("== Tiempo para matar (zombi de 100 de vida)")

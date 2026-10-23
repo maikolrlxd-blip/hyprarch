@@ -6,6 +6,8 @@ local TweenService = game:GetService("TweenService")
 local RS = game:GetService("ReplicatedStorage")
 local SR = RS:WaitForChild("Luto", 5) or RS:WaitForChild("SlimeRush", 5)
 local Impactos = SR and require(SR.Impactos) or nil
+local Disparo = SR and require(SR.Disparo) or nil
+local reservaHuecos, reservaMarcas = nil, nil
 
 local FX = {}
 local SONIDOS = {} -- nombre -> "rbxassetid://..." (pendiente de subir)
@@ -42,9 +44,35 @@ local function mancha(pos, normal, tam, vida)
 	Debris:AddItem(m, vida + 1)
 end
 
+-- AGUJERO DE BALA: marca visible DONDE impacta (hueco oscuro con borde astillado). Se pega a la pieza golpeada para que la siga si se mueve.
+function FX.agujero(pos, normal, pieza, armaId, sobreEnemigo)
+	if not Disparo or typeof(normal) ~= "Vector3" then return end
+	local a = Disparo.agujero(armaId or "pistola", sobreEnemigo)
+	local reserva = sobreEnemigo and reservaMarcas or reservaHuecos
+	if not reserva then
+		reserva = Impactos.nuevaReserva(sobreEnemigo and Disparo.AGUJERO.max_enemigo or Disparo.AGUJERO.max_mapa)
+		if sobreEnemigo then reservaMarcas = reserva else reservaHuecos = reserva end
+	end
+	local function disco(tam, color, alto, desplazo)
+		local d = Instance.new("Part"); d.Shape = Enum.PartType.Cylinder; d.Size = Vector3.new(alto, tam, tam)
+		d.Color = Color3.fromRGB(color[1], color[2], color[3]); d.Material = Enum.Material.SmoothPlastic
+		d.CanCollide = false; d.CanQuery = false; d.CanTouch = false; d.Massless = true; d.Anchored = false
+		d.CFrame = CFrame.lookAt(pos + normal * desplazo, pos + normal) * CFrame.Angles(0, math.rad(90), 0)
+		d.Parent = workspace
+		if pieza and pieza.Parent then
+			if pieza.Anchored then d.Anchored = true else local w = Instance.new("WeldConstraint"); w.Part0 = d; w.Part1 = pieza; w.Parent = d end
+		else d.Anchored = true end
+		Debris:AddItem(d, a.vida + 1); return d
+	end
+	local borde = disco(a.tam * a.borde, a.color_borde, 0.03, 0.02)
+	local centro = disco(a.tam, a.color_centro, 0.05, 0.035)
+	local viejo = Impactos.agregarMancha(reserva, { borde, centro }, os.clock())
+	if viejo and viejo.mancha then for _, p in ipairs(viejo.mancha) do if p.Parent then p:Destroy() end end end
+end
+
 function FX.mostrar(pos, spec, normal)
 	emisor(pos, spec.efecto)
-	if spec.mancha and normal then mancha(pos, normal, spec.mancha.tam, Impactos and Impactos.MANCHAS.vida or 20) end
+	if spec.mancha and typeof(normal) == "Vector3" then mancha(pos, { x = normal.X, y = normal.Y, z = normal.Z }, spec.mancha.tam, Impactos and Impactos.MANCHAS.vida or 20) end
 end
 
 return FX
