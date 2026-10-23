@@ -5,6 +5,7 @@ local RS = game:GetService("ReplicatedStorage")
 local SS = game:GetService("ServerStorage")
 local Collection = game:GetService("CollectionService")
 local Debris = game:GetService("Debris")
+local PFS = game:GetService("PathfindingService")
 local Lighting = game:GetService("Lighting")
 local Luto = RS:WaitForChild("Luto")
 local Partida, Tienda, Animaciones = require(Luto.Partida), require(Luto.Tienda), require(Luto.Animaciones)
@@ -100,6 +101,8 @@ local function colorear(modelo, jefe)
 end
 
 -- Carga las pistas de animacion (si ya hay ids publicados en src/Animaciones.lua)
+-- Prioridades para que Reposo no se mezcle con Caminar/Atacar (prueba en Studio)
+local PRIORIDAD = { Reposo = Enum.AnimationPriority.Idle, Caminar = Enum.AnimationPriority.Movement, Atacar = Enum.AnimationPriority.Action, Caer = Enum.AnimationPriority.Action2 }
 local function cargarAnimaciones(hum, clave)
 	local conj = Animaciones[clave] or Animaciones.zombi
 	local animator = hum:FindFirstChildOfClass("Animator") or Instance.new("Animator", hum)
@@ -108,7 +111,7 @@ local function cargarAnimaciones(hum, clave)
 		if id ~= "" then
 			local a = Instance.new("Animation"); a.AnimationId = id
 			local ok, pista = pcall(function() return animator:LoadAnimation(a) end)
-			if ok then pistas[nombre] = pista end
+			if ok then pista.Priority = PRIORIDAD[nombre] or pista.Priority; pistas[nombre] = pista end
 		end
 	end
 	if pistas.Caminar then pistas.Caminar.Looped = true end
@@ -135,6 +138,7 @@ local function crearZombi(cfg, esJefe)
 	local j = cfg.jefe
 	modelo.Name = esJefe and "Jefe" or "Zombi"; if not molde then colorear(modelo, esJefe) end -- con plantilla de Blender se respeta su textura pintada
 	hum.MaxHealth = esJefe and j.hp or cfg.hp; hum.Health = hum.MaxHealth; hum.WalkSpeed = esJefe and j.velocidad or cfg.velocidad
+	hum.BreakJointsOnDeath = false -- para que se vea la animacion Caer en vez de desarmarse
 	hum.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOn; hum.DisplayName = esJefe and "LA " .. string.upper(j.tipo) or "Zombi"
 	Collection:AddTag(modelo, "Zombi"); modelo:SetAttribute("Jefe", esJefe)
 	if esJefe and not plantilla("Jefe_" .. j.tipo) then modelo:ScaleTo(j.escala) end
@@ -169,6 +173,7 @@ local function crearZombi(cfg, esJefe)
 	end)
 	task.spawn(function() -- IA: perseguir al jugador vivo mas cercano y golpearlo cuerpo a cuerpo
 		local ultimo = 0
+		local camino, indice, ultimoCalc = nil, 2, 0 -- ruta por PathfindingService (evita quedarse pegado a coches y barreras)
 		while modelo.Parent and hum.Health > 0 do
 			local mejor, dist
 			for _, plr in ipairs(Players:GetPlayers()) do
@@ -180,7 +185,24 @@ local function crearZombi(cfg, esJefe)
 				if moviendo and not pistas.Caminar.IsPlaying then pistas.Caminar:Play() elseif not moviendo and pistas.Caminar.IsPlaying then pistas.Caminar:Stop() end
 			end
 			if mejor then
-				hum:MoveTo(viva(mejor).Position)
+				local alcance = esJefe and 9 or 5
+				local destino = viva(mejor).Position
+				if dist < alcance + 2 then destino = root.Position -- ya esta al alcance: no subirse encima del jugador
+				elseif dist > 14 then
+					local t = now()
+					if not camino or t - ultimoCalc > 1.5 + math.random() * 0.5 then
+						ultimoCalc = t
+						local path = PFS:CreatePath({ AgentRadius = esJefe and 3 or 2, AgentHeight = esJefe and 10 or 5.5, AgentCanJump = false })
+						local okp = pcall(function() path:ComputeAsync(root.Position, destino) end)
+						if okp and path.Status == Enum.PathStatus.Success then camino = path:GetWaypoints(); indice = 2 else camino = nil end
+					end
+					if camino then
+						local wp = camino[indice]
+						if wp and (root.Position - wp.Position).Magnitude < 4 then indice = indice + 1; wp = camino[indice] end
+						if wp then destino = wp.Position end
+					end
+				end
+				hum:MoveTo(destino)
 				if dist < (esJefe and 9 or 5) and now() - ultimo > 1.2 then
 					ultimo = now(); if pistas.Atacar then pistas.Atacar:Play() end; local hp = mejor.Character:FindFirstChildOfClass("Humanoid"); if hp then hp:TakeDamage(dano) end
 				end
