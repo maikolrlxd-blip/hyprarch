@@ -9,12 +9,27 @@ v5, del 2026-10-23. Es realista, con proporciones tipo Rthro, tal como pidió Ma
 - **Rodillas:** se ve una costura en la junta de cada rodilla, porque cada pieza R15 es rígida.
 - **Arrugas:** las de la frente y los surcos de la boca siguen siendo trazos pintados, aunque ya suaves.
 - **Sin dedos:** las manos tienen palma y dedos en bloque.
-- **En el juego todavía no se anima:** los clips (`clips/*.fbx`) hay que importarlos con el Animation Editor y publicarlos con la cuenta de Maikol, y el servidor de Luto tiene que reproducirlos. Mientras tanto, las zombis se deslizan rígidas en su pose de reposo.
+- **Animaciones en el juego (publicadas el 2026-10-23):** se reproducen, pero con dos fallos que se arreglan en el servidor (`apocalipsis-juego/server/Partida.server.lua`, que no es mío):
+  - los cuatro clips se publicaron con prioridad Action, y como el servidor deja Reposo sonando mientras camina o ataca, Reposo se mezcla al 50 % con Caminar y Atacar. Hay que asignar la prioridad de cada pista al cargarla: Reposo Idle, Caminar Movement, Atacar Action, Caer Action2;
+  - al morir se rompen las articulaciones (`BreakJointsOnDeath`), así que el cuerpo se desmonta y el clip Caer no llega a verse.
 
 ## Probado en Roblox Studio (2026-10-23)
 - **Importación:** `ZombiMujer_Estatico.fbx` entró con el 3D Importer y la sesión de Maikol, con 15 MeshPart de nombres R15 exactos y texturas.
 - **Rig:** `integracion/ArmarZombi.lua` lo dejó como rig R15 con `HumanoidRootPart`, 15 Motor6D y un Humanoid R15. Mide 2 × 5,71 × 1,17 studs y está en `ServerStorage.LUTO_Plantillas.Zombi_Mujer`.
 - **Play:** el servidor de Luto clona la plantilla. Las mujeres zombi salen de los bordes del mapa con su textura y su barra de vida y van a por el jugador (captura en `renders/Studio_Luto_zombis_mujer_en_partida.jpg`).
+- **Animaciones publicadas** (cuenta de Maikol, fuera de venta) y escritas en `apocalipsis-juego/src/Animaciones.lua`:
+
+  | Clip | Id |
+  |---|---|
+  | Reposo | 117323418394221 |
+  | Caminar | 128425423837041 |
+  | Atacar | 81918422160520 |
+  | Caer | 131892149953171 |
+
+  - Salen de `integracion/Animaciones_Zombi.rbxmx`, que genera `tools/exportar_animaciones_roblox.py` desde `ZombiMujer.blend` (KeyframeSequence a 30 fps).
+  - Antes de publicar se comprobaron sobre el rig: caminar, atacar y caer.
+  - Después, cada id se descargó en Studio y coincide con su secuencia local en claves y poses.
+  - En Play, las zombis reproducen Reposo, Caminar y Atacar.
 
 ## Qué funciona
 - **Cuerpo y ropa:** piel pálida verdosa con moretones y suciedad, y vestido floral desvaído, roto y manchado de tierra (no de sangre). Un pie va descalzo y el otro con zapato.

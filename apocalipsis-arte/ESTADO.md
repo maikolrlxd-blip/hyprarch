@@ -1,12 +1,16 @@
 # Estado del encargo "apocalipsis" (arte en Blender) — juego Luto
 
-Actualizado el 2026-10-23 a las 06:20 por la sesión del PC (Claude). El encargo completo está en `ENCARGO.md` y el estilo en `taller-ia/ESTILO.md` (Poli Pintado). El resumen de la noche está en `RESUMEN-NOCHE.md`.
+Actualizado el 2026-10-23 a las 11:05 por la sesión del PC (Claude). El encargo completo está en `ENCARGO.md` y el estilo en `taller-ia/ESTILO.md` (Poli Pintado). El resumen de la noche está en `RESUMEN-NOCHE.md`.
 
 ## Qué falla o falta (primero)
-- **Animaciones en Roblox:** ningún clip está publicado todavía.
-  - Las zombis y los jefes se deslizan sin andar en el juego.
-  - Las armas no tienen sus clips en Studio.
-  - Hay que importar los FBX de `clips/` con el Animation Editor, publicarlos con la cuenta de Maikol y que el servidor de Luto los cargue.
+- **Animaciones de la zombi y los jefes:** publicadas el 2026-10-23 con la cuenta de Maikol (12 clips) y escritas en `apocalipsis-juego/src/Animaciones.lua`. En Play se reproducen, pero hay tres fallos que se arreglan en el servidor (`apocalipsis-juego/server/Partida.server.lua`, del director):
+  - todos los clips llevan prioridad Action, y como Reposo sigue sonando, se mezcla al 50 % con Caminar y Atacar;
+  - al morir se rompen las articulaciones, así que el cuerpo se desmonta y Caer no se ve;
+  - el jefe va con `MoveTo` hasta el jugador y se le sube a la cabeza.
+- **Animaciones de las armas:** sin publicar.
+- **Ambiente en el juego** (`mapa/ambiente-roblox.lua`, aplicado en el place):
+  - el cielo sigue siendo el skybox azul con nubes blancas por defecto y la bruma de polvo solo se nota en el horizonte: parece una tarde soleada, no un apocalipsis;
+  - con el sol bajo al fondo de una de las calles, el bloom deslumbra y los personajes a contraluz salen lavados.
 - **Armas (v5):** sus fallos están en `armas/<arma>/ESTADO.md`:
   - la manga tapa la pantalla al montar la corredera de la pistola;
   - la escopeta se ve fina en primera persona.
@@ -14,8 +18,7 @@ Actualizado el 2026-10-23 a las 06:20 por la sesión del PC (Claude). El encargo
 - **Jefes:** La Alta todavía no tiene identidad propia, y en los dos la única deformación son los brazos largos.
 - **Mapa (v3):** los solares se repiten, el borde termina en seco y el follaje es de bloques.
 - **PENDIENTE DE MAIKOL:**
-  - OK para subir los commits locales de esta madrugada;
-  - publicar las animaciones, o decirme que lo haga yo en Studio;
+  - OK para subir el commit de los ids de animación y la prueba (los 11 commits de la madrugada ya están subidos);
   - una prueba con 2 clientes.
 
 ## Entregas
@@ -38,6 +41,14 @@ Actualizado el 2026-10-23 a las 06:20 por la sesión del PC (Claude). El encargo
   2. ejecutar su `integracion/ArmarZombi.lua` con el modelo seleccionado, que lo deja como rig R15 con HumanoidRootPart, Motor6D y Humanoid;
   3. moverlo a `LUTO_Plantillas` como `Zombi_Mujer`, `Jefe_lamentadora` o `Jefe_alta`.
 - **Prueba de Luto en Studio:** el informe y el arreglo de una línea (`viva()` con un humanoide muerto) se le mandaron al director. No los commiteé yo.
+- **Animaciones:**
+  - `tools/exportar_animaciones_roblox.py` saca de cada `.blend` un `integracion/Animaciones_*.rbxmx` con las KeyframeSequence.
+  - Se inserta en `ServerStorage` y cada secuencia se publica con clic derecho > Guardar / Exportar > Guardar en Roblox.
+  - Los ids están en `zombi-mujer/ESTADO.md` y en el de cada jefe.
+- **Segunda prueba en Studio (2026-10-23):**
+  - Copia del place antes y después en `C:\Users\maiko\Backups\luto\`.
+  - Las capturas del HUD a 1920 × 1080 (emulador de dispositivos de Studio; la pantalla del PC es de 1024 × 768) están en `renders/Studio_Luto_HUD_1080_*.jpg`.
+  - El script de prueba con `JEFE_CADA = 1` quedó en `ServerStorage.LUTO_Pruebas` del place y no se ejecuta.
 
 ## Cómo se construye
 - Cada pieza tiene su script en `tools/`. Se ejecuta con:
