@@ -304,7 +304,9 @@ class MB:
         if recalc:
             bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
         if triangulate:
-            # EAR_CLIP: los perfiles concavos (empunaduras, culatas) se triangulan sin crear caras fuera del contorno
+            # las caras nuevas de bmesh tienen normal (0,0,0): sin calcularla, el triangulado proyecta los poligonos
+            # concavos (empunaduras, culatas) en un plano equivocado y crea triangulos fuera del contorno, invertidos (negros)
+            bm.normal_update()
             bmesh.ops.triangulate(bm, faces=bm.faces[:], quad_method='BEAUTY', ngon_method='EAR_CLIP')
         o = Vector(origin)
         for v in bm.verts:
