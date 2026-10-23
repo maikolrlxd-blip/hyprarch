@@ -12,7 +12,7 @@ Código: `src/Weapons.lua` (puro, sin Roblox) + `tests/` (9 pruebas ok: `python3
 | Equipar | 0,8 s | 1,0 s | 0,9 s |
 | Alcance / daño pleno hasta | 140 / 60 studs (cae a 60 %) | 60 / 12 studs (cae a 15 %) | 110 / 45 studs (cae a 50 %) |
 | Dispersión (quieto / moviéndose) | 0,8° / 1,5° | 5,5° / 7,0° | 1,6° / 3,0° (+0,12° por bala en ráfaga) |
-| **Inspeccionar** | **PENDIENTE: Maikol dirá cómo es** (placeholder 2,5 s) | idem | idem |
+| **Inspeccionar** | Maikol: la gira en diagonal a la derecha, luego a la izquierda, estira la mano y la pone de lado en posición de disparo (estilo gángster) y vuelve al reposo (~3-3,5 s) | libre (la inventa el Coordinador, 2,5-3,5 s) | libre (idem) |
 
 Tiempo para matar a un zombi de 100 de vida (todos los disparos aciertan): pistola 4 disparos / 0,67 s; escopeta cerca 2 / 0,91 s; subfusil 8 / 0,58 s. A la cabeza: pistola 2 / 0,22 s, escopeta 1, subfusil 4 / 0,25 s. (No cuenta fallos, recargas ni dispersión: es el mejor caso.)
 
