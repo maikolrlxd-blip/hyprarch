@@ -9,6 +9,7 @@ local PFS = game:GetService("PathfindingService")
 local Lighting = game:GetService("Lighting")
 local Luto = RS:WaitForChild("Luto")
 local Partida, Tienda, Animaciones = require(Luto.Partida), require(Luto.Tienda), require(Luto.Animaciones)
+local Apariencia = require(Luto.Apariencia)
 
 Players.CharacterAutoLoads = false
 local SEED = tonumber(workspace:GetAttribute("LUTO_Seed")) or 1234
@@ -72,6 +73,7 @@ local function cargar(plr, indice)
 		local ch = plr.Character or plr.CharacterAdded:Wait()
 		local root = ch:WaitForChild("HumanoidRootPart", 5)
 		if root then ch:PivotTo(CFrame.new(puntoJugadores + Vector3.new(((indice or 1) - 2.5) * 5, 0, 0))) end
+		pcall(Apariencia.aplicar, ch) -- cuerpo base de Luto (sin la skin de Roblox del jugador)
 		local hum = ch:FindFirstChildOfClass("Humanoid")
 		if hum then
 			hum.Died:Connect(function()
