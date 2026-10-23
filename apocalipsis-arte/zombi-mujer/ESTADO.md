@@ -9,7 +9,12 @@ v5, del 2026-10-23. Es realista, con proporciones tipo Rthro, tal como pidió Ma
 - **Rodillas:** se ve una costura en la junta de cada rodilla, porque cada pieza R15 es rígida.
 - **Arrugas:** las de la frente y los surcos de la boca siguen siendo trazos pintados, aunque ya suaves.
 - **Sin dedos:** las manos tienen palma y dedos en bloque.
-- **Sin probar en Studio:** los clips con el Animation Editor. El rig R15 con Motor6D se monta con `integracion/ArmarZombi.lua`.
+- **En el juego todavía no se anima:** los clips (`clips/*.fbx`) hay que importarlos con el Animation Editor y publicarlos con la cuenta de Maikol, y el servidor de Luto tiene que reproducirlos. Mientras tanto, las zombis se deslizan rígidas en su pose de reposo.
+
+## Probado en Roblox Studio (2026-10-23)
+- **Importación:** `ZombiMujer_Estatico.fbx` entró con el 3D Importer y la sesión de Maikol, con 15 MeshPart de nombres R15 exactos y texturas.
+- **Rig:** `integracion/ArmarZombi.lua` lo dejó como rig R15 con `HumanoidRootPart`, 15 Motor6D y un Humanoid R15. Mide 2 × 5,71 × 1,17 studs y está en `ServerStorage.LUTO_Plantillas.Zombi_Mujer`.
+- **Play:** el servidor de Luto clona la plantilla. Las mujeres zombi salen de los bordes del mapa con su textura y su barra de vida y van a por el jugador (captura en `renders/Studio_Luto_zombis_mujer_en_partida.jpg`).
 
 ## Qué funciona
 - **Cuerpo y ropa:** piel pálida verdosa con moretones y suciedad, y vestido floral desvaído, roto y manchado de tierra (no de sangre). Un pie va descalzo y el otro con zapato.
