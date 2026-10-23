@@ -18,3 +18,6 @@ Tiempo para matar a un zombi de 100 de vida (todos los disparos aciertan): pisto
 
 Las duraciones de equipar/recargar/disparo deben coincidir con los clips exportados de Blender (el Coordinador entrega los tiempos reales; si cambian, se ajustan aquí). Nombres de clip usados: Equipar, Disparo, Bombear, Recargar, Recargar_Inicio, Recargar_Cartucho, Recargar_Fin, Reposo, Inspeccionar.
 Pendiente de decidir con Maikol: moneda/precio de cada arma, munición comprable en la tienda del mapa, mejoras, y cómo funciona la inspección de cada una.
+
+## Impactos en enemigos (Luto)
+`src/Impactos.lua` (puro, 5 pruebas ok): zona (cabeza/torso/brazo/pierna) → daño, reacción ("Golpeado", probabilidad de tambalearse, empuje), efecto de partículas, sonido (`impacto_zombi`, `marcador_impacto`) y mancha que se desvanece (tope de 60). Sangre ESTILIZADA con opción de apagarla (chispas neutras). `client/ImpactoFX.lua` dibuja los efectos en Roblox: **SIN PROBAR EN STUDIO**. Faltan: el zombi con su animación "Golpeado", subir los audios a Roblox, el disparo real con raycast y la zona de impacto (cabeza/torso...), todo ello por conectar.
