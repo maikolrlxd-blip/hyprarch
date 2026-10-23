@@ -140,6 +140,7 @@ local function crearZombi(cfg, esJefe)
 	local j = cfg.jefe
 	modelo.Name = esJefe and "Jefe" or "Zombi"; if not molde then colorear(modelo, esJefe) end -- con plantilla de Blender se respeta su textura pintada
 	hum.MaxHealth = esJefe and j.hp or cfg.hp; hum.Health = hum.MaxHealth; hum.WalkSpeed = esJefe and j.velocidad or cfg.velocidad
+	hum.NameDisplayDistance = esJefe and 80 or 0; hum.HealthDisplayDistance = esJefe and 80 or 20 -- sin carteles amontonados con muchas zombis
 	hum.BreakJointsOnDeath = false -- para que se vea la animacion Caer en vez de desarmarse
 	hum.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOn; hum.DisplayName = esJefe and "LA " .. string.upper(j.tipo) or "Zombi"
 	Collection:AddTag(modelo, "Zombi"); modelo:SetAttribute("Jefe", esJefe)
@@ -200,12 +201,12 @@ local function crearZombi(cfg, esJefe)
 					end
 					if camino then
 						local wp = camino[indice]
-						if wp and (root.Position - wp.Position).Magnitude < 4 then indice = indice + 1; wp = camino[indice] end
+						if wp and ((root.Position - wp.Position) * Vector3.new(1, 0, 1)).Magnitude < 4 then indice = indice + 1; wp = camino[indice] end
 						if wp then destino = wp.Position end
 					end
 				end
 				hum:MoveTo(destino)
-				if dist < (esJefe and 9 or 5) and now() - ultimo > 1.2 then
+				if dist < (esJefe and 9 or 5) + 2 and now() - ultimo > 1.2 then
 					ultimo = now(); if pistas.Atacar then pistas.Atacar:Play() end; local hp = mejor.Character:FindFirstChildOfClass("Humanoid"); if hp then hp:TakeDamage(dano) end
 				end
 			end

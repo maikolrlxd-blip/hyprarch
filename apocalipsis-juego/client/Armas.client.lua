@@ -10,9 +10,16 @@ local Ins = RS:WaitForChild("LUTO_Inspeccionar"); local Est = RS:WaitForChild("L
 local arma, modo = "pistola", "semi"
 Est.OnClientEvent:Connect(function(st) if st.arma then arma, modo = st.arma, st.modo end end)
 
+-- Punto al que apunta el jugador: rayo desde la CAMARA (lo que ve) hasta lo primero que toca; si no toca nada, un punto lejano en esa direccion.
+-- El servidor dispara desde la cabeza hacia ese punto (asi funciona en tercera persona y de cerca).
 local function apuntar()
 	local cam = workspace.CurrentCamera; local p = UIS:GetMouseLocation()
-	return cam:ViewportPointToRay(p.X, p.Y).Direction.Unit
+	local rayo = cam:ViewportPointToRay(p.X, p.Y)
+	local params = RaycastParams.new(); params.FilterType = Enum.RaycastFilterType.Exclude
+	local excluir = { cam }; if plr.Character then excluir[#excluir + 1] = plr.Character end
+	params.FilterDescendantsInstances = excluir
+	local res = workspace:Raycast(rayo.Origin, rayo.Direction.Unit * 600, params)
+	return res and res.Position or (rayo.Origin + rayo.Direction.Unit * 600)
 end
 
 local disparando = false

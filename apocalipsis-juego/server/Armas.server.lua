@@ -78,8 +78,9 @@ end
 
 R.Disparar.OnServerEvent:Connect(function(plr, aim)
 	local s = estado[plr]; local char = plr.Character
-	if not s or not char or typeof(aim) ~= "Vector3" or aim.Magnitude < 0.5 or aim.Magnitude > 1.5 then return end
+	if not s or not char or typeof(aim) ~= "Vector3" then return end
 	local origen = cabeza(char); if not origen then return end
+	if (aim - origen).Magnitude < 0.5 or (aim - origen).Magnitude > 2000 then return end -- 'aim' es el PUNTO apuntado por la camara del jugador
 	local root = char:FindFirstChild("HumanoidRootPart")
 	local moving = root and root.AssemblyLinearVelocity.Magnitude > 2 or false
 	local w = s.armas[s.actual]
@@ -89,7 +90,7 @@ R.Disparar.OnServerEvent:Connect(function(plr, aim)
 	if r.pump_clip then task.delay(0.35, function() if estado[plr] and estado[plr].actual == s.actual then clip(plr, "Bombear") end end) end
 	local params = RaycastParams.new(); params.FilterType = Enum.RaycastFilterType.Exclude
 	params.FilterDescendantsInstances = { char }
-	local a = aim.Unit
+	local a = (aim - origen).Unit
 	for _, p in ipairs(r.pellets) do
 		local d = Disparo.direccion({ x = a.X, y = a.Y, z = a.Z }, p.yaw, p.pitch)
 		local res = workspace:Raycast(origen, Vector3.new(d.x, d.y, d.z) * w.def.range, params)

@@ -4,7 +4,7 @@
 local Apariencia = {}
 
 Apariencia.BASE = {
-	piel = { 125, 102, 76 }, manga = { 93, 106, 66 }, torso = { 80, 90, 58 }, pantalon = { 58, 56, 50 }, zapato = { 36, 34, 32 },
+	piel = { 107, 90, 68 }, manga = { 75, 81, 54 }, torso = { 66, 72, 48 }, pantalon = { 52, 50, 46 }, zapato = { 32, 30, 28 }, -- iguales a los viewmodels de Blender
 }
 
 local function c(t) return Color3.fromRGB(t[1], t[2], t[3]) end
