@@ -1,0 +1,12 @@
+{
+  "name": "Luto",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": { "$className": "ReplicatedStorage", "Luto": { "$path": "src" } },
+    "ServerScriptService": { "$className": "ServerScriptService", "LutoServidor": { "$path": "server" } },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": { "$className": "StarterPlayerScripts", "LutoCliente": { "$path": "client" } }
+    }
+  }
+}
