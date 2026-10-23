@@ -3,6 +3,18 @@
 Versión v3, del 2026-10-23. Es solo apariencia, en estilo Poli Pintado: formas facetadas, pintura a mano mate, paleta sucia y apagada, y ambiente de polvo.
 
 ## Qué falla (primero)
+- **Los zombis se atascan en coches y edificios** (visto en la prueba del 2026-10-23). La Alta salió por `SpawnZombi_04` (−6, 145) y se quedó unos 25 s parada contra `Coche_Sedan_Oxidado_02`, que está en su mismo carril. Causa: el servidor los lleva con `MoveTo` en línea recta, sin rodear nada.
+  - Línea recta de cada spawn al punto de los jugadores (0, −4), contra las 47 colisiones que sobresalen del suelo:
+
+    | Spawns | Qué pasa |
+    |---|---|
+    | 07, 11 y 12 | Libres |
+    | 05 y 06 | Libres para la zombi; el jefe roza un árbol o una señal |
+    | 01, 02, 03, 04, 08, 09 y 10 | Chocan con coches, barreras o edificios |
+
+  - El arreglo de fondo es que el servidor use `PathfindingService` (las cajas de colisión ya sirven para eso).
+  - Por el lado del mapa se pueden mover los spawns para que al menos el primer tramo quede libre.
+- **El ambiente no se ve apocalíptico en el juego:** el cielo es el skybox azul con nubes por defecto, y el sol bajo deslumbra al fondo de una calle (ver `../ESTADO.md`).
 - **Los solares se repiten:** el mismo `Suelo_Solar_60`, girado, cubre los 16 solares, y desde arriba se nota la repetición de manchas de hierba y piedras.
 - **El mapa termina en seco:** el borde de los solares es un corte recto. En el juego lo tapan la bruma (`ambiente-roblox.lua`) y los muros invisibles del borde, pero desde arriba se ve.
 - **El follaje es de bloques:** el arbusto, la copa del árbol y las hojas de la enredadera son poliedros. Se leen bien de lejos y de cerca se notan.
