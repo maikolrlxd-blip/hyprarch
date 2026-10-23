@@ -51,8 +51,8 @@ for _, t in ipairs(TIENDAS) do
 	local b = mapa and mapa:FindFirstChild("Tienda_" .. t.item, true) or nil -- marcador del mapa de Blender (Part)
 	if b and not b:IsA("BasePart") then b = b:FindFirstChildWhichIsA("BasePart", true) end
 	b = b or bloque("Tienda_" .. t.item, Vector3.new(4, 3, 4), t.pos, t.color)
-	local pp = Instance.new("ProximityPrompt"); pp.HoldDuration = 0.3; pp.MaxActivationDistance = 10; pp.RequiresLineOfSight = false
-	pp.ObjectText = Tienda.ITEMS[t.item].nombre; pp.ActionText = "Comprar (" .. Tienda.precio(t.item, 1) .. ")"; pp.Parent = b
+	local pp = Instance.new("ProximityPrompt"); pp.Style = Enum.ProximityPromptStyle.Custom; pp.HoldDuration = 0.3; pp.MaxActivationDistance = 10; pp.RequiresLineOfSight = false
+	pp.ObjectText = (t.item == "municion") and "Munición" or "Curación"; pp.ActionText = "Comprar · " .. Tienda.precio(t.item, 1); pp.Parent = b
 	prompts[t.item] = pp
 end
 
@@ -131,7 +131,9 @@ local function crearZombi(cfg, esJefe)
 	hum.Died:Connect(function()
 		if muerto then return end; muerto = true; vivosZ = vivosZ - 1
 		local killer = modelo:GetAttribute("UltimoAtacante")
-		partida:zombiMuerto(killer, esJefe, now())
+		local pago = partida:zombiMuerto(killer, esJefe, now())
+		local kp = killer and porId[killer]
+		if kp and pago > 0 then R:FireClient(kp, { ganancia = pago, tipo = esJefe and "JEFE" or "ZOMBI" }) end
 		Debris:AddItem(modelo, 2)
 	end)
 	task.spawn(function() -- IA: perseguir al jugador vivo mas cercano y golpearlo cuerpo a cuerpo
@@ -165,7 +167,10 @@ end
 
 -- ===== Fin y reinicio =====
 finPartida = function(r)
-	R:FireAllClients({ fin = true, rondaMax = r.rondaMax, monedasLobby = r.monedasLobby })
+	for id, plr in pairs(porId) do
+		local p = partida.players[id]
+		if plr.Parent then R:FireClient(plr, { fin = true, rondaMax = r.rondaMax, monedasLobby = r.monedasLobby, kills = p and p.kills or 0 }) end
+	end
 	for _, z in ipairs(Collection:GetTagged("Zombi")) do z:Destroy() end
 	vivosZ = 0
 	task.delay(12, function()
@@ -194,8 +199,8 @@ task.spawn(function()
 			if ev.tipo == "revivir" then
 				for _, id in ipairs(ev.ids) do local plr = porId[id]; if plr then cargar(plr, 1); mensaje(plr, "¡Has revivido!") end end
 			elseif ev.tipo == "inicio_ronda" then
-				avisarTodos(ev.config.esJefe and ("RONDA " .. ev.ronda .. " — ¡JEFE!") or ("RONDA " .. ev.ronda)); proxSpawn = t + 2
-				for item, pp in pairs(prompts) do pp.ActionText = "Comprar (" .. Tienda.precio(item, ev.ronda) .. ")" end
+				R:FireAllClients({ anuncio = { ronda = ev.ronda, jefe = ev.config.esJefe } }); proxSpawn = t + 2
+				for item, pp in pairs(prompts) do pp.ActionText = "Comprar · " .. Tienda.precio(item, ev.ronda) end
 			end
 		end
 		if partida.estado == "ronda" and partida:porAparecer() > 0 and vivosZ < partida.config.simultaneos and t >= proxSpawn then
@@ -204,12 +209,23 @@ task.spawn(function()
 		end
 		if t - ultimoEstado >= 0.5 and partida.estado ~= "fin" then
 			ultimoEstado = t
+			local equipo = {}
+			for _, id in ipairs(partida.order) do
+				local plr = porId[id]; local h = plr and plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+				equipo[#equipo + 1] = { nombre = plr and plr.DisplayName or "?", vivo = partida.players[id].vivo and h ~= nil and h.Health > 0,
+					vida = h and h.Health / math.max(1, h.MaxHealth) or 0 }
+			end
+			local jefeVida, jefeNombre
+			for _, z in ipairs(Collection:GetTagged("Zombi")) do
+				local hz = z:FindFirstChildOfClass("Humanoid")
+				if z:GetAttribute("Jefe") and hz and hz.Health > 0 then jefeVida = hz.Health / hz.MaxHealth; jefeNombre = hz.DisplayName end
+			end
 			for id, plr in pairs(porId) do
 				local p = partida.players[id]
 				if p and plr.Parent then
 					R:FireClient(plr, { estado = partida.estado, ronda = partida.ronda, restantes = math.max(0, partida.restantes), monedas = p.monedas,
 						vivos = partida:vivos(), total = #partida.order, siguiente = partida.estado == "intermision" and math.max(0, math.ceil(partida.t_next - t)) or nil,
-						jefe = partida.config and partida.config.esJefe or false })
+						jefe = partida.config and partida.config.esJefe or false, equipo = equipo, jefeVida = jefeVida, jefeNombre = jefeNombre })
 				end
 			end
 		end

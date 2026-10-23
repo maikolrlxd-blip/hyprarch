@@ -1,0 +1,26 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><title>Luto - fin, jefe y tienda (mock)</title>
+<style>
+:root{--panel:rgba(22,23,27,.9);--line:#5b5d63;--txt:#e8e4d8;--mut:#9a978c;--red:#b33a3a;--amb:#e3b95c}
+*{box-sizing:border-box;margin:0}
+body{width:1600px;height:900px;position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 70%,#35383f,#15161a 70%);font-family:"Oswald","Arial Narrow",Impact,sans-serif;color:var(--txt)}
+.panel{position:absolute;background:var(--panel);border:1px solid var(--line)}
+.panel::before,.panel::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--amb)}
+.panel::before{left:-3px;top:-3px;border-right:0;border-bottom:0}.panel::after{right:-3px;bottom:-3px;border-left:0;border-top:0}
+.lbl{font-size:14px;letter-spacing:.22em;color:var(--mut);text-transform:uppercase}
+.bar{height:12px;background:#0e0e10;border:1px solid #000;position:relative}.bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(#c24b4b,#8f2c2c)}
+#jefe{left:50%;top:146px;transform:translateX(-50%);width:440px;padding:8px 14px 12px;text-align:center}
+#jefe .nm{font-size:18px;letter-spacing:.16em;color:var(--red);margin-bottom:8px}
+#fin{left:50%;top:50%;transform:translate(-50%,-50%);width:560px;height:300px;text-align:center;padding-top:16px;background:rgba(10,10,13,.95)}
+#fin .t{font-size:22px;letter-spacing:.4em;color:var(--red)}#fin .r{font-size:64px;font-weight:700;letter-spacing:.06em;margin-top:6px}
+#fin .d{margin-top:18px;font-size:24px;color:var(--mut);line-height:1.5}#fin .d b{color:var(--amb)}
+#fin .n{position:absolute;bottom:14px;left:0;right:0;font-size:18px;color:var(--amb);letter-spacing:.12em}
+#tienda{left:380px;top:560px;width:280px;height:70px;padding:8px 14px}
+#tienda .k{position:absolute;left:14px;top:18px;width:34px;height:34px;background:var(--amb);color:#0e0e10;font-size:22px;text-align:center;line-height:34px}
+#tienda .a{margin-left:46px;font-size:18px}#tienda .b{margin-left:46px;font-size:22px;color:var(--amb)}
+.caja{position:absolute;left:420px;top:640px;width:150px;height:110px;background:#5b5233;clip-path:polygon(0 15%,100% 0,100% 100%,0 100%)}
+</style><body>
+<div class="caja"></div>
+<div class="panel" id="jefe"><div class="nm">LA LAMENTADORA</div><div class="bar"><i style="width:72%"></i></div></div>
+<div class="panel" id="tienda"><div class="k">E</div><div class="a">MUNICIÓN (+2 CARGADORES)</div><div class="b">COMPRAR (50)</div></div>
+<div class="panel" id="fin"><div class="t">LUTO</div><div class="r">RONDA 7</div><div class="d">BAJAS <b>41</b><br>MONEDAS DEL LOBBY <b>+12</b></div><div class="n">NUEVA PARTIDA EN 9</div></div>
+</body></html>
