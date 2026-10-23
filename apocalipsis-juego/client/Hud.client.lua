@@ -8,6 +8,7 @@ local Tema = require(script.Parent:WaitForChild("ui"):WaitForChild("Tema"))
 local C, n, E = Tema.col, Tema.n, Tema.etiqueta
 local RPartida, REstado, RImpacto = RS:WaitForChild("LUTO_Partida"), RS:WaitForChild("LUTO_Estado"), RS:WaitForChild("LUTO_Impacto")
 
+pcall(function() game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false) end) -- evita que la lista de jugadores se monte con el equipo
 local gui = n("ScreenGui", { Name = "LutoHud", ResetOnSpawn = false, IgnoreGuiInset = true, ZIndexBehavior = Enum.ZIndexBehavior.Sibling }, plr:WaitForChild("PlayerGui"))
 Tema.escala(gui)
 
@@ -28,30 +29,30 @@ end
 
 -- ===== Panel de ronda (arriba al centro) =====
 local pRonda = Tema.panel(gui, { Size = UDim2.fromOffset(340, 92), AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 18) })
-E(pRonda, { Text = "ronda", TextSize = 14, TextColor3 = C.mut, Size = UDim2.new(1, 0, 0, 18), Position = UDim2.fromOffset(0, 6) })
+E(pRonda, { Text = "ronda", TextSize = 17, TextColor3 = C.mut, Size = UDim2.new(1, 0, 0, 18), Position = UDim2.fromOffset(0, 6) })
 local tRonda = E(pRonda, { Text = "--", TextSize = 46, Font = Enum.Font.Oswald, Size = UDim2.new(1, 0, 0, 46), Position = UDim2.fromOffset(0, 18) })
 local tZombis = E(pRonda, { Text = "", TextSize = 16, TextColor3 = C.mut, Size = UDim2.new(1, 0, 0, 20), Position = UDim2.new(0, 0, 1, -26) })
 local tSiguiente = E(gui, { Text = "", TextSize = 18, TextColor3 = C.ambar, AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 118), Size = UDim2.fromOffset(340, 24) })
 
 -- ===== Jefe (banner bajo el panel de ronda) =====
 local pJefe = Tema.panel(gui, { Size = UDim2.fromOffset(440, 54), AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 146), Visible = false })
-local tJefe = E(pJefe, { Text = "jefe", TextSize = 18, TextColor3 = C.rojo, Size = UDim2.new(1, 0, 0, 22), Position = UDim2.fromOffset(0, 4) })
+local tJefe = E(pJefe, { Text = "jefe", TextSize = 22, TextColor3 = Color3.fromRGB(225, 85, 85), Size = UDim2.new(1, 0, 0, 22), Position = UDim2.fromOffset(0, 4) })
 local bJefe = Tema.barra(pJefe, { Size = UDim2.new(1, -28, 0, 12), Position = UDim2.new(0, 14, 1, -22) }); bJefe.relleno.BackgroundColor3 = C.rojo
 
 -- ===== Equipo (arriba a la izquierda) =====
 local pEquipo = Tema.panel(gui, { Size = UDim2.fromOffset(250, 40), Position = UDim2.fromOffset(28, 18), Visible = false })
-E(pEquipo, { Text = "equipo", TextSize = 13, TextColor3 = C.mut, Size = UDim2.new(1, -16, 0, 16), Position = UDim2.fromOffset(10, 4), TextXAlignment = Enum.TextXAlignment.Left })
+E(pEquipo, { Text = "equipo", TextSize = 16, TextColor3 = C.mut, Size = UDim2.new(1, -16, 0, 16), Position = UDim2.fromOffset(10, 4), TextXAlignment = Enum.TextXAlignment.Left })
 local filasEquipo = {}
 
 -- ===== Vida y monedas (abajo a la izquierda) =====
 local pVida = Tema.panel(gui, { Size = UDim2.fromOffset(380, 118), AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 28, 1, -28) })
-E(pVida, { Text = "vida", TextSize = 14, TextColor3 = C.mut, Size = UDim2.fromOffset(80, 18), Position = UDim2.fromOffset(16, 10), TextXAlignment = Enum.TextXAlignment.Left })
+E(pVida, { Text = "vida", TextSize = 17, TextColor3 = C.mut, Size = UDim2.fromOffset(80, 18), Position = UDim2.fromOffset(16, 10), TextXAlignment = Enum.TextXAlignment.Left })
 local tVida = E(pVida, { Text = "100", TextSize = 34, Size = UDim2.fromOffset(120, 36), Position = UDim2.new(1, -136, 0, 4), TextXAlignment = Enum.TextXAlignment.Right })
 local bVida = Tema.barra(pVida, { Size = UDim2.new(1, -32, 0, 16), Position = UDim2.fromOffset(16, 46) })
 local rombo = n("Frame", { Size = UDim2.fromOffset(16, 16), Position = UDim2.fromOffset(22, 80), Rotation = 45, BackgroundColor3 = C.ambar, BorderSizePixel = 0 }, pVida)
 n("UIStroke", { Color = Color3.fromRGB(138, 106, 28), Thickness = 2 }, rombo)
 local tMonedas = E(pVida, { Text = "0", TextSize = 28, TextColor3 = C.ambar, Size = UDim2.fromOffset(120, 32), Position = UDim2.fromOffset(46, 72), TextXAlignment = Enum.TextXAlignment.Left })
-E(pVida, { Text = "monedas", TextSize = 13, TextColor3 = C.mut, Size = UDim2.fromOffset(100, 18), Position = UDim2.fromOffset(150, 80), TextXAlignment = Enum.TextXAlignment.Left })
+E(pVida, { Text = "monedas", TextSize = 16, TextColor3 = C.mut, Size = UDim2.fromOffset(100, 18), Position = UDim2.fromOffset(150, 80), TextXAlignment = Enum.TextXAlignment.Left })
 
 -- ===== Arma y municion (abajo a la derecha) =====
 local pArma = Tema.panel(gui, { Size = UDim2.fromOffset(380, 150), AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -28, 1, -28) })
@@ -119,7 +120,7 @@ end)
 
 -- ===== Anuncio central =====
 local anuncio = n("Frame", { Size = UDim2.fromOffset(700, 130), AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 230), BackgroundTransparency = 1, Visible = false }, gui)
-local aPeq = E(anuncio, { Text = "", TextSize = 20, TextColor3 = C.mut, Size = UDim2.new(1, 0, 0, 26) })
+local aPeq = E(anuncio, { Text = "", TextSize = 26, TextColor3 = C.txt, TextStrokeTransparency = 0.4, TextStrokeColor3 = Color3.new(0, 0, 0), Size = UDim2.new(1, 0, 0, 26) })
 local aGrande = E(anuncio, { Text = "", TextSize = 84, Size = UDim2.new(1, 0, 0, 90), Position = UDim2.fromOffset(0, 30), TextStrokeTransparency = 0.3, TextStrokeColor3 = Color3.new(0, 0, 0) })
 local tokenAnuncio = 0
 local function mostrarAnuncio(peq, grande, color, seg)
