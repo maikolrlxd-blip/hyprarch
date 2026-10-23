@@ -35,7 +35,7 @@ Cada arma lleva modelo de mundo y viewmodel con brazos R15, con los mismos clips
 
 ## Jefes
 - **La Lamentadora v0.1, de Codex:** guardada con su crítica, porque tenía la cara de caricatura y el pelo en tablas. El .blend está en Backups.
-- **La Lamentadora v0.2 y La Alta:** se construyen sobre la base de la mujer zombi. Su estado está en `bosses/*/ESTADO.md`.
+- **La Lamentadora v0.2 y La Alta v0.1:** se construyeron sobre la base de la mujer zombi: piezas R15, clips, 1,75× y 2×, brazos largos y vestido de luto. La Lamentadora tiene ojos hundidos y la boca abierta en un lamento. Las dos están importadas en Studio como `Jefe_lamentadora` y `Jefe_alta`. **Qué falla:** La Alta parece la zombi en grande, sin identidad propia; y en las dos, la única deformación son los brazos largos.
 
 ## Mapa (300 × 300 studs, v3)
 - **Qué se ve:**

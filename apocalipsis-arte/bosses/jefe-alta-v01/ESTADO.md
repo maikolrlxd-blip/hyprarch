@@ -5,7 +5,7 @@ Del 2026-10-23. Es el segundo tipo de jefe de Luto, hecho sobre la base de la mu
 ## Qué falla
 - **Sin identidad propia:** parece la mujer zombi en grande (2×), con vestido gris. Le falta algo que la distinga de lejos, como una silueta muy delgada y estirada, otra ropa o un peinado distinto.
 - **Clips:** son los de la zombi escalados.
-- **Sin probar en Studio** y sin animaciones publicadas.
+- **Importada en Studio** (2026-10-23) como `ServerStorage.LUTO_Plantillas.Jefe_alta`, con su rig R15. Faltan las animaciones publicadas y verla en una ronda de jefe.
 
 ## Qué funciona
 - **Aspecto:** mide unos 11,5 studs, más del doble que un R15. Tiene los brazos largos (×1,25), la cara de angustia de la zombi y un vestido gris apagado y roto.

@@ -7,7 +7,7 @@ Del 2026-10-23. Está hecha sobre la base de la mujer zombi: piezas R15, rig y c
 - **Pelo:** es negro, pero sus reflejos pintados tiran a marrón y, de cerca, los mechones siguen pareciendo tablas.
 - **Cara:** las arrugas y los surcos son los mismos trazos que en la zombi.
 - **Clips:** son los de la zombi escalados; no tiene clip de lamento propio.
-- **Sin probar en Studio:** no está importada. Tampoco tiene animaciones publicadas.
+- **Importada en Studio** (2026-10-23) como `ServerStorage.LUTO_Plantillas.Jefe_lamentadora`, con su rig R15. Faltan las animaciones publicadas y verla en una ronda de jefe (cada 15 rondas).
 
 ## Qué funciona
 - **Tamaño:** mide unos 10 studs, casi el doble que un R15.

@@ -1,36 +1,33 @@
 # Estado del encargo "apocalipsis" (arte en Blender) — juego Luto
 
-Actualizado el 2026-10-23 a las 05:30 por la sesión del PC (Claude). El encargo completo está en `ENCARGO.md` y el estilo en `taller-ia/ESTILO.md` (Poli Pintado).
+Actualizado el 2026-10-23 a las 06:20 por la sesión del PC (Claude). El encargo completo está en `ENCARGO.md` y el estilo en `taller-ia/ESTILO.md` (Poli Pintado). El resumen de la noche está en `RESUMEN-NOCHE.md`.
 
 ## Qué falla o falta (primero)
-- **Armas:**
-  - la v4 está subida;
-  - la v5 se está construyendo: mangas del viewmodel más finas, recarga de la pistola sin tapar la pantalla, escopeta más cerca, inspecciones más visibles;
-  - fallos que siguen: los de cada `armas/<arma>/ESTADO.md`;
-  - **sin importar a Studio:** los clips (Animation Editor) y el Tool.
-- **Mujer zombi:**
-  - la v4 está hecha; la v5 en cola (sin zarpazos en el antebrazo y trazos de la cara más suaves);
-  - **sin importar todavía a Studio**: el script `zombi-mujer/integracion/ArmarZombi.lua` ya está listo.
-- **Jefes:** La Lamentadora v0.2 y La Alta, en cola. Salen de la misma base que la zombi: más grandes, brazos más largos y ropa de luto.
-  - La v0.1 de Codex está guardada en `bosses/la-lamentadora-v01/`, con su crítica.
-- **Mapa:** terminado y probado en Studio. Sus pegas menores están en `mapa/ESTADO.md`:
-  - los solares se repiten;
-  - el borde termina en seco;
-  - el follaje es de bloques.
+- **Animaciones en Roblox:** ningún clip está publicado todavía.
+  - Las zombis y los jefes se deslizan sin andar en el juego.
+  - Las armas no tienen sus clips en Studio.
+  - Hay que importar los FBX de `clips/` con el Animation Editor, publicarlos con la cuenta de Maikol y que el servidor de Luto los cargue.
+- **Armas (v5):** sus fallos están en `armas/<arma>/ESTADO.md`:
+  - la manga tapa la pantalla al montar la corredera de la pistola;
+  - la escopeta se ve fina en primera persona.
+- **Mujer zombi (v5):** el pelo, de cerca, se ve rígido y se nota la costura de las rodillas.
+- **Jefes:** La Alta todavía no tiene identidad propia, y en los dos la única deformación son los brazos largos.
+- **Mapa (v3):** los solares se repiten, el borde termina en seco y el follaje es de bloques.
 - **PENDIENTE DE MAIKOL:**
-  - OK para subir los commits locales (mapa y La Lamentadora v0.1);
-  - las animaciones de los zombis y las armas en Roblox se publican con su cuenta desde el Animation Editor.
+  - OK para subir los commits locales de esta madrugada;
+  - publicar las animaciones, o decirme que lo haga yo en Studio;
+  - una prueba con 2 clientes.
 
 ## Entregas
 | Pieza | Carpeta | Triángulos | Estado |
 |---|---|---|---|
-| Pistola 9mm | `armas/pistola-9mm/` | 634 | v4 subida, v5 en construcción |
-| Escopeta | `armas/escopeta/` | 530 | v4 subida, v5 en construcción |
-| Subfusil | `armas/subfusil/` | 780 | v4 subida, v5 en construcción |
-| Mujer zombi | `zombi-mujer/` | 1966 | v4 hecha, v5 en cola |
-| La Lamentadora | `bosses/la-lamentadora-v02/` | (≈1966, a 1,75×) | en cola |
-| La Alta | `bosses/jefe-alta-v01/` | (≈1966, a 2×) | en cola |
-| Mapa 300×300 | `mapa/` | 30 850 (121 piezas) | **terminado y probado en Studio** |
+| Pistola 9mm | `armas/pistola-9mm/` | 634 | v5 hecha |
+| Escopeta | `armas/escopeta/` | 530 | v5 hecha |
+| Subfusil | `armas/subfusil/` | 780 | v5 hecha |
+| Mujer zombi | `zombi-mujer/` | 1966 | v5, **en Luto (Studio)** |
+| La Lamentadora | `bosses/la-lamentadora-v02/` | 1966 (a 1,75×) | v0.2, importada en Studio |
+| La Alta | `bosses/jefe-alta-v01/` | 1966 (a 2×) | v0.1, importada en Studio |
+| Mapa 300×300 | `mapa/` | 30 850 (121 piezas) | v3, **en Luto (Studio)** |
 
 ## Integración con Luto (`apocalipsis-juego/INTEGRACION.md`)
 - **Place de prueba:** `C:\Users\maiko\Documents\Luto\Luto-prueba-2-mapa.rbxl`, con copia en `C:\Users\maiko\Backups\luto\`. Ya tiene:
