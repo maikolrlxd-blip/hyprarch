@@ -7,7 +7,7 @@ local Collection = game:GetService("CollectionService")
 local Debris = game:GetService("Debris")
 local Lighting = game:GetService("Lighting")
 local Luto = RS:WaitForChild("Luto")
-local Partida, Tienda = require(Luto.Partida), require(Luto.Tienda)
+local Partida, Tienda, Animaciones = require(Luto.Partida), require(Luto.Tienda), require(Luto.Animaciones)
 
 Players.CharacterAutoLoads = false
 local SEED = tonumber(workspace:GetAttribute("LUTO_Seed")) or 1234
@@ -40,7 +40,7 @@ else
 		{ Vector3.new(2, 16, 420), Vector3.new(210, 8, 0) }, { Vector3.new(2, 16, 420), Vector3.new(-210, 8, 0) } }) do
 		bloque("Muro", w[1], w[2], Color3.fromRGB(50, 50, 52))
 	end
-	Lighting.ClockTime = 20; Lighting.Brightness = 1.2; Lighting.OutdoorAmbient = Color3.fromRGB(70, 75, 95)
+	Lighting.ClockTime = 17; Lighting.Brightness = 2; Lighting.OutdoorAmbient = Color3.fromRGB(120, 115, 105) -- tarde polvorienta (provisional)
 end
 
 -- ===== Tienda (ProximityPrompt) =====
@@ -51,8 +51,8 @@ for _, t in ipairs(TIENDAS) do
 	local b = mapa and mapa:FindFirstChild("Tienda_" .. t.item, true) or nil -- marcador del mapa de Blender (Part)
 	if b and not b:IsA("BasePart") then b = b:FindFirstChildWhichIsA("BasePart", true) end
 	b = b or bloque("Tienda_" .. t.item, Vector3.new(4, 3, 4), t.pos, t.color)
-	local pp = Instance.new("ProximityPrompt"); pp.HoldDuration = 0.3; pp.MaxActivationDistance = 10; pp.RequiresLineOfSight = false
-	pp.ObjectText = Tienda.ITEMS[t.item].nombre; pp.ActionText = "Comprar (" .. Tienda.precio(t.item, 1) .. ")"; pp.Parent = b
+	local pp = Instance.new("ProximityPrompt"); pp.Style = Enum.ProximityPromptStyle.Custom; pp.HoldDuration = 0.3; pp.MaxActivationDistance = 10; pp.RequiresLineOfSight = false
+	pp.ObjectText = (t.item == "municion") and "Munición" or "Curación"; pp.ActionText = "Comprar · " .. Tienda.precio(t.item, 1); pp.Parent = b
 	prompts[t.item] = pp
 end
 
@@ -60,7 +60,7 @@ end
 local porId = {}
 local finPartida -- se define mas abajo
 local function viva(plr)
-	local c = plr.Character; local h = c and c:FindFirstChildOfClass("Humanoid"); return h and h.Health > 0 and c:FindFirstChild("HumanoidRootPart") or nil
+	local c = plr.Character; local h = c and c:FindFirstChildOfClass("Humanoid"); return h and h.Health > 0 and h:GetState() ~= Enum.HumanoidStateType.Dead and c:FindFirstChild("HumanoidRootPart") or nil
 end
 local function mensaje(plr, texto) R:FireClient(plr, { msg = texto }) end
 local function avisarTodos(texto) R:FireAllClients({ msg = texto }) end
@@ -99,6 +99,23 @@ local function colorear(modelo, jefe)
 	end
 end
 
+-- Carga las pistas de animacion (si ya hay ids publicados en src/Animaciones.lua)
+local function cargarAnimaciones(hum, clave)
+	local conj = Animaciones[clave] or Animaciones.zombi
+	local animator = hum:FindFirstChildOfClass("Animator") or Instance.new("Animator", hum)
+	local pistas = {}
+	for nombre, id in pairs(conj) do
+		if id ~= "" then
+			local a = Instance.new("Animation"); a.AnimationId = id
+			local ok, pista = pcall(function() return animator:LoadAnimation(a) end)
+			if ok then pistas[nombre] = pista end
+		end
+	end
+	if pistas.Caminar then pistas.Caminar.Looped = true end
+	if pistas.Reposo then pistas.Reposo.Looped = true end
+	return pistas
+end
+
 local function crearZombi(cfg, esJefe)
 	local j0 = cfg.jefe
 	local molde = esJefe and (plantilla("Jefe_" .. j0.tipo) or plantilla("Zombi_Mujer")) or plantilla("Zombi_Mujer")
@@ -121,17 +138,33 @@ local function crearZombi(cfg, esJefe)
 	hum.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOn; hum.DisplayName = esJefe and "LA " .. string.upper(j.tipo) or "Zombi"
 	Collection:AddTag(modelo, "Zombi"); modelo:SetAttribute("Jefe", esJefe)
 	if esJefe and not plantilla("Jefe_" .. j.tipo) then modelo:ScaleTo(j.escala) end
-	if #puntosZombi > 0 then modelo:PivotTo(CFrame.new(puntosZombi[math.random(1, #puntosZombi)]))
+	if #puntosZombi > 0 then
+		-- elegir un punto de aparicion LEJOS de los jugadores (>= 100 studs; si no hay, el mas lejano)
+		local mejorP, mejorD = nil, -1
+		local candidatos = {}
+		for _, pt in ipairs(puntosZombi) do
+			local dmin = math.huge
+			for _, plr in ipairs(Players:GetPlayers()) do local rp = viva(plr); if rp then dmin = math.min(dmin, (rp.Position - pt).Magnitude) end end
+			if dmin >= 100 then candidatos[#candidatos + 1] = pt end
+			if dmin > mejorD then mejorP, mejorD = pt, dmin end
+		end
+		modelo:PivotTo(CFrame.new(#candidatos > 0 and candidatos[math.random(1, #candidatos)] or mejorP))
 	else local ang = math.random() * 2 * math.pi; local r = 150 + math.random() * 40; modelo:PivotTo(CFrame.new(math.cos(ang) * r, 4, math.sin(ang) * r)) end
 	modelo.Parent = workspace
 	local root = modelo:FindFirstChild("HumanoidRootPart"); if root then pcall(function() root:SetNetworkOwner(nil) end) end
 	vivosZ = vivosZ + 1
 	local dano = esJefe and j.dano or cfg.dano
+	local pistas = cargarAnimaciones(hum, esJefe and ("jefe_" .. j.tipo) or "zombi")
+	if pistas.Reposo then pistas.Reposo:Play() end
 	local muerto = false
 	hum.Died:Connect(function()
 		if muerto then return end; muerto = true; vivosZ = vivosZ - 1
+		for _, pista in pairs(pistas) do pista:Stop() end
+		if pistas.Caer then pistas.Caer:Play() end
 		local killer = modelo:GetAttribute("UltimoAtacante")
-		partida:zombiMuerto(killer, esJefe, now())
+		local pago = partida:zombiMuerto(killer, esJefe, now())
+		local kp = killer and porId[killer]
+		if kp and pago > 0 then R:FireClient(kp, { ganancia = pago, tipo = esJefe and "JEFE" or "ZOMBI" }) end
 		Debris:AddItem(modelo, 2)
 	end)
 	task.spawn(function() -- IA: perseguir al jugador vivo mas cercano y golpearlo cuerpo a cuerpo
@@ -142,10 +175,14 @@ local function crearZombi(cfg, esJefe)
 				local rp = viva(plr)
 				if rp and root then local d = (rp.Position - root.Position).Magnitude; if not dist or d < dist then mejor, dist = plr, d end end
 			end
+			local moviendo = mejor ~= nil and dist >= (esJefe and 9 or 5)
+			if pistas.Caminar then
+				if moviendo and not pistas.Caminar.IsPlaying then pistas.Caminar:Play() elseif not moviendo and pistas.Caminar.IsPlaying then pistas.Caminar:Stop() end
+			end
 			if mejor then
 				hum:MoveTo(viva(mejor).Position)
 				if dist < (esJefe and 9 or 5) and now() - ultimo > 1.2 then
-					ultimo = now(); local hp = mejor.Character:FindFirstChildOfClass("Humanoid"); if hp then hp:TakeDamage(dano) end
+					ultimo = now(); if pistas.Atacar then pistas.Atacar:Play() end; local hp = mejor.Character:FindFirstChildOfClass("Humanoid"); if hp then hp:TakeDamage(dano) end
 				end
 			end
 			task.wait(0.25)
@@ -165,7 +202,10 @@ end
 
 -- ===== Fin y reinicio =====
 finPartida = function(r)
-	R:FireAllClients({ fin = true, rondaMax = r.rondaMax, monedasLobby = r.monedasLobby })
+	for id, plr in pairs(porId) do
+		local p = partida.players[id]
+		if plr.Parent then R:FireClient(plr, { fin = true, rondaMax = r.rondaMax, monedasLobby = r.monedasLobby, kills = p and p.kills or 0 }) end
+	end
 	for _, z in ipairs(Collection:GetTagged("Zombi")) do z:Destroy() end
 	vivosZ = 0
 	task.delay(12, function()
@@ -194,8 +234,8 @@ task.spawn(function()
 			if ev.tipo == "revivir" then
 				for _, id in ipairs(ev.ids) do local plr = porId[id]; if plr then cargar(plr, 1); mensaje(plr, "¡Has revivido!") end end
 			elseif ev.tipo == "inicio_ronda" then
-				avisarTodos(ev.config.esJefe and ("RONDA " .. ev.ronda .. " — ¡JEFE!") or ("RONDA " .. ev.ronda)); proxSpawn = t + 2
-				for item, pp in pairs(prompts) do pp.ActionText = "Comprar (" .. Tienda.precio(item, ev.ronda) .. ")" end
+				R:FireAllClients({ anuncio = { ronda = ev.ronda, jefe = ev.config.esJefe } }); proxSpawn = t + 2
+				for item, pp in pairs(prompts) do pp.ActionText = "Comprar · " .. Tienda.precio(item, ev.ronda) end
 			end
 		end
 		if partida.estado == "ronda" and partida:porAparecer() > 0 and vivosZ < partida.config.simultaneos and t >= proxSpawn then
@@ -204,12 +244,23 @@ task.spawn(function()
 		end
 		if t - ultimoEstado >= 0.5 and partida.estado ~= "fin" then
 			ultimoEstado = t
+			local equipo = {}
+			for _, id in ipairs(partida.order) do
+				local plr = porId[id]; local h = plr and plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+				equipo[#equipo + 1] = { nombre = plr and plr.DisplayName or "?", vivo = partida.players[id].vivo and h ~= nil and h.Health > 0,
+					vida = h and h.Health / math.max(1, h.MaxHealth) or 0 }
+			end
+			local jefeVida, jefeNombre
+			for _, z in ipairs(Collection:GetTagged("Zombi")) do
+				local hz = z:FindFirstChildOfClass("Humanoid")
+				if z:GetAttribute("Jefe") and hz and hz.Health > 0 then jefeVida = hz.Health / hz.MaxHealth; jefeNombre = hz.DisplayName end
+			end
 			for id, plr in pairs(porId) do
 				local p = partida.players[id]
 				if p and plr.Parent then
 					R:FireClient(plr, { estado = partida.estado, ronda = partida.ronda, restantes = math.max(0, partida.restantes), monedas = p.monedas,
 						vivos = partida:vivos(), total = #partida.order, siguiente = partida.estado == "intermision" and math.max(0, math.ceil(partida.t_next - t)) or nil,
-						jefe = partida.config and partida.config.esJefe or false })
+						jefe = partida.config and partida.config.esJefe or false, equipo = equipo, jefeVida = jefeVida, jefeNombre = jefeNombre })
 				end
 			end
 		end

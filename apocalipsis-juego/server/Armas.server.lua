@@ -83,7 +83,7 @@ R.Disparar.OnServerEvent:Connect(function(plr, aim)
 					hum:TakeDamage(spec.dano)
 					local rootE = modelo:FindFirstChild("HumanoidRootPart")
 					if rootE and not rootE.Anchored then rootE:ApplyImpulse(Vector3.new(d.x, 0, d.z) * spec.reaccion.empuje * rootE.AssemblyMass) end
-					R.Impacto:FireAllClients({ pos = res.Position, normal = res.Normal, pieza = res.Instance, enemigo = true, arma = s.actual, spec = spec })
+					R.Impacto:FireAllClients({ pos = res.Position, normal = res.Normal, pieza = res.Instance, enemigo = true, arma = s.actual, spec = spec, tirador = plr.UserId, cabeza = zona == "cabeza" })
 				end
 			else
 				R.Impacto:FireAllClients({ pos = res.Position, normal = res.Normal, pieza = res.Instance, enemigo = false, arma = s.actual })

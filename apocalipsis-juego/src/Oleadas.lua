@@ -11,13 +11,13 @@ function Oleadas.config(ronda, seed)
 	local k = ronda - 1
 	local cfg = {
 		ronda = ronda, esJefe = esJefe,
-		cantidad = math.min(6 + 2 * k, 80),              -- zombis comunes en la ronda
-		simultaneos = math.min(8 + k, 30),               -- tope de zombis vivos a la vez
-		hp = math.floor(100 * (1 + 0.12 * k)),
-		velocidad = math.min(8 + 0.25 * k, 14),          -- studs/s (el jugador anda a 16)
-		dano = math.floor(8 + 0.6 * k),                  -- por golpe (cada ~1,2 s)
+		cantidad = math.min(4 + 2 * k, 80),              -- zombis comunes en la ronda
+		simultaneos = math.min(2 + k, 30),               -- tope de zombis vivos a la vez (la ronda 1 llega poco a poco)
+		hp = math.floor(80 * (1 + 0.14 * k)),
+		velocidad = math.min(6 + 0.3 * k, 14),          -- studs/s (el jugador anda a 16)
+		dano = math.floor(4 + 0.8 * k),                  -- por golpe (cada ~1,2 s); ronda 1 = 4
 		recompensa = 10 + 2 * (k // 5),                  -- monedas por zombi
-		intervalo = math.max(0.5, 1.6 - 0.04 * k),       -- segundos entre apariciones
+		intervalo = math.max(0.6, 4.0 - 0.15 * k),       -- segundos entre apariciones (ronda 1: 4 s)
 	}
 	if esJefe then
 		local n = ronda // Oleadas.JEFE_CADA

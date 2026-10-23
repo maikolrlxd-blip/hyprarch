@@ -37,3 +37,9 @@ Para probar todo junto: abrir `apocalipsis-juego/default.project.json` con Rojo 
 - **Código puro probado (26 pruebas):** `src/Oleadas.lua`, `src/Partida.lua`, `src/Tienda.lua` (+ Weapons, Impactos, Disparo).
 - **Roblox (no probado):** `server/Partida.server.lua`, `client/Partida.client.lua`, `server/Armas.server.lua`, `client/Armas.client.lua`, `client/ImpactoFX.lua`. `server/Maniquies.server.lua` solo se activa con `workspace:SetAttribute("LUTO_Maniquies", true)`.
 - **Falta:** el mapa real y el zombi de Blender (ahora son bloques/rigs por defecto), animaciones de caminar y de las armas, sonidos subidos a Roblox, lobby y tienda de clases/armas con la moneda del lobby, balance real.
+
+## Interfaces rediseñadas (Maikol: "las interfaces están horribles")
+Estilo: paneles oscuros con esquinas ámbar, tipografía condensada (Oswald), colores apagados; todo por código, sin imágenes. Bocetos de diseño en `ui-mock/` (`hud.png`, `fin.png`, hechos en HTML; **no son capturas de Roblox**).
+- `client/ui/Tema.lua`: paneles, etiquetas, barras con color por nivel (verde / ámbar / rojo), escala según la pantalla (móvil y escritorio).
+- `client/Hud.client.lua` (reemplaza a las etiquetas provisionales): ronda y zombis arriba al centro, equipo con vida de cada compañero, vida y monedas abajo a la izquierda, arma y munición (número grande; ámbar al 30 %, rojo en 0; "RECARGANDO…") y ranuras 1-2-3 abajo a la derecha, mira con marcador de impacto (rojo; ámbar a la cabeza), viñeta roja al recibir daño y pulso con vida baja, anuncio central de ronda (rojo en jefe), banner con barra de vida del jefe, ganancias "+10 ZOMBI" a la derecha, pantalla de fin con ronda, bajas y moneda del lobby con cuenta atrás, y prompts de la tienda con el mismo estilo.
+- Todo **sin probar en Studio** (solo sintaxis comprobada). Falta: lobby y menú de clases/armas.
