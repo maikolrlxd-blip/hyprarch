@@ -1,0 +1,67 @@
+{
+ "pistola_disparo": {
+  "duracion_s": 0.5,
+  "pico": 0.9,
+  "rms": 0.0811
+ },
+ "escopeta_disparo": {
+  "duracion_s": 1.0,
+  "pico": 0.9,
+  "rms": 0.0797
+ },
+ "subfusil_disparo": {
+  "duracion_s": 0.25,
+  "pico": 0.9,
+  "rms": 0.0667
+ },
+ "clic_vacio": {
+  "duracion_s": 0.12,
+  "pico": 0.798,
+  "rms": 0.0571
+ },
+ "pistola_equipar": {
+  "duracion_s": 0.8,
+  "pico": 0.9,
+  "rms": 0.0578
+ },
+ "pistola_recarga": {
+  "duracion_s": 1.7,
+  "pico": 0.9,
+  "rms": 0.0799
+ },
+ "subfusil_equipar": {
+  "duracion_s": 0.9,
+  "pico": 0.9,
+  "rms": 0.0662
+ },
+ "subfusil_recarga": {
+  "duracion_s": 1.95,
+  "pico": 0.9,
+  "rms": 0.0852
+ },
+ "escopeta_equipar": {
+  "duracion_s": 1.0,
+  "pico": 0.9,
+  "rms": 0.0786
+ },
+ "escopeta_bombeo": {
+  "duracion_s": 0.55,
+  "pico": 0.9,
+  "rms": 0.1054
+ },
+ "escopeta_cartucho": {
+  "duracion_s": 0.2,
+  "pico": 0.9,
+  "rms": 0.1338
+ },
+ "impacto_zombi": {
+  "duracion_s": 0.2,
+  "pico": 0.9,
+  "rms": 0.2027
+ },
+ "marcador_impacto": {
+  "duracion_s": 0.05,
+  "pico": 0.9,
+  "rms": 0.1265
+ }
+}
