@@ -5,6 +5,7 @@ local RS = game:GetService("ReplicatedStorage")
 local SS = game:GetService("ServerStorage")
 local Collection = game:GetService("CollectionService")
 local Debris = game:GetService("Debris")
+local PFS = game:GetService("PathfindingService")
 local Lighting = game:GetService("Lighting")
 local Luto = RS:WaitForChild("Luto")
 local Partida, Tienda, Animaciones = require(Luto.Partida), require(Luto.Tienda), require(Luto.Animaciones)
@@ -172,6 +173,7 @@ local function crearZombi(cfg, esJefe)
 	end)
 	task.spawn(function() -- IA: perseguir al jugador vivo mas cercano y golpearlo cuerpo a cuerpo
 		local ultimo = 0
+		local camino, indice, ultimoCalc = nil, 2, 0 -- ruta por PathfindingService (evita quedarse pegado a coches y barreras)
 		while modelo.Parent and hum.Health > 0 do
 			local mejor, dist
 			for _, plr in ipairs(Players:GetPlayers()) do
@@ -185,7 +187,21 @@ local function crearZombi(cfg, esJefe)
 			if mejor then
 				local alcance = esJefe and 9 or 5
 				local destino = viva(mejor).Position
-				if dist < alcance + 2 then destino = root.Position end -- ya esta al alcance: no subirse encima del jugador
+				if dist < alcance + 2 then destino = root.Position -- ya esta al alcance: no subirse encima del jugador
+				elseif dist > 14 then
+					local t = now()
+					if not camino or t - ultimoCalc > 1.5 + math.random() * 0.5 then
+						ultimoCalc = t
+						local path = PFS:CreatePath({ AgentRadius = esJefe and 3 or 2, AgentHeight = esJefe and 10 or 5.5, AgentCanJump = false })
+						local okp = pcall(function() path:ComputeAsync(root.Position, destino) end)
+						if okp and path.Status == Enum.PathStatus.Success then camino = path:GetWaypoints(); indice = 2 else camino = nil end
+					end
+					if camino then
+						local wp = camino[indice]
+						if wp and (root.Position - wp.Position).Magnitude < 4 then indice = indice + 1; wp = camino[indice] end
+						if wp then destino = wp.Position end
+					end
+				end
 				hum:MoveTo(destino)
 				if dist < (esJefe and 9 or 5) and now() - ultimo > 1.2 then
 					ultimo = now(); if pistas.Atacar then pistas.Atacar:Play() end; local hp = mejor.Character:FindFirstChildOfClass("Humanoid"); if hp then hp:TakeDamage(dano) end
