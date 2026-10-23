@@ -1,4 +1,5 @@
-# Guía del estilo visual (nombre por decidir — Maikol: "amo el estilo que estamos usando")
+# POLI PINTADO — guía del estilo visual (nombre elegido por Maikol, 2026-10-23)
+Regla corta: "esto no es Poli Pintado" = le falta textura pintada o está liso/plástico.
 Aplica a TODO el arte de los juegos (armas, zombi, mapa, árboles v04). Lo que ya se ve en las armas del apocalipsis es la referencia.
 
 ## Reglas
