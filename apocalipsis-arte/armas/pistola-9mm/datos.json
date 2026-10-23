@@ -1,0 +1,72 @@
+{
+  "triangulos": {
+    "Armazon": 176,
+    "Corredera": 260,
+    "Cargador": 72,
+    "Gatillo": 60,
+    "Casquillo": 66
+  },
+  "triangulos_total": 634,
+  "triangulos_brazos_vm": 256,
+  "largo_studs": 1.5,
+  "medidas_studs": [
+    0.251,
+    1.75,
+    1.121
+  ],
+  "clips": {
+    "Equipar": {
+      "duracion_s": 0.8,
+      "bucle": false,
+      "partes": [
+        "Corredera"
+      ],
+      "vm_extra": [
+        "Arma",
+        "LeftHand",
+        "LeftLowerArm",
+        "LeftUpperArm"
+      ]
+    },
+    "Disparo": {
+      "duracion_s": 0.25,
+      "bucle": false,
+      "partes": [
+        "Casquillo",
+        "Corredera",
+        "Gatillo"
+      ],
+      "vm_extra": [
+        "Arma"
+      ]
+    },
+    "Recargar": {
+      "duracion_s": 1.7,
+      "bucle": false,
+      "partes": [
+        "Cargador",
+        "Corredera"
+      ],
+      "vm_extra": [
+        "Arma",
+        "LeftHand",
+        "LeftLowerArm",
+        "LeftUpperArm"
+      ]
+    },
+    "Reposo": {
+      "duracion_s": 2.0,
+      "bucle": true,
+      "partes": [],
+      "vm_extra": [
+        "Arma"
+      ]
+    }
+  },
+  "viewmodel_origen_arma_desde_camara": [
+    0.36000001430511475,
+    1.1200000047683716,
+    -0.5
+  ],
+  "exportacion": "FBX global_scale=0.01, ejes -Z delante / Y arriba (1 unidad = 1 stud)"
+}

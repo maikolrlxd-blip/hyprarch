@@ -224,7 +224,7 @@ def static_copies(objs, coll_name='TMP_Estatico', rename=None):
     out = []
     for o in objs:
         o2 = o.copy()
-        o2.data = o.data
+        o2.data = o.data.copy()          # malla propia: los grupos de vertices viven en la malla y se borran aqui
         for m in list(o2.modifiers):
             o2.modifiers.remove(m)
         o2.vertex_groups.clear()

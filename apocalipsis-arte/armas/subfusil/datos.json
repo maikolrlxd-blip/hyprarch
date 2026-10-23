@@ -1,0 +1,95 @@
+{
+  "triangulos": {
+    "Cuerpo": 592,
+    "Cargador": 72,
+    "Palanca": 40,
+    "Cerrojo": 12,
+    "Gatillo": 20,
+    "Casquillo": 44
+  },
+  "triangulos_total": 780,
+  "triangulos_brazos_vm": 256,
+  "largo_studs": 2.9,
+  "medidas_studs": [
+    0.35,
+    2.967,
+    1.042
+  ],
+  "clips": {
+    "Equipar": {
+      "duracion_s": 0.8,
+      "bucle": false,
+      "partes": [
+        "Cerrojo",
+        "Palanca"
+      ],
+      "vm_extra": [
+        "Arma",
+        "LeftHand",
+        "LeftLowerArm",
+        "LeftUpperArm"
+      ]
+    },
+    "Disparo": {
+      "duracion_s": 0.16,
+      "bucle": false,
+      "partes": [
+        "Casquillo",
+        "Cerrojo",
+        "Gatillo"
+      ],
+      "vm_extra": [
+        "Arma",
+        "LeftHand",
+        "LeftLowerArm",
+        "LeftUpperArm"
+      ]
+    },
+    "Recargar": {
+      "duracion_s": 1.95,
+      "bucle": false,
+      "partes": [
+        "Cargador",
+        "Cerrojo",
+        "Palanca"
+      ],
+      "vm_extra": [
+        "Arma",
+        "LeftHand",
+        "LeftLowerArm",
+        "LeftUpperArm"
+      ]
+    },
+    "Amartillar": {
+      "duracion_s": 0.4,
+      "bucle": false,
+      "partes": [
+        "Cerrojo",
+        "Palanca"
+      ],
+      "vm_extra": [
+        "Arma",
+        "LeftHand",
+        "LeftLowerArm",
+        "LeftUpperArm"
+      ]
+    },
+    "Reposo": {
+      "duracion_s": 2.0,
+      "bucle": true,
+      "partes": [],
+      "vm_extra": [
+        "Arma",
+        "LeftHand",
+        "LeftLowerArm",
+        "LeftUpperArm"
+      ]
+    }
+  },
+  "viewmodel_origen_arma_desde_camara": [
+    0.36000001430511475,
+    1.100000023841858,
+    -0.6600000262260437
+  ],
+  "exportacion": "FBX global_scale=0.01, ejes -Z delante / Y arriba (1 unidad = 1 stud)"
+}

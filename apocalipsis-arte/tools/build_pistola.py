@@ -53,7 +53,7 @@ mb.prism([xz(*p) for p in port], Y(36), Y(78), 'corredera', plane='XZ', cap0=Fal
 mb.loft([[xz(*p) for p in full], [xz(*p) for p in full], [xz(*p) for p in nose]], [Y(78), Y(181), Y(186)], 'corredera', plane='XZ', bevel=0.8 * s)
 notch = [(-7, 133.5), (7, 133.5), (7, 140), (2.2, 140), (2.2, 136.8), (-2.2, 136.8), (-2.2, 140), (-7, 140)]
 mb.prism([xz(*p) for p in notch], Y(8), Y(19), 'mira', plane='XZ', bevel=0.5 * s)
-mb.box(P3(0, 175, 136.6), (4 * s, 6 * s, 6.4 * s), 'mira', bevel=0.5 * s)
+mb.box(P3(0, 175, 136.6), (4 * s, 6 * s, 6.4 * s), 'mira')
 mb.cyl(P3(0, 178, 119), P3(0, 187, 119), 7.0 * s, 8, 'canon', inset_cap1=2.4 * s, inset_depth=7 * s)
 mb.box(P3(4, 57, 121), (16 * s, 41 * s, 14 * s), 'canon')
 corredera = mb.finish(CM, origin=P3(0, 93, 119.5))
@@ -71,11 +71,11 @@ for t, off in ((0.12, 0), (0.22, 3.4), (0.33, 0), (0.45, 3.4), (0.56, 0), (0.68,
     outline.append((q.x, q.y))
 outline += [(19, 9), (-28, 9), (-29.5, 14), (-15, 50), (-2.5, 86), (-7, 95), (-9.5, 100.5), (-4, 105.6)]
 mb = A.MB('Armazon')
-mb.prism([yz(*p) for p in outline], -14 * s, 14 * s, 'armazon', plane='YZ', bevel=1.4 * s)
+mb.prism([yz(*p) for p in outline], -14 * s, 14 * s, 'armazon', plane='YZ')
 guard = [(96, 93), (98.5, 73), (94, 66.5), (62, 65), (54, 70.5), (51, 81)]
-mb.band([yz(*p) for p in guard], 7 * s, -6.5 * s, 6.5 * s, 'armazon', plane='YZ', bevel=0.9 * s)
-mb.box(P3(-14.7, 78, 103.4), (1.8 * s, 13 * s, 3.6 * s), 'palanca', bevel=0.4 * s)
-mb.box(P3(0, 92, 101.2), (31 * s, 5 * s, 3.6 * s), 'palanca', bevel=0.4 * s)
+mb.band([yz(*p) for p in guard], 9.5 * s, -7.5 * s, 7.5 * s, 'armazon', plane='YZ')
+mb.box(P3(-14.7, 78, 103.4), (1.8 * s, 13 * s, 3.6 * s), 'palanca')
+mb.box(P3(0, 92, 101.2), (31 * s, 5 * s, 3.6 * s), 'palanca')
 armazon = mb.finish(CM, origin=(0, 0, 0))
 
 # ------------------------------------------------------------------ CARGADOR (cuerpo inclinado + base)
@@ -94,7 +94,7 @@ MAG_DOWN = Vector((0, -math.sin(ang), -math.cos(ang)))   # direccion de salida d
 # ------------------------------------------------------------------ GATILLO
 mb = A.MB('Gatillo')
 trig = [(62, 91), (63.6, 84), (62.6, 78), (59.4, 73)]
-mb.band([yz(*p) for p in trig], 5.2 * s, -3 * s, 3 * s, 'gatillo', plane='YZ', bevel=0.6 * s)
+mb.band([yz(*p) for p in trig], 7.5 * s, -4 * s, 4 * s, 'gatillo', plane='YZ', bevel=0.8 * s)
 gatillo = mb.finish(CM, origin=P3(0, 62, 91))
 
 # ------------------------------------------------------------------ CASQUILLO (escondido en la recamara en reposo)
@@ -136,7 +136,47 @@ def serrations(P, msk, pos, nrm, col):
     # puerto de expulsion: paredes interiores mas oscuras
     inner = (np.abs(nrm[:, 1]) > 0.85) & (y > 34) & (y < 80) & (z > 113)
     col[inner] = col[inner] * 0.55
+    # --- pintura a mano del lateral: franja alta clara, franja baja oscura, rayones de uso y marcado generico
+    x = mm(pos[:, 0])
+    side = np.abs(nrm[:, 0]) > 0.8
+    body = side & (z > 105) & (z < 133)
+    hi = body & (z > 124.5)
+    col[hi] = np.clip(col[hi] * 1.08 + 0.01, 0, 1)
+    lo = body & (z < 109)
+    col[lo] = col[lo] * 0.80
+    sp = np.stack([pos[:, 0] * 30.0, pos[:, 1] * 3.2, pos[:, 2] * 60.0], 1)
+    sn = A.vnoise(sp, 41)
+    scratch = body & (sn > 0.86)
+    col[scratch] = np.clip(col[scratch] * 1.22 + 0.025, 0, 1)
+    scr2 = body & (A.vnoise(sp * 1.9 + 7.0, 43) < 0.12)
+    col[scr2] = col[scr2] * 0.68
+    # ranura decorativa del frente y division del desmontaje
+    groove2 = side & (y > 160) & (y < 162.2) & (z > 105) & (z < 128)
+    col[groove2] = col[groove2] * 0.45
+    cut = side & (np.abs(y - 78) < 0.7) & (z > 105) & (z < 125)
+    col[cut] = col[cut] * 0.5
+    # marcado "9MM" (generico, sin marcas) grabado en la corredera, legible en ambos lados
+    u = np.where(nrm[:, 0] > 0, (y - 128.0) / 1.15, (170.0 - y) / 1.15)
+    v = (126.4 - z) / 1.15
+    msk_t = body & (u >= 0) & (u < 18) & (v >= 0) & (v < 7)
+    if msk_t.any():
+        txt = text_mask(u[msk_t], v[msk_t], '9MM')
+        idx = np.where(msk_t)[0][txt]
+        col[idx] = np.clip(col[idx] * 0.35, 0, 1)
     return col
+
+
+def text_mask(u, v, text):
+    """True donde el pixel (u,v) de una cuadricula 5x7 por letra (avance 6) cae en un trazo."""
+    out = np.zeros(u.shape, bool)
+    iu, iv = np.floor(u).astype(int), np.floor(v).astype(int)
+    for i, ch in enumerate(text):
+        g = W._G.get(ch, W._G[' '])
+        for r, row in enumerate(g):
+            for c, px in enumerate(row):
+                if px == '#':
+                    out |= (iu == i * 6 + c) & (iv == r)
+    return out
 
 
 def sights(P, msk, pos, nrm, col):
@@ -219,18 +259,18 @@ def primer(P, msk, pos, nrm, col):
     return col
 
 
-P.region('corredera', '#3e444b', var=0.07, stroke=(1, 4, 1), stroke_scale=7, blotch=0.06, ao=0.6, light=0.26, grad=0.16,
-         edge_col='#b2bac2', edge=1.0, edge_th=0.05, edge_break=0.45, grime=0.18, rust=0.10, dust=0.12, seed=3, extra=serrations)
-P.region('mira', '#2c2f33', var=0.05, ao=0.4, edge_col='#8e969e', edge=0.8, seed=5, extra=sights)
-P.region('canon', '#857559', var=0.06, stroke=(1, 3, 1), stroke_scale=9, ao=0.7, edge_col='#d3bf93', edge=0.9,
+P.region('corredera', '#4f565e', var=0.10, stroke=(1, 4, 1), stroke_scale=7, blotch=0.09, ao=0.62, ao_tint='#1b2330', light=0.28,
+         grad=0.18, edge_col='#cdd3d8', edge=1.0, edge_th=0.035, edge_break=0.40, grime=0.22, rust=0.14, dust=0.16, seed=3, extra=serrations)
+P.region('mira', '#34383d', var=0.05, ao=0.4, edge_col='#a3abb2', edge=0.9, seed=5, extra=sights)
+P.region('canon', '#8d7d5e', var=0.06, stroke=(1, 3, 1), stroke_scale=9, ao=0.7, edge_col='#d9c79c', edge=0.9,
          grime=0.25, grime_col='#2b241c', seed=7, extra=barrel)
-P.region('armazon', '#35332f', var=0.05, stroke=(1, 1, 1), stroke_scale=9, blotch=0.05, ao=0.6, light=0.24, grad=0.12,
-         edge_col='#736d62', edge=0.85, edge_th=0.05, grime=0.30, dust=0.22, seed=11, extra=grip)
-P.region('palanca', '#30353a', var=0.05, ao=0.5, edge_col='#a5adb5', edge=1.0, seed=13)
-P.region('cargador', '#3b3e42', var=0.06, stroke=(1, 1, 3), stroke_scale=8, ao=0.35, edge_col='#a3aab0', edge=0.9,
+P.region('armazon', '#46423b', var=0.08, stroke=(1, 1, 1), stroke_scale=9, blotch=0.08, ao=0.62, ao_tint='#17130f', light=0.26,
+         grad=0.14, edge_col='#8a8272', edge=1.0, edge_th=0.035, grime=0.34, dust=0.30, seed=11, extra=grip)
+P.region('palanca', '#383d43', var=0.05, ao=0.5, edge_col='#b4bcc3', edge=1.0, seed=13)
+P.region('cargador', '#4a4d52', var=0.07, stroke=(1, 1, 3), stroke_scale=8, ao=0.4, edge_col='#b3bac0', edge=1.0, edge_th=0.035,
          seed=17, extra=mag_top)
-P.region('base', '#2f2d2a', var=0.05, ao=0.45, edge_col='#67625a', edge=0.9, grime=0.2, seed=19)
-P.region('gatillo', '#2b2b2b', var=0.04, ao=0.4, edge_col='#6f6f6f', edge=0.8, seed=23, extra=trigger_blade)
+P.region('base', '#3a3733', var=0.06, ao=0.45, edge_col='#7a746a', edge=1.0, grime=0.25, seed=19)
+P.region('gatillo', '#3a3a3a', var=0.04, ao=0.4, edge_col='#8a8a8a', edge=0.9, seed=23, extra=trigger_blade)
 P.region('laton', '#c79f48', var=0.08, stroke=(1, 3, 1), stroke_scale=14, ao=0.3, light=0.3, edge_col='#f1d793',
          edge=0.9, seed=29, extra=primer)
 TEX = os.path.join(OUT, 'texturas', NOMBRE + '_Color.png')
@@ -251,7 +291,7 @@ BW = [b[0] for b in bones_w]
 
 # ------------------------------------------------------------------ VIEWMODEL (primera persona)
 CV = A.collection('Arma_VM')
-G = Vector((0.42, 1.40, -0.62))
+G = Vector((0.36, 1.12, -0.50))
 HR = Vector((0.02, -0.02, -0.03))
 WR = Vector((0.05, -0.20, -0.17))
 HL = Vector((-0.21, 0.05, -0.10))
@@ -281,7 +321,7 @@ W.paint_arms(arms, os.path.join(OUT, 'texturas', 'BrazosVM_Color.png'))
 vm_parts = {}
 for o in partes:
     o2 = o.copy()
-    o2.data = o.data
+    o2.data = o.data.copy()
     for m in list(o2.modifiers):
         o2.modifiers.remove(m)
     o2.parent = None
@@ -376,13 +416,19 @@ for act in acts_w.values():
 acts_v = {cd.name: cd.build(rig_v, BV, vm=True) for cd in clips}
 vm_objs = [rig_v] + list(vm_parts.values()) + list(arms.values())
 export_rig_clips(rig_v, vm_objs, acts_v, 'VM')
-# 3) volver a crear los clips de mundo para el .blend y los renders (prefijo Mundo_)
-acts_w = {}
+# 3) el exportador FBX deja las acciones sin ranura utilizable: se borran y se reconstruyen (prefijos Mundo_ / VM_)
+for act in list(acts_v.values()):
+    bpy.data.actions.remove(act)
+acts_w, acts_v = {}, {}
 for cd in clips:
     act = cd.build(rig_w, BW, vm=False)
     act.name = 'Mundo_' + cd.name
     acts_w[cd.name] = act
+    act = cd.build(rig_v, BV, vm=True)
+    act.name = 'VM_' + cd.name
+    acts_v[cd.name] = act
 rig_w.animation_data.action = None
+rig_v.animation_data.action = None
 # estatico (sin rig): piezas separadas con su pivote, para montar con Motor6D/Weld en Studio
 for o in partes:
     o.name = o.name + '_rig'
@@ -415,10 +461,10 @@ ctr = (mn + mx) / 2
 A.setup_render((1280, 720), 'CYCLES', 48)
 W.hide_only({'Arma_Mundo', 'Camaras'})
 cams = {
-    '1_tres_cuartos': W.look_cam(CC, 'C1', ctr, (1.0, 0.75, 0.45), 2.4, 50),
-    '2_lado_izq': W.look_cam(CC, 'C2', ctr, (-1, 0, 0), 4.0, 50, ortho=1.85),
-    '3_atras_arriba': W.look_cam(CC, 'C3', ctr + Vector((0, -0.1, 0.1)), (0.35, -1.0, 0.55), 2.3, 50),
-    '4_abajo_der': W.look_cam(CC, 'C4', ctr, (0.8, 0.3, -0.5), 2.4, 50),
+    '1_tres_cuartos': W.look_cam(CC, 'C1', ctr, (1.0, 0.75, 0.45), 3.9, 50),
+    '2_lado_izq': W.look_cam(CC, 'C2', ctr, (-1, 0, 0), 6.0, 50, ortho=2.25),
+    '3_atras_arriba': W.look_cam(CC, 'C3', ctr + Vector((0, 0.2, 0.0)), (0.35, -1.0, 0.55), 3.3, 50),
+    '4_abajo_der': W.look_cam(CC, 'C4', ctr, (0.8, 0.3, -0.5), 3.8, 50),
 }
 for n, cam in cams.items():
     A.render(os.path.join(PV, NOMBRE + '_' + n + '.png'), cam)
@@ -444,20 +490,22 @@ sc = bpy.context.scene
 TIMES = {'Equipar': [0, 0.1, 0.2, 0.3, 0.42, 0.48, 0.53, 0.7], 'Disparo': [0, 0.016, 0.033, 0.05, 0.08, 0.12, 0.18, 0.24],
          'Recargar': [0, 0.2, 0.32, 0.5, 0.62, 0.9, 1.04, 1.13, 1.19, 1.25, 1.4, 1.65], 'Reposo': [0, 0.5, 1.0, 1.5]}
 sheets = []
+camvx = W.look_cam(CC, 'CVX', G + Vector((-0.45, -0.25, 0.0)), (-0.95, 0.55, 0.35), 4.6, 50)   # camara externa del viewmodel (desde la izquierda)
 for n, ts in TIMES.items():
     W.hide_only({'Arma_VM', 'Camaras'})
     A.set_action(rig_v, acts_v[n])
-    items = []
-    for t in ts:
-        sc.frame_set(int(round(t * 60)))
-        p = os.path.join(PV, '_f_vm_%s_%03d.png' % (n, int(t * 1000)))
-        A.render(p, camvm)
-        items.append((p, '%s %.2fs' % (n, t)))
-    out = os.path.join(PV, '%s_clip_VM_%s.png' % (NOMBRE, n))
-    W.contact_sheet(items, 4, out, title='%s VM - %s (%.2fs)' % (NOMBRE, n, clips[[x.name for x in clips].index(n)].length))
-    sheets.append(out)
-    for p, _ in items:
-        os.remove(p)
+    for cam_, tag, ttl in ((camvm, 'VM', 'primera persona'), (camvx, 'VMext', 'vista externa')):
+        items = []
+        for t in ts:
+            sc.frame_set(int(round(t * 60)))
+            p = os.path.join(PV, '_f_vm_%s_%03d.png' % (n, int(t * 1000)))
+            A.render(p, cam_)
+            items.append((p, '%s %.2fs' % (n, t)))
+        out = os.path.join(PV, '%s_clip_%s_%s.png' % (NOMBRE, tag, n))
+        W.contact_sheet(items, 4, out, title='%s %s - %s (%.2fs)' % (NOMBRE, ttl, n, clips[[x.name for x in clips].index(n)].length))
+        sheets.append(out)
+        for p, _ in items:
+            os.remove(p)
 rig_v.animation_data.action = None
 # tercera persona (solo partes): disparo y recarga vistos de lado
 W.hide_only({'Arma_Mundo', 'Camaras'})

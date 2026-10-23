@@ -304,7 +304,8 @@ class MB:
         if recalc:
             bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
         if triangulate:
-            bmesh.ops.triangulate(bm, faces=bm.faces[:], quad_method='BEAUTY', ngon_method='BEAUTY')
+            # EAR_CLIP: los perfiles concavos (empunaduras, culatas) se triangulan sin crear caras fuera del contorno
+            bmesh.ops.triangulate(bm, faces=bm.faces[:], quad_method='BEAUTY', ngon_method='EAR_CLIP')
         o = Vector(origin)
         for v in bm.verts:
             v.co -= o
@@ -379,6 +380,9 @@ def uv_unwrap(objs, angle=52.0, margin=0.006, weights=None):
 
 
 # ------------------------------------------------------------------ horneado de mapas de datos (Cycles)
+NRM_SMOOTH = False      # True: la luz pintada usa la normal suavizada (formas organicas); False: facetada
+
+
 def _nodes_clear(mat):
     if hasattr(mat, 'use_nodes'):
         try:
@@ -412,7 +416,7 @@ def _bake_tree(mat, pas, img, rid, R, ao_dist, bevel_r, pos_ref=None):
     elif pas == 'NRM':
         geo = N.new('ShaderNodeNewGeometry')
         mul = N.new('ShaderNodeVectorMath'); mul.operation = 'MULTIPLY_ADD'
-        L.new(geo.outputs['True Normal'], mul.inputs[0])
+        L.new(geo.outputs['Normal' if NRM_SMOOTH else 'True Normal'], mul.inputs[0])
         mul.inputs[1].default_value = (0.5, 0.5, 0.5)
         mul.inputs[2].default_value = (0.5, 0.5, 0.5)
         L.new(mul.outputs['Vector'], em.inputs['Color'])
@@ -478,6 +482,8 @@ def bake_maps(objs, size, R, ao_dist, bevel_r, samples=16, explode=None, passes=
         bpy.context.view_layer.update()
         select_only(objs)
         t = time.time()
+        # los pases de datos no necesitan muestreo; la oclusion y los bordes si
+        sc.cycles.samples = 1 if pas in ('ID', 'POS', 'NRM') else (samples if pas == 'AO' else max(4, samples // 2))
         bpy.ops.object.bake(type='EMIT', margin=10, use_clear=True, target='IMAGE_TEXTURES')
         if pas == 'AO' and explode:
             for o in explode:
