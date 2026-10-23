@@ -26,3 +26,6 @@ Se rejuegan muchas veces con armas distintas: las animaciones de arma importan m
 - Entregar por arma: (a) **modelo de mundo** (en la mano del personaje, tercera persona) y (b) **viewmodel** (primera persona): mismas partes, pivote y escala pensados para colgarse de la cámara, sin partes ocultas inútiles.
 - Las animaciones (Equipar/Disparo/Recargar/Reposo) deben funcionar en ambos; si los brazos del viewmodel van aparte, entregar unos brazos simples estilo Roblox (R15) con los mismos clips.
 - El zombi se verá de lejos y muy de cerca: texturas coherentes y sin costuras visibles.
+
+## Nombre del juego: LUTO (Maikol, 2026-10-23)
+"Apocalipsis" era un nombre provisional. El juego se llama **Luto** y su estilo visual **Poli Pintado** (ver taller-ia/ESTILO.md).
