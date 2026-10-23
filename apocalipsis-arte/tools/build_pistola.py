@@ -291,7 +291,7 @@ BW = [b[0] for b in bones_w]
 
 # ------------------------------------------------------------------ VIEWMODEL (primera persona)
 CV = A.collection('Arma_VM')
-G = Vector((0.36, 1.12, -0.50))
+G = Vector((0.30, 0.95, -0.45))          # v3c: mas cerca y centrada (en v3 se veia pequena y lejana)
 HR = Vector((0.02, -0.02, -0.03))
 WR = Vector((0.05, -0.20, -0.17))
 HL = Vector((-0.21, 0.05, -0.10))
@@ -346,21 +346,23 @@ BV = [b[0] for b in bones_v]
 # ------------------------------------------------------------------ CLIPS
 md = lambda k: tuple(MAG_DOWN * k)
 slide_back = 0.30
-SLIDE_GRAB = Vector((-0.10, -0.20, 0.50))       # muneca izquierda para agarrar la corredera por detras/arriba
+SLIDE_GRAB = Vector((-0.20, -0.14, 0.30))       # muneca izquierda: agarra la corredera por el lado izquierdo, baja (la manga no tapa)
 POLE_L = (-1, -0.3, -1)
 clips = []
 
 c = W.ClipDef('Equipar', 0.80)
+c.e(0.48, 'corredera_atras').e(0.53, 'corredera_adelante')
 c.p('Corredera', 0.40).p('Corredera', 0.48, (0, -slide_back, 0), ip='LINEAR').p('Corredera', 0.505, (0, -slide_back, 0), ip='LINEAR') \
  .p('Corredera', 0.53, ip='LINEAR').p('Corredera', 0.80)
 c.v('Arma', 0.0, (0.25, -0.35, -0.95), (-55, 25, -10)).v('Arma', 0.28, (0.02, -0.02, -0.03), (4, -3, 2)) \
- .v('Arma', 0.36, (0, 0, 0), (0, 0, 0)).v('Arma', 0.48, (-0.03, 0.03, 0.0), (2, 0, 3)).v('Arma', 0.56, (0, -0.02, 0), (-1, 0, 0)) \
+ .v('Arma', 0.36, (0, 0, 0), (0, 0, 0)).v('Arma', 0.48, (-0.02, 0.12, -0.12), (2, 14, 3)).v('Arma', 0.56, (0, 0.02, -0.02), (-1, 2, 0)) \
  .v('Arma', 0.80)
 c.rest_hand('L', 0.34).hand('L', 0.42, SLIDE_GRAB, J, POLE_L).hand('L', 0.48, SLIDE_GRAB + Vector((0, -slide_back, 0)), J, POLE_L) \
- .hand('L', 0.53, SLIDE_GRAB + Vector((-0.08, -0.36, 0.10)), J, POLE_L).rest_hand('L', 0.72)
+ .hand('L', 0.53, SLIDE_GRAB + Vector((-0.10, -0.34, 0.0)), J, POLE_L).rest_hand('L', 0.72)
 clips.append(c)
 
 c = W.ClipDef('Disparo', 0.25)
+c.e(0.0, 'disparo').e(0.033, 'corredera_atras').e(0.05, 'casquillo_sale').e(0.11, 'corredera_adelante')
 c.p('Gatillo', 0.0).p('Gatillo', 0.016, rot=(-14, 0, 0), ip='LINEAR').p('Gatillo', 0.10, rot=(-14, 0, 0)).p('Gatillo', 0.16)
 c.p('Corredera', 0.0).p('Corredera', 0.033, (0, -slide_back, 0), ip='LINEAR').p('Corredera', 0.05, (0, -slide_back, 0)) \
  .p('Corredera', 0.11).p('Corredera', 0.25)
@@ -371,14 +373,19 @@ c.v('Arma', 0.0).v('Arma', 0.025, (0.01, -0.10, 0.025), (7.5, 1.2, -1.0)).v('Arm
 clips.append(c)
 
 c = W.ClipDef('Recargar', 1.70)
+c.e(0.22, 'cargador_suelta').e(0.32, 'cargador_fuera').e(0.56, 'cargador_nuevo').e(1.04, 'cargador_dentro') \
+ .e(1.18, 'corredera_atras').e(1.24, 'corredera_adelante')
 c.p('Cargador', 0.0).p('Cargador', 0.22).p('Cargador', 0.32, md(0.65), ip='LINEAR') \
  .p('Cargador', 0.50, tuple(MAG_DOWN * 0.65 + Vector((0, -0.10, -1.40))), (25, 0, 10), ip='CONSTANT') \
  .p('Cargador', 0.56, md(0.80)).p('Cargador', 0.88, md(0.30)).p('Cargador', 1.00, md(0.08)).p('Cargador', 1.04, ip='LINEAR').p('Cargador', 1.70)
 c.p('Corredera', 0.0).p('Corredera', 1.10).p('Corredera', 1.18, (0, -slide_back, 0), ip='LINEAR').p('Corredera', 1.21, (0, -slide_back, 0), ip='LINEAR') \
  .p('Corredera', 1.24, ip='LINEAR').p('Corredera', 1.70)
-RP = ((-0.18, 0.05, 0.33), (14, 22, 10))
-c.v('Arma', 0.0).v('Arma', 0.18, *RP).v('Arma', 1.00, (-0.18, 0.05, 0.34), (14, 22, 10)).v('Arma', 1.05, (-0.18, 0.05, 0.37), (16, 22, 10)) \
- .v('Arma', 1.12, (-0.08, 0.03, 0.18), (6, 8, 4)).v('Arma', 1.20, (-0.05, 0.06, 0.16), (5, 6, 4)).v('Arma', 1.27, (-0.03, -0.02, 0.10), (3, 3, 2)) \
+# v3c: el arma sube e inclina mas para que la boca del cargador quede en pantalla; al montar la corredera baja y gira a la
+# derecha para que la mano izquierda llegue por el lado sin que la manga tape la vista
+# v5: en v4 el arma subia demasiado cerca y la manga tapaba media pantalla: ahora sube menos y se adelanta
+RP = ((-0.10, 0.14, 0.30), (22, 24, 8))
+c.v('Arma', 0.0).v('Arma', 0.18, *RP).v('Arma', 1.00, (-0.10, 0.14, 0.31), (22, 24, 8)).v('Arma', 1.05, (-0.10, 0.14, 0.34), (24, 24, 8)) \
+ .v('Arma', 1.12, (0.02, 0.16, -0.16), (2, 18, 3)).v('Arma', 1.20, (0.03, 0.17, -0.18), (2, 16, 2)).v('Arma', 1.27, (0.02, 0.08, -0.10), (1, 6, 1)) \
  .v('Arma', 1.70)
 base_bottom = Vector((0, (-5 - GY) * s, (5 - GZ) * s)) - Vector((0, (T.x - GY) * s, (T.y - GZ) * s))   # base del cargador respecto a su pivote
 mag_piv = piv['Cargador']
@@ -389,11 +396,35 @@ c.rest_hand('L', 0.20).hand('L', 0.30, WL + Vector((-0.15, -0.20, -0.45)), J, PO
  .hand('L', 0.88, hand_under_mag(0.30), J, POLE_L).hand('L', 1.00, hand_under_mag(0.08), J, POLE_L) \
  .hand('L', 1.05, hand_under_mag(0.0) + Vector((0, 0, 0.03)), J, POLE_L) \
  .hand('L', 1.13, SLIDE_GRAB, J, POLE_L).hand('L', 1.19, SLIDE_GRAB + Vector((0, -slide_back, 0)), J, POLE_L) \
- .hand('L', 1.25, SLIDE_GRAB + Vector((-0.06, -0.38, 0.12)), J, POLE_L).rest_hand('L', 1.55)
+ .hand('L', 1.25, SLIDE_GRAB + Vector((-0.08, -0.36, 0.0)), J, POLE_L).rest_hand('L', 1.55)
 clips.append(c)
 
 c = W.ClipDef('Reposo', 2.0, loop=True)
 c.v('Arma', 0.0).v('Arma', 0.5, (0, 0, 0.006), (0.5, 0, 0.25)).v('Arma', 1.0).v('Arma', 1.5, (0, 0, -0.006), (-0.4, 0, -0.2)).v('Arma', 2.0)
+clips.append(c)
+
+# Inspeccionar (descripcion de Maikol): la voltea en diagonal hacia la derecha, luego lo mismo hacia la izquierda, estira el
+# brazo con la pistola de lado (estilo gangster) con una pausa y vuelve al reposo. La mano izquierda suelta el arma y baja.
+INSP = [(0.00, (0, 0, 0), (0, 0, 0)),
+        (0.30, (-0.04, -0.06, 0.06), (5, 0, 0)),
+        (0.85, (-0.12, -0.20, 0.14), (16, 16, -55)),
+        (1.10, (-0.12, -0.20, 0.15), (18, 18, -59)),
+        (1.65, (-0.20, -0.18, 0.14), (16, -16, 50)),
+        (1.90, (-0.20, -0.18, 0.15), (18, -18, 54)),
+        (2.40, (-0.10, 0.30, 0.10), (0, -84, 0)),
+        (2.80, (-0.10, 0.31, 0.10), (1, -87, 0)),
+        (3.30, (0, 0, 0), (0, 0, 0))]
+L_OFF = Vector((-0.55, -0.30, -0.75))           # mano izquierda fuera de cuadro (espacio de camara, relativa a G)
+
+
+def left_insp(t, T, R):
+    w = W.ramp(t, 0.06, 0.36, 2.92, 3.26)
+    on = Vector(T) + Euler([math.radians(a) for a in R], 'XYZ').to_matrix() @ Vector(J['L']['W'])
+    return on.lerp(L_OFF, w), True, 1.0 - w
+
+
+c = W.ClipDef('Inspeccionar', 3.30)
+W.inspect(c, INSP, J, {'R': (1, 0, -1), 'L': POLE_L}, left_insp)
 clips.append(c)
 
 def export_rig_clips(rig, objs, acts, tag):
@@ -443,6 +474,9 @@ for o in partes:
 cst, st_objs = W.static_copies(list(vm_parts.values()) + list(arms.values()), 'TMP_VM')
 A.export_glb(os.path.join(OUT, NOMBRE + '_VM.glb'), st_objs)
 W.remove_collection(cst)
+# puntos para efectos/camara (boca: fogonazo y raycast; expulsion: casquillos; miras: apuntar)
+PUNTOS = {'Boca': P3(0, 187, 119), 'Expulsion': P3(12.75, 57, 124), 'MiraTrasera': P3(0, 13.5, 140), 'MiraDelantera': P3(0, 175, 139.8)}
+W.write_eventos(OUT, NOMBRE, clips, PUNTOS, armazon)
 A.log('exportado')
 
 # ------------------------------------------------------------------ RENDERS de comprobacion
@@ -474,12 +508,12 @@ camvm = W.vm_camera(CC)
 A.render(os.path.join(PV, NOMBRE + '_5_primera_persona.png'), camvm)
 # escala: maniqui R15 de 5,2 studs + regla de 6 studs, arma en la mano derecha
 W.hide_only({'Ref', 'Arma_Mundo', 'Camaras'})
-A.reference_figure(CR, x=0, y=0, h=5.2)
+figs = A.reference_figure(CR, x=0, y=0, h=5.2)
 A.ruler(CR, -2.6, 0, 6)
 W.backdrop(CR, 0.0)
-rig_w.location = (1.5, 0.35, 1.75)
+rig_w.location = W.tool_pose(figs)              # en la mano, con el brazo hacia delante como un Tool de Roblox
 bpy.context.view_layer.update()
-cs = W.look_cam(CC, 'CEsc', (0.3, 0.4, 2.6), (1.0, 0.85, 0.35), 11.5, 50)
+cs = W.look_cam(CC, 'CEsc', (0.5, 0.9, 2.8), (1.0, 0.9, 0.35), 11.5, 50)
 A.render(os.path.join(PV, NOMBRE + '_6_escala_R15.png'), cs)
 rig_w.location = (0, 0, 0)
 bpy.context.view_layer.update()
@@ -488,7 +522,8 @@ bpy.context.view_layer.update()
 A.setup_render((480, 270), 'CYCLES', 16)
 sc = bpy.context.scene
 TIMES = {'Equipar': [0, 0.1, 0.2, 0.3, 0.42, 0.48, 0.53, 0.7], 'Disparo': [0, 0.016, 0.033, 0.05, 0.08, 0.12, 0.18, 0.24],
-         'Recargar': [0, 0.2, 0.32, 0.5, 0.62, 0.9, 1.04, 1.13, 1.19, 1.25, 1.4, 1.65], 'Reposo': [0, 0.5, 1.0, 1.5]}
+         'Recargar': [0, 0.2, 0.32, 0.5, 0.62, 0.9, 1.04, 1.13, 1.19, 1.25, 1.4, 1.65], 'Reposo': [0, 0.5, 1.0, 1.5],
+         'Inspeccionar': [0.3, 0.85, 1.1, 1.65, 1.9, 2.4, 2.8, 3.15]}
 sheets = []
 camvx = W.look_cam(CC, 'CVX', G + Vector((-0.45, -0.25, 0.0)), (-0.95, 0.55, 0.35), 4.6, 50)   # camara externa del viewmodel (desde la izquierda)
 for n, ts in TIMES.items():
@@ -510,7 +545,7 @@ rig_v.animation_data.action = None
 # tercera persona (solo partes): disparo y recarga vistos de lado
 W.hide_only({'Arma_Mundo', 'Camaras'})
 camw = W.look_cam(CC, 'CW', ctr + Vector((0, 0, -0.25)), (1.0, 0.15, 0.2), 4.2, 50)
-for n in ('Disparo', 'Recargar', 'Equipar'):
+for n in ('Disparo', 'Recargar', 'Equipar', 'Inspeccionar'):
     A.set_action(rig_w, acts_w[n])
     items = []
     for t in TIMES[n]:

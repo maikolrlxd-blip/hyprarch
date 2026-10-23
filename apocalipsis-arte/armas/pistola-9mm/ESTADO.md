@@ -1,39 +1,42 @@
 # Pistola 9mm — estado
 
-**Congelada por decisión de Maikol** (2026-10-23, "Ya déjale las armas así"). Esta es la versión v3b y no se hacen más vueltas de crítica.
+Versión v5, del 2026-10-23. Maikol congeló el diseño («Ya déjale las armas así»): desde la v4 solo hay correcciones de errores, animaciones y la exportación para el código.
 
 ## Qué falla
-- **Triángulo negro grande en el armazón.** Se ve en la vista izquierda, en la de tres cuartos y en la de escala. Una cara del armazón tapa el hueco entre el guardamonte y la empuñadura y se ve negra porque tiene la normal invertida.
-  - Pasar la triangulación a EAR_CLIP no lo arregló, así que lo más probable es que el contorno del armazón se cruce en algún punto.
-  - Arreglo propuesto, no hecho por la congelación: partir la tapa del armazón en piezas convexas (bloque superior + empuñadura).
-- Por culpa de ese triángulo, el guardamonte no se ve desde la izquierda. Desde la derecha sí se ve.
-- Por el puerto de expulsión se ve un bloque de latón liso. Es el casquillo, escondido en la recámara porque Roblox no anima la escala. Se lee como una bala en la recámara, pero es un bloque.
+- **Recarga en primera persona:** al montar la corredera, entre 1,13 y 1,25 s, la manga izquierda todavía cubre media pantalla. Con mangas más finas y el arma más baja mejoró, pero no del todo.
+- **Cargador en la recarga:** se ve el gesto de la mano, pero el cargador nuevo queda en parte tapado por la mano.
+- Por el puerto de expulsión se ve un bloque de latón liso. Es el casquillo, que va escondido en la recámara porque Roblox no anima la escala.
 - Las manos del viewmodel son bloques estilo R15, sin dedos.
-- **No probado en Roblox Studio:** la importación de los FBX animados.
+- **No probado en Roblox Studio:** la importación de los clips con el Animation Editor ni el Tool.
+
+## Qué funciona
+- **Sin pared negra.** Era un fallo de triangulación (la normal de la cara no se calculaba) y está arreglado en `ap_lib`.
+- Viewmodel más cerca y centrado.
+- La vista de escala tiene la pistola en la mano del R15, con el brazo hacia delante (pose de Tool).
+- **Inspeccionar (3,30 s)**, según la descripción de Maikol:
+  - diagonal a la derecha;
+  - diagonal a la izquierda;
+  - brazo estirado con la pistola de lado, estilo gánster, con pausa;
+  - vuelta al reposo.
+  La mano izquierda baja fuera de cuadro. En el modelo de mundo la pistola solo gira en la mano.
+- **Eventos y puntos** para el código, en `eventos.json` y `Pistola9mm_Eventos.lua`.
 
 ## Triángulos
-Armazón 176, Corredera 260, Cargador 72, Gatillo 60 y Casquillo 66: **634 en total** (presupuesto 300–800). Los brazos del viewmodel suman 256 aparte.
+Armazón 176, Corredera 260, Cargador 72, Gatillo 60 y Casquillo 66: **634 en total**. Los brazos del viewmodel van aparte.
 
-## Clips (modelo de mundo y viewmodel)
-- Equipar: 0,80 s
-- Disparo: 0,25 s, con el casquillo saliendo a la derecha
-- Recargar: 1,70 s
-- Reposo: 2,00 s, en bucle
-
-El detalle de cada clip está en `../../armas-animaciones.md`.
+## Clips (mundo y viewmodel)
+| Clip | Duración |
+|---|---|
+| Equipar | 0,80 s |
+| Disparo | 0,25 s |
+| Recargar | 1,70 s |
+| Reposo | 2,00 s, en bucle |
+| Inspeccionar | 3,30 s |
 
 ## Vueltas
-1. **v1:** salió oscura y plana, y el viewmodel era pobre.
-2. **v2:** la corredera parecía cromada y tenía 890 triángulos.
-3. **v3:** corredera más oscura, arañazos suaves y sin biseles, con 634 triángulos. También se arregló el viewmodel, que no se deformaba porque las copias compartían la malla y borraban los grupos de vértices.
-4. **v3b:** la misma geometría con triangulación EAR_CLIP. No arregló el triángulo negro.
-
-## Archivos
-- `Pistola9mm.blend`: escena con los dos rigs y todos los clips, con prefijos `Mundo_` y `VM_`.
-- `Pistola9mm_Mundo.fbx`: modelo de mundo con sus clips.
-- `Pistola9mm_VM.fbx`: viewmodel con brazos R15 y sus clips.
-- `Pistola9mm_Mundo_Estatico.fbx`: piezas separadas; la pieza principal se llama `Handle`.
-- GLB de mundo y de viewmodel.
-- `clips/`: un FBX por clip.
-- `texturas/`: color de 1024 px.
-- `previews/`: renders y hojas de contacto. Copia en `../../renders/`.
+1. **v1:** oscura y plana.
+2. **v2:** corredera cromada y 890 triángulos.
+3. **v3:** 634 triángulos y viewmodel que deformaba bien.
+4. **v3b:** pasó a EAR_CLIP, pero el triángulo negro seguía.
+5. **v4:** corregido el triángulo negro (normal antes de triangular). Viewmodel más cerca, inspección, eventos y pose de Tool.
+6. **v5:** mangas más finas (0,30) y recarga más baja y adelantada.

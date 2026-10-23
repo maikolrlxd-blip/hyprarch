@@ -1,45 +1,47 @@
 # Escopeta de corredera — estado
 
-**Congelada por decisión de Maikol** (2026-10-23, "Ya déjale las armas así"). Esta es la versión v2 y no se hacen más vueltas de crítica.
+Versión v2c, del 2026-10-23. El diseño está congelado por Maikol: solo se han hecho correcciones de errores, animaciones y la exportación para el código.
 
 ## Qué falla
-- **Gatillo demasiado grande:** dentro del guardamonte se ve una cuña negra y gruesa, no una lámina fina.
-- **Madera muy saturada:** la culata y la bomba son de un naranja fuerte y a distancia se ven planas. La bomba es un bloque sin estrías.
-- **Cajón de mecanismos liso:** es una caja que desde la izquierda no tiene ningún detalle.
-- **Primera persona:**
-  - el arma ocupa poca pantalla;
-  - el antebrazo izquierdo, una manga verde, es un bloque grande que domina la esquina inferior izquierda.
-- **No probado en Roblox Studio:** la importación de los FBX animados.
+- **Primera persona:** aunque está más cerca que en la v2, sigue viéndose fina y lejana por lo larga que es (4 studs). El antebrazo izquierdo ocupa la esquina inferior izquierda.
+- **Madera y cajón:** la madera es lisa, sin estrías en la bomba, y el cajón también es liso por el lado izquierdo.
+- **No probado en Roblox Studio:** ni los clips con el Animation Editor ni el Tool.
 
 ## Qué funciona
-- La silueta se lee claramente como una escopeta de corredera.
-- Al bombear, el casquillo rojo sale por la ventana derecha.
-- La recarga mete los cartuchos uno a uno: `Recargar_Inicio`, después `Recargar_Cartucho` las veces que haga falta y al final `Recargar_Fin`.
+- **Silueta:** la de una escopeta de corredera clara.
+- **Correcciones:**
+  - madera con menos saturación;
+  - guardamonte y gatillo más finos;
+  - sin caras negras.
+- **Bombear:** el casquillo rojo sale por la ventana derecha.
+- **Recarga:** mete los cartuchos de uno en uno (`Recargar_Inicio`, después `Recargar_Cartucho` × N y al final `Recargar_Fin`).
+- **Inspeccionar (3,00 s):** gira el arma para mirar la ventana, medio bombeo para revisar la recámara, la gira al otro lado y vuelve.
+- **Eventos y puntos** para el código: `eventos.json` y `Escopeta_Eventos.lua`.
 
 ## Triángulos
-Cuerpo 342, Bomba 68, Cerrojo 12, Gatillo 20, Cartucho 44 y Casquillo 44: **530 en total** (presupuesto 300–800). Los brazos del viewmodel suman 256 aparte.
+**530 en total**:
+- Cuerpo 342
+- Bomba 68
+- Cerrojo 12
+- Gatillo 20
+- Cartucho 44
+- Casquillo 44
 
-## Clips (modelo de mundo y viewmodel)
-| Clip | Duración | Bucle |
-|---|---|---|
-| Equipar | 0,90 s | no |
-| Disparo | 0,45 s | no |
-| Bombear | 0,60 s | no |
-| Recargar_Inicio | 0,45 s | no |
-| Recargar_Cartucho | 0,50 s | sí, una vez por cartucho |
-| Recargar_Fin | 0,55 s | no |
-| Recargar (el clip completo con 3 cartuchos) | 2,50 s | no |
-| Reposo | 2,00 s | sí |
+## Clips
+| Clip | Duración |
+|---|---|
+| Equipar | 0,90 s |
+| Disparo | 0,45 s |
+| Bombear | 0,60 s |
+| Recargar_Inicio | 0,45 s |
+| Recargar_Cartucho | 0,50 s (bucle) |
+| Recargar_Fin | 0,55 s |
+| Recargar | 2,50 s |
+| Reposo | 2,00 s (bucle) |
+| Inspeccionar | 3,00 s |
 
 ## Vueltas
-1. **v1:** tenía 1264 triángulos y la culata era rara. El cajón salía negro porque una caja exterior tapaba la ventana de expulsión.
-2. **v2:** cajón rehecho como un prisma más las piezas de la pared derecha alrededor de la ventana, y culata recta clásica. Bajó a 530 triángulos.
-
-## Archivos
-Siguen el mismo esquema que la pistola:
-- `Escopeta.blend`;
-- `Escopeta_Mundo.fbx`, `Escopeta_VM.fbx` y `Escopeta_Mundo_Estatico.fbx` (con su pieza `Handle`);
-- GLB;
-- `clips/` (16 FBX);
-- `texturas/`;
-- `previews/`, con copia en `../../renders/`.
+1. **v1:** cajón negro y 1264 triángulos.
+2. **v2:** cajón por piezas, culata recta y 530 triángulos.
+3. **v2b:** sin caras negras, madera desaturada, guardamonte fino, inspección y eventos.
+4. **v2c:** viewmodel más cerca, inspección más marcada y mangas finas.

@@ -1,0 +1,215 @@
+{
+  "arma": "Escopeta",
+  "fps": 60,
+  "unidades": "studs, ejes Roblox: X derecha, Y arriba, -Z delante (LookVector del Handle)",
+  "handle_centro_desde_origen": [
+    0.0,
+    -0.1,
+    -0.7596
+  ],
+  "puntos": {
+    "Boca": {
+      "desde_origen": [
+        0.0,
+        0.097,
+        -2.7879
+      ],
+      "desde_centro_handle": [
+        0.0,
+        0.197,
+        -2.0283
+      ]
+    },
+    "Expulsion": {
+      "desde_origen": [
+        0.1103,
+        0.097,
+        -0.5657
+      ],
+      "desde_centro_handle": [
+        0.1103,
+        0.197,
+        0.1939
+      ]
+    },
+    "PuertoCarga": {
+      "desde_origen": [
+        0.0,
+        -0.101,
+        -0.7273
+      ],
+      "desde_centro_handle": [
+        0.0,
+        -0.001,
+        0.0323
+      ]
+    },
+    "MiraTrasera": {
+      "desde_origen": [
+        0.0,
+        0.1818,
+        -0.1818
+      ],
+      "desde_centro_handle": [
+        0.0,
+        0.2818,
+        0.5778
+      ]
+    },
+    "MiraDelantera": {
+      "desde_origen": [
+        0.0,
+        0.1919,
+        -2.7273
+      ],
+      "desde_centro_handle": [
+        0.0,
+        0.2919,
+        -1.9677
+      ]
+    }
+  },
+  "clips": {
+    "Equipar": {
+      "duracion_s": 0.9,
+      "frames": 54,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0.58,
+          "frame": 35,
+          "nombre": "bomba_atras"
+        },
+        {
+          "t": 0.77,
+          "frame": 46,
+          "nombre": "bomba_adelante"
+        }
+      ]
+    },
+    "Disparo": {
+      "duracion_s": 0.45,
+      "frames": 27,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0.0,
+          "frame": 0,
+          "nombre": "disparo"
+        }
+      ]
+    },
+    "Bombear": {
+      "duracion_s": 0.6,
+      "frames": 36,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0.16,
+          "frame": 10,
+          "nombre": "bomba_atras"
+        },
+        {
+          "t": 0.18,
+          "frame": 11,
+          "nombre": "casquillo_sale"
+        },
+        {
+          "t": 0.4,
+          "frame": 24,
+          "nombre": "bomba_adelante"
+        }
+      ]
+    },
+    "Recargar_Inicio": {
+      "duracion_s": 0.45,
+      "frames": 27,
+      "bucle": false,
+      "eventos": []
+    },
+    "Recargar_Cartucho": {
+      "duracion_s": 0.5,
+      "frames": 30,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0.34,
+          "frame": 20,
+          "nombre": "cartucho_dentro"
+        }
+      ]
+    },
+    "Recargar_Fin": {
+      "duracion_s": 0.55,
+      "frames": 33,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0.28,
+          "frame": 17,
+          "nombre": "bomba_atras"
+        },
+        {
+          "t": 0.46,
+          "frame": 28,
+          "nombre": "bomba_adelante"
+        }
+      ]
+    },
+    "Recargar": {
+      "duracion_s": 2.5,
+      "frames": 150,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0.79,
+          "frame": 47,
+          "nombre": "cartucho_dentro"
+        },
+        {
+          "t": 1.29,
+          "frame": 77,
+          "nombre": "cartucho_dentro"
+        },
+        {
+          "t": 1.79,
+          "frame": 107,
+          "nombre": "cartucho_dentro"
+        },
+        {
+          "t": 2.23,
+          "frame": 134,
+          "nombre": "bomba_atras"
+        },
+        {
+          "t": 2.41,
+          "frame": 145,
+          "nombre": "bomba_adelante"
+        }
+      ]
+    },
+    "Reposo": {
+      "duracion_s": 2.0,
+      "frames": 120,
+      "bucle": true,
+      "eventos": []
+    },
+    "Inspeccionar": {
+      "duracion_s": 3.0,
+      "frames": 180,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0.92,
+          "frame": 55,
+          "nombre": "bomba_atras"
+        },
+        {
+          "t": 1.25,
+          "frame": 75,
+          "nombre": "bomba_adelante"
+        }
+      ]
+    }
+  }
+}

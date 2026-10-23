@@ -66,7 +66,7 @@ mb.cyl(P3(0, 905, -14), P3(0, 926, -14), 13.2 * s, 8, 'canon')
 mb.box(P3(0, 884, -3), (30 * s, 18 * s, 50 * s), 'canon')
 # guardamonte
 guard = [(338, -48), (338, -84), (347, -95), (420, -95), (430, -84), (432, -48)]
-mb.band([yz(*p) for p in guard], 9.5 * s, -7 * s, 7 * s, 'metal', plane='YZ')
+mb.band([yz(*p) for p in guard], 6.5 * s, -5 * s, 5 * s, 'metal', plane='YZ')         # v2b: guardamonte mas fino
 cuerpo = mb.finish(CM, origin=(0, 0, 0))
 
 # ------------------------------------------------------------------ BOMBA (guardamano de madera, se desliza)
@@ -86,7 +86,7 @@ cerrojo = mb.finish(CM, origin=P3(9.5, 437, 9))
 # ------------------------------------------------------------------ GATILLO
 mb = A.MB('Gatillo')
 trig = [(378, -50), (373, -66), (366, -84)]
-mb.band([yz(*p) for p in trig], 7.5 * s, -3.6 * s, 3.6 * s, 'gatillo', plane='YZ')
+mb.band([yz(*p) for p in trig], 5.5 * s, -2.8 * s, 2.8 * s, 'gatillo', plane='YZ')    # v2b: gatillo mas fino
 gatillo = mb.finish(CM, origin=P3(0, 378, -50))
 
 # ------------------------------------------------------------------ CARTUCHO (nuevo) y CASQUILLO (gastado): calibre 12, 70 mm
@@ -181,8 +181,8 @@ def shell_paint(P, msk, pos, nrm, col):
     return col
 
 
-P.region('madera', '#8f5d31', var=0.12, stroke=(10, 1, 1), stroke_scale=6, blotch=0.10, ao=0.62, ao_tint='#1d1008', light=0.26,
-         tone_steps=5, grad=0.10, edge_col='#cf9d62', edge=0.9, edge_th=0.035, edge_break=0.45, grime=0.25, grime_col='#2a190c',
+P.region('madera', '#755339', var=0.12, stroke=(10, 1, 1), stroke_scale=6, blotch=0.10, ao=0.62, ao_tint='#1d1008', light=0.26,
+         tone_steps=5, grad=0.10, edge_col='#a98a6a', edge=0.9, edge_th=0.035, edge_break=0.45, grime=0.25, grime_col='#2a190c',
          dust=0.10, seed=3, extra=wood)
 P.regions_alias = None
 P.region('metal', '#555b62', var=0.09, stroke=(1, 5, 1), stroke_scale=7, blotch=0.08, ao=0.62, ao_tint='#171d28', light=0.26, grad=0.14,
@@ -217,7 +217,7 @@ BW = [b[0] for b in bones_w]
 
 # ------------------------------------------------------------------ VIEWMODEL (primera persona)
 CV = A.collection('Arma_VM')
-G = Vector((0.40, 0.95, -0.74))
+G = Vector((0.32, 0.70, -0.58))          # v2c: mas cerca y mas alta (en v2 se veia pequena y lejana)
 SRa, SLa = Vector((0.90, -0.70, -1.05)), Vector((-0.85, 0.20, -1.05))      # hombros (absolutos, fuera de cuadro)
 HR = Vector((0.03, 0.00, 0.00))
 WR = Vector((0.05, -0.22, -0.10))
@@ -278,6 +278,7 @@ ESC = {}
 def pump_pull(c, t0, dur_back, hold, dur_fwd, hand=True, wl=None):
     """Mueve bomba y cerrojo atras y adelante; la mano izquierda acompana a la bomba."""
     t1, t2, t3 = t0 + dur_back, t0 + dur_back + hold, t0 + dur_back + hold + dur_fwd
+    c.e(t1, 'bomba_atras').e(t3, 'bomba_adelante')
     c.p('Bomba', t0).p('Bomba', t1, (0, -P_BACK, 0)).p('Bomba', t2, (0, -P_BACK, 0)).p('Bomba', t3)
     c.p('Cerrojo', t0).p('Cerrojo', t1, (0, -CERROJO_BACK, 0)).p('Cerrojo', t2, (0, -CERROJO_BACK, 0)).p('Cerrojo', t3)
     if hand:
@@ -289,6 +290,7 @@ def pump_pull(c, t0, dur_back, hold, dur_fwd, hand=True, wl=None):
 
 def casing_eject(c, t0):
     """Casquillo gastado sale por la ventana derecha. En reposo esta oculto dentro del cajon (no se anima escala en Roblox)."""
+    c.e(t0 + 0.04, 'casquillo_sale')
     c.p('Casquillo', t0).p('Casquillo', t0 + 0.04, (0, -4 * s, 30 * s), ip='LINEAR') \
      .p('Casquillo', t0 + 0.08, (30 * s, -8 * s, 62 * s), (0, 0, -40), ip='LINEAR') \
      .p('Casquillo', t0 + 0.17, (150 * s, -40 * s, 112 * s), (90, 30, -120), ip='LINEAR') \
@@ -316,6 +318,7 @@ def seg_cartucho(c, t0, first=False):
     sh2 = PORT + Vector((0.0, 0.0, 0.04))                       # dentro
     rest_c = Vector(piv['Cartucho'])
     rel = lambda p: tuple(p - rest_c)
+    c.e(t0 + 0.34, 'cartucho_dentro')
     c.p('Cartucho', t0).p('Cartucho', t0 + 0.02, rel(sh0), ip='LINEAR') \
      .p('Cartucho', t0 + 0.26, rel(sh1), (-8, 0, 0), ip='LINEAR').p('Cartucho', t0 + 0.34, rel(sh2), ip='LINEAR') \
      .p('Cartucho', t0 + 0.38, (0, 0, 0), ip='CONSTANT').p('Cartucho', t0 + 0.50)
@@ -328,6 +331,7 @@ def seg_cartucho(c, t0, first=False):
 def seg_fin(c, t0):
     c.v('Arma', t0, (-0.10, 0.02, 0.10), (6, 8, 22)).v('Arma', t0 + 0.20, (0, 0, 0), (0, 0, 0)).v('Arma', t0 + 0.55)
     c.hand('L', t0, POUCH, J, POLE_L).hand('L', t0 + 0.18, WL, J, POLE_L)
+    c.e(t0 + 0.28, 'bomba_atras').e(t0 + 0.46, 'bomba_adelante')
     c.p('Bomba', t0 + 0.18).p('Bomba', t0 + 0.28, (0, -P_BACK, 0)).p('Bomba', t0 + 0.34, (0, -P_BACK, 0)).p('Bomba', t0 + 0.46).p('Bomba', t0 + 0.55)
     c.p('Cerrojo', t0 + 0.18).p('Cerrojo', t0 + 0.28, (0, -CERROJO_BACK, 0)).p('Cerrojo', t0 + 0.34, (0, -CERROJO_BACK, 0)).p('Cerrojo', t0 + 0.46).p('Cerrojo', t0 + 0.55)
     c.hand('L', t0 + 0.28, WL + Vector((0, -P_BACK, 0)), J, POLE_L).hand('L', t0 + 0.34, WL + Vector((0, -P_BACK, 0)), J, POLE_L) \
@@ -343,6 +347,7 @@ pump_pull(c, 0.48, 0.10, 0.05, 0.14)
 clips.append(c)
 
 c = W.ClipDef('Disparo', 0.45)
+c.e(0.0, 'disparo')
 c.v('Arma', 0.0).v('Arma', 0.03, (0.0, -0.27, 0.035), (11.5, 0.8, -1.0)).v('Arma', 0.12, (0.0, -0.10, 0.015), (4.5, 0.3, -0.4)) \
  .v('Arma', 0.28, (0, -0.02, 0.0), (1.0, 0, 0)).v('Arma', 0.45)
 c.p('Gatillo', 0.0).p('Gatillo', 0.02, rot=(-16, 0, 0), ip='LINEAR').p('Gatillo', 0.12, rot=(-16, 0, 0)).p('Gatillo', 0.24)
@@ -369,6 +374,24 @@ clips.append(c)
 c = W.ClipDef('Reposo', 2.0, loop=True)
 c.v('Arma', 0.0).v('Arma', 0.5, (0, 0, 0.007), (0.5, 0, 0.3)).v('Arma', 1.0).v('Arma', 1.5, (0, 0, -0.007), (-0.4, 0, -0.25)).v('Arma', 2.0)
 c.hand('L', 0.0, WL, J, POLE_L).hand('L', 2.0, WL, J, POLE_L)
+clips.append(c)
+
+# Inspeccionar (Maikol la dejo a nuestro criterio): gira el arma para mirar la ventana de expulsion, abre la recamara con
+# medio bombeo, cierra, gira al otro lado y vuelve. La mano izquierda no suelta la bomba.
+PH, CH = 45.0 * s, 38.0 * s
+INSP = [(0.00, (0, 0, 0), (0, 0, 0)),                      # v2c: giros mas marcados y el arma mas alta (en v2b casi no se notaba)
+        (0.45, (-0.18, -0.08, 0.20), (10, -45, 20)),
+        (0.70, (-0.18, -0.08, 0.20), (11, -47, 21)),
+        (1.30, (-0.18, -0.08, 0.20), (11, -47, 21)),
+        (1.95, (-0.10, -0.06, 0.20), (12, 40, -26)),
+        (2.40, (-0.10, -0.06, 0.20), (13, 42, -28)),
+        (3.00, (0, 0, 0), (0, 0, 0))]
+c = W.ClipDef('Inspeccionar', 3.00)
+c.p('Bomba', 0.75).p('Bomba', 0.92, (0, -PH, 0)).p('Bomba', 1.08, (0, -PH, 0)).p('Bomba', 1.25)
+c.p('Cerrojo', 0.75).p('Cerrojo', 0.92, (0, -CH, 0)).p('Cerrojo', 1.08, (0, -CH, 0)).p('Cerrojo', 1.25)
+c.e(0.92, 'bomba_atras').e(1.25, 'bomba_adelante')
+W.inspect(c, INSP, J, {'R': POLE_R, 'L': POLE_L},
+          lambda t, T, R: (WL + Vector((0, -PH * W.ramp(t, 0.75, 0.92, 1.08, 1.25), 0)), False, 1.0))
 clips.append(c)
 
 
@@ -415,6 +438,10 @@ for o in partes:
 cst, st_objs = W.static_copies(list(vm_parts.values()) + list(arms.values()), 'TMP_VM')
 A.export_glb(os.path.join(OUT, NOMBRE + '_VM.glb'), st_objs)
 W.remove_collection(cst)
+# puntos para efectos/camara (la X va engrosada por XS como las piezas)
+PUNTOS = {'Boca': P3(0, 990, 9), 'Expulsion': P3(21 * XS, 440, 9), 'PuertoCarga': P3(0, 480, -40),
+          'MiraTrasera': P3(0, 345, 30), 'MiraDelantera': P3(0, 975, 32.5)}
+W.write_eventos(OUT, NOMBRE, clips, PUNTOS, cuerpo)
 A.log('exportado')
 
 # ------------------------------------------------------------------ RENDERS de comprobacion
@@ -444,13 +471,12 @@ W.hide_only({'Arma_VM', 'Camaras'})
 camvm = W.vm_camera(CC)
 A.render(os.path.join(PV, NOMBRE + '_5_primera_persona.png'), camvm)
 W.hide_only({'Ref', 'Arma_Mundo', 'Camaras'})
-A.reference_figure(CR, x=0, y=0, h=5.2)
+figs = A.reference_figure(CR, x=0, y=0, h=5.2)
 A.ruler(CR, -2.6, 0, 6)
 W.backdrop(CR, 0.0)
-rig_w.location = (1.3, 0.05, 3.1)
-rig_w.rotation_euler = (0, math.radians(8), 0)
+rig_w.location = W.tool_pose(figs)              # en la mano, con el brazo hacia delante como un Tool de Roblox
 bpy.context.view_layer.update()
-cs = W.look_cam(CC, 'CEsc', (0.5, 0.2, 2.8), (1.0, 1.0, 0.25), 13.0, 50)
+cs = W.look_cam(CC, 'CEsc', (0.6, 1.4, 2.9), (1.0, 0.75, 0.35), 13.5, 50)
 A.render(os.path.join(PV, NOMBRE + '_6_escala_R15.png'), cs)
 rig_w.location = (0, 0, 0)
 rig_w.rotation_euler = (0, 0, 0)
@@ -463,7 +489,7 @@ if not QUICK:
              'Bombear': [0, 0.08, 0.16, 0.22, 0.28, 0.38, 0.48, 0.58],
              'Recargar_Inicio': [0, 0.1, 0.2, 0.3, 0.4], 'Recargar_Cartucho': [0, 0.06, 0.14, 0.22, 0.30, 0.36, 0.42, 0.49],
              'Recargar_Fin': [0, 0.1, 0.2, 0.3, 0.4, 0.5], 'Recargar': [0, 0.3, 0.6, 0.9, 1.2, 1.5, 1.9, 2.4, 2.6, 2.9, 3.1, 3.4],
-             'Reposo': [0, 0.5, 1.0, 1.5]}
+             'Reposo': [0, 0.5, 1.0, 1.5], 'Inspeccionar': [0.3, 0.6, 0.92, 1.1, 1.6, 2.0, 2.4, 2.8]}
     camvx = W.look_cam(CC, 'CVX', G + Vector((-0.2, 0.9, 0.1)), (1.0, 0.45, 0.30), 6.4, 50)
     camw = W.look_cam(CC, 'CW', ctr + Vector((0, 0, 0.0)), (1.0, 0.15, 0.25), 8.0, 50)
     for n, ts in TIMES.items():
@@ -482,7 +508,7 @@ if not QUICK:
                 os.remove(p)
     rig_v.animation_data.action = None
     W.hide_only({'Arma_Mundo', 'Camaras'})
-    for n in ('Disparo', 'Bombear', 'Recargar_Cartucho'):
+    for n in ('Disparo', 'Bombear', 'Recargar_Cartucho', 'Inspeccionar'):
         A.set_action(rig_w, acts_w[n])
         items = []
         for t in TIMES[n]:

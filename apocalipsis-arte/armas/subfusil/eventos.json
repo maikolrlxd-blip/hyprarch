@@ -1,0 +1,173 @@
+{
+  "arma": "Subfusil",
+  "fps": 60,
+  "unidades": "studs, ejes Roblox: X derecha, Y arriba, -Z delante (LookVector del Handle)",
+  "handle_centro_desde_origen": [
+    0.0,
+    0.2142,
+    -0.3012
+  ],
+  "puntos": {
+    "Boca": {
+      "desde_origen": [
+        0.0,
+        0.4372,
+        -1.7846
+      ],
+      "desde_centro_handle": [
+        0.0,
+        0.2231,
+        -1.4835
+      ]
+    },
+    "Expulsion": {
+      "desde_origen": [
+        0.1383,
+        0.4863,
+        -0.4595
+      ],
+      "desde_centro_handle": [
+        0.1383,
+        0.2722,
+        -0.1584
+      ]
+    },
+    "MiraTrasera": {
+      "desde_origen": [
+        0.0,
+        0.6335,
+        0.2052
+      ],
+      "desde_centro_handle": [
+        0.0,
+        0.4194,
+        0.5064
+      ]
+    },
+    "MiraDelantera": {
+      "desde_origen": [
+        0.0,
+        0.6135,
+        -1.6195
+      ],
+      "desde_centro_handle": [
+        0.0,
+        0.3993,
+        -1.3184
+      ]
+    }
+  },
+  "clips": {
+    "Equipar": {
+      "duracion_s": 0.8,
+      "frames": 48,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0.52,
+          "frame": 31,
+          "nombre": "palanca_atras"
+        },
+        {
+          "t": 0.59,
+          "frame": 35,
+          "nombre": "palanca_suelta"
+        }
+      ]
+    },
+    "Disparo": {
+      "duracion_s": 0.16,
+      "frames": 10,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0.0,
+          "frame": 0,
+          "nombre": "disparo"
+        },
+        {
+          "t": 0.02,
+          "frame": 1,
+          "nombre": "casquillo_sale"
+        }
+      ]
+    },
+    "Recargar": {
+      "duracion_s": 1.95,
+      "frames": 117,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0.3,
+          "frame": 18,
+          "nombre": "cargador_suelta"
+        },
+        {
+          "t": 0.36,
+          "frame": 22,
+          "nombre": "cargador_fuera"
+        },
+        {
+          "t": 0.84,
+          "frame": 50,
+          "nombre": "cargador_nuevo"
+        },
+        {
+          "t": 1.16,
+          "frame": 70,
+          "nombre": "cargador_dentro"
+        },
+        {
+          "t": 1.44,
+          "frame": 86,
+          "nombre": "palanca_atras"
+        },
+        {
+          "t": 1.51,
+          "frame": 91,
+          "nombre": "palanca_suelta"
+        }
+      ]
+    },
+    "Amartillar": {
+      "duracion_s": 0.4,
+      "frames": 24,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0.1,
+          "frame": 6,
+          "nombre": "palanca_atras"
+        },
+        {
+          "t": 0.17,
+          "frame": 10,
+          "nombre": "palanca_suelta"
+        }
+      ]
+    },
+    "Reposo": {
+      "duracion_s": 2.0,
+      "frames": 120,
+      "bucle": true,
+      "eventos": []
+    },
+    "Inspeccionar": {
+      "duracion_s": 3.0,
+      "frames": 180,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0.72,
+          "frame": 43,
+          "nombre": "cargador_fuera"
+        },
+        {
+          "t": 1.2,
+          "frame": 72,
+          "nombre": "cargador_dentro"
+        }
+      ]
+    }
+  }
+}

@@ -103,7 +103,7 @@ def vm_camera(coll, fov_v=70.0, name='Cam_VM'):
 
 
 # ------------------------------------------------------------------ brazos de viewmodel (bloques estilo R15)
-ARM = dict(w=0.40, cuff=0.45, sleeve_col='#4b5136', cuff_col='#3a3f2b', glove_col='#6b5a44')
+ARM = dict(w=0.30, cuff=0.34, sleeve_col='#4b5136', cuff_col='#3a3f2b', glove_col='#6b5a44')   # v5: mangas mas finas (tapaban la pantalla)
 
 
 def build_vm_arms(coll, G, J):
@@ -173,10 +173,19 @@ def qdeg(q):
 
 # ------------------------------------------------------------------ definicion de clips (partes del arma + extras de viewmodel)
 class ClipDef:
-    def __init__(self, name, length, loop=False):
+    def __init__(self, name, length, loop=False, hueco=False):
         self.name, self.length, self.loop = name, length, loop
+        self.hueco = hueco             # clip reservado (pose de reposo) a la espera de la descripcion de Maikol
         self.parts = {}
         self.vm = {}
+        self.wo = {}                   # claves solo del modelo de mundo
+        self.ev = []
+        self._prev = {}                # ultimo Euler por hueso (continuidad al convertir cuaterniones)
+
+    def e(self, t, nombre):
+        """Punto de evento del clip (segundos) para sonidos/efectos en el juego: 'disparo', 'casquillo_sale', ..."""
+        self.ev.append((t, nombre))
+        return self
 
     def p(self, bone, t, loc=(0, 0, 0), rot=(0, 0, 0), ip='BEZIER'):
         self.parts.setdefault(bone, []).append((t, loc, rot, ip))
@@ -184,6 +193,39 @@ class ClipDef:
 
     def v(self, bone, t, loc=(0, 0, 0), rot=(0, 0, 0), ip='BEZIER'):
         self.vm.setdefault(bone, []).append((t, loc, rot, ip))
+        return self
+
+    def w(self, bone, t, loc=(0, 0, 0), rot=(0, 0, 0), ip='BEZIER'):
+        """Clave solo del modelo de mundo (p. ej. el arma girando en la mano durante la inspeccion)."""
+        self.wo.setdefault(bone, []).append((t, loc, rot, ip))
+        return self
+
+    def _eul(self, key, q):
+        prev = self._prev.get(key)
+        e = q.to_euler('XYZ', prev) if prev is not None else q.to_euler('XYZ')
+        self._prev[key] = e
+        return tuple(math.degrees(a) for a in e)
+
+    def hand_cam(self, side, t, Wt, J, pole, T, Reul, lock=0.0, cam=False, ip='LINEAR'):
+        """Como hand(), pero el hombro queda fijo respecto a la camara aunque el hueso Arma este movido (T) y girado
+        (Reul, grados XYZ) en el instante t. Wt: muneca en espacio del arma (relativa a G); con cam=True, en espacio de
+        camara relativo a G. lock (0..1): cuanto conserva la mano su orientacion respecto al arma (1 = la sujeta)."""
+        pre = 'Right' if side == 'R' else 'Left'
+        j = J[side]
+        Ri = Euler([math.radians(a) for a in Reul], 'XYZ').to_matrix().inverted()
+        T = Vector(T)
+        S, E, Wr = Vector(j['S']), Vector(j['E']), Vector(j['W'])
+        S2 = Ri @ (S - T)                     # hombro fijo en camara, visto desde el arma girada
+        d = S2 - S
+        Wt = Ri @ (Vector(Wt) - T) if cam else Vector(Wt)
+        L = (E - S).length + (Wr - E).length
+        if (Wt - S2).length > L - 1e-3:
+            A.log('aviso alcance', self.name, side, round(t, 2), 'falta', round((Wt - S2).length - L, 3))
+        qu, ql, Q = ik_two_bone(S2, E + d, Wr + d, Wt, Ri @ Vector(pole))
+        qh = Quaternion().slerp((qu @ ql).inverted(), lock) if lock > 0 else Quaternion()
+        self.v(pre + 'UpperArm', t, loc=tuple(d), rot=self._eul(pre + 'U', qu), ip=ip)
+        self.v(pre + 'LowerArm', t, rot=self._eul(pre + 'L', ql), ip=ip)
+        self.v(pre + 'Hand', t, rot=self._eul(pre + 'H', qh), ip=ip)
         return self
 
     def hand(self, side, t, Wt, J, pole, extra=(0, 0, 0), ip='BEZIER'):
@@ -209,12 +251,59 @@ class ClipDef:
             if b in bones:
                 for k in ks:
                     c.k(b, *k)
-        if vm:
-            for b, ks in self.vm.items():
-                if b in bones:
-                    for k in ks:
-                        c.k(b, *k)
+        extra = self.vm if vm else self.wo
+        for b, ks in extra.items():
+            if b in bones:
+                for k in ks:
+                    c.k(b, *k)
         return c.build(bones)
+
+
+def ease(u):
+    u = min(max(u, 0.0), 1.0)
+    return u * u * (3 - 2 * u)
+
+
+def track(keys, t):
+    """keys: [(t, valor, valor, ...)] ordenadas; cada valor es una tupla. Interpolacion suave entre claves consecutivas."""
+    if t <= keys[0][0]:
+        return keys[0][1:]
+    for ka, kb in zip(keys, keys[1:]):
+        if t <= kb[0]:
+            u = ease((t - ka[0]) / (kb[0] - ka[0]))
+            return tuple(tuple(a + (b - a) * u for a, b in zip(va, vb)) for va, vb in zip(ka[1:], kb[1:]))
+    return keys[-1][1:]
+
+
+def ramp(t, t0, t1, t2, t3):
+    """0 antes de t0, sube hasta 1 en t1, se mantiene hasta t2 y baja a 0 en t3 (suavizado)."""
+    if t <= t1:
+        return ease((t - t0) / max(t1 - t0, 1e-6))
+    return 1.0 - ease((t - t2) / max(t3 - t2, 1e-6))
+
+
+def inspect(c, keys, J, poles, left_fn, step=1.0 / 20):
+    """Inspeccion por muestreo denso: el hueso Arma sigue keys [(t, T, R)], la mano derecha sujeta el arma con el hombro
+    fijo y la izquierda va donde diga left_fn(t, T, R) -> (Wt, en_camara, lock). En el modelo de mundo el arma solo gira."""
+    n = int(round(c.length / step))
+    for i in range(n + 1):
+        t = round(min(i * step, c.length), 4)
+        T, R = track(keys, t)
+        c.v('Arma', t, T, R, ip='LINEAR')
+        c.w('Arma', t, (0, 0, 0), R, ip='LINEAR')
+        c.hand_cam('R', t, J['R']['W'], J, poles['R'], T, R, lock=1.0)
+        Wt, cam, lock = left_fn(t, T, R)
+        c.hand_cam('L', t, Wt, J, poles['L'], T, R, lock=lock, cam=cam)
+    return c
+
+
+def tool_pose(figs, k=1.0):
+    """Levanta el brazo derecho del maniqui R15 hacia delante (pose de Tool de Roblox) y devuelve el punto de agarre."""
+    arm = [o for o in figs if o.name.endswith('Brazo_D')][0]
+    sh = Vector((1.5 * k, 0.0, 3.75 * k))
+    arm.data.transform(Matrix.Translation(sh) @ Matrix.Rotation(math.radians(90), 4, 'X') @ Matrix.Translation(-sh))
+    arm.data.update()
+    return sh + Vector((0.0, 1.45 * k, -0.08 * k))
 
 
 # ------------------------------------------------------------------ utilidades de exportacion/render
@@ -249,6 +338,43 @@ def bounds(objs):
     mn = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts)))
     mx = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
     return mn, mx
+
+
+def write_eventos(out_dir, nombre, clips, puntos, handle_obj, fps=60):
+    """eventos.json + <nombre>_Eventos.lua: duracion exacta de cada clip, sus eventos y los puntos del arma.
+    Puntos en studs y ejes de Roblox (X derecha, Y arriba, -Z delante = LookVector), medidos desde el origen del FBX
+    (punto de agarre) y desde el centro de la caja de Handle (donde Roblox coloca el MeshPart importado)."""
+    rbx = lambda v: [round(v[0], 4), round(v[2], 4), round(-v[1], 4)]
+    mn, mx = bounds([handle_obj])
+    hc = (mn + mx) / 2
+    data = {'arma': nombre, 'fps': fps,
+            'unidades': 'studs, ejes Roblox: X derecha, Y arriba, -Z delante (LookVector del Handle)',
+            'handle_centro_desde_origen': rbx(hc),
+            'puntos': {k: {'desde_origen': rbx(v), 'desde_centro_handle': rbx(Vector(v) - hc)} for k, v in puntos.items()},
+            'clips': {}}
+    for cd in clips:
+        d = {'duracion_s': round(cd.length, 4), 'frames': int(round(cd.length * fps)), 'bucle': cd.loop,
+             'eventos': [{'t': round(t, 4), 'frame': int(round(t * fps)), 'nombre': n} for t, n in sorted(cd.ev)]}
+        if cd.hueco:
+            d['hueco'] = 'pose de reposo; se anima cuando Maikol describa la inspeccion'
+        data['clips'][cd.name] = d
+    A.write_json(os.path.join(out_dir, 'eventos.json'), data)
+    v3 = lambda a: 'Vector3.new(%s, %s, %s)' % tuple(repr(x) for x in a)
+    L = ['-- Generado por tools/build_*.py: no editar a mano.',
+         '-- Clips a %d fps con su duracion exacta y sus eventos (segundos); puntos del arma en studs (ejes Roblox).' % fps,
+         'return {', '\tArma = "%s",' % nombre, '\tFps = %d,' % fps,
+         '\tHandleCentroDesdeOrigen = %s,' % v3(data['handle_centro_desde_origen']), '\tPuntos = {']
+    for k, p in data['puntos'].items():
+        L.append('\t\t%s = {DesdeOrigen = %s, DesdeCentroHandle = %s},' % (k, v3(p['desde_origen']), v3(p['desde_centro_handle'])))
+    L += ['\t},', '\tClips = {']
+    for n, d in data['clips'].items():
+        evs = ', '.join('{T = %r, Nombre = "%s"}' % (e['t'], e['nombre']) for e in d['eventos'])
+        L.append('\t\t%s = {Duracion = %r, Bucle = %s, Hueco = %s, Eventos = {%s}},' % (
+            n, d['duracion_s'], 'true' if d['bucle'] else 'false', 'true' if 'hueco' in d else 'false', evs))
+    L += ['\t},', '}', '']
+    with open(os.path.join(out_dir, nombre + '_Eventos.lua'), 'w', encoding='utf-8', newline='\n') as f:
+        f.write('\n'.join(L))
+    return data
 
 
 def look_cam(coll, name, target, dirv, dist, lens=50.0, ortho=None):

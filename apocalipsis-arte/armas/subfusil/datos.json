@@ -11,9 +11,9 @@
   "triangulos_brazos_vm": 256,
   "largo_studs": 2.9,
   "medidas_studs": [
-    0.35,
-    2.967,
-    1.042
+    0.485,
+    2.959,
+    1.058
   ],
   "clips": {
     "Equipar": {
@@ -84,12 +84,28 @@
         "LeftLowerArm",
         "LeftUpperArm"
       ]
+    },
+    "Inspeccionar": {
+      "duracion_s": 3.0,
+      "bucle": false,
+      "partes": [
+        "Cargador"
+      ],
+      "vm_extra": [
+        "Arma",
+        "LeftHand",
+        "LeftLowerArm",
+        "LeftUpperArm",
+        "RightHand",
+        "RightLowerArm",
+        "RightUpperArm"
+      ]
     }
   },
   "viewmodel_origen_arma_desde_camara": [
     0.36000001430511475,
-    1.100000023841858,
-    -0.6600000262260437
+    1.0,
+    -0.8600000143051147
   ],
   "exportacion": "FBX global_scale=0.01, ejes -Z delante / Y arriba (1 unidad = 1 stud)"
 }

@@ -44,9 +44,9 @@ CM = A.collection('Arma_Mundo')
 
 # ------------------------------------------------------------------ CUERPO
 mb = A.MB('Cuerpo')
-stock = [(0, 26), (60, 30), (176, 22), (176, -22), (120, -34), (60, -58), (0, -68)]
-mb.prism([yz(*p) for p in stock], -17 * s, 17 * s, 'polimero', plane='YZ', bevel=1.8 * s)
-mb.prism([yz(*p) for p in [(-13, 24), (0, 26), (0, -68), (-13, -64)]], -17.5 * s, 17.5 * s, 'goma', plane='YZ', bevel=1.2 * s)
+stock = [(0, 18), (60, 22), (176, 18), (176, -18), (120, -28), (60, -48), (0, -56)]          # v2b: culata mas fina y baja
+mb.prism([yz(*p) for p in stock], -12 * s, 12 * s, 'polimero', plane='YZ', bevel=1.8 * s)
+mb.prism([yz(*p) for p in [(-13, 16), (0, 18), (0, -56), (-13, -52)]], -12.5 * s, 12.5 * s, 'goma', plane='YZ', bevel=1.2 * s)
 # receptor (tubo de chapa octogonal) con tapa trasera
 mb.cyl(P3(0, 170, 0), P3(0, 482, 0), 31 * s, 8, 'metal')
 mb.cyl(P3(0, 160, 0), P3(0, 172, 0), 26 * s, 8, 'polimero')
@@ -168,16 +168,17 @@ def mag_paint(P, msk, pos, nrm, col):
     return col
 
 
-P.region('polimero', '#35373b', var=0.10, stroke=(1, 1, 1), stroke_scale=8, blotch=0.09, ao=0.62, ao_tint='#121316', light=0.26,
+# v2b: mas contraste de valores: polimero oscuro frente a metal y cargador mas claros (antes todo era casi negro)
+P.region('polimero', '#2f3134', var=0.10, stroke=(1, 1, 1), stroke_scale=8, blotch=0.09, ao=0.62, ao_tint='#121316', light=0.26,
          grad=0.12, edge_col='#7b7f84', edge=1.0, edge_th=0.035, edge_break=0.45, grime=0.28, dust=0.24, seed=3, extra=body_paint)
-P.region('metal', '#4a5057', var=0.09, stroke=(1, 5, 1), stroke_scale=7, blotch=0.08, ao=0.62, ao_tint='#171d28', light=0.26, grad=0.14,
-         edge_col='#cdd3d8', edge=1.0, edge_th=0.035, edge_break=0.40, grime=0.22, rust=0.16, dust=0.14, seed=5, extra=metal_paint)
-P.region('canon', '#3a3f45', var=0.08, stroke=(1, 8, 1), stroke_scale=7, ao=0.55, ao_tint='#10151b', light=0.3, grad=0.12,
-         edge_col='#aab2b9', edge=1.0, edge_th=0.035, grime=0.22, rust=0.10, seed=7, extra=body_paint)
+P.region('metal', '#68707a', var=0.09, stroke=(1, 5, 1), stroke_scale=7, blotch=0.08, ao=0.62, ao_tint='#171d28', light=0.26, grad=0.14,
+         edge_col='#dfe4e8', edge=1.0, edge_th=0.035, edge_break=0.40, grime=0.22, rust=0.16, dust=0.14, seed=5, extra=metal_paint)
+P.region('canon', '#565d65', var=0.08, stroke=(1, 8, 1), stroke_scale=7, ao=0.55, ao_tint='#10151b', light=0.3, grad=0.12,
+         edge_col='#c7ced5', edge=1.0, edge_th=0.035, grime=0.22, rust=0.10, seed=7, extra=body_paint)
 P.region('goma', '#2a2723', var=0.06, stroke=(1, 1, 1), stroke_scale=14, ao=0.5, edge_col='#5c564e', edge=0.8, seed=9)
-P.region('mira', '#2d3135', var=0.05, ao=0.4, edge_col='#a3abb2', edge=0.9, seed=11)
+P.region('mira', '#4a5056', var=0.05, ao=0.4, edge_col='#a3abb2', edge=0.9, seed=11)
 P.region('interior', '#0d0d0f', var=0.04, ao=0.3, seed=13)
-P.region('cargador', '#43474c', var=0.07, stroke=(1, 1, 3), stroke_scale=8, ao=0.4, edge_col='#a8afb6', edge=1.0, edge_th=0.035,
+P.region('cargador', '#6a7078', var=0.07, stroke=(1, 1, 3), stroke_scale=8, ao=0.4, edge_col='#dde2e6', edge=1.0, edge_th=0.035,
          seed=15, extra=mag_paint)
 P.region('base', '#33302d', var=0.06, ao=0.45, edge_col='#77726a', edge=1.0, grime=0.25, seed=17)
 P.region('palanca', '#2a2d31', var=0.05, ao=0.45, edge_col='#b4bcc3', edge=1.0, seed=19)
@@ -202,7 +203,7 @@ BW = [b[0] for b in bones_w]
 
 # ------------------------------------------------------------------ VIEWMODEL
 CV = A.collection('Arma_VM')
-G = Vector((0.36, 1.10, -0.66))
+G = Vector((0.36, 1.00, -0.86))          # v2b: mas bajo para que la culata salga del cuadro por abajo (v2: tapaba 1/3)
 SRa, SLa = Vector((0.90, -0.90, -1.00)), Vector((-0.85, -0.10, -1.00))
 HR = Vector((0.03, 0.00, 0.00))
 WR = Vector((0.04, -0.19, -0.10))
@@ -261,6 +262,7 @@ clips = []
 
 
 def eject(c, t0, dur):
+    c.e(t0 + 0.02, 'casquillo_sale')
     c.p('Casquillo', t0).p('Casquillo', t0 + 0.02, (0, 0, 14 * s), ip='LINEAR') \
      .p('Casquillo', t0 + 0.04, (34 * s, -6 * s, 28 * s), (0, 0, -40), ip='LINEAR') \
      .p('Casquillo', t0 + 0.09, (150 * s, -22 * s, 86 * s), (120, 30, -140), ip='LINEAR') \
@@ -270,6 +272,7 @@ def eject(c, t0, dur):
 def charge(c, t0, hand=True):
     """Tirar de la palanca de carga y soltarla (la mano izquierda cruza sobre el arma)."""
     hp = Vector((-0.08, 0.50, 0.70))
+    c.e(t0 + 0.10, 'palanca_atras').e(t0 + 0.17, 'palanca_suelta')
     c.p('Palanca', t0).p('Palanca', t0 + 0.10, (0, -HANDLE, 0)).p('Palanca', t0 + 0.14, (0, -HANDLE, 0)).p('Palanca', t0 + 0.17, ip='LINEAR') \
      .p('Palanca', t0 + 0.30)
     c.p('Cerrojo', t0).p('Cerrojo', t0 + 0.10, (0, -BOLT, 0)).p('Cerrojo', t0 + 0.14, (0, -BOLT, 0)).p('Cerrojo', t0 + 0.17, ip='LINEAR') \
@@ -288,6 +291,7 @@ charge(c, 0.42)
 clips.append(c)
 
 c = W.ClipDef('Disparo', 0.16)
+c.e(0.0, 'disparo')
 c.v('Arma', 0.0).v('Arma', 0.02, (0.0, -0.11, 0.016), (3.4, 0.4, -0.5)).v('Arma', 0.07, (0, -0.035, 0.005), (1.0, 0.1, -0.1)).v('Arma', 0.12)
 c.p('Gatillo', 0.0).p('Gatillo', 0.01, rot=(-14, 0, 0), ip='LINEAR').p('Gatillo', 0.08, rot=(-14, 0, 0)).p('Gatillo', 0.14)
 c.p('Cerrojo', 0.0).p('Cerrojo', 0.02, (0, -BOLT, 0), ip='LINEAR').p('Cerrojo', 0.07).p('Cerrojo', 0.16)
@@ -296,6 +300,7 @@ c.hand('L', 0.0, WL, J, POLE_L).hand('L', 0.16, WL, J, POLE_L)
 clips.append(c)
 
 c = W.ClipDef('Recargar', 1.95)
+c.e(0.30, 'cargador_suelta').e(0.36, 'cargador_fuera').e(0.84, 'cargador_nuevo').e(1.16, 'cargador_dentro')
 mag_piv = Vector(piv['Cargador'])
 base_bottom = P3(0, 425, -179) - mag_piv                  # base del cargador respecto a su pivote
 slot = Vector(piv['Cargador'])
@@ -323,6 +328,31 @@ clips.append(c)
 c = W.ClipDef('Reposo', 2.0, loop=True)
 c.v('Arma', 0.0).v('Arma', 0.5, (0, 0, 0.006), (0.5, 0, 0.3)).v('Arma', 1.0).v('Arma', 1.5, (0, 0, -0.006), (-0.4, 0, -0.25)).v('Arma', 2.0)
 c.hand('L', 0.0, WL, J, POLE_L).hand('L', 2.0, WL, J, POLE_L)
+clips.append(c)
+
+# Inspeccionar (Maikol la dejo a nuestro criterio): inclina el arma, la mano izquierda saca el cargador a medias, lo mira,
+# lo vuelve a meter, gira el arma al otro lado y vuelve al reposo.
+MK = 0.22
+INSP = [(0.00, (0, 0, 0), (0, 0, 0)),                      # v2c: sube y gira el cargador hacia la mano izquierda para que se vea
+        (0.40, (-0.14, -0.12, 0.30), (16, 32, 14)),
+        (0.75, (-0.14, -0.12, 0.31), (19, 36, 16)),
+        (1.20, (-0.14, -0.12, 0.30), (17, 34, 15)),
+        (1.85, (-0.08, -0.10, 0.26), (10, -30, -18)),
+        (2.35, (-0.08, -0.10, 0.27), (11, -32, -20)),
+        (3.00, (0, 0, 0), (0, 0, 0))]
+c = W.ClipDef('Inspeccionar', 3.00)
+c.p('Cargador', 0.0).p('Cargador', 0.50).p('Cargador', 0.72, tuple(MAG_DOWN * MK)).p('Cargador', 1.02, tuple(MAG_DOWN * MK)) \
+ .p('Cargador', 1.20).p('Cargador', 3.00)
+c.e(0.72, 'cargador_fuera').e(1.20, 'cargador_dentro')
+
+
+def left_insp(t, T, R):
+    k = MK * W.ramp(t, 0.50, 0.72, 1.02, 1.20)
+    w = W.ramp(t, 0.12, 0.45, 1.25, 1.55)
+    return WL.lerp(hand_under(k), w), False, 1.0
+
+
+W.inspect(c, INSP, J, {'R': (1, 0, -1), 'L': POLE_L}, left_insp)
 clips.append(c)
 
 
@@ -368,6 +398,9 @@ for o in partes:
 cst, st_objs = W.static_copies(list(vm_parts.values()) + list(arms.values()), 'TMP_VM')
 A.export_glb(os.path.join(OUT, NOMBRE + '_VM.glb'), st_objs)
 W.remove_collection(cst)
+# puntos para efectos/camara (boca: fogonazo y raycast; expulsion: casquillos; miras: apuntar)
+PUNTOS = {'Boca': P3(0, 652, -2), 'Expulsion': P3(31, 355, 9), 'MiraTrasera': P3(0, 206, 42), 'MiraDelantera': P3(0, 615, 37.5)}
+W.write_eventos(OUT, NOMBRE, clips, PUNTOS, cuerpo)
 A.log('exportado')
 
 # ------------------------------------------------------------------ RENDERS de comprobacion
@@ -397,13 +430,12 @@ W.hide_only({'Arma_VM', 'Camaras'})
 camvm = W.vm_camera(CC)
 A.render(os.path.join(PV, NOMBRE + '_5_primera_persona.png'), camvm)
 W.hide_only({'Ref', 'Arma_Mundo', 'Camaras'})
-A.reference_figure(CR, x=0, y=0, h=5.2)
+figs = A.reference_figure(CR, x=0, y=0, h=5.2)
 A.ruler(CR, -2.6, 0, 6)
 W.backdrop(CR, 0.0)
-rig_w.location = (1.3, 0.1, 3.0)
-rig_w.rotation_euler = (0, math.radians(6), 0)
+rig_w.location = W.tool_pose(figs)              # en la mano, con el brazo hacia delante como un Tool de Roblox
 bpy.context.view_layer.update()
-cs = W.look_cam(CC, 'CEsc', (0.5, 0.2, 2.8), (1.0, 1.0, 0.25), 12.0, 50)
+cs = W.look_cam(CC, 'CEsc', (0.6, 1.2, 2.9), (1.0, 0.8, 0.35), 12.5, 50)
 A.render(os.path.join(PV, NOMBRE + '_6_escala_R15.png'), cs)
 rig_w.location = (0, 0, 0)
 rig_w.rotation_euler = (0, 0, 0)
@@ -414,7 +446,8 @@ if not QUICK:
     sc = bpy.context.scene
     TIMES = {'Equipar': [0, 0.15, 0.30, 0.42, 0.50, 0.55, 0.62, 0.78], 'Disparo': [0, 0.01, 0.02, 0.04, 0.06, 0.09, 0.12, 0.15],
              'Recargar': [0, 0.18, 0.34, 0.50, 0.70, 0.98, 1.10, 1.20, 1.38, 1.45, 1.52, 1.85],
-             'Amartillar': [0, 0.05, 0.10, 0.14, 0.17, 0.25], 'Reposo': [0, 0.5, 1.0, 1.5]}
+             'Amartillar': [0, 0.05, 0.10, 0.14, 0.17, 0.25], 'Reposo': [0, 0.5, 1.0, 1.5],
+             'Inspeccionar': [0.3, 0.5, 0.72, 0.95, 1.25, 1.85, 2.35, 2.75]}
     camvx = W.look_cam(CC, 'CVX', G + Vector((-0.1, 0.7, 0.05)), (1.0, 0.45, 0.30), 5.2, 50)
     camw = W.look_cam(CC, 'CW', ctr, (1.0, 0.15, 0.25), 6.4, 50)
     for n, ts in TIMES.items():
@@ -433,7 +466,7 @@ if not QUICK:
                 os.remove(p)
     rig_v.animation_data.action = None
     W.hide_only({'Arma_Mundo', 'Camaras'})
-    for n in ('Disparo', 'Recargar'):
+    for n in ('Disparo', 'Recargar', 'Inspeccionar'):
         A.set_action(rig_w, acts_w[n])
         items = []
         for t in TIMES[n]:
