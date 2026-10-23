@@ -7,7 +7,7 @@ local Collection = game:GetService("CollectionService")
 local Debris = game:GetService("Debris")
 local Lighting = game:GetService("Lighting")
 local Luto = RS:WaitForChild("Luto")
-local Partida, Tienda = require(Luto.Partida), require(Luto.Tienda)
+local Partida, Tienda, Animaciones = require(Luto.Partida), require(Luto.Tienda), require(Luto.Animaciones)
 
 Players.CharacterAutoLoads = false
 local SEED = tonumber(workspace:GetAttribute("LUTO_Seed")) or 1234
@@ -99,6 +99,23 @@ local function colorear(modelo, jefe)
 	end
 end
 
+-- Carga las pistas de animacion (si ya hay ids publicados en src/Animaciones.lua)
+local function cargarAnimaciones(hum, clave)
+	local conj = Animaciones[clave] or Animaciones.zombi
+	local animator = hum:FindFirstChildOfClass("Animator") or Instance.new("Animator", hum)
+	local pistas = {}
+	for nombre, id in pairs(conj) do
+		if id ~= "" then
+			local a = Instance.new("Animation"); a.AnimationId = id
+			local ok, pista = pcall(function() return animator:LoadAnimation(a) end)
+			if ok then pistas[nombre] = pista end
+		end
+	end
+	if pistas.Caminar then pistas.Caminar.Looped = true end
+	if pistas.Reposo then pistas.Reposo.Looped = true end
+	return pistas
+end
+
 local function crearZombi(cfg, esJefe)
 	local j0 = cfg.jefe
 	local molde = esJefe and (plantilla("Jefe_" .. j0.tipo) or plantilla("Zombi_Mujer")) or plantilla("Zombi_Mujer")
@@ -137,9 +154,13 @@ local function crearZombi(cfg, esJefe)
 	local root = modelo:FindFirstChild("HumanoidRootPart"); if root then pcall(function() root:SetNetworkOwner(nil) end) end
 	vivosZ = vivosZ + 1
 	local dano = esJefe and j.dano or cfg.dano
+	local pistas = cargarAnimaciones(hum, esJefe and ("jefe_" .. j.tipo) or "zombi")
+	if pistas.Reposo then pistas.Reposo:Play() end
 	local muerto = false
 	hum.Died:Connect(function()
 		if muerto then return end; muerto = true; vivosZ = vivosZ - 1
+		for _, pista in pairs(pistas) do pista:Stop() end
+		if pistas.Caer then pistas.Caer:Play() end
 		local killer = modelo:GetAttribute("UltimoAtacante")
 		local pago = partida:zombiMuerto(killer, esJefe, now())
 		local kp = killer and porId[killer]
@@ -154,10 +175,14 @@ local function crearZombi(cfg, esJefe)
 				local rp = viva(plr)
 				if rp and root then local d = (rp.Position - root.Position).Magnitude; if not dist or d < dist then mejor, dist = plr, d end end
 			end
+			local moviendo = mejor ~= nil and dist >= (esJefe and 9 or 5)
+			if pistas.Caminar then
+				if moviendo and not pistas.Caminar.IsPlaying then pistas.Caminar:Play() elseif not moviendo and pistas.Caminar.IsPlaying then pistas.Caminar:Stop() end
+			end
 			if mejor then
 				hum:MoveTo(viva(mejor).Position)
 				if dist < (esJefe and 9 or 5) and now() - ultimo > 1.2 then
-					ultimo = now(); local hp = mejor.Character:FindFirstChildOfClass("Humanoid"); if hp then hp:TakeDamage(dano) end
+					ultimo = now(); if pistas.Atacar then pistas.Atacar:Play() end; local hp = mejor.Character:FindFirstChildOfClass("Humanoid"); if hp then hp:TakeDamage(dano) end
 				end
 			end
 			task.wait(0.25)
