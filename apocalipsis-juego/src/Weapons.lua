@@ -5,23 +5,23 @@ local Rng = script and require(script.Parent.Rng) or require("Rng")
 local Weapons = {}
 Weapons.__index = Weapons
 
--- Tiempos de animacion (segundos) = los de los clips de Blender (Equipar, Disparo, Recargar...). Inspeccionar: PENDIENTE de Maikol.
+-- Tiempos de animacion (segundos) = los de los clips de Blender (Equipar, Disparo, Recargar...). Inspeccionar: duraciones reales de los clips (pistola 3,3 s; escopeta y subfusil 3,0 s).
 Weapons.DEFS = {
 	pistola = {
 		name = "Pistola 9mm", mode = "semi", pellets = 1, damage = 25, headshot = 2.0, rate = 4.5,   -- tiros/s (limite de cadencia)
-		mag = 15, reserve = 90, reload = 1.7, equip = 0.8, inspect = 2.5,
+		mag = 15, reserve = 90, reload = 1.7, equip = 0.8, inspect = 3.3,
 		range = 140, falloff_start = 60, falloff_min = 0.6, spread = 0.8, spread_move = 1.5, recoil = 1.2,
 		sound = { fire = "pistola_disparo", reload = "pistola_recarga", empty = "clic_vacio", equip = "pistola_equipar" },
 	},
 	escopeta = {
 		name = "Escopeta", mode = "semi", pellets = 8, damage = 12, headshot = 1.5, rate = 1.1,
-		mag = 6, reserve = 36, reload_shell = 0.55, reload_start = 0.5, reload_end = 0.4, pump = 0.45, equip = 1.0, inspect = 2.5,
+		mag = 6, reserve = 36, reload_shell = 0.55, reload_start = 0.5, reload_end = 0.4, pump = 0.45, equip = 1.0, inspect = 3.0,
 		range = 60, falloff_start = 12, falloff_min = 0.15, spread = 5.5, spread_move = 7.0, recoil = 4.0,
 		sound = { fire = "escopeta_disparo", pump = "escopeta_bombeo", shell = "escopeta_cartucho", empty = "clic_vacio", equip = "escopeta_equipar" },
 	},
 	subfusil = {
 		name = "Subfusil", mode = "auto", pellets = 1, damage = 14, headshot = 1.8, rate = 12,
-		mag = 30, reserve = 150, reload = 1.95, equip = 0.9, inspect = 2.5,
+		mag = 30, reserve = 150, reload = 1.95, equip = 0.9, inspect = 3.0,
 		range = 110, falloff_start = 45, falloff_min = 0.5, spread = 1.6, spread_move = 3.0, spread_burst = 0.12, recoil = 0.9,
 		sound = { fire = "subfusil_disparo", reload = "subfusil_recarga", empty = "clic_vacio", equip = "subfusil_equipar" },
 	},
