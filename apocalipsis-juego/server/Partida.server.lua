@@ -40,7 +40,7 @@ else
 		{ Vector3.new(2, 16, 420), Vector3.new(210, 8, 0) }, { Vector3.new(2, 16, 420), Vector3.new(-210, 8, 0) } }) do
 		bloque("Muro", w[1], w[2], Color3.fromRGB(50, 50, 52))
 	end
-	Lighting.ClockTime = 20; Lighting.Brightness = 1.2; Lighting.OutdoorAmbient = Color3.fromRGB(70, 75, 95)
+	Lighting.ClockTime = 17; Lighting.Brightness = 2; Lighting.OutdoorAmbient = Color3.fromRGB(120, 115, 105) -- tarde polvorienta (provisional)
 end
 
 -- ===== Tienda (ProximityPrompt) =====
@@ -60,7 +60,7 @@ end
 local porId = {}
 local finPartida -- se define mas abajo
 local function viva(plr)
-	local c = plr.Character; local h = c and c:FindFirstChildOfClass("Humanoid"); return h and h.Health > 0 and c:FindFirstChild("HumanoidRootPart") or nil
+	local c = plr.Character; local h = c and c:FindFirstChildOfClass("Humanoid"); return h and h.Health > 0 and h:GetState() ~= Enum.HumanoidStateType.Dead and c:FindFirstChild("HumanoidRootPart") or nil
 end
 local function mensaje(plr, texto) R:FireClient(plr, { msg = texto }) end
 local function avisarTodos(texto) R:FireAllClients({ msg = texto }) end
