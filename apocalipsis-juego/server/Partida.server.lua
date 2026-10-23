@@ -121,7 +121,17 @@ local function crearZombi(cfg, esJefe)
 	hum.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOn; hum.DisplayName = esJefe and "LA " .. string.upper(j.tipo) or "Zombi"
 	Collection:AddTag(modelo, "Zombi"); modelo:SetAttribute("Jefe", esJefe)
 	if esJefe and not plantilla("Jefe_" .. j.tipo) then modelo:ScaleTo(j.escala) end
-	if #puntosZombi > 0 then modelo:PivotTo(CFrame.new(puntosZombi[math.random(1, #puntosZombi)]))
+	if #puntosZombi > 0 then
+		-- elegir un punto de aparicion LEJOS de los jugadores (>= 100 studs; si no hay, el mas lejano)
+		local mejorP, mejorD = nil, -1
+		local candidatos = {}
+		for _, pt in ipairs(puntosZombi) do
+			local dmin = math.huge
+			for _, plr in ipairs(Players:GetPlayers()) do local rp = viva(plr); if rp then dmin = math.min(dmin, (rp.Position - pt).Magnitude) end end
+			if dmin >= 100 then candidatos[#candidatos + 1] = pt end
+			if dmin > mejorD then mejorP, mejorD = pt, dmin end
+		end
+		modelo:PivotTo(CFrame.new(#candidatos > 0 and candidatos[math.random(1, #candidatos)] or mejorP))
 	else local ang = math.random() * 2 * math.pi; local r = 150 + math.random() * 40; modelo:PivotTo(CFrame.new(math.cos(ang) * r, 4, math.sin(ang) * r)) end
 	modelo.Parent = workspace
 	local root = modelo:FindFirstChild("HumanoidRootPart"); if root then pcall(function() root:SetNetworkOwner(nil) end) end
