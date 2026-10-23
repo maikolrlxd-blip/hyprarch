@@ -364,6 +364,9 @@ for i, p in enumerate(MARCAS['SpawnZombis']):
 for n in ('Tienda_municion', 'Tienda_curar'):
     p = MARCAS[n][0]
     L.append('caja("%s", mapa, %s, Vector3.new(4, 4, 4), 0, false)' % (n, rb((p[0], p[1], p[2] + 2.0))))
+# el servidor usa estas Parts como el bloque de la tienda: visibles y solidas (las otras marcas son invisibles)
+L.append('for _, n in ipairs({"Tienda_municion", "Tienda_curar"}) do local t = mapa[n]; t.Transparency = 0; t.CanCollide = true; '
+         't.Material = Enum.Material.WoodPlanks; t.Color = (n == "Tienda_municion") and Color3.fromRGB(150, 120, 70) or Color3.fromRGB(80, 140, 90) end')
 L.append('print("Mapa listo:", #col:GetChildren(), "colisiones,", #sz:GetChildren(), "spawns de zombis")')
 os.makedirs(os.path.join(MAPA, 'integracion'), exist_ok=True)
 with open(os.path.join(MAPA, 'integracion', 'MapaColisionesMarcadores.lua'), 'w', encoding='utf-8', newline='\n') as f:

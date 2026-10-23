@@ -8,7 +8,18 @@ Versión v3, del 2026-10-23. Es solo apariencia, en estilo Poli Pintado: formas 
 - **El follaje es de bloques:** el arbusto, la copa del árbol y las hojas de la enredadera son poliedros. Se leen bien de lejos y de cerca se notan.
 - **La enredadera, suelta, flota:** está pensada para pegarse a un muro. Así está colocada en el ensamblado, en dos fachadas.
 - **Vistas previas:** el maniquí de escala queda pegado a algunas piezas (contenedor, barriles).
-- **Nada probado todavía en Roblox Studio:** ni la importación del FBX, ni las texturas, ni las colisiones, ni los marcadores. Es el siguiente paso.
+- **Sin comprobar en Studio:** que las cajas de colisión coincidan una a una con la malla (por ejemplo los coches girados), los marcadores de tienda en una partida y la bruma a distancia con Atmosphere. Es una comprobación jugando, no de importación.
+
+## Probado en Roblox Studio (2026-10-23)
+- **Importación:** `Mapa_Completo.fbx` entró con el 3D Importer y la sesión de Maikol (mallas y texturas subidas a su cuenta). La opción «Anclado» iba marcada.
+  - Resultado: Model de **121 MeshPart, caja de 300 × 49,5 × 300 studs**, con la escala correcta y las texturas puestas.
+  - Ojo: el importador dejó **espacios al final del nombre** («Mapa    »). Hay que renombrarlo a `Mapa` exacto.
+- **Plantilla:** movido a `ServerStorage.LUTO_Plantillas.Mapa`. El script `integracion/MapaColisionesMarcadores.lua` creó lo esperado:
+  - 97 colisiones, 12 `SpawnZombi_*`, `SpawnJugadores` y las dos tiendas;
+  - lo alineó con el cruce: el importador había movido el modelo unos −4,9 studs en Z.
+- **Ambiente:** `ambiente-roblox.lua` aplicado al place.
+- **Partida:** el servidor de Luto clona el mapa. El jugador aparece en el cruce, sobre el asfalto agrietado y entre los coches, con el HUD de la ronda, y los zombis llegan desde los bordes por las calles.
+- **Place de prueba:** `C:\Users\maiko\Documents\Luto\Luto-prueba-2-mapa.rbxl`, con copia en `C:\Users\maiko\Backups\luto\`.
 
 ## Qué hay
 - **Calles** (`calles/`), losetas de 60 × 60:

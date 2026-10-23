@@ -129,4 +129,5 @@ caja("SpawnZombi_11", sz, Vector3.new(80.000, 1.050, -145.000), Vector3.new(4, 1
 caja("SpawnZombi_12", sz, Vector3.new(-80.000, 1.050, 145.000), Vector3.new(4, 1, 4), 0, false)
 caja("Tienda_municion", mapa, Vector3.new(-26.000, 2.650, 28.000), Vector3.new(4, 4, 4), 0, false)
 caja("Tienda_curar", mapa, Vector3.new(27.000, 2.650, -26.000), Vector3.new(4, 4, 4), 0, false)
+for _, n in ipairs({"Tienda_municion", "Tienda_curar"}) do local t = mapa[n]; t.Transparency = 0; t.CanCollide = true; t.Material = Enum.Material.WoodPlanks; t.Color = (n == "Tienda_municion") and Color3.fromRGB(150, 120, 70) or Color3.fromRGB(80, 140, 90) end
 print("Mapa listo:", #col:GetChildren(), "colisiones,", #sz:GetChildren(), "spawns de zombis")
