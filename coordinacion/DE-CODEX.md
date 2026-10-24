@@ -75,3 +75,15 @@ Imágenes actuales: `previews/LaLamentadora_v03b_*`. La primera pasada v03 tení
 Studio: 0 ventanas abiertas por Codex en este bloque, no se controló la interfaz ni se publicaron assets. La plantilla de Studio sigue siendo v02. Código de Slime Rush y cambios de otros sin tocar. Pendiente feedback de Maikol sobre rostro/silueta antes de avanzar a armas u objetos.
 
 Nota reutilizable para cerebro: al desasignar una Action Blender conserva la pose; limpiar matrix_basis/rotación/posición antes de guardar y medir. Limpiar lista de materiales puede restablecer índices de polígonos: restaurar slots in situ. Cavity facial y longitud de dedos deben revisarse con luz neutra además de renders de ambiente. Mantener snapshots de fuentes compartidas para no pisar al coordinador.
+
+## 2026-10-23 — LUTO / La Lamentadora v04: detalle facial
+
+Pedido directo de Maikol: «Le daría mas vida y detalles, principalmente en la cara». Se creó una revisión aislada `apocalipsis-arte/bosses/la-lamentadora-v04/`, partiendo de v03b. Mantiene Poli Pintado: mate, paleta apagada, pinceladas y formas de pocos polígonos. Ojos ahora con iris/pupila/reflejo pequeño dentro de las cuencas; cejas tensas asimétricas, pliegues, ojeras, lágrimas secas, cicatriz curada fina, piel con variación dirigida y labios agrietados. Siete dientes pequeños con profundidad; fosas nasales más pequeñas. No se cambian cuerpo, vestido, manos ni diseño de clips.
+
+Resultado: 2926 tris (cabeza 1470 / resto 1456), 15 mallas, 16 huesos, cuatro atlas 1024 empaquetados y cuatro clips. `qa/VALIDACION-BLENDER.json` PASADA: geometría/UV/pesos/pose neutral y reimportación del FBX estático, rig y Caer. Comprobación geométrica de contacto de Caer pasada, no física. No Roblox ni FPS/colisión. Cero ventanas Studio abiertas/controladas por Codex en este bloque. Nada publicado, ningún push.
+
+Fotos actuales Blender: `previews/LaLamentadora_v04_4_cara_tres_cuartos.png` y `LaLamentadora_v04_5_cara_frente_muy_cerca.png`; también vistas completas 1 y 2. Se mostraron al usuario; respondió «ok» tras la vista de tres cuartos. No equivale a autorizar publicación/integración. Autocrítica: dientes superiores poco visibles con cabeza inclinada, pelo aún rígido; pendiente Lamento propio y más identidad corporal si Maikol sigue esta dirección. No avanzar a armas/mapa sin resolver feedback de la jefa.
+
+Entrega: .blend + FBX rig/estático + GLB + cuatro FBX de clips, fuentes congeladas y validación. Paquete `C:/Users/maiko/Documents/Codex/2026-10-21/c/outputs/La Lamentadora v04 - rostro.zip`, SHA en `.zip.sha256`. V03 protegida (SHA del .blend 2053783b1fc0f781f66285c8b4bb603b15fbc8ebf86e68e3e1aa00aff3e6a4a8); v02 de Studio y cambios del coordinador sin tocar.
+
+Para el cerebro/diario: el detalle facial debe seguir la anatomía (párpados, cejas, lagrimal, comisura) para añadir expresión sin ruido uniforme. Cabeza con arte pintado en atlas propio; aplicar recetas nuevas solo a ese grupo. La revisión se hizo con Blender background limitado a tres hilos. Próximo punto visual: reacción de Maikol al frontal; no confundir este archivo local con la plantilla cargada en Studio. Sin preguntas bloqueantes.

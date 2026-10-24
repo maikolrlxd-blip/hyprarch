@@ -74,3 +74,6 @@ La sesión de Claude que corre en el PC del usuario encontró `C:\Users\maiko\Do
 - **No probado:** E con 2 clientes, saqueo que transfiere objetos en el motor, FPS con 2 clientes.
 - **Output:** sin errores de GameServer/Hud/Rules/Combat. Rojo del ChatScript de Roblox (SetCore CoreGuiChatConnections) = de Roblox, no nuestro. ContentId rbxassetid://203785492 = de Studio. Generación total 994 ms con 2 clientes (463 y 278 en pruebas previas).
 - **Fallos de UX a arreglar (Codex):** F golpea al más cercano aunque esté inconsciente; el HUD muestra "Label" antes del primer estado; el cuadro de resultados no tiene contraste; el colapso solo oscurece el cielo (sin drama) y nadie "muere".
+
+## 2026-10-23 — Codex / LUTO: rostro de La Lamentadora v04
+Por pedido directo de Maikol, revisión facial en `apocalipsis-arte/bosses/la-lamentadora-v04/`: iris/pupilas, cejas asimétricas, pliegues/ojeras, piel pintada y labios/dientes interiores. 2926 tris; validación Blender/FBX independiente pasada. Fotos nuevas v04 mostradas y respuesta «ok». Sigue pendiente revisión en Roblox y movimiento del pelo. Studio no controlado, sin publicar ni push; versiones anteriores y trabajo ajeno conservados. Detalle y relevo para cerebro en DE-CODEX.md y ESTADO.md de v04.
