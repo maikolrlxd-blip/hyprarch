@@ -1,0 +1,185 @@
+{
+  "scope": "Entrega de arte Blender, sin motor",
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 124,
+      "sha256": "5c1341f648a3cf87f297684ddae92c11f7aa078a0f3509a3e24a1cad9b53474e"
+    },
+    {
+      "path": "clips/LaLamentadora_Atacar.fbx",
+      "bytes": 1741772,
+      "sha256": "333b2a094369178099c8962be12dad595cafb5da2ebf549df3ad92122cddc96f"
+    },
+    {
+      "path": "clips/LaLamentadora_Caer.fbx",
+      "bytes": 1814204,
+      "sha256": "a559ec604352da6c6d2be3244a013fba7dd79681235d5a5d677fec8c56f86963"
+    },
+    {
+      "path": "clips/LaLamentadora_Caminar.fbx",
+      "bytes": 1770412,
+      "sha256": "55c627d5234564eb6a7a959eb6c4181997fd5ca6c7f5394e84cf42de82b9d7fc"
+    },
+    {
+      "path": "clips/LaLamentadora_Lamento.fbx",
+      "bytes": 1996412,
+      "sha256": "750d187244466c2f501b8ebaf671463c4562ef7ce20306a513daad70c1e380a7"
+    },
+    {
+      "path": "clips/LaLamentadora_Reposo.fbx",
+      "bytes": 1889052,
+      "sha256": "ee441c49986d20b27d643f74e85ac11fb06f750e4876fcbc2e76235db6ce28e0"
+    },
+    {
+      "path": "datos.json",
+      "bytes": 6069,
+      "sha256": "7a6f5dd257a53723be016071c33a481043aadd8b5a4c4d1bf0bfe2f5359c1c7c"
+    },
+    {
+      "path": "ESTADO.md",
+      "bytes": 2504,
+      "sha256": "3d5de19c843ee8665b2673d62ee4c39940b05ed831346ab8b0b6407d543478b1"
+    },
+    {
+      "path": "fuentes/ap_armas.py",
+      "bytes": 19880,
+      "sha256": "6f9e190c59d836c712d4e7ee6a9151ef02e023e9644f399be5f55322221de38a"
+    },
+    {
+      "path": "fuentes/ap_lib.py",
+      "bytes": 40076,
+      "sha256": "a6efb640592eb3e2a3b00586fcecf79a17b6d7a9dae025a35160fbb3ebb0dcab"
+    },
+    {
+      "path": "fuentes/Base-v04.blend",
+      "bytes": 2979418,
+      "sha256": "9c20c1da9f7dc6f40ced9be8a42a6a05eb866fdc0093ee39d4444cfecd6f397b"
+    },
+    {
+      "path": "fuentes/build_motion.py",
+      "bytes": 7921,
+      "sha256": "f8df60cd9dbb0bdffe74aa17b4d0395747908b026bf557d166735731b760aa47"
+    },
+    {
+      "path": "fuentes/clip_contacts.py",
+      "bytes": 7667,
+      "sha256": "3ec3b1b5cc02642dabfba1053c4c824aaee5a7e8de0c76a7e1c913ef8aaa3c71"
+    },
+    {
+      "path": "LaLamentadora.blend",
+      "bytes": 3062727,
+      "sha256": "75703446f53b1a133d47d64e090efb8c5d32d54724d9780d9d7c5a3f0eb0d797"
+    },
+    {
+      "path": "LaLamentadora_Estatico.fbx",
+      "bytes": 804172,
+      "sha256": "a7cde9b3768ebb40160f942f43732188dfda5ea125d2403797e3bbbfe56a5dbb"
+    },
+    {
+      "path": "LaLamentadora_Skinned.fbx",
+      "bytes": 3593164,
+      "sha256": "f77d57b4d7ffdab82dc089e6bf78f79a785b5f29678145c34b0a6e05a7d99c4a"
+    },
+    {
+      "path": "LaLamentadora_Skinned.glb",
+      "bytes": 3339656,
+      "sha256": "24f7cc97a887e4795424526e33bbe02ea6c334d501a5722738c5c6ebb790f482"
+    },
+    {
+      "path": "previews/Lamentadora-v05b-Lamento-00-Blender.png",
+      "bytes": 656587,
+      "sha256": "490c885f675cc4906b7ffe33c4235fe1d9d405bf420d2ade602bedb4ce76ed90"
+    },
+    {
+      "path": "previews/Lamentadora-v05b-Lamento-01-Blender.png",
+      "bytes": 654037,
+      "sha256": "6451fbef12f223da92985447b86bcfc54ee7ead0d32164827c27e2685a9af18f"
+    },
+    {
+      "path": "previews/Lamentadora-v05b-Lamento-02-Blender.png",
+      "bytes": 653331,
+      "sha256": "8d8b87d12644641c4fb91bd21a2b9b58d88e812a19b548718fc93b71cf51b2c7"
+    },
+    {
+      "path": "previews/Lamentadora-v05b-Lamento-03-Blender.png",
+      "bytes": 656299,
+      "sha256": "beaf7b0ae5786b7c03b86cb7e918ae3ddd4cb9cf96b89afce33ac506b43c412c"
+    },
+    {
+      "path": "previews/Lamentadora-v05b-Lamento-04-Blender.png",
+      "bytes": 657975,
+      "sha256": "446aabc3308f5301ccbc17f249e3e9fb0208192c340c868e0a65cfd04ac65bd5"
+    },
+    {
+      "path": "previews/Lamentadora-v05b-Lamento-05-Blender.png",
+      "bytes": 656824,
+      "sha256": "a43411cb6ab7eda56349d629e2b45ba5fc8b0c3057a61b6b20396acd42bcc2c5"
+    },
+    {
+      "path": "previews/Lamentadora-v05b-Lamento-secuencia-Blender.png",
+      "bytes": 3035077,
+      "sha256": "cb5190918a14079395929f5286521e1498dc52fada7b3b9e07f677e328188c99"
+    },
+    {
+      "path": "qa/build-motion-v05b.log",
+      "bytes": 5067,
+      "sha256": "85b755d8bd589b7f4151c2afb33fb53841050d47118a89956ac2723a1ddbabd4"
+    },
+    {
+      "path": "qa/check-motion-v05b.log",
+      "bytes": 1706,
+      "sha256": "ea157fb529406aad34a8f2a66d2d9cd6cfc3a73c6660f658c9faa42b48aec608"
+    },
+    {
+      "path": "qa/check_motion.py",
+      "bytes": 3232,
+      "sha256": "4f4273b9ff76bd5fb863bb96688d1930770b8b257aa29a45bccc7a931022cab8"
+    },
+    {
+      "path": "qa/CONTACTO-CAIDA.json",
+      "bytes": 152303,
+      "sha256": "07d85cc1b87d55fbeee067a753a656048c00c5900a29d8a952dea92c0687096e"
+    },
+    {
+      "path": "qa/VALIDACION-BLENDER.json",
+      "bytes": 18437,
+      "sha256": "389e6301932201e43cbf9d8486a60aa318f06b4bec53a9b5720523f6638a4de5"
+    },
+    {
+      "path": "qa/VALIDACION-MOVIMIENTO.json",
+      "bytes": 457,
+      "sha256": "bfd4470bbe63b647c2f70c00a7e8290e54b0d1f479e6b838f52d5f27452d985e"
+    },
+    {
+      "path": "qa/validate-v05b.log",
+      "bytes": 367,
+      "sha256": "6e069e9e9fe62888403544a7c99902dee98066bcff86463236d2f66517156c79"
+    },
+    {
+      "path": "qa/validate_blender.py",
+      "bytes": 5220,
+      "sha256": "fe7254051a84503a1d30f45a103db2d72bc1c704dedb15076b1e2b3e8f301f00"
+    },
+    {
+      "path": "texturas/LaLamentadora_Brazos_Color.png",
+      "bytes": 823742,
+      "sha256": "d665f4ed55313782bfc9d9cf00e4be01b67ffbfdf134b1baadefdef1b8d8936d"
+    },
+    {
+      "path": "texturas/LaLamentadora_Cabeza_Color.png",
+      "bytes": 637968,
+      "sha256": "6844c5d936769ae99f88f4b42df00d9a3a1558ccf1fd4d2383c2f86672d92ded"
+    },
+    {
+      "path": "texturas/LaLamentadora_Piernas_Color.png",
+      "bytes": 736550,
+      "sha256": "de56d165f3637feaf7e1595bcf9c8918c7ce81a1f2e6c1547edb5ddc4c088e4a"
+    },
+    {
+      "path": "texturas/LaLamentadora_Torso_Color.png",
+      "bytes": 557594,
+      "sha256": "97948a6f7906d4eb63390ccdfa310e7987ecfd39bbe10193d5cd485981a8d64b"
+    }
+  ]
+}

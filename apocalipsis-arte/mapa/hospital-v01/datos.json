@@ -1,0 +1,56 @@
+{
+  "Camilla": {
+    "triangles": 792,
+    "texture_size": 512,
+    "local_bounds": [
+      [
+        -1.4649999141693115,
+        -3.1489999294281006,
+        0.019791334867477417
+      ],
+      [
+        1.4649999141693115,
+        3.0999999046325684,
+        3.365000009536743
+      ]
+    ],
+    "unit": "1 Blender unit = 1 stud",
+    "runtime_verified": false
+  },
+  "Biombo": {
+    "triangles": 816,
+    "texture_size": 512,
+    "local_bounds": [
+      [
+        -2.805905818939209,
+        -0.550000011920929,
+        0.0
+      ],
+      [
+        2.805905818939209,
+        1.1093448400497437,
+        5.75
+      ]
+    ],
+    "unit": "1 Blender unit = 1 stud",
+    "runtime_verified": false
+  },
+  "Soporte_Suero": {
+    "triangles": 476,
+    "texture_size": 512,
+    "local_bounds": [
+      [
+        -0.9230566024780273,
+        -0.9623997211456299,
+        0.010656863451004028
+      ],
+      [
+        0.9230566024780273,
+        0.9623997211456299,
+        5.699999809265137
+      ]
+    ],
+    "unit": "1 Blender unit = 1 stud",
+    "runtime_verified": false
+  }
+}

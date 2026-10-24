@@ -1,0 +1,23 @@
+00:01.656  blend            | Read blend: "C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\bosses\la-lamentadora-v05\LaLamentadora.blend"
+00:05.437  blend            | Read blend: "C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\bosses\la-lamentadora-v05\fuentes\Base-v04.blend"
+03:07:38 | INFO: Data are loaded, start creating Blender stuff
+03:07:38 | INFO: Blender create Mesh node Head
+03:07:38 | INFO: Blender create Mesh node LeftFoot
+03:07:38 | INFO: Blender create Mesh node LeftHand
+03:07:38 | INFO: Blender create Mesh node LeftLowerArm
+03:07:38 | INFO: Blender create Mesh node LeftLowerLeg
+03:07:38 | INFO: Blender create Mesh node LeftUpperArm
+03:07:38 | INFO: Blender create Mesh node LeftUpperLeg
+03:07:38 | INFO: Blender create Mesh node LowerTorso
+03:07:38 | INFO: Blender create Mesh node RightFoot
+03:07:38 | INFO: Blender create Mesh node RightHand
+03:07:38 | INFO: Blender create Mesh node RightLowerArm
+03:07:38 | INFO: Blender create Mesh node RightLowerLeg
+03:07:38 | INFO: Blender create Mesh node RightUpperArm
+03:07:38 | INFO: Blender create Mesh node RightUpperLeg
+03:07:38 | INFO: Blender create Mesh node UpperTorso
+03:07:38 | INFO: glTF import finished in 0.31s
+MOTION_QA {"passed": true, "errors": [], "scope": "Blender offline, no fisica Roblox ni aceptacion visual", "same_geometry_uv_as_v04": true, "hair_vertices": 325, "max_weights": 2, "hair_motion_head_local_studs": 0.7009326010327149, "other_head_motion_studs": 1.9524644141454074e-06, "Lamento_min_z_integer_frames": 0.020637482404708862, "glb_actions": ["Atacar", "Caer", "Caminar", "Lamento", "Reposo"]}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:37:04)
+
+Blender quit

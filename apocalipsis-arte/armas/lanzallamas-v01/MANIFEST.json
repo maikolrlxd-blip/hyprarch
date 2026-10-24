@@ -1,0 +1,355 @@
+{
+  "scope": "Entrega de arte Blender, sin motor",
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 103,
+      "sha256": "049d28321e628ccc796b877b53a7e48ea193f47f09247044e9ee3263d63c75b5"
+    },
+    {
+      "path": "clips/Lanzallamas_Mundo_Disparo.fbx",
+      "bytes": 756204,
+      "sha256": "898d9645ce1cb1af7584ab3b0e43fb791d6943adc54dd8987d93afe62f22d3fa"
+    },
+    {
+      "path": "clips/Lanzallamas_Mundo_Equipar.fbx",
+      "bytes": 760092,
+      "sha256": "6aee7c4e2306e28436370c1ac2d803f1a072b3b606980ab910d84f2eaf82b26e"
+    },
+    {
+      "path": "clips/Lanzallamas_Mundo_Guardar.fbx",
+      "bytes": 757404,
+      "sha256": "1392891f5108af3b8db49dadb7c979da8131fdddbca165c2ba39226a4fce9985"
+    },
+    {
+      "path": "clips/Lanzallamas_Mundo_Inspeccionar.fbx",
+      "bytes": 790220,
+      "sha256": "adaa0b856688c42c6e2f302fd3e2e4935013b698e0a2d7a49d3235cde5c0d800"
+    },
+    {
+      "path": "clips/Lanzallamas_Mundo_Recargar.fbx",
+      "bytes": 782076,
+      "sha256": "d906b103ad946bac29efe091de883434394f1d847fce95a7e558f476008d7140"
+    },
+    {
+      "path": "clips/Lanzallamas_Mundo_Reposo.fbx",
+      "bytes": 771884,
+      "sha256": "33ac1d92bea07703242cc22a68ed82133adf5acee8e5c78e25d582768e00457a"
+    },
+    {
+      "path": "clips/Lanzallamas_VM_Disparo.fbx",
+      "bytes": 1097372,
+      "sha256": "e569309524f6e1b0b944614b0bcdbed4519e5fc3c32bbff72bb9e47b76fb7dfa"
+    },
+    {
+      "path": "clips/Lanzallamas_VM_Equipar.fbx",
+      "bytes": 1108700,
+      "sha256": "33217b810655663dbcda97c5be0f2fc7b6909dba8df2594e871278cfca04a890"
+    },
+    {
+      "path": "clips/Lanzallamas_VM_Guardar.fbx",
+      "bytes": 1101980,
+      "sha256": "b9c61f71854e70de972730b34e43902a12476e8bdc352bb9d59051c18213a6ee"
+    },
+    {
+      "path": "clips/Lanzallamas_VM_Inspeccionar.fbx",
+      "bytes": 1196556,
+      "sha256": "a4d83a24bfca3396a65fc8068a5c9b99bef46af35077b5c6fbe197edb3eece8a"
+    },
+    {
+      "path": "clips/Lanzallamas_VM_Recargar.fbx",
+      "bytes": 1175596,
+      "sha256": "c73a92e080aa2f1cfe480c47209878201616cd94a884763656a1ede01cc2f2c9"
+    },
+    {
+      "path": "clips/Lanzallamas_VM_Reposo.fbx",
+      "bytes": 1141692,
+      "sha256": "25b287269b67fb01c5d7cf5bd796124c0b3a935de1773662fc4e8725f058fddb"
+    },
+    {
+      "path": "datos.json",
+      "bytes": 391,
+      "sha256": "853c953afd519e1ae7f61e9a61afaa01547255e40cedd7da3029c06af50ec1e5"
+    },
+    {
+      "path": "ESTADO.md",
+      "bytes": 3187,
+      "sha256": "6e9c114e2e0ad94d7b07ce8cb459028a8d637a3555bfebb9421a9717a2457a24"
+    },
+    {
+      "path": "eventos.json",
+      "bytes": 2340,
+      "sha256": "68bdb69ab1b4a8b1d5d9d461a6772f5d9995fbaed1bcdfd6f810a8380213e229"
+    },
+    {
+      "path": "fuentes/ap_armas.py",
+      "bytes": 19880,
+      "sha256": "6f9e190c59d836c712d4e7ee6a9151ef02e023e9644f399be5f55322221de38a"
+    },
+    {
+      "path": "fuentes/ap_lib.py",
+      "bytes": 40076,
+      "sha256": "a6efb640592eb3e2a3b00586fcecf79a17b6d7a9dae025a35160fbb3ebb0dcab"
+    },
+    {
+      "path": "fuentes/build_lanzallamas.py",
+      "bytes": 9940,
+      "sha256": "1e394466d34e76c84b52a133c515198aff6ac8a4c004312f33aa2836fdd131e2"
+    },
+    {
+      "path": "fuentes/clip_contacts.py",
+      "bytes": 7667,
+      "sha256": "3ec3b1b5cc02642dabfba1053c4c824aaee5a7e8de0c76a7e1c913ef8aaa3c71"
+    },
+    {
+      "path": "integracion/CONTRATO.md",
+      "bytes": 3128,
+      "sha256": "fcdb179b8d0a8f7313070a4f334e68d4668689e494d3c68cdc2760aa7df5c8f9"
+    },
+    {
+      "path": "integracion/QuemadoFX.lua",
+      "bytes": 3897,
+      "sha256": "aa61cdb3e7c50db757c2aa815f92044d213ce2358e14295facfae50c0384b3af"
+    },
+    {
+      "path": "Lanzallamas.blend",
+      "bytes": 1015926,
+      "sha256": "7a8c8ccd725778a467eae38f07695ec25e281cb7b48631ef3fcad4b5cfc2e604"
+    },
+    {
+      "path": "Lanzallamas_Estatico.fbx",
+      "bytes": 711468,
+      "sha256": "5a4593ed1f1a10082ae677a25227f56801f9c35866eda35b0d0671f187ca7fc2"
+    },
+    {
+      "path": "Lanzallamas_Estatico.glb",
+      "bytes": 704580,
+      "sha256": "f0a2cab107043eac7897bdec8165bff52ad6d9d94c7fc56b88c1ba5909f6457d"
+    },
+    {
+      "path": "Lanzallamas_Eventos.lua",
+      "bytes": 1252,
+      "sha256": "d030a68c58eacbee253e988f227bdd8e14f5bf8fe0f9c85ba953d94c8ac7adc8"
+    },
+    {
+      "path": "Lanzallamas_Mundo.fbx",
+      "bytes": 975900,
+      "sha256": "8ec39ee0884525ec4e97a89f5990d878f96684c8cabb318b5b06773584f34975"
+    },
+    {
+      "path": "Lanzallamas_VM.fbx",
+      "bytes": 1729084,
+      "sha256": "57592b62fea9807fe0ee0b31c01c1cf0809e615720e8a318207a4231a21343ae"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-01-PoliPintado-Blender.png",
+      "bytes": 844187,
+      "sha256": "1711635b132d467e5859cf4cff6c6b891d610bb694d8421f32178a891e464bf9"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-02-primera-persona-Blender.png",
+      "bytes": 827053,
+      "sha256": "afa321b83d8df10d2f029ffaa3d23ce4f195dcb8f36d10b5b6fa6526a4b7632f"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Equipar-00-Blender.png",
+      "bytes": 228926,
+      "sha256": "5cac02560fbc5425cee0872fa29a7d5b27dedc46e7f8e7b3f0b3c41317ca0712"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Equipar-01-Blender.png",
+      "bytes": 240724,
+      "sha256": "9b2d21ee2382adcf22688e46673b7467a1f49c81c39271deeb49a3116aa831ae"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Equipar-02-Blender.png",
+      "bytes": 255871,
+      "sha256": "13aa97887843d79c3640026b122addc37c6f25eaf86c6fe75fea089b1f81b6a5"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Equipar-03-Blender.png",
+      "bytes": 254122,
+      "sha256": "1b40d2209e68364be2cb867e9b372363c04fbe644e034ced6cba70877adc3e9d"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Equipar-secuencia-Blender.png",
+      "bytes": 731960,
+      "sha256": "862e8777fa13c28617da95c4d8e08a78107aa1493c9c327ea22e293558509777"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Guardar-00-Blender.png",
+      "bytes": 254122,
+      "sha256": "cd34a833f1d913701b3caef75087b0166b9813451d71524b322749bed4364fee"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Guardar-01-Blender.png",
+      "bytes": 253988,
+      "sha256": "20fda474ffdabc040b64339eb5b395502c102c89366397160f8884453ce07644"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Guardar-02-Blender.png",
+      "bytes": 240093,
+      "sha256": "b2cb33299ea59e370c986ac90096b597a220f00d9eb96fdcfa3d8baa206db78a"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Guardar-03-Blender.png",
+      "bytes": 227766,
+      "sha256": "443142ab67b620cb84f249dd4bfc800f435a5ff1e768d526c14d2883b03a3b0f"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Guardar-secuencia-Blender.png",
+      "bytes": 724102,
+      "sha256": "60404382133ef7fef59c275aadc8a3a933342d71a7b11dd70886a93d0dd3bfb0"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Inspeccionar-00-Blender.png",
+      "bytes": 253291,
+      "sha256": "19961fe17c4dabe6c8aa0ca8047ea3a3c5ed2d00a054e6ff7d2dd37afc2cac55"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Inspeccionar-01-Blender.png",
+      "bytes": 255983,
+      "sha256": "10b13b8d8defab2b6f090bdc2ae82b5e9c2ddd99a43e4e249acfa40d8c9793ae"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Inspeccionar-02-Blender.png",
+      "bytes": 255983,
+      "sha256": "a5bbf993dabec0c5f0ce9c427f563f323f70339672edf7f09b9592fb29da1ad3"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Inspeccionar-03-Blender.png",
+      "bytes": 268319,
+      "sha256": "be996298eae87a13bf24bea7ef7dd854b666b97d10303017b1cd4ee7863361ac"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Inspeccionar-04-Blender.png",
+      "bytes": 268319,
+      "sha256": "947be836d2b8d488b0d5d41597c5191c7a07c49376c1e245ecd3146b003d44b0"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Inspeccionar-05-Blender.png",
+      "bytes": 253291,
+      "sha256": "faeb74f0103a7622965d1c0043a4aadd0fd314d62b76d403f4ceb4b649f8706d"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Inspeccionar-secuencia-Blender.png",
+      "bytes": 996411,
+      "sha256": "9cb1bcb6233fc14d58262ec6e145acf29222b21913f1f6a21de966ba9781b204"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Recargar-00-Blender.png",
+      "bytes": 254123,
+      "sha256": "e5106ae2478c5857e342d2961d1bb550d2ff6173852c77004a4addb5735d0734"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Recargar-01-Blender.png",
+      "bytes": 252169,
+      "sha256": "9426391c17718a0415d76180ef17388841c26c747f9d364ca57b62a3edbb54ac"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Recargar-02-Blender.png",
+      "bytes": 250413,
+      "sha256": "4bd5e17691c8044bd882cbd5c6b25772d0d38abd5c3478d86f76aa07b2efb661"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Recargar-03-Blender.png",
+      "bytes": 248045,
+      "sha256": "5b1a3dcc9d91ef26f9b8268b56fa97f949c92f613e7b0d568671c896b769b8e8"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Recargar-04-Blender.png",
+      "bytes": 252280,
+      "sha256": "431cfbfd14a4cd7883f138c0edb77f70e2b000651e4ffb58eee78ae86929a725"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Recargar-05-Blender.png",
+      "bytes": 254123,
+      "sha256": "af6586c69f9be5703db43fbd6f8a0b7a183e2f44b887e6433951f065a62d623e"
+    },
+    {
+      "path": "previews/Lanzallamas-v01b-Recargar-secuencia-Blender.png",
+      "bytes": 1097783,
+      "sha256": "c24be3f89304fa1964a6de1023a3bc637b16673254af4c437b2b5fe5a52a4f90"
+    },
+    {
+      "path": "qa/build-v01b.log",
+      "bytes": 14166,
+      "sha256": "9a11e22d0933a9f250d03d59d4db83e06efcff87d0251f218a1e2b8ab62908fc"
+    },
+    {
+      "path": "qa/fix-fire-loop.log",
+      "bytes": 1225,
+      "sha256": "161fd273623966422807d5d2042c2fc2b440b9b1c16f939024f7f83619e60b8a"
+    },
+    {
+      "path": "qa/fix-static-names.log",
+      "bytes": 1212,
+      "sha256": "eafd7aafa78e4818ea545a1e4d17654b782f496d5794dec447d788e768b9b6ef"
+    },
+    {
+      "path": "qa/fix_fire_loop.py",
+      "bytes": 1573,
+      "sha256": "dd39dba60bc970e168f5ae402c05ac2be865e3206a3da1e1567e7576d660af72"
+    },
+    {
+      "path": "qa/fix_static_names.py",
+      "bytes": 778,
+      "sha256": "27d43fda42a772171c82dbc7753a0f019e6e5ef21ddb9cb9195f378f14a9b285"
+    },
+    {
+      "path": "qa/fx-mock.log",
+      "bytes": 454,
+      "sha256": "167af9a933795930d0e24514abe470584f902266db0a368278b0c38bcae44b0d"
+    },
+    {
+      "path": "qa/fx_harness_prefix.luau",
+      "bytes": 2796,
+      "sha256": "c3a6640365cad49c7e9e7982bf859e64190518aa1625fd3ce0ff1803781e3a00"
+    },
+    {
+      "path": "qa/fx_harness_suffix.luau",
+      "bytes": 2632,
+      "sha256": "595f037316ca1a08f3b7bf9d6f5a29199e3de02322bbcc2fe07401702b521bd0"
+    },
+    {
+      "path": "qa/run_fx_mock.py",
+      "bytes": 922,
+      "sha256": "fa3e44183af01d85e6229e209cbf5450725d14958f38fdb99ab1c428c3634ec0"
+    },
+    {
+      "path": "qa/VALIDACION-FX-MOCK.json",
+      "bytes": 209,
+      "sha256": "a3c63d4bd584aefda636c289db67732fb49ed197559018e66e04cba341703857"
+    },
+    {
+      "path": "qa/VALIDACION.json",
+      "bytes": 1590,
+      "sha256": "b06df432449a48e75d6995e5151ff5f0ea29e3621f8ff118b55e7b2cdd822d90"
+    },
+    {
+      "path": "qa/validate-v01b.log",
+      "bytes": 1596,
+      "sha256": "bbc67e2461e61acaafd36837146d0b97ff3fc535d1e905e0b09e65e9e031ab5b"
+    },
+    {
+      "path": "qa/validate-v01c.log",
+      "bytes": 1870,
+      "sha256": "f0d27ada5f4f61028edb6d2b1f26fd8ddd4b87c2dc5c39d1571c15d8a7a8ca9c"
+    },
+    {
+      "path": "qa/validate.py",
+      "bytes": 5513,
+      "sha256": "7f0eb6fbb022857a2bc018a881707286a628745ed6ed2e165a8ada4be61cebc3"
+    },
+    {
+      "path": "texturas/BrazosVM_Color.png",
+      "bytes": 173105,
+      "sha256": "84d9aa26cbef8b75020116bed9e3b6cf10238aebda8bdc316e436f0a23bb2df3"
+    },
+    {
+      "path": "texturas/Lanzallamas_Color.png",
+      "bytes": 675030,
+      "sha256": "a628c992aea0b558d07cc8539e27860c479d1e1357663437ff0bb2ae4346fee8"
+    }
+  ]
+}

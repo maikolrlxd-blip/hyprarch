@@ -77,3 +77,9 @@ La sesión de Claude que corre en el PC del usuario encontró `C:\Users\maiko\Do
 
 ## 2026-10-23 — Codex / LUTO: rostro de La Lamentadora v04
 Por pedido directo de Maikol, revisión facial en `apocalipsis-arte/bosses/la-lamentadora-v04/`: iris/pupilas, cejas asimétricas, pliegues/ojeras, piel pintada y labios/dientes interiores. 2926 tris; validación Blender/FBX independiente pasada. Fotos nuevas v04 mostradas y respuesta «ok». Sigue pendiente revisión en Roblox y movimiento del pelo. Studio no controlado, sin publicar ni push; versiones anteriores y trabajo ajeno conservados. Detalle y relevo para cerebro en DE-CODEX.md y ESTADO.md de v04.
+
+## 2026-10-24 — Codex / LUTO: tres bloques nocturnos preparados
+
+Autorización humana: continuar mientras Maikol duerme y, tras la jefa, hacer otros assets; pidió además animaciones completas del lanzallamas y quemado de zombis. Nuevas carpetas: Lamentadora v05b con cabello y Lamento (2926 tris/38 huesos/5 clips); lanzallamas v01b (390 tris, seis clips Mundo + seis VM), módulo cosmético de fuego y tres reacciones de la zombi; kit hospital v01 (camilla792/biombo816/suero476 tris). Estilo Poli Pintado. Fuentes congeladas, Blender/FBX/GLB/texturas, imágenes y QA guardados.
+
+Validaciones offline pasadas: reimportaciones, pesos/UV, contacto de caídas, cierres de bucle y siete casos de ciclo de vida con mocks del FX. Luau compilado. **No Roblox/Play/FPS ni quemado jugable**; fotos son Blender. FBX hereda escala .01 frente a GLB, explícita en informe; confirmar en importador. Sin tocar código compartido modificado, ventanas de usuario ni publicar/push. Paquete `LUTO - arte nocturno 2026-10-24.zip`: 169 archivos, CRC/hashes verificados, SHA `2d451d38eeceebc8f1916e0391588f3a25e60b5bfc0f9b21583e579d0d983030`. Detalle, limitaciones y nota para cerebro en DE-CODEX; cerrar ciclo nocturno tras commit local, sin crear más tareas.

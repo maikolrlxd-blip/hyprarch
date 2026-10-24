@@ -1,0 +1,135 @@
+{
+  "scope": "Entrega de arte Blender, sin motor",
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 46,
+      "sha256": "3bdfb8ae7b475afaf0e168ae019263c984fb0fb75113aa7c53eda30124416b31"
+    },
+    {
+      "path": "datos.json",
+      "bytes": 1130,
+      "sha256": "f8f277dc345f9783f1056b6b76f2a2a52d5552130359b63de768ead9985d822b"
+    },
+    {
+      "path": "ESTADO.md",
+      "bytes": 2497,
+      "sha256": "0934268a729507a95ffa23d03d9276d6eadef00c3b830f9483f80f7ca29dafd8"
+    },
+    {
+      "path": "fbx/Biombo.fbx",
+      "bytes": 394444,
+      "sha256": "c875d866778e27bf140effe4f5ff8472bf3a5643e60741d621d2ba7bb079fb42"
+    },
+    {
+      "path": "fbx/Biombo.glb",
+      "bytes": 407232,
+      "sha256": "2a6ed995d5be33d061ec325fda6abec3d7486e2792e1a87db9b6ba2bbbff7bfe"
+    },
+    {
+      "path": "fbx/Camilla.fbx",
+      "bytes": 380844,
+      "sha256": "f7390549171d9c531c104291b2ead436a8ae0a59a3a0760cba575389ce3720b3"
+    },
+    {
+      "path": "fbx/Camilla.glb",
+      "bytes": 396212,
+      "sha256": "d8382871491610029ebd49c997ee88e1d7a4b72c37ad1b5329d5e245c01c12dd"
+    },
+    {
+      "path": "fbx/Soporte_Suero.fbx",
+      "bytes": 273644,
+      "sha256": "74c5699e4b5f3ac937f5b2e78b3d45a36db0f95c51ef4ef57ca79954e0d72925"
+    },
+    {
+      "path": "fbx/Soporte_Suero.glb",
+      "bytes": 270676,
+      "sha256": "b2514cd0aec1f7f8379f8b055b7782119c7ec7a170539dd9046b55676f970660"
+    },
+    {
+      "path": "fuentes/ap_armas.py",
+      "bytes": 19880,
+      "sha256": "6f9e190c59d836c712d4e7ee6a9151ef02e023e9644f399be5f55322221de38a"
+    },
+    {
+      "path": "fuentes/ap_lib.py",
+      "bytes": 40076,
+      "sha256": "a6efb640592eb3e2a3b00586fcecf79a17b6d7a9dae025a35160fbb3ebb0dcab"
+    },
+    {
+      "path": "fuentes/build_hospital.py",
+      "bytes": 8064,
+      "sha256": "cef188aca29213fe91ecd2e028544387fffb5bed4e3f32c130c968d42655cb41"
+    },
+    {
+      "path": "Hospital.blend",
+      "bytes": 1084780,
+      "sha256": "c8b96a9498c5a8193ba7c3a4a8ad2200f4cbd18056c3475ca5aa6f7218f62b02"
+    },
+    {
+      "path": "previews/Hospital-v01-Biombo-Blender.png",
+      "bytes": 764257,
+      "sha256": "fb1269b475cb5d08ef81d898d20389dfb4d5bb5b96e3424d5d5a01fccb6b4873"
+    },
+    {
+      "path": "previews/Hospital-v01-Camilla-Blender.png",
+      "bytes": 751676,
+      "sha256": "04e8db8add36540d9fe0049807f0aae24f87bcc6ce58a1d5259370e2a45fa278"
+    },
+    {
+      "path": "previews/Hospital-v01-kit-Blender.png",
+      "bytes": 1195075,
+      "sha256": "5c869e2941d68c1741a6a97d311cbec0d2598f862f9303a7cba5f82063a4d63f"
+    },
+    {
+      "path": "previews/Hospital-v01-piezas-Blender.png",
+      "bytes": 1867905,
+      "sha256": "2e8a15ba1836d46dbd707b2265da0696dd5116945fc8b5e95d18609a7710aec9"
+    },
+    {
+      "path": "previews/Hospital-v01-Soporte_Suero-Blender.png",
+      "bytes": 655636,
+      "sha256": "47a0f358f5cc2bf5fdd66220f8edb72408b2ad1ffbe865985c6c64463027cddb"
+    },
+    {
+      "path": "qa/build-v01b.log",
+      "bytes": 4798,
+      "sha256": "da4e9f5c63dacacfdb2539434810769c3830db753c971e6f3ddfd9aeec7e0d0a"
+    },
+    {
+      "path": "qa/VALIDACION.json",
+      "bytes": 2527,
+      "sha256": "e6bfe0315389f3678b1adf578de39a82a8b424608d2a05c5349c9ed2ea9d1f73"
+    },
+    {
+      "path": "qa/validate-v01.log",
+      "bytes": 3392,
+      "sha256": "790e036ddf8253872426374b8112cdf59d6f4c41fbea3ec4a697aca6cbe0381d"
+    },
+    {
+      "path": "qa/validate-v01b.log",
+      "bytes": 2829,
+      "sha256": "8bba7b581dd2be9ba58fa42f795927aec5e7800271e4526050c966bbfb36f538"
+    },
+    {
+      "path": "qa/validate.py",
+      "bytes": 2780,
+      "sha256": "94cc47234631c47afcd12439020f8225834417e805508db0ecbe0076e1ed4c34"
+    },
+    {
+      "path": "texturas/Biombo_Color.png",
+      "bytes": 349745,
+      "sha256": "fa1798fc71bd361f578b8e7f6fb8edcb23f16f4a3af662fc346a02d639313090"
+    },
+    {
+      "path": "texturas/Camilla_Color.png",
+      "bytes": 341584,
+      "sha256": "4bb1341d6a8b39379165ee8d2f437eba861ef4fecd7afdb277ece937e9862d3a"
+    },
+    {
+      "path": "texturas/Soporte_Suero_Color.png",
+      "bytes": 237924,
+      "sha256": "1d7758d4b0b4853148156214f5b1c7598b48fab52c0e466c27628e0f736f6641"
+    }
+  ]
+}

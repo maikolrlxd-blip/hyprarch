@@ -1,0 +1,70 @@
+Info: Baking map saved to internal image, save it externally or pack it
+[AP    1.9s] horneado ID 0.1s
+Info: Baking map saved to internal image, save it externally or pack it
+[AP    2.0s] horneado POS 0.1s
+Info: Baking map saved to internal image, save it externally or pack it
+[AP    2.1s] horneado NRM 0.1s
+Info: Baking map saved to internal image, save it externally or pack it
+[AP    6.3s] horneado AO 4.2s
+Info: Baking map saved to internal image, save it externally or pack it
+[AP    7.2s] horneado EDGE 0.9s
+
+FBX export starting... 'C:\\Users\\maiko\\slime-rush\\hyprarch\\apocalipsis-arte\\mapa\\hospital-v01\\fbx\\Camilla.fbx'
+export finished in 0.0080 sec.
+INFO Draco is available, use library at C:\Users\maiko\Documents\Codex\2026-10-21\c\work\tools\blender-5.2.2-windows-x64\5.2\scripts\addons_core\io_scene_gltf2\bf_intern_draco_bridge.dll
+INFO MeshOptimizer is available, use library at C:\Users\maiko\Documents\Codex\2026-10-21\c\work\tools\blender-5.2.2-windows-x64\5.2\scripts\addons_core\io_scene_gltf2\bf_intern_meshopt_bridge.dll
+08:06:47 | INFO: Starting glTF 2.0 export
+08:06:47 | INFO: Extracting primitive: Camilla
+08:06:47 | INFO: Primitives created: 1
+08:06:47 | INFO: Finished glTF 2.0 export in 0.023136138916015625 s
+
+Info: Baking map saved to internal image, save it externally or pack it
+[AP    9.2s] horneado ID 0.1s
+Info: Baking map saved to internal image, save it externally or pack it
+[AP    9.3s] horneado POS 0.1s
+Info: Baking map saved to internal image, save it externally or pack it
+[AP    9.3s] horneado NRM 0.1s
+Info: Baking map saved to internal image, save it externally or pack it
+[AP   12.3s] horneado AO 3.0s
+Info: Baking map saved to internal image, save it externally or pack it
+[AP   13.0s] horneado EDGE 0.7s
+
+FBX export starting... 'C:\\Users\\maiko\\slime-rush\\hyprarch\\apocalipsis-arte\\mapa\\hospital-v01\\fbx\\Biombo.fbx'
+export finished in 0.0105 sec.
+08:06:52 | INFO: Starting glTF 2.0 export
+08:06:52 | INFO: Extracting primitive: Biombo
+08:06:52 | INFO: Primitives created: 1
+08:06:52 | INFO: Finished glTF 2.0 export in 0.018831729888916016 s
+
+Info: Baking map saved to internal image, save it externally or pack it
+[AP   14.7s] horneado ID 0.1s
+Info: Baking map saved to internal image, save it externally or pack it
+[AP   14.8s] horneado POS 0.1s
+Info: Baking map saved to internal image, save it externally or pack it
+[AP   14.9s] horneado NRM 0.1s
+Info: Baking map saved to internal image, save it externally or pack it
+[AP   17.9s] horneado AO 3.0s
+Info: Baking map saved to internal image, save it externally or pack it
+[AP   18.6s] horneado EDGE 0.6s
+
+FBX export starting... 'C:\\Users\\maiko\\slime-rush\\hyprarch\\apocalipsis-arte\\mapa\\hospital-v01\\fbx\\Soporte_Suero.fbx'
+export finished in 0.0078 sec.
+08:06:57 | INFO: Starting glTF 2.0 export
+08:06:57 | INFO: Extracting primitive: Soporte_Suero
+08:06:57 | INFO: Primitives created: 1
+08:06:57 | INFO: Finished glTF 2.0 export in 0.012584686279296875 s
+00:34.500  render           | Saved: 'C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\mapa\hospital-v01\previews\Hospital-v01-Camilla-Blender.png'
+
+[AP   33.4s] render Hospital-v01-Camilla-Blender.png 14.4s
+00:49.219  render           | Saved: 'C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\mapa\hospital-v01\previews\Hospital-v01-Biombo-Blender.png'
+[AP   48.2s] render Hospital-v01-Biombo-Blender.png 14.7s
+01:02.922  render           | Saved: 'C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\mapa\hospital-v01\previews\Hospital-v01-Soporte_Suero-Blender.png'
+[AP   61.9s] render Hospital-v01-Soporte_Suero-Blender.png 13.7s
+01:24.891  render           | Saved: 'C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\mapa\hospital-v01\previews\Hospital-v01-kit-Blender.png'
+[AP   83.8s] render Hospital-v01-kit-Blender.png 22.0s
+Info: Packed 3 file(s)
+Info: Saved as "Hospital.blend"
+HOSPITAL_BUILD_DONE {"Camilla": {"triangles": 792, "texture_size": 512, "local_bounds": [[-1.4649999141693115, -3.1489999294281006, 0.019791334867477417], [1.4649999141693115, 3.0999999046325684, 3.365000009536743]], "unit": "1 Blender unit = 1 stud", "runtime_verified": false}, "Biombo": {"triangles": 816, "texture_size": 512, "local_bounds": [[-2.805905818939209, -0.550000011920929, 0.0], [2.805905818939209, 1.1093448400497437, 5.75]], "unit": "1 Blender unit = 1 stud", "runtime_verified": false}, "Soporte_Suero": {"triangles": 476, "texture_size": 512, "local_bounds": [[-0.9230566024780273, -0.9623997211456299, 0.010656863451004028], [0.9230566024780273, 0.9623997211456299, 5.699999809265137]], "unit": "1 Blender unit = 1 stud", "runtime_verified": false}}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:37:04)
+
+Blender quit

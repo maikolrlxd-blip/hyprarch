@@ -1,0 +1,6 @@
+{
+  "passed": true,
+  "cases": 7,
+  "module_sha256": "aa61cdb3e7c50db757c2aa815f92044d213ce2358e14295facfae50c0384b3af",
+  "scope": "Mocks de ciclo de vida, sin ParticleEmitter real ni pruebas de motor"
+}

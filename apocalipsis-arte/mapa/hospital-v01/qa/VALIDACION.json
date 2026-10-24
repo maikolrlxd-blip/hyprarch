@@ -1,0 +1,103 @@
+{
+  "passed": true,
+  "errors": [],
+  "scope": "Geometria/UV/texturas y reimportacion Blender. No colision/escala/FPS Roblox",
+  "imports": [
+    {
+      "asset": "Camilla",
+      "format": "fbx",
+      "triangles": 792,
+      "raw_dimensions_blender": [
+        0.02929999679327011,
+        0.06249000132083893,
+        0.03345209508552216
+      ],
+      "blender_roundtrip_normalization": 100,
+      "dimensions_source_units": [
+        2.929999679327011,
+        6.249000132083893,
+        3.345209508552216
+      ]
+    },
+    {
+      "asset": "Camilla",
+      "format": "glb",
+      "triangles": 792,
+      "raw_dimensions_blender": [
+        2.929999828338623,
+        6.248999834060669,
+        3.3452086746692657
+      ],
+      "blender_roundtrip_normalization": 1,
+      "dimensions_source_units": [
+        2.929999828338623,
+        6.248999834060669,
+        3.3452086746692657
+      ]
+    },
+    {
+      "asset": "Biombo",
+      "format": "fbx",
+      "triangles": 816,
+      "raw_dimensions_blender": [
+        0.05611811578273773,
+        0.01659345719963312,
+        0.05749999912514303
+      ],
+      "blender_roundtrip_normalization": 100,
+      "dimensions_source_units": [
+        5.611811578273773,
+        1.6593457199633121,
+        5.749999912514303
+      ]
+    },
+    {
+      "asset": "Biombo",
+      "format": "glb",
+      "triangles": 816,
+      "raw_dimensions_blender": [
+        5.611811637878418,
+        1.6593448519706726,
+        5.75
+      ],
+      "blender_roundtrip_normalization": 1,
+      "dimensions_source_units": [
+        5.611811637878418,
+        1.6593448519706726,
+        5.75
+      ]
+    },
+    {
+      "asset": "Soporte_Suero",
+      "format": "fbx",
+      "triangles": 476,
+      "raw_dimensions_blender": [
+        0.018461132422089577,
+        0.019248003140091896,
+        0.056893429238698445
+      ],
+      "blender_roundtrip_normalization": 100,
+      "dimensions_source_units": [
+        1.8461132422089577,
+        1.9248003140091896,
+        5.6893429238698445
+      ]
+    },
+    {
+      "asset": "Soporte_Suero",
+      "format": "glb",
+      "triangles": 476,
+      "raw_dimensions_blender": [
+        1.8461132049560547,
+        1.9247994422912598,
+        5.689342945814133
+      ],
+      "blender_roundtrip_normalization": 1,
+      "dimensions_source_units": [
+        1.8461132049560547,
+        1.9247994422912598,
+        5.689342945814133
+      ]
+    }
+  ]
+}

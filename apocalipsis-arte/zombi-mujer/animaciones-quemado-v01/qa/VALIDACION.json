@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "errors": [],
+  "scope": "Blender y reimportacion FBX/GLB, no motor",
+  "geometry_uv_unchanged": true,
+  "triangles": 1966,
+  "bones": 16,
+  "clips": [
+    {
+      "clip": "QuemadoInicio",
+      "seconds": 0.85
+    },
+    {
+      "clip": "QuemadoBucle",
+      "seconds": 1.2
+    },
+    {
+      "clip": "QuemadoCaer",
+      "seconds": 1.8
+    }
+  ],
+  "min_z_integer_frames": {
+    "QuemadoInicio": 0.028078436851501465,
+    "QuemadoBucle": 0.028078436851501465,
+    "QuemadoCaer": 0.0209997296333313
+  },
+  "fall_quarterframe_min_z": 0.0201328843832016,
+  "loop_endpoint_matrix_error": 2.5648941810080915e-17
+}

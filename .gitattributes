@@ -1,2 +1,8 @@
 * text=auto eol=lf
 *.png binary
+
+# Entregas selladas con SHA256: conservar bytes de fuentes/logs al hacer checkout.
+apocalipsis-arte/bosses/la-lamentadora-v05/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+apocalipsis-arte/armas/lanzallamas-v01/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+apocalipsis-arte/zombi-mujer/animaciones-quemado-v01/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+apocalipsis-arte/mapa/hospital-v01/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

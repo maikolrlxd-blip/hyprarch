@@ -1,0 +1,29 @@
+00:00.938  blend            | Read blend: "C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\zombi-mujer\animaciones-quemado-v01\fuentes\Base-zombi.blend"
+00:00.985  blend            | Read blend: "C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\zombi-mujer\animaciones-quemado-v01\Zombi_Quemado.blend"
+C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\zombi-mujer\animaciones-quemado-v01\qa\validate.py:22: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  used_images={n.image for o in obs for mat in o.data.materials if mat and mat.use_nodes for n in mat.node_tree.nodes if n.type=='TEX_IMAGE' and n.image}
+IMAGE_DETAILS [{"name": "ZombiMujer_Cabeza_Color.png", "packed": true, "size": [1024, 1024], "pixels": 4194304}, {"name": "ZombiMujer_Brazos_Color.png", "packed": true, "size": [1024, 1024], "pixels": 4194304}, {"name": "ZombiMujer_Piernas_Color.png", "packed": true, "size": [1024, 1024], "pixels": 4194304}, {"name": "ZombiMujer_Torso_Color.png", "packed": true, "size": [1024, 1024], "pixels": 4194304}]
+FBX version: 7400
+FBX version: 7400
+FBX version: 7400
+08:02:49 | INFO: Data are loaded, start creating Blender stuff
+08:02:49 | INFO: Blender create Mesh node Head
+08:02:49 | INFO: Blender create Mesh node LeftFoot
+08:02:49 | INFO: Blender create Mesh node LeftHand
+08:02:49 | INFO: Blender create Mesh node LeftLowerArm
+08:02:49 | INFO: Blender create Mesh node LeftLowerLeg
+08:02:49 | INFO: Blender create Mesh node LeftUpperArm
+08:02:49 | INFO: Blender create Mesh node LeftUpperLeg
+08:02:49 | INFO: Blender create Mesh node LowerTorso
+08:02:49 | INFO: Blender create Mesh node RightFoot
+08:02:49 | INFO: Blender create Mesh node RightHand
+08:02:49 | INFO: Blender create Mesh node RightLowerArm
+08:02:49 | INFO: Blender create Mesh node RightLowerLeg
+08:02:49 | INFO: Blender create Mesh node RightUpperArm
+08:02:49 | INFO: Blender create Mesh node RightUpperLeg
+08:02:49 | INFO: Blender create Mesh node UpperTorso
+08:02:49 | INFO: glTF import finished in 0.07s
+BURN_QA {"passed": true, "errors": [], "scope": "Blender y reimportacion FBX/GLB, no motor", "geometry_uv_unchanged": true, "triangles": 1966, "bones": 16, "clips": [{"clip": "QuemadoInicio", "seconds": 0.85}, {"clip": "QuemadoBucle", "seconds": 1.2}, {"clip": "QuemadoCaer", "seconds": 1.8}], "min_z_integer_frames": {"QuemadoInicio": 0.028078436851501465, "QuemadoBucle": 0.028078436851501465, "QuemadoCaer": 0.0209997296333313}, "fall_quarterframe_min_z": 0.0201328843832016, "loop_endpoint_matrix_error": 2.5648941810080915e-17}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:37:04)
+
+Blender quit

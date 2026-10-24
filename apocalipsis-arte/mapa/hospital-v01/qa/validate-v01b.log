@@ -1,0 +1,19 @@
+FBX version: 7400
+08:09:52 | INFO: Data are loaded, start creating Blender stuff
+08:09:52 | INFO: Blender create Mesh node Camilla
+08:09:52 | INFO: glTF import finished in 0.01s
+FBX version: 7400
+08:09:52 | INFO: Data are loaded, start creating Blender stuff
+08:09:52 | INFO: Blender create Mesh node Biombo
+08:09:52 | INFO: glTF import finished in 0.01s
+FBX version: 7400
+08:09:52 | INFO: Data are loaded, start creating Blender stuff
+08:09:52 | INFO: Blender create Mesh node Soporte_Suero
+08:09:52 | INFO: glTF import finished in 0.00s
+00:01.562  blend            | Read blend: "C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\mapa\hospital-v01\Hospital.blend"
+C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\mapa\hospital-v01\qa\validate.py:35: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  images={n.image for m in ob.data.materials if m and m.use_nodes for n in m.node_tree.nodes if n.type=='TEX_IMAGE' and n.image}
+HOSPITAL_QA {"passed": true, "errors": [], "scope": "Geometria/UV/texturas y reimportacion Blender. No colision/escala/FPS Roblox", "imports": [{"asset": "Camilla", "format": "fbx", "triangles": 792, "raw_dimensions_blender": [0.02929999679327011, 0.06249000132083893, 0.03345209508552216], "blender_roundtrip_normalization": 100, "dimensions_source_units": [2.929999679327011, 6.249000132083893, 3.345209508552216]}, {"asset": "Camilla", "format": "glb", "triangles": 792, "raw_dimensions_blender": [2.929999828338623, 6.248999834060669, 3.3452086746692657], "blender_roundtrip_normalization": 1, "dimensions_source_units": [2.929999828338623, 6.248999834060669, 3.3452086746692657]}, {"asset": "Biombo", "format": "fbx", "triangles": 816, "raw_dimensions_blender": [0.05611811578273773, 0.01659345719963312, 0.05749999912514303], "blender_roundtrip_normalization": 100, "dimensions_source_units": [5.611811578273773, 1.6593457199633121, 5.749999912514303]}, {"asset": "Biombo", "format": "glb", "triangles": 816, "raw_dimensions_blender": [5.611811637878418, 1.6593448519706726, 5.75], "blender_roundtrip_normalization": 1, "dimensions_source_units": [5.611811637878418, 1.6593448519706726, 5.75]}, {"asset": "Soporte_Suero", "format": "fbx", "triangles": 476, "raw_dimensions_blender": [0.018461132422089577, 0.019248003140091896, 0.056893429238698445], "blender_roundtrip_normalization": 100, "dimensions_source_units": [1.8461132422089577, 1.9248003140091896, 5.6893429238698445]}, {"asset": "Soporte_Suero", "format": "glb", "triangles": 476, "raw_dimensions_blender": [1.8461132049560547, 1.9247994422912598, 5.689342945814133], "blender_roundtrip_normalization": 1, "dimensions_source_units": [1.8461132049560547, 1.9247994422912598, 5.689342945814133]}]}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:37:04)
+
+Blender quit

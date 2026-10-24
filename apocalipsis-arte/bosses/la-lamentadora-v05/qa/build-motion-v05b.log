@@ -1,0 +1,75 @@
+00:01.344  blend            | Read blend: "C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\bosses\la-lamentadora-v05\fuentes\Base-v04.blend"
+Info: No new files have been packed
+Info: Saved as "LaLamentadora.blend"
+
+FBX export starting... 'C:\\Users\\maiko\\slime-rush\\hyprarch\\apocalipsis-arte\\bosses\\la-lamentadora-v05\\LaLamentadora_Skinned.fbx'
+export finished in 1.5957 sec.
+
+FBX export starting... 'C:\\Users\\maiko\\slime-rush\\hyprarch\\apocalipsis-arte\\bosses\\la-lamentadora-v05\\clips\\LaLamentadora_Atacar.fbx'
+export finished in 0.3792 sec.
+
+FBX export starting... 'C:\\Users\\maiko\\slime-rush\\hyprarch\\apocalipsis-arte\\bosses\\la-lamentadora-v05\\clips\\LaLamentadora_Caer.fbx'
+export finished in 0.3821 sec.
+
+FBX export starting... 'C:\\Users\\maiko\\slime-rush\\hyprarch\\apocalipsis-arte\\bosses\\la-lamentadora-v05\\clips\\LaLamentadora_Caminar.fbx'
+export finished in 0.2917 sec.
+
+FBX export starting... 'C:\\Users\\maiko\\slime-rush\\hyprarch\\apocalipsis-arte\\bosses\\la-lamentadora-v05\\clips\\LaLamentadora_Reposo.fbx'
+export finished in 0.4531 sec.
+
+FBX export starting... 'C:\\Users\\maiko\\slime-rush\\hyprarch\\apocalipsis-arte\\bosses\\la-lamentadora-v05\\clips\\LaLamentadora_Lamento.fbx'
+export finished in 0.5708 sec.
+INFO Draco is available, use library at C:\Users\maiko\Documents\Codex\2026-10-21\c\work\tools\blender-5.2.2-windows-x64\5.2\scripts\addons_core\io_scene_gltf2\bf_intern_draco_bridge.dll
+INFO MeshOptimizer is available, use library at C:\Users\maiko\Documents\Codex\2026-10-21\c\work\tools\blender-5.2.2-windows-x64\5.2\scripts\addons_core\io_scene_gltf2\bf_intern_meshopt_bridge.dll
+03:06:32 | INFO: Starting glTF 2.0 export
+03:06:32 | INFO: Extracting primitive: Head
+03:06:32 | INFO: Primitives created: 1
+03:06:32 | INFO: Extracting primitive: LeftFoot
+03:06:32 | INFO: Primitives created: 1
+03:06:32 | INFO: Extracting primitive: LeftHand
+03:06:32 | INFO: Primitives created: 1
+03:06:32 | INFO: Extracting primitive: LeftLowerArm
+03:06:32 | INFO: Primitives created: 1
+03:06:32 | INFO: Extracting primitive: LeftLowerLeg
+03:06:32 | INFO: Primitives created: 1
+03:06:32 | INFO: Extracting primitive: LeftUpperArm
+03:06:32 | INFO: Primitives created: 1
+03:06:32 | INFO: Extracting primitive: LeftUpperLeg
+03:06:32 | INFO: Primitives created: 1
+03:06:32 | INFO: Extracting primitive: LowerTorso
+03:06:32 | INFO: Primitives created: 1
+03:06:32 | INFO: Extracting primitive: RightFoot
+03:06:32 | INFO: Primitives created: 1
+03:06:32 | INFO: Extracting primitive: RightHand
+03:06:32 | INFO: Primitives created: 1
+03:06:32 | INFO: Extracting primitive: RightLowerArm
+03:06:32 | INFO: Primitives created: 1
+03:06:32 | INFO: Extracting primitive: RightLowerLeg
+03:06:32 | INFO: Primitives created: 1
+03:06:32 | INFO: Extracting primitive: RightUpperArm
+03:06:32 | INFO: Primitives created: 1
+03:06:32 | INFO: Extracting primitive: RightUpperLeg
+03:06:32 | INFO: Primitives created: 1
+03:06:32 | INFO: Extracting primitive: UpperTorso
+03:06:32 | INFO: Primitives created: 1
+03:06:35 | INFO: Finished glTF 2.0 export in 2.862842321395874 s
+00:28.547  render           | Saved: 'C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\bosses\la-lamentadora-v05\previews\Lamentadora-v05b-Lamento-00-Blender.png'
+
+
+FBX export starting... 'C:\\Users\\maiko\\slime-rush\\hyprarch\\apocalipsis-arte\\bosses\\la-lamentadora-v05\\LaLamentadora_Estatico.fbx'
+export finished in 0.0307 sec.
+[AP   27.2s] render Lamentadora-v05b-Lamento-00-Blender.png 13.0s
+00:41.125  render           | Saved: 'C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\bosses\la-lamentadora-v05\previews\Lamentadora-v05b-Lamento-01-Blender.png'
+[AP   39.8s] render Lamentadora-v05b-Lamento-01-Blender.png 12.6s
+00:53.969  render           | Saved: 'C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\bosses\la-lamentadora-v05\previews\Lamentadora-v05b-Lamento-02-Blender.png'
+[AP   52.6s] render Lamentadora-v05b-Lamento-02-Blender.png 12.8s
+01:06.875  render           | Saved: 'C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\bosses\la-lamentadora-v05\previews\Lamentadora-v05b-Lamento-03-Blender.png'
+[AP   65.5s] render Lamentadora-v05b-Lamento-03-Blender.png 12.9s
+01:20.859  render           | Saved: 'C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\bosses\la-lamentadora-v05\previews\Lamentadora-v05b-Lamento-04-Blender.png'
+[AP   79.5s] render Lamentadora-v05b-Lamento-04-Blender.png 14.0s
+01:34.172  render           | Saved: 'C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\bosses\la-lamentadora-v05\previews\Lamentadora-v05b-Lamento-05-Blender.png'
+[AP   92.8s] render Lamentadora-v05b-Lamento-05-Blender.png 13.3s
+BOSS_V05_BUILD {"base_sha256": "9c20c1da9f7dc6f40ced9be8a42a6a05eb866fdc0093ee39d4444cfecd6f397b", "triangles": 2926, "meshes": 15, "bones": 38, "hair_locks": 11, "clips": ["Atacar", "Caer", "Caminar", "Reposo", "Lamento"], "scope": "Blender, no Roblox"}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:37:04)
+
+Blender quit

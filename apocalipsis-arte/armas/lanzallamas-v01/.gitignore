@@ -1,0 +1,6 @@
+__pycache__/
+*.blend1
+*.fbm/
+previews/Lanzallamas-v01-*.png
+qa/build-v01.log
+qa/fx_generated_test.luau

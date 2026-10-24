@@ -1,0 +1,7 @@
+__pycache__/
+*.blend1
+*.fbm/
+previews/Lamentadora-v05-Lamento-*.png
+qa/build-motion.log
+qa/check-motion.log
+qa/validate.log

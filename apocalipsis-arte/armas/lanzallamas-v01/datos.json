@@ -1,0 +1,22 @@
+{
+  "triangles_weapon": 390,
+  "triangles_arms": 256,
+  "clips": {
+    "Equipar": 0.85,
+    "Guardar": 0.65,
+    "Reposo": 2,
+    "Disparo": 0.6,
+    "Recargar": 2.8,
+    "Inspeccionar": 3.2
+  },
+  "rigs": {
+    "Mundo": 3,
+    "VM": 10
+  },
+  "scope": "Asset ficticio Blender; no Roblox ni arma real",
+  "world_parts": [
+    "Handle",
+    "Cartucho",
+    "Cierre"
+  ]
+}

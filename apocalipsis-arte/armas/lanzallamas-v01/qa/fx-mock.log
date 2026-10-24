@@ -1,0 +1,8 @@
+FX_MOCK PASS muzzle start stop and idempotent cleanup
+FX_MOCK PASS reject invalid and unparented targets
+FX_MOCK PASS repeat refreshes without stacking; expiry cleans
+FX_MOCK PASS removed model cleans connection and emitters
+FX_MOCK PASS one supported body part and minimum duration
+FX_MOCK PASS NaN defaults and infinity is bounded
+FX_MOCK PASS explicit stop and global burn cleanup
+FX_MOCK SUMMARY 7 PASS; only lifecycle mocks, NOT Roblox Play

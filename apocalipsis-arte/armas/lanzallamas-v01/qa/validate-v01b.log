@@ -1,0 +1,23 @@
+00:00.937  blend            | Read blend: "C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\armas\lanzallamas-v01\Lanzallamas.blend"
+FBX version: 7400
+03:21:17 | INFO: Data are loaded, start creating Blender stuff
+03:21:17 | INFO: Blender create Mesh node Cartucho.002
+03:21:17 | INFO: Blender create Mesh node Cierre.002
+03:21:17 | INFO: Blender create Mesh node Handle.002
+03:21:17 | INFO: glTF import finished in 0.01s
+FBX version: 7400
+FBX version: 7400
+FBX version: 7400
+FBX version: 7400
+FBX version: 7400
+FBX version: 7400
+FBX version: 7400
+FBX version: 7400
+FBX version: 7400
+FBX version: 7400
+FBX version: 7400
+FBX version: 7400
+FLAME_QA {"passed": true, "errors": [], "scope": "Blender/FBX offline, no Studio ni revision visual completa", "triangles_weapon": 390, "triangles_viewmodel": 646, "reimported_clips": [{"clip": "Mundo/Equipar", "meshes": 3, "seconds": 0.85}, {"clip": "Mundo/Guardar", "meshes": 3, "seconds": 0.65}, {"clip": "Mundo/Reposo", "meshes": 3, "seconds": 2.0}, {"clip": "Mundo/Disparo", "meshes": 3, "seconds": 0.6}, {"clip": "Mundo/Recargar", "meshes": 3, "seconds": 2.8}, {"clip": "Mundo/Inspeccionar", "meshes": 3, "seconds": 3.2}, {"clip": "VM/Equipar", "meshes": 9, "seconds": 0.85}, {"clip": "VM/Guardar", "meshes": 9, "seconds": 0.65}, {"clip": "VM/Reposo", "meshes": 9, "seconds": 2.0}, {"clip": "VM/Disparo", "meshes": 9, "seconds": 0.6}, {"clip": "VM/Recargar", "meshes": 9, "seconds": 2.8}, {"clip": "VM/Inspeccionar", "meshes": 9, "seconds": 3.2}]}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:37:04)
+
+Blender quit

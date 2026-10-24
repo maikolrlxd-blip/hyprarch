@@ -1,0 +1,11 @@
+{
+  "base_sha256": "233276d75f3dfb70c3481ea3bc5e8b86ebece5f1fc0258aa6f4b9afbc525b4c4",
+  "triangles": 1966,
+  "bones": 16,
+  "clips": {
+    "QuemadoInicio": 0.85,
+    "QuemadoBucle": 1.2,
+    "QuemadoCaer": 1.8
+  },
+  "scope": "Reacciones Blender; sin prueba Roblox. La muerte la decide el servidor, nunca el VFX."
+}

@@ -1,0 +1,160 @@
+{
+  "scope": "Entrega de arte Blender, sin motor",
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 84,
+      "sha256": "79547b1fdae9d1efd6976256f30dd4c82cb50ebf49522e672618cc16ceb5e174"
+    },
+    {
+      "path": "clips/Zombi_QuemadoBucle.fbx",
+      "bytes": 3277244,
+      "sha256": "96c1d5c9cad626891bf65722bce1ed04be98f5bac946f385b850ddf18308e901"
+    },
+    {
+      "path": "clips/Zombi_QuemadoCaer.fbx",
+      "bytes": 3315132,
+      "sha256": "c113bfc687d74ea98ab32d6ff88f2ff84e64010f1101fba3aa1694bf0d4ff87f"
+    },
+    {
+      "path": "clips/Zombi_QuemadoInicio.fbx",
+      "bytes": 3258812,
+      "sha256": "a8b67f07b5b646af1c4f47a3b1ec7f3ec0d2719d06702c7a8a5cc2bd8d7a9079"
+    },
+    {
+      "path": "datos.json",
+      "bytes": 326,
+      "sha256": "fcb4ac1c70850a50192a3532aaa8e31a7a2f7ff6b12dda6e1b466dc3931c662e"
+    },
+    {
+      "path": "ESTADO.md",
+      "bytes": 2055,
+      "sha256": "4f1f3a9731f8e6ecdfd2b172cbfbd8af4da5017a365c654182a37a8f114fec64"
+    },
+    {
+      "path": "fuentes/ap_armas.py",
+      "bytes": 19880,
+      "sha256": "6f9e190c59d836c712d4e7ee6a9151ef02e023e9644f399be5f55322221de38a"
+    },
+    {
+      "path": "fuentes/ap_lib.py",
+      "bytes": 40076,
+      "sha256": "a6efb640592eb3e2a3b00586fcecf79a17b6d7a9dae025a35160fbb3ebb0dcab"
+    },
+    {
+      "path": "fuentes/Base-zombi.blend",
+      "bytes": 189133,
+      "sha256": "233276d75f3dfb70c3481ea3bc5e8b86ebece5f1fc0258aa6f4b9afbc525b4c4"
+    },
+    {
+      "path": "fuentes/build_quemado.py",
+      "bytes": 5058,
+      "sha256": "4c2dacda2dc1ee5dad57af0df799c7817718c5a1d8aaa2a6e93eecdd6d8e527c"
+    },
+    {
+      "path": "fuentes/clip_contacts.py",
+      "bytes": 7756,
+      "sha256": "4f1c46c25b642410dce560bf77fc35534a2683bcccde2fcdcd4eec98aaf93be8"
+    },
+    {
+      "path": "previews/Zombi-quemado-v01-00-Blender.png",
+      "bytes": 384953,
+      "sha256": "fdbb5769b45968517e152b1dbd859569c9c0755e3f03222cc57de4d410ff0f7a"
+    },
+    {
+      "path": "previews/Zombi-quemado-v01-01-Blender.png",
+      "bytes": 385095,
+      "sha256": "f5f8dffff2325a8b9694b3a92d05be364c79e2216d9f60621085037002eec632"
+    },
+    {
+      "path": "previews/Zombi-quemado-v01-02-Blender.png",
+      "bytes": 385044,
+      "sha256": "ea65f05a6bbf8d8c41b8aaa74af5525c26ca087b5546425762e0339b48f09020"
+    },
+    {
+      "path": "previews/Zombi-quemado-v01-03-Blender.png",
+      "bytes": 386724,
+      "sha256": "398005b7c4cc5bfa99f52cb23c3945362cda5d089731f045ab4fb4bd92059018"
+    },
+    {
+      "path": "previews/Zombi-quemado-v01-04-Blender.png",
+      "bytes": 387113,
+      "sha256": "2f3d3fc0ca341558f201700eac8ee1ddba58a1ba81513c3b5aef96a7e053ba15"
+    },
+    {
+      "path": "previews/Zombi-quemado-v01-05-Blender.png",
+      "bytes": 379982,
+      "sha256": "6e8f64f0b84860325130106c2a4d48ff2f39cf9a37c5831826379689aeb5e27f"
+    },
+    {
+      "path": "previews/Zombi-quemado-v01-secuencia-Blender.png",
+      "bytes": 1798680,
+      "sha256": "acd5a871857d7287b3a00ffa56e43850b3502f5e59fd736699ecdf36624d6195"
+    },
+    {
+      "path": "qa/build-v01c.log",
+      "bytes": 4296,
+      "sha256": "de76d7092ab66f5bca245cbbe4d93fac659f7ce2f79d801e2ae45d88de167346"
+    },
+    {
+      "path": "qa/CONTACTO-CAIDA.json",
+      "bytes": 206962,
+      "sha256": "33608eb983c7f2b73869d74f7146e667d8393c2b1a0d527243182dbbaa9d6015"
+    },
+    {
+      "path": "qa/VALIDACION.json",
+      "bytes": 660,
+      "sha256": "6c64f646e5ea5f58a0ac3eb52ed9546c42ac70c2771e2cfc8c0b074b3c229554"
+    },
+    {
+      "path": "qa/validate-v01b.log",
+      "bytes": 2666,
+      "sha256": "b1ab7525ea6910c780850f814cb5387be3d8349667cc3f6bec2d250fccb1f1e4"
+    },
+    {
+      "path": "qa/validate.py",
+      "bytes": 4259,
+      "sha256": "31c55f705e89fc7f099b896b38cd9eb31fea642b16e10a3a4c25736631d342e7"
+    },
+    {
+      "path": "texturas/ZombiMujer_Brazos_Color.png",
+      "bytes": 720847,
+      "sha256": "f6e5efff213d5900d6b6ae33bee1b9b35d0cc271f72f6450a10258ab03cc2bb6"
+    },
+    {
+      "path": "texturas/ZombiMujer_Cabeza_Color.png",
+      "bytes": 613727,
+      "sha256": "5b335e6d0205e38cf7d46eedafd459e528eba9c7bdea5b82bea7ced8e474b971"
+    },
+    {
+      "path": "texturas/ZombiMujer_Color.png",
+      "bytes": 1024590,
+      "sha256": "23a5587596e67179e99cbb2c1b3810d2da34c365c4153d080d87b3b10685fe80"
+    },
+    {
+      "path": "texturas/ZombiMujer_Piernas_Color.png",
+      "bytes": 690857,
+      "sha256": "c93466035931a6b9dd2b4247d50a15f82e4261992632a6e77a8002a01408c0f5"
+    },
+    {
+      "path": "texturas/ZombiMujer_Torso_Color.png",
+      "bytes": 708833,
+      "sha256": "5e78014bfd1a53416306045102216d55bb159e109de989cff8de379b1bd72b74"
+    },
+    {
+      "path": "Zombi_Quemado.blend",
+      "bytes": 2918060,
+      "sha256": "61d7c8795a99a3063c30a94bcdfd1bf04cbb211b58ef3bdd1fbd32f77039fa50"
+    },
+    {
+      "path": "Zombi_Quemado.fbx",
+      "bytes": 3607292,
+      "sha256": "b1ebac11d34ebcac86cc242b2915832c5151ee7a6ac19252e0b226e6321403e7"
+    },
+    {
+      "path": "Zombi_Quemado.glb",
+      "bytes": 2928952,
+      "sha256": "f53ea9ae826758d104a77ddf9ba040926dc91eb29bb836e8c19cf51ac5888eb5"
+    }
+  ]
+}

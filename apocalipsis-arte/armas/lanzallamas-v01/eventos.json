@@ -1,0 +1,122 @@
+{
+  "arma": "Lanzallamas",
+  "fps": 60,
+  "unidades": "studs, ejes Roblox: X derecha, Y arriba, -Z delante (LookVector del Handle)",
+  "handle_centro_desde_origen": [
+    -0.1187,
+    0.1387,
+    -1.16
+  ],
+  "puntos": {
+    "Boca": {
+      "desde_origen": [
+        0.0,
+        0.32,
+        -2.75
+      ],
+      "desde_centro_handle": [
+        0.1187,
+        0.1813,
+        -1.59
+      ]
+    }
+  },
+  "clips": {
+    "Equipar": {
+      "duracion_s": 0.85,
+      "frames": 51,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0.56,
+          "frame": 34,
+          "nombre": "agarre"
+        }
+      ]
+    },
+    "Guardar": {
+      "duracion_s": 0.65,
+      "frames": 39,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0,
+          "frame": 0,
+          "nombre": "fuego_apagar"
+        },
+        {
+          "t": 0.6,
+          "frame": 36,
+          "nombre": "ocultar_arma"
+        }
+      ]
+    },
+    "Reposo": {
+      "duracion_s": 2,
+      "frames": 120,
+      "bucle": true,
+      "eventos": []
+    },
+    "Disparo": {
+      "duracion_s": 0.6,
+      "frames": 36,
+      "bucle": true,
+      "eventos": [
+        {
+          "t": 0,
+          "frame": 0,
+          "nombre": "fuego_sostener"
+        }
+      ]
+    },
+    "Recargar": {
+      "duracion_s": 2.8,
+      "frames": 168,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0,
+          "frame": 0,
+          "nombre": "fuego_apagar"
+        },
+        {
+          "t": 0.34,
+          "frame": 20,
+          "nombre": "cierre_abrir"
+        },
+        {
+          "t": 0.88,
+          "frame": 53,
+          "nombre": "cartucho_fuera"
+        },
+        {
+          "t": 1.36,
+          "frame": 82,
+          "nombre": "cartucho_nuevo"
+        },
+        {
+          "t": 2.12,
+          "frame": 127,
+          "nombre": "cartucho_insertar"
+        },
+        {
+          "t": 2.42,
+          "frame": 145,
+          "nombre": "recarga_confirmar"
+        }
+      ]
+    },
+    "Inspeccionar": {
+      "duracion_s": 3.2,
+      "frames": 192,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0,
+          "frame": 0,
+          "nombre": "fuego_apagar"
+        }
+      ]
+    }
+  }
+}

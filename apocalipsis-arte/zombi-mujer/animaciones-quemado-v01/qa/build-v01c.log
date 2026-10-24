@@ -1,0 +1,66 @@
+00:00.985  blend            | Read blend: "C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\zombi-mujer\animaciones-quemado-v01\fuentes\Base-zombi.blend"
+Info: Packed 4 file(s)
+Info: Saved as "Zombi_Quemado.blend"
+
+FBX export starting... 'C:\\Users\\maiko\\slime-rush\\hyprarch\\apocalipsis-arte\\zombi-mujer\\animaciones-quemado-v01\\Zombi_Quemado.fbx'
+export finished in 0.3273 sec.
+
+FBX export starting... 'C:\\Users\\maiko\\slime-rush\\hyprarch\\apocalipsis-arte\\zombi-mujer\\animaciones-quemado-v01\\clips\\Zombi_QuemadoInicio.fbx'
+export finished in 0.1217 sec.
+
+FBX export starting... 'C:\\Users\\maiko\\slime-rush\\hyprarch\\apocalipsis-arte\\zombi-mujer\\animaciones-quemado-v01\\clips\\Zombi_QuemadoBucle.fbx'
+export finished in 0.1449 sec.
+
+FBX export starting... 'C:\\Users\\maiko\\slime-rush\\hyprarch\\apocalipsis-arte\\zombi-mujer\\animaciones-quemado-v01\\clips\\Zombi_QuemadoCaer.fbx'
+export finished in 0.2025 sec.
+INFO Draco is available, use library at C:\Users\maiko\Documents\Codex\2026-10-21\c\work\tools\blender-5.2.2-windows-x64\5.2\scripts\addons_core\io_scene_gltf2\bf_intern_draco_bridge.dll
+INFO MeshOptimizer is available, use library at C:\Users\maiko\Documents\Codex\2026-10-21\c\work\tools\blender-5.2.2-windows-x64\5.2\scripts\addons_core\io_scene_gltf2\bf_intern_meshopt_bridge.dll
+03:20:35 | INFO: Starting glTF 2.0 export
+03:20:35 | INFO: Extracting primitive: Head
+03:20:35 | INFO: Primitives created: 1
+03:20:35 | INFO: Extracting primitive: LeftFoot
+03:20:35 | INFO: Primitives created: 1
+03:20:35 | INFO: Extracting primitive: LeftHand
+03:20:35 | INFO: Primitives created: 1
+03:20:35 | INFO: Extracting primitive: LeftLowerArm
+03:20:35 | INFO: Primitives created: 1
+03:20:35 | INFO: Extracting primitive: LeftLowerLeg
+03:20:35 | INFO: Primitives created: 1
+03:20:35 | INFO: Extracting primitive: LeftUpperArm
+03:20:35 | INFO: Primitives created: 1
+03:20:35 | INFO: Extracting primitive: LeftUpperLeg
+03:20:35 | INFO: Primitives created: 1
+03:20:35 | INFO: Extracting primitive: LowerTorso
+03:20:35 | INFO: Primitives created: 1
+03:20:35 | INFO: Extracting primitive: RightFoot
+03:20:35 | INFO: Primitives created: 1
+03:20:35 | INFO: Extracting primitive: RightHand
+03:20:35 | INFO: Primitives created: 1
+03:20:35 | INFO: Extracting primitive: RightLowerArm
+03:20:35 | INFO: Primitives created: 1
+03:20:35 | INFO: Extracting primitive: RightLowerLeg
+03:20:35 | INFO: Primitives created: 1
+03:20:35 | INFO: Extracting primitive: RightUpperArm
+03:20:35 | INFO: Primitives created: 1
+03:20:35 | INFO: Extracting primitive: RightUpperLeg
+03:20:35 | INFO: Primitives created: 1
+03:20:35 | INFO: Extracting primitive: UpperTorso
+03:20:35 | INFO: Primitives created: 1
+03:20:36 | INFO: Finished glTF 2.0 export in 0.44745469093322754 s
+00:13.766  render           | Saved: 'C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\zombi-mujer\animaciones-quemado-v01\previews\Zombi-quemado-v01-00-Blender.png'
+
+[AP   12.8s] render Zombi-quemado-v01-00-Blender.png 4.9s
+00:18.641  render           | Saved: 'C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\zombi-mujer\animaciones-quemado-v01\previews\Zombi-quemado-v01-01-Blender.png'
+[AP   17.6s] render Zombi-quemado-v01-01-Blender.png 4.9s
+00:23.578  render           | Saved: 'C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\zombi-mujer\animaciones-quemado-v01\previews\Zombi-quemado-v01-02-Blender.png'
+[AP   22.6s] render Zombi-quemado-v01-02-Blender.png 4.9s
+00:28.531  render           | Saved: 'C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\zombi-mujer\animaciones-quemado-v01\previews\Zombi-quemado-v01-03-Blender.png'
+[AP   27.6s] render Zombi-quemado-v01-03-Blender.png 4.9s
+00:33.516  render           | Saved: 'C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\zombi-mujer\animaciones-quemado-v01\previews\Zombi-quemado-v01-04-Blender.png'
+[AP   32.5s] render Zombi-quemado-v01-04-Blender.png 5.0s
+00:38.750  render           | Saved: 'C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\zombi-mujer\animaciones-quemado-v01\previews\Zombi-quemado-v01-05-Blender.png'
+[AP   37.8s] render Zombi-quemado-v01-05-Blender.png 5.2s
+BURN_BUILD_DONE
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:37:04)
+
+Blender quit

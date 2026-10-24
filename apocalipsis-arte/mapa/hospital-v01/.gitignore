@@ -1,0 +1,4 @@
+__pycache__/
+*.blend1
+*.fbm/
+qa/build-v01.log

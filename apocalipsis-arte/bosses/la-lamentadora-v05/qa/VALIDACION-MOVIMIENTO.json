@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "errors": [],
+  "scope": "Blender offline, no fisica Roblox ni aceptacion visual",
+  "same_geometry_uv_as_v04": true,
+  "hair_vertices": 325,
+  "max_weights": 2,
+  "hair_motion_head_local_studs": 0.7009326010327149,
+  "other_head_motion_studs": 1.9524644141454074e-06,
+  "Lamento_min_z_integer_frames": 0.020637482404708862,
+  "glb_actions": [
+    "Atacar",
+    "Caer",
+    "Caminar",
+    "Lamento",
+    "Reposo"
+  ]
+}

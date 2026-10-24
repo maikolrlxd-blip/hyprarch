@@ -1,0 +1,19 @@
+00:01.187  blend            | Read blend: "C:\Users\maiko\slime-rush\hyprarch\apocalipsis-arte\armas\lanzallamas-v01\Lanzallamas.blend"
+
+FBX export starting... 'C:\\Users\\maiko\\slime-rush\\hyprarch\\apocalipsis-arte\\armas\\lanzallamas-v01\\Lanzallamas_Estatico.fbx'
+export finished in 0.0183 sec.
+INFO Draco is available, use library at C:\Users\maiko\Documents\Codex\2026-10-21\c\work\tools\blender-5.2.2-windows-x64\5.2\scripts\addons_core\io_scene_gltf2\bf_intern_draco_bridge.dll
+INFO MeshOptimizer is available, use library at C:\Users\maiko\Documents\Codex\2026-10-21\c\work\tools\blender-5.2.2-windows-x64\5.2\scripts\addons_core\io_scene_gltf2\bf_intern_meshopt_bridge.dll
+03:21:04 | INFO: Starting glTF 2.0 export
+03:21:04 | INFO: Extracting primitive: Cartucho.002
+03:21:05 | INFO: Primitives created: 1
+03:21:05 | INFO: Extracting primitive: Cierre.002
+03:21:05 | INFO: Primitives created: 1
+03:21:05 | INFO: Extracting primitive: Handle.002
+03:21:05 | INFO: Primitives created: 1
+03:21:05 | INFO: Finished glTF 2.0 export in 0.14496445655822754 s
+
+STATIC_NAMES_FIXED ['Handle', 'Cartucho', 'Cierre']
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:37:04)
+
+Blender quit
