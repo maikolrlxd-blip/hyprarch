@@ -1,0 +1,68 @@
+{
+  "triangulos": {
+    "LowerTorso": 212,
+    "UpperTorso": 208,
+    "Head": 774,
+    "LeftUpperArm": 60,
+    "LeftLowerArm": 44,
+    "LeftHand": 90,
+    "RightUpperArm": 60,
+    "RightLowerArm": 44,
+    "RightHand": 90,
+    "LeftUpperLeg": 76,
+    "LeftLowerLeg": 56,
+    "LeftFoot": 60,
+    "RightUpperLeg": 76,
+    "RightLowerLeg": 56,
+    "RightFoot": 60
+  },
+  "triangulos_total": 1966,
+  "medidas_studs": [
+    6.488,
+    9.948,
+    4.198
+  ],
+  "texturas": {
+    "Cabeza": "LaLamentadora_Cabeza_Color.png",
+    "Torso": "LaLamentadora_Torso_Color.png",
+    "Brazos": "LaLamentadora_Brazos_Color.png",
+    "Piernas": "LaLamentadora_Piernas_Color.png"
+  },
+  "clips": {
+    "Reposo": {
+      "duracion_s": 2.0,
+      "bucle": true
+    },
+    "Caminar": {
+      "duracion_s": 1.1,
+      "bucle": true
+    },
+    "Atacar": {
+      "duracion_s": 0.9,
+      "bucle": false
+    },
+    "Caer": {
+      "duracion_s": 1.4,
+      "bucle": false
+    }
+  },
+  "huesos": [
+    "HumanoidRootPart",
+    "LowerTorso",
+    "UpperTorso",
+    "Head",
+    "LeftUpperArm",
+    "LeftLowerArm",
+    "LeftHand",
+    "RightUpperArm",
+    "RightLowerArm",
+    "RightHand",
+    "LeftUpperLeg",
+    "LeftLowerLeg",
+    "LeftFoot",
+    "RightUpperLeg",
+    "RightLowerLeg",
+    "RightFoot"
+  ],
+  "exportacion": "FBX global_scale=0.01, ejes -Z delante / Y arriba (1 unidad = 1 stud)"
+}

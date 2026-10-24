@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taller IA</title>
+<script type="importmap">
+{"imports":{"three":"/vendor/three/build/three.module.js","three/addons/":"/vendor/three/examples/jsm/"}}
+</script>
+<style>
+:root{--bg:#0b0f14;--panel:#121923;--line:#223042;--text:#e6eef7;--dim:#8aa0b6;--mint:#5ef2b0;--cyan:#4fd8ff;--warn:#ffb454;--bad:#ff6b8b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto,sans-serif;height:100vh;display:grid;grid-template-columns:240px 1fr 340px;grid-template-rows:auto 1fr}
+header{grid-column:1/-1;display:flex;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line)}
+header h1{font-size:16px;margin:0;letter-spacing:.5px}header h1 b{color:var(--mint)}
+#team{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}.tm{font-size:12px;border:1px solid var(--line);border-radius:99px;padding:2px 10px;cursor:pointer;background:var(--panel)}.tm i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--c)}.tm.ok{--c:var(--mint)}.tm.busy{--c:var(--warn)}.tm.limit{--c:var(--bad);border-color:var(--bad)}.tm.away,.tm.stale{--c:#6b7a8c}#live{font-size:12px;color:var(--dim)}#live i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bad);margin-right:6px}#live.on i{background:var(--mint);box-shadow:0 0 8px var(--mint)}
+aside,section{overflow:auto;min-height:0}
+#list{border-right:1px solid var(--line);padding:8px}
+.item{padding:10px;border:1px solid transparent;border-radius:10px;cursor:pointer;margin-bottom:6px}
+.item:hover{background:var(--panel)}.item.sel{background:var(--panel);border-color:var(--line)}
+.item small{color:var(--dim)}
+.chip{font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);margin-left:6px;white-space:nowrap}
+.st-in_review{color:var(--cyan)}.st-changes_requested{color:var(--warn)}.st-ai_approved{color:var(--mint)}.st-approved{color:#04130c;background:var(--mint);border-color:var(--mint)}
+#main{display:flex;flex-direction:column;min-width:0}
+#bar{display:flex;gap:10px;align-items:center;padding:8px 12px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+select,button,textarea{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font:inherit}
+button{cursor:pointer}button:hover{border-color:var(--mint)}button.go{background:var(--mint);color:#04130c;border-color:var(--mint);font-weight:600}
+dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px;max-width:760px;width:92vw;max-height:86vh;overflow:auto}dialog::backdrop{background:#000a}
+.ai{border:1px solid var(--line);border-left:4px solid var(--c);border-radius:10px;padding:10px;margin-bottom:10px}.ai pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;white-space:pre-wrap;word-break:break-all;font-size:12px;margin:6px 0}
+#board{position:absolute;inset:0;background:var(--bg);overflow:auto;padding:12px;display:none;z-index:2}
+#board.on{display:block}#cols{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:10px;margin-top:10px}
+.col h4{margin:0 0 6px;font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.6px}
+.task{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--c,#667);border-radius:8px;padding:8px;margin-bottom:6px;font-size:13px;cursor:pointer}
+.task small{color:var(--dim)}.role{color:var(--dim);font-size:11px;margin-left:4px}
+#stage{flex:1;position:relative;min-height:240px}
+#stage canvas,#stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+#msg{position:absolute;inset:0;display:grid;place-items:center;color:var(--dim);text-align:center;padding:20px;pointer-events:none}
+#clips{display:flex;gap:6px;flex-wrap:wrap;padding:8px 12px;border-top:1px solid var(--line);min-height:44px;align-items:center}
+#clips button.on{border-color:var(--cyan);color:var(--cyan)}
+#side{border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+#thread{flex:1;overflow:auto;padding:10px}
+.card{border:1px solid var(--line);border-left:4px solid var(--c,#667);border-radius:10px;padding:8px 10px;margin-bottom:8px;background:var(--panel)}
+.card .who{font-weight:600;color:var(--c,#aab)}.card .meta{color:var(--dim);font-size:12px}
+.card.new{animation:flash 1.2s}@keyframes flash{from{background:#1d3a30}}
+.v-changes{color:var(--warn)}.v-approve{color:var(--mint)}
+#form{border-top:1px solid var(--line);padding:10px;display:grid;gap:8px}
+#form textarea{min-height:64px;resize:vertical}
+#form .row{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:900px){body{grid-template-columns:1fr;grid-template-rows:auto auto 60vh auto;height:auto}#list{border:0}#side{border:0}}
+</style>
+</head>
+<body>
+<header><h1>Taller <b>IA</b></h1><span id="who" style="color:var(--dim)"></span><div id="team"></div><div id="live"><i></i><span>conectando…</span></div></header>
+<aside id="list"></aside>
+<section id="main">
+  <div id="bar"><b id="title">—</b><span id="status"></span><select id="ver"></select><button id="tb">📋 Tareas</button><button id="cb">🔌 Conectar IAs</button><span id="desc" style="color:var(--dim)"></span></div>
+  <div id="stage"><div id="board"><b>Tareas del equipo</b> <button id="nt">+ Tarea</button><button id="sd" title="Carga las tareas ya repartidas del plan de Slime Rush v2">⬇ Cargar plan Slime Rush v2</button><div id="cols"></div></div><div id="msg">Esperando que una IA publique algo…<br>Se actualiza solo.</div></div>
+  <div id="clips"></div>
+</section>
+<aside id="side">
+  <div id="thread"></div>
+  <div id="form">
+    <textarea id="txt" placeholder="Tu comentario (se lo mandas a todas las IAs)…"></textarea>
+    <div class="row"><button id="send" class="go">Comentar</button><button id="chg">Pedir cambios</button><button id="ok">✔ Aprobar (final)</button><button id="more" title="Dar mas rondas a las IAs">+ rondas</button></div>
+  </div>
+</aside>
+<dialog id="dlg"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">Conectar tus IAs al Taller</b><button id="dx">✕</button></div>
+<p style="color:var(--dim);margin:6px 0 12px">Cada IA se conecta <b>desde su chat que ya tienes abierto</b> (no se crean chats nuevos). Por cada una: <b>1)</b> copia el comando/ajuste y aplícalo, <b>2)</b> pégale sus instrucciones.</p><div id="dbody"></div></dialog>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
+
+const q = new URLSearchParams(location.search);
+if (q.get('k')) { sessionStorage.k = q.get('k'); history.replaceState(null, '', location.pathname); }
+const KEY = sessionStorage.k || '';
+const COLORS = {claude:'#ff9a5e', chatgpt:'#5ef2b0', antigravity:'#4fd8ff', humano:'#e6eef7'};
+const palette = ['#c792ea','#ffd166','#7fdbff','#ff7eb6','#a3e635'];
+const colorOf = a => COLORS[a] || palette[[...a].reduce((s,c)=>s+c.charCodeAt(0),0)%palette.length];
+const $ = id => document.getElementById(id);
+let current = null, meta = null, ver = null, lastNew = 0;
+
+// ---------- 3D ----------
+const stage = $('stage');
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(45, 1, 0.01, 2000);
+const controls = new OrbitControls(cam, renderer.domElement);
+controls.enableDamping = true;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x334455, 1.6));
+const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(3, 6, 4); scene.add(sun);
+const grid = new THREE.GridHelper(20, 20, 0x2a3b4f, 0x182433); scene.add(grid);
+let obj = null, mixer = null, actions = [], clock = new THREE.Clock();
+stage.appendChild(renderer.domElement);
+function resize(){ const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); cam.aspect = w/h; cam.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(stage); resize();
+renderer.setAnimationLoop(() => { if (mixer) mixer.update(clock.getDelta()); controls.update(); renderer.render(scene, cam); });
+
+function frame(o){
+  const box = new THREE.Box3().setFromObject(o), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  const r = Math.max(size.x, size.y, size.z) || 1;
+  o.position.sub(new THREE.Vector3(c.x, box.min.y, c.z)); // apoyado en el suelo
+  cam.position.set(r*1.6, r*1.1, r*1.8); controls.target.set(0, size.y/2, 0); cam.near = r/100; cam.far = r*100; cam.updateProjectionMatrix();
+  grid.scale.setScalar(Math.max(1, r/8));
+}
+function clearObj(){ if (obj) scene.remove(obj); obj = null; mixer = null; actions = []; $('clips').innerHTML = ''; }
+function show(url, file){
+  clearObj(); $('msg').style.display = 'none';
+  stage.querySelectorAll('img').forEach(i => i.remove()); renderer.domElement.style.display = 'block';
+  const ext = file.split('.').pop().toLowerCase();
+  if (['png','jpg','jpeg','webp','gif'].includes(ext)) {
+    renderer.domElement.style.display = 'none'; const im = new Image(); im.src = url; stage.appendChild(im); return;
+  }
+  const onLoad = (o, anims) => {
+    obj = o; scene.add(o); frame(o);
+    if (anims && anims.length) {
+      mixer = new THREE.AnimationMixer(o);
+      actions = anims.map(c => ({clip:c, act:mixer.clipAction(c)}));
+      const clips = $('clips'); clips.innerHTML = '<span style="color:var(--dim)">Animaciones:</span>';
+      actions.forEach((a, i) => { const b = document.createElement('button'); b.textContent = `${a.clip.name || 'clip '+i} (${a.clip.duration.toFixed(1)}s)`;
+        b.onclick = () => { actions.forEach(x => x.act.stop()); [...clips.querySelectorAll('button')].forEach(x => x.classList.remove('on')); a.act.reset().play(); b.classList.add('on'); };
+        clips.appendChild(b); });
+      clips.querySelector('button').click();
+    } else $('clips').innerHTML = '<span style="color:var(--dim)">Sin animaciones en este archivo.</span>';
+  };
+  const fail = e => { $('msg').style.display = 'grid'; $('msg').textContent = 'No se pudo cargar el modelo: ' + (e.message || e); };
+  if (ext === 'fbx') new FBXLoader().load(url, o => onLoad(o, o.animations), undefined, fail);
+  else if (ext === 'glb' || ext === 'gltf') new GLTFLoader().load(url, g => onLoad(g.scene, g.animations), undefined, fail);
+  else { $('msg').style.display = 'grid'; $('msg').textContent = 'Archivo no visualizable (' + ext + '). Mira el hilo.'; }
+}
+
+// ---------- datos ----------
+const api = (p, o) => fetch(p, o).then(r => r.json());
+const post = (p, b) => fetch(p, {method:'POST', headers:{'X-Taller-Key':KEY, 'Content-Type':'application/json'}, body:JSON.stringify(b)}).then(r => r.json());
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function refreshList(){
+  const list = await api('/api/assets');
+  $('list').innerHTML = list.length ? '' : '<p style="color:var(--dim);padding:8px">Aún no hay nada publicado.</p>';
+  list.forEach(a => { const d = document.createElement('div'); d.className = 'item' + (a.name === current ? ' sel' : '');
+    d.innerHTML = `<b>${esc(a.name)}</b><span class="chip st-${a.status}">${a.status.replace('_',' ')}</span><br><small>${a.kind} · v${a.versions} · por <span style="color:${colorOf(a.latest_author)}">${esc(a.latest_author)}</span></small>`;
+    d.onclick = () => open(a.name); $('list').appendChild(d); });
+  if (!current && list.length) open(list[0].name);
+}
+async function open(name, keepVer){
+  current = name; meta = await api('/api/assets/' + encodeURIComponent(name));
+  const vs = meta.versions; const sel = $('ver'); const want = keepVer || vs[vs.length-1].v;
+  sel.innerHTML = vs.map(v => `<option value="${v.v}">v${v.v} — ${esc(v.author)}</option>`).join(''); sel.value = want;
+  loadVersion(Number(want)); refreshList().catch(()=>{});
+}
+function loadVersion(n){
+  ver = meta.versions.find(v => v.v === n);
+  $('title').textContent = meta.name; $('status').innerHTML = `<span class="chip st-${meta.status}">${meta.status.replace('_',' ')}</span>`;
+  $('desc').textContent = ver.description || '';
+  const base = `/files/${encodeURIComponent(meta.name)}/v${ver.v}/`;
+  show(base + encodeURIComponent(ver.file), ver.file);
+  if (meta.kind === 'model' && ver.preview) { /* el render de la IA queda accesible como comparacion */ }
+  thread();
+}
+function card(who, html, meta_, isNew){
+  return `<div class="card ${isNew ? 'new' : ''}" style="--c:${colorOf(who)}"><span class="who">${esc(who)}</span> <span class="meta">${meta_}</span><div>${html}</div></div>`;
+}
+function thread(){
+  const items = [];
+  meta.versions.forEach(v => items.push({t:v.created, h:card(v.author, `publicó <b>v${v.v}</b>${v.description ? ': ' + esc(v.description) : ''}`, v.created.slice(11,16))}));
+  meta.reviews.forEach(r => items.push({t:r.created, h:card(r.author, `<span class="v-${r.verdict}">[${r.verdict}]</span> en v${r.v}: ${esc(r.comment)}${r.point ? ' <i>(' + esc(JSON.stringify(r.point)) + ')</i>' : ''}`, r.created.slice(11,16), r.created > lastNew)}));
+  items.sort((a, b) => a.t < b.t ? -1 : 1);
+  $('thread').innerHTML = items.map(i => i.h).join('') || '<p style="color:var(--dim)">Sin actividad.</p>';
+  $('thread').scrollTop = 1e9;
+}
+$('ver').onchange = e => loadVersion(Number(e.target.value));
+const send = verdict => async () => {
+  const c = $('txt').value.trim(); if (!current || !c) return;
+  const r = await post('/api/comment', {name:current, version:ver.v, verdict, comment:c}); if (r.error) alert(r.error); $('txt').value = '';
+};
+$('send').onclick = send('comment'); $('chg').onclick = send('changes');
+$('ok').onclick = async () => { if (current && confirm('¿Aprobar "' + current + '" como versión final?')) await post('/api/approve', {name:current}); };
+$('more').onclick = async () => { if (current) await post('/api/reset', {name:current}); };
+
+// ---------- panel de equipo (quien esta disponible / con limite) ----------
+const LABEL = {ok:'disponible', busy:'ocupada', limit:'LÍMITE de uso', away:'ausente', stale:'sin señal'};
+async function team(){
+  const pr = await api('/api/presence'); const now = Date.now()/1000; const box = $('team'); box.innerHTML = '';
+  Object.entries(pr).forEach(([who, c]) => {
+    const ago = now - (c.last_seen || 0); let st = c.state || 'ok'; if (st === 'ok' && ago > 180) st = 'stale';
+    const d = document.createElement('div'); d.className = 'tm ' + st;
+    d.title = (c.note || '') + (c.reset_at ? ' — vuelve ' + c.reset_at : '') + `\nvisto hace ${ago < 90 ? Math.round(ago) + ' s' : Math.round(ago/60) + ' min'}\nClic para cambiar el estado a mano`;
+    d.innerHTML = `<i></i><b style="color:${colorOf(who)}">${esc(who)}</b>${c.role ? '<span class="role">' + esc(c.role) + '</span>' : ''} ${LABEL[st]}${st === 'limit' && c.reset_at ? ' · ' + esc(c.reset_at) : ''}`;
+    d.onclick = async () => { const s = prompt(`Estado de ${who}: ok, busy, limit o away`, c.state || 'ok'); if (!s) return;
+      const reset = s === 'limit' ? (prompt('¿Cuándo vuelve? (opcional, ej. hoy 01:00)') || '') : '';
+      const role = prompt('Rol principal de ' + who + ' (director, modelador, animador, ingeniero, artista; vacío = sin cambios). Recuerda: todas pueden programar.') || '';
+      const r = await post('/api/presence', {name: who, state: s.trim(), reset_at: reset, role: role.trim() || undefined}); if (r.error) alert(r.error); team(); };
+    box.appendChild(d); });
+}
+setInterval(() => team().catch(()=>{}), 15000);
+
+// ---------- conectar IAs ----------
+$('cb').onclick = async () => {
+  const list = await api('/api/connect'); const body = $('dbody'); body.innerHTML = '';
+  list.forEach(a => { const d = document.createElement('div'); d.className = 'ai'; d.style.setProperty('--c', colorOf(a.name));
+    d.innerHTML = `<b style="color:${colorOf(a.name)}">${esc(a.label)}</b> <span class="role">nombre: ${esc(a.name)} · rol: ${esc(a.role)}</span>
+      <div style="color:var(--dim);font-size:13px;margin-top:6px">1) ${esc(a.kind)}</div><pre>${esc(a.text)}</pre>
+      <button data-c="1">Copiar conexión</button> <button data-p="1" class="go">2) Copiar instrucciones para esta IA</button> <span class="ok" style="color:var(--mint)"></span>`;
+    const ok = d.querySelector('.ok'); const say = t => { ok.textContent = t; setTimeout(() => ok.textContent = '', 2500); };
+    d.querySelector('[data-c]').onclick = () => navigator.clipboard.writeText(a.text).then(() => say('¡Copiado!'));
+    d.querySelector('[data-p]').onclick = async () => { const r = await api('/api/prompt?role=' + a.role); await navigator.clipboard.writeText(r.text); say('¡Copiado! Pégalo en el chat de ' + a.name); };
+    body.appendChild(d); });
+  $('dlg').showModal();
+};
+$('dx').onclick = () => $('dlg').close();
+$('sd').onclick = async () => { const r = await post('/api/seed', {plan:'slime-rush-v2'}); if (r.error) alert(r.error); else alert(r.tareas_nuevas + ' tareas nuevas cargadas'); board(); };
+
+// ---------- tablero de tareas ----------
+const COLS = [['todo','Por hacer'],['doing','En curso'],['review','En revisión'],['done','Hecho'],['blocked','Bloqueado']];
+async function board(){
+  const {tasks, roles} = await api('/api/tasks'); const box = $('cols');
+  box.style.gridTemplateColumns = `repeat(${COLS.length},minmax(150px,1fr))`;
+  box.innerHTML = COLS.map(([k, label]) => `<div class="col"><h4>${label} (${tasks.filter(t => t.status === k).length})</h4>` +
+    tasks.filter(t => t.status === k).map(t => `<div class="task" data-id="${t.id}" style="--c:${t.assignee ? colorOf(t.assignee) : '#667'}"><b>#${t.id} ${esc(t.title)}</b><br><small>${t.assignee ? esc(t.assignee) : 'sin asignar'}${t.asset ? ' · ' + esc(t.asset) : ''}${t.needs ? ' · 🔧 ' + esc(t.needs) : ''}</small>${t.detail ? '<br><small>' + esc(t.detail).slice(0,140) + '</small>' : ''}${t.notes.length ? '<br><small>💬 ' + esc(t.notes.at(-1).text).slice(0,100) + '</small>' : ''}</div>`).join('') + '</div>').join('');
+  box.querySelectorAll('.task').forEach(el => el.onclick = async () => {
+    const id = Number(el.dataset.id); const s = prompt('Mover tarea #' + id + ' a: todo, doing, review, done o blocked'); if (!s) return;
+    const r = await post('/api/task', {id, status: s.trim()}); if (r.error) alert(r.error); board(); });
+}
+$('tb').onclick = () => { const b = $('board'); b.classList.toggle('on'); if (b.classList.contains('on')) board(); };
+$('nt').onclick = async () => { const title = prompt('Título de la tarea'); if (!title) return; const who = prompt('¿Para quién? (nombre de la IA, vacío = sin asignar)') || '';
+  const r = await post('/api/task', {title, assignee: who.trim()}); if (r.error) alert(r.error); board(); };
+
+// ---------- tiempo real ----------
+function connect(){
+  const es = new EventSource('/api/stream'); const live = $('live');
+  es.onopen = () => { live.className = 'on'; live.lastChild.textContent = 'en vivo'; };
+  es.onerror = () => { live.className = ''; live.lastChild.textContent = 'reconectando…'; };
+  es.onmessage = async m => {
+    const e = JSON.parse(m.data); lastNew = new Date(e.ts*1000 - 1500).toISOString().slice(0,19);
+    await refreshList(); team().catch(()=>{}); if ($('board').classList.contains('on')) board().catch(()=>{});
+    if (e.asset === current) { const wasLast = ver && ver.v === meta.versions.at(-1).v; await open(current, e.type === 'publish' && wasLast ? undefined : ver && ver.v); }
+    else if (!current) await open(e.asset);
+  };
+}
+team().catch(()=>{}); refreshList().then(connect).catch(e => { $('msg').textContent = 'Error: ' + e; });
+</script>
+</body>
+</html>

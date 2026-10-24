@@ -1,0 +1,171 @@
+{
+  "revision": "0.3b-estudio-visual",
+  "status": "pendiente feedback humano y Roblox",
+  "files": [
+    {
+      "path": "clips/LaLamentadora_Atacar.fbx",
+      "bytes": 3362460,
+      "sha256": "0bef83fbea3a1608f2c5abeb753c50b07aff30eb2fa2bcfdf54bd08978574627"
+    },
+    {
+      "path": "clips/LaLamentadora_Caer.fbx",
+      "bytes": 3391596,
+      "sha256": "b9cc34ec6d0e398e75930e57b2a27aae23bbc995b8506c09fc483a2d935abd38"
+    },
+    {
+      "path": "clips/LaLamentadora_Caminar.fbx",
+      "bytes": 3374876,
+      "sha256": "58e2aae3c6b80859fa33b439668909b279ab4a6eec44313ddef24a409725dd1c"
+    },
+    {
+      "path": "clips/LaLamentadora_Reposo.fbx",
+      "bytes": 3417020,
+      "sha256": "ae79ef22b76e6d690b49ab756030b77e90798556a151f0d392bb4c829903e74e"
+    },
+    {
+      "path": "datos.json",
+      "bytes": 1433,
+      "sha256": "50bfc5b11684edf0516ff9c9178c66c7d3371a16988917ff5c6d307b3d9f6494"
+    },
+    {
+      "path": "ESTADO.md",
+      "bytes": 3775,
+      "sha256": "6bf76811bb3f4c2939ace4e9dcfd94122a899574de2f4f2467edabea7e1dde77"
+    },
+    {
+      "path": "fuentes/ap_armas.py",
+      "bytes": 19880,
+      "sha256": "6f9e190c59d836c712d4e7ee6a9151ef02e023e9644f399be5f55322221de38a"
+    },
+    {
+      "path": "fuentes/ap_lib.py",
+      "bytes": 40076,
+      "sha256": "a6efb640592eb3e2a3b00586fcecf79a17b6d7a9dae025a35160fbb3ebb0dcab"
+    },
+    {
+      "path": "fuentes/boss_head.py",
+      "bytes": 11442,
+      "sha256": "17b5871962aacff111f0a9eafd45d54a86df1245d164756f42d7501f9986aa68"
+    },
+    {
+      "path": "fuentes/build_base_v02.py",
+      "bytes": 39815,
+      "sha256": "c8c0796ffee4eec23c5cc8eb4fba6813a1aa55f079fbd5e064e08b1403a75c47"
+    },
+    {
+      "path": "fuentes/build_lamentadora.py",
+      "bytes": 36414,
+      "sha256": "1569c15744f40be13722fd6eb9d3156650fae9a660f0a0a18b196e139dc3d095"
+    },
+    {
+      "path": "fuentes/clip_contacts.py",
+      "bytes": 7667,
+      "sha256": "3ec3b1b5cc02642dabfba1053c4c824aaee5a7e8de0c76a7e1c913ef8aaa3c71"
+    },
+    {
+      "path": "fuentes/prepare_revision.py",
+      "bytes": 7303,
+      "sha256": "c60dbb425c64fba29559eeb4ae5cfd9ae97bf0adf3be98702a5cada7db7b2b80"
+    },
+    {
+      "path": "integracion/ArmarZombi.lua",
+      "bytes": 3202,
+      "sha256": "4eaa31819b4466ab7c60c54cc13dc4acb2e23918924c744fb9bc929df8d0145e"
+    },
+    {
+      "path": "LaLamentadora.blend",
+      "bytes": 3014135,
+      "sha256": "2053783b1fc0f781f66285c8b4bb603b15fbc8ebf86e68e3e1aa00aff3e6a4a8"
+    },
+    {
+      "path": "LaLamentadora.fbx",
+      "bytes": 3890604,
+      "sha256": "bc36626802e77283239a9528124fb2baa8d35bdde05362b2ac79bbb300961a8a"
+    },
+    {
+      "path": "LaLamentadora_Estatico.fbx",
+      "bytes": 2957868,
+      "sha256": "ebf7a2a965657450f1a55034b78ddc962fc849369bc546696108497879038137"
+    },
+    {
+      "path": "LaLamentadora_Estatico.glb",
+      "bytes": 2931236,
+      "sha256": "93d4a8001207065e05478d976c8cb778d1a27162309f1712fde21b8651175e89"
+    },
+    {
+      "path": "previews/LaLamentadora_v03b_1_frente_con_ref.png",
+      "bytes": 1244190,
+      "sha256": "7316c6d48366476535f799e1f87fa892564630991233626ae48ca7a14a832800"
+    },
+    {
+      "path": "previews/LaLamentadora_v03b_2_tres_cuartos.png",
+      "bytes": 1244486,
+      "sha256": "4edec615d89653bcbfe20c935f31755393009f997bc185c904665b5753af1ba1"
+    },
+    {
+      "path": "previews/LaLamentadora_v03b_4_cara_tres_cuartos.png",
+      "bytes": 1268330,
+      "sha256": "d77cfad4a369d8d710cc3873bb0c40e8cb705da542c77b5a39da13042177c7a1"
+    },
+    {
+      "path": "previews/LaLamentadora_v03b_5_cara_frente_muy_cerca.png",
+      "bytes": 1267746,
+      "sha256": "ae664f370533fb41acd724f923e8cdc79e06e73f843e0b4598817b746cfa370e"
+    },
+    {
+      "path": "previews/Lamentadora-v03b-01-rostro-forma-Blender.png",
+      "bytes": 1008653,
+      "sha256": "0dd7a02569778a8074d1094aaf1d3cd0fced7393af680c0794e345ea72ce3537"
+    },
+    {
+      "path": "qa/build-v03-02.log",
+      "bytes": 10774,
+      "sha256": "367ddc27711dd3a4bc17924e2d6e9b998eed211897f3c13d7eb10975906d42df"
+    },
+    {
+      "path": "qa/CONTACTO-CAIDA.json",
+      "bytes": 159664,
+      "sha256": "67dd6858dbb784e95c47fb69b3928b3277aac01823dcc21e41f3befb75deb0ef"
+    },
+    {
+      "path": "qa/package_revision.py",
+      "bytes": 1693,
+      "sha256": "c9ca7994d0dd88866b45f4297df10b3abf4f30271201b21a39d3c40c3c1d6d59"
+    },
+    {
+      "path": "qa/VALIDACION-BLENDER.json",
+      "bytes": 14853,
+      "sha256": "f3a0e7e776ef3278c5955270bd962bf0cbffb55d182c50c54f535da881f5e60a"
+    },
+    {
+      "path": "qa/validate_blender.py",
+      "bytes": 5131,
+      "sha256": "4a47284bf0e55a287fc9b86627aa60cb9a8cb6e95d659f40102d95843bf8f72b"
+    },
+    {
+      "path": "qa/validation-blender.log",
+      "bytes": 348,
+      "sha256": "95b78ecd2a002c71f638fc3b9c63d573971cbb26e42485e8795f29955983366a"
+    },
+    {
+      "path": "texturas/LaLamentadora_Brazos_Color.png",
+      "bytes": 823839,
+      "sha256": "e5ac14cf84df2f5cb0c8f32d1d4138354f6ee03ff4cf9a3a093d69051be80ded"
+    },
+    {
+      "path": "texturas/LaLamentadora_Cabeza_Color.png",
+      "bytes": 676087,
+      "sha256": "1ad7e38e90c687e7a928005d0ce07dec9098731a115a0c77b26ca420bef5a5cd"
+    },
+    {
+      "path": "texturas/LaLamentadora_Piernas_Color.png",
+      "bytes": 736550,
+      "sha256": "de56d165f3637feaf7e1595bcf9c8918c7ce81a1f2e6c1547edb5ddc4c088e4a"
+    },
+    {
+      "path": "texturas/LaLamentadora_Torso_Color.png",
+      "bytes": 557525,
+      "sha256": "fab95eb800878b02a4a41ea6f58158db26a31d53da8343c680331257428ffe8f"
+    }
+  ]
+}

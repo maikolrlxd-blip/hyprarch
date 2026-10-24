@@ -1,0 +1,122 @@
+{
+  "Escombros_Grande": {
+    "tris": 468,
+    "dims": [
+      9.17,
+      8.31,
+      3.67
+    ],
+    "tex": 1024,
+    "regiones": [
+      "escombro",
+      "ladrillo",
+      "hierro"
+    ]
+  },
+  "Escombros_Pequeno": {
+    "tris": 252,
+    "dims": [
+      4.59,
+      4.3,
+      2.23
+    ],
+    "tex": 512,
+    "regiones": [
+      "escombro",
+      "ladrillo",
+      "hierro"
+    ]
+  },
+  "Escombros_Ladrillos": {
+    "tris": 336,
+    "dims": [
+      5.66,
+      5.76,
+      1.5
+    ],
+    "tex": 512,
+    "regiones": [
+      "escombro",
+      "ladrillo"
+    ]
+  },
+  "Arbusto": {
+    "tris": 179,
+    "dims": [
+      4.33,
+      3.86,
+      3.14
+    ],
+    "tex": 512,
+    "regiones": [
+      "hoja_seca",
+      "hoja",
+      "corteza"
+    ]
+  },
+  "Hierba_Alta": {
+    "tris": 176,
+    "dims": [
+      1.79,
+      2.36,
+      2.39
+    ],
+    "tex": 512,
+    "regiones": [
+      "hierba"
+    ]
+  },
+  "Maleza": {
+    "tris": 140,
+    "dims": [
+      1.37,
+      1.81,
+      1.13
+    ],
+    "tex": 512,
+    "regiones": [
+      "hierba",
+      "hoja"
+    ]
+  },
+  "Arbol_Muerto": {
+    "tris": 250,
+    "dims": [
+      10.05,
+      8.89,
+      10.76
+    ],
+    "tex": 1024,
+    "regiones": [
+      "corteza"
+    ]
+  },
+  "Arbol_Invasor": {
+    "tris": 271,
+    "dims": [
+      9.81,
+      8.68,
+      13.13
+    ],
+    "tex": 1024,
+    "regiones": [
+      "corteza",
+      "hoja_seca",
+      "hoja"
+    ]
+  },
+  "Enredadera_Muro": {
+    "tris": 480,
+    "dims": [
+      11.95,
+      0.93,
+      12.01
+    ],
+    "tex": 1024,
+    "regiones": [
+      "corteza",
+      "hoja_seca",
+      "hoja"
+    ]
+  }
+}

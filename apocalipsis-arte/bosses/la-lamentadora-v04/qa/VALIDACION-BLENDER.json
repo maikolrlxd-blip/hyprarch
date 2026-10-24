@@ -1,0 +1,664 @@
+{
+  "scope": "Blender y reimportacion FBX; no Roblox Studio ni comportamiento jugable",
+  "errors": [],
+  "warnings": [
+    "El cabello esta unido a Head; aun no tiene movimiento independiente.",
+    "Contacto Caer valida ausencia de penetracion muestreada, no la calidad visual de la caida ni fisica Roblox."
+  ],
+  "blender": {
+    "meshes": [
+      {
+        "name": "Head",
+        "vertices": 833,
+        "triangles": 1470,
+        "loose": 0,
+        "degenerate": 0,
+        "uv_bad": 0
+      },
+      {
+        "name": "LeftFoot",
+        "vertices": 32,
+        "triangles": 60,
+        "loose": 0,
+        "degenerate": 0,
+        "uv_bad": 0
+      },
+      {
+        "name": "LeftHand",
+        "vertices": 131,
+        "triangles": 222,
+        "loose": 0,
+        "degenerate": 0,
+        "uv_bad": 0
+      },
+      {
+        "name": "LeftLowerArm",
+        "vertices": 24,
+        "triangles": 44,
+        "loose": 0,
+        "degenerate": 0,
+        "uv_bad": 0
+      },
+      {
+        "name": "LeftLowerLeg",
+        "vertices": 30,
+        "triangles": 56,
+        "loose": 0,
+        "degenerate": 0,
+        "uv_bad": 0
+      },
+      {
+        "name": "LeftUpperArm",
+        "vertices": 32,
+        "triangles": 60,
+        "loose": 0,
+        "degenerate": 0,
+        "uv_bad": 0
+      },
+      {
+        "name": "LeftUpperLeg",
+        "vertices": 40,
+        "triangles": 76,
+        "loose": 0,
+        "degenerate": 0,
+        "uv_bad": 0
+      },
+      {
+        "name": "LowerTorso",
+        "vertices": 124,
+        "triangles": 212,
+        "loose": 0,
+        "degenerate": 0,
+        "uv_bad": 0
+      },
+      {
+        "name": "RightFoot",
+        "vertices": 32,
+        "triangles": 60,
+        "loose": 0,
+        "degenerate": 0,
+        "uv_bad": 0
+      },
+      {
+        "name": "RightHand",
+        "vertices": 131,
+        "triangles": 222,
+        "loose": 0,
+        "degenerate": 0,
+        "uv_bad": 0
+      },
+      {
+        "name": "RightLowerArm",
+        "vertices": 24,
+        "triangles": 44,
+        "loose": 0,
+        "degenerate": 0,
+        "uv_bad": 0
+      },
+      {
+        "name": "RightLowerLeg",
+        "vertices": 30,
+        "triangles": 56,
+        "loose": 0,
+        "degenerate": 0,
+        "uv_bad": 0
+      },
+      {
+        "name": "RightUpperArm",
+        "vertices": 32,
+        "triangles": 60,
+        "loose": 0,
+        "degenerate": 0,
+        "uv_bad": 0
+      },
+      {
+        "name": "RightUpperLeg",
+        "vertices": 40,
+        "triangles": 76,
+        "loose": 0,
+        "degenerate": 0,
+        "uv_bad": 0
+      },
+      {
+        "name": "UpperTorso",
+        "vertices": 108,
+        "triangles": 208,
+        "loose": 0,
+        "degenerate": 0,
+        "uv_bad": 0
+      }
+    ],
+    "bones": 16,
+    "bounds": {
+      "min": [
+        -1.997352123260498,
+        -0.9800000190734863,
+        -0.003362685441970825
+      ],
+      "max": [
+        1.9950000047683716,
+        1.0499999523162842,
+        10.193750381469727
+      ],
+      "size": [
+        3.9923521280288696,
+        2.0299999713897705,
+        10.197113066911697
+      ]
+    },
+    "triangles_total": 2926,
+    "bad_weights": []
+  },
+  "actions": {
+    "Atacar": {
+      "frame_range": [
+        0.0,
+        54.0
+      ],
+      "seconds": 0.9
+    },
+    "Caer": {
+      "frame_range": [
+        0.0,
+        84.0
+      ],
+      "seconds": 1.4
+    },
+    "Caminar": {
+      "frame_range": [
+        0.0,
+        66.0
+      ],
+      "seconds": 1.1
+    },
+    "Reposo": {
+      "frame_range": [
+        0.0,
+        120.0
+      ],
+      "seconds": 2.0
+    }
+  },
+  "textures": [
+    {
+      "name": "LaLamentadora_Brazos_Color.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "packed": true
+    },
+    {
+      "name": "LaLamentadora_Cabeza_Color.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "packed": true
+    },
+    {
+      "name": "LaLamentadora_Piernas_Color.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "packed": true
+    },
+    {
+      "name": "LaLamentadora_Torso_Color.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "packed": true
+    }
+  ],
+  "fall_contact": {
+    "passed": true,
+    "before_min_z": -2.3920953273773193,
+    "after_min_z": 0.020007282495498657,
+    "verification_step_frames": 0.25
+  },
+  "fbx_reimport": [
+    {
+      "file": "LaLamentadora_Estatico.fbx",
+      "meshes": [
+        {
+          "name": "Head",
+          "vertices": 833,
+          "triangles": 1470,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftFoot",
+          "vertices": 32,
+          "triangles": 60,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftHand",
+          "vertices": 131,
+          "triangles": 222,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftLowerArm",
+          "vertices": 24,
+          "triangles": 44,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftLowerLeg",
+          "vertices": 30,
+          "triangles": 56,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftUpperArm",
+          "vertices": 32,
+          "triangles": 60,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftUpperLeg",
+          "vertices": 40,
+          "triangles": 76,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LowerTorso",
+          "vertices": 124,
+          "triangles": 212,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightFoot",
+          "vertices": 32,
+          "triangles": 60,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightHand",
+          "vertices": 131,
+          "triangles": 222,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightLowerArm",
+          "vertices": 24,
+          "triangles": 44,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightLowerLeg",
+          "vertices": 30,
+          "triangles": 56,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightUpperArm",
+          "vertices": 32,
+          "triangles": 60,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightUpperLeg",
+          "vertices": 40,
+          "triangles": 76,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "UpperTorso",
+          "vertices": 108,
+          "triangles": 208,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        }
+      ],
+      "bounds": {
+        "min": [
+          -0.019973520189523697,
+          -0.00979999452829361,
+          -3.3626536605879664e-05
+        ],
+        "max": [
+          0.01994999870657921,
+          0.010500004515051842,
+          0.10193750262260437
+        ],
+        "size": [
+          0.039923518896102905,
+          0.02029999904334545,
+          0.10197112915921025
+        ]
+      },
+      "bones": 0,
+      "actions": []
+    },
+    {
+      "file": "LaLamentadora.fbx",
+      "meshes": [
+        {
+          "name": "Head",
+          "vertices": 833,
+          "triangles": 1470,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftFoot",
+          "vertices": 32,
+          "triangles": 60,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftHand",
+          "vertices": 131,
+          "triangles": 222,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftLowerArm",
+          "vertices": 24,
+          "triangles": 44,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftLowerLeg",
+          "vertices": 30,
+          "triangles": 56,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftUpperArm",
+          "vertices": 32,
+          "triangles": 60,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftUpperLeg",
+          "vertices": 40,
+          "triangles": 76,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LowerTorso",
+          "vertices": 124,
+          "triangles": 212,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightFoot",
+          "vertices": 32,
+          "triangles": 60,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightHand",
+          "vertices": 131,
+          "triangles": 222,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightLowerArm",
+          "vertices": 24,
+          "triangles": 44,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightLowerLeg",
+          "vertices": 30,
+          "triangles": 56,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightUpperArm",
+          "vertices": 32,
+          "triangles": 60,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightUpperLeg",
+          "vertices": 40,
+          "triangles": 76,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "UpperTorso",
+          "vertices": 108,
+          "triangles": 208,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        }
+      ],
+      "bounds": {
+        "min": [
+          -0.019973520189523697,
+          -0.00979999452829361,
+          -3.3626536605879664e-05
+        ],
+        "max": [
+          0.01994999870657921,
+          0.010500004515051842,
+          0.10193750262260437
+        ],
+        "size": [
+          0.039923518896102905,
+          0.02029999904334545,
+          0.10197112915921025
+        ]
+      },
+      "bones": 16,
+      "actions": [
+        "LaLamentadora|LaLamentadora|Atacar",
+        "LaLamentadora|LaLamentadora|Caer",
+        "LaLamentadora|LaLamentadora|Caminar",
+        "LaLamentadora|LaLamentadora|Reposo"
+      ]
+    },
+    {
+      "file": "clips/LaLamentadora_Caer.fbx",
+      "meshes": [
+        {
+          "name": "Head",
+          "vertices": 833,
+          "triangles": 1470,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftFoot",
+          "vertices": 32,
+          "triangles": 60,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftHand",
+          "vertices": 131,
+          "triangles": 222,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftLowerArm",
+          "vertices": 24,
+          "triangles": 44,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftLowerLeg",
+          "vertices": 30,
+          "triangles": 56,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftUpperArm",
+          "vertices": 32,
+          "triangles": 60,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LeftUpperLeg",
+          "vertices": 40,
+          "triangles": 76,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "LowerTorso",
+          "vertices": 124,
+          "triangles": 212,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightFoot",
+          "vertices": 32,
+          "triangles": 60,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightHand",
+          "vertices": 131,
+          "triangles": 222,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightLowerArm",
+          "vertices": 24,
+          "triangles": 44,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightLowerLeg",
+          "vertices": 30,
+          "triangles": 56,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightUpperArm",
+          "vertices": 32,
+          "triangles": 60,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "RightUpperLeg",
+          "vertices": 40,
+          "triangles": 76,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        },
+        {
+          "name": "UpperTorso",
+          "vertices": 108,
+          "triangles": 208,
+          "loose": 0,
+          "degenerate": 0,
+          "uv_bad": 0
+        }
+      ],
+      "bounds": {
+        "min": [
+          -0.019973520189523697,
+          -0.00979999452829361,
+          -3.3626536605879664e-05
+        ],
+        "max": [
+          0.01994999870657921,
+          0.010500004515051842,
+          0.10193750262260437
+        ],
+        "size": [
+          0.039923518896102905,
+          0.02029999904334545,
+          0.10197112915921025
+        ]
+      },
+      "bones": 16,
+      "actions": [
+        "LaLamentadora|Scene"
+      ]
+    }
+  ],
+  "passed": true
+}

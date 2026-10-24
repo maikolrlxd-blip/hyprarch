@@ -1,0 +1,81 @@
+{
+  "Suelo_Solar_60": {
+    "tris": 164,
+    "dims": [
+      60.0,
+      60.0,
+      3.4
+    ],
+    "tex": 1024,
+    "regiones": [
+      "tierra_solar",
+      "escombro_s"
+    ],
+    "ref": [
+      -8,
+      -8,
+      0.55
+    ]
+  },
+  "Calle_Recto_60": {
+    "tris": 244,
+    "dims": [
+      60.0,
+      60.0,
+      1.55
+    ],
+    "tex": 1024,
+    "regiones": [
+      "asfalto",
+      "acera",
+      "bordillo",
+      "tapa"
+    ],
+    "ref": [
+      -8,
+      -8,
+      0
+    ]
+  },
+  "Calle_Cruce_60": {
+    "tris": 472,
+    "dims": [
+      60.0,
+      60.0,
+      1.75
+    ],
+    "tex": 1024,
+    "regiones": [
+      "asfalto",
+      "acera",
+      "bordillo",
+      "tapa"
+    ],
+    "ref": [
+      -8,
+      -8,
+      0
+    ]
+  },
+  "Calle_Rota_60": {
+    "tris": 744,
+    "dims": [
+      60.0,
+      60.0,
+      4.81
+    ],
+    "tex": 1024,
+    "regiones": [
+      "asfalto",
+      "tierra",
+      "hierro",
+      "acera",
+      "bordillo"
+    ],
+    "ref": [
+      -20,
+      -12,
+      0
+    ]
+  }
+}

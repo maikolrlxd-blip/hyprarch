@@ -1,0 +1,27 @@
+{
+  "name": "SlimeRush",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "SlimeRush": {
+        "$path": "src"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "SlimeRushServer": {
+        "$path": "server"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "SlimeRushClient": {
+          "$path": "client"
+        }
+      }
+    }
+  }
+}

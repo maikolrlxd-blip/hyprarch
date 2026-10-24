@@ -1,0 +1,58 @@
+{
+  "Edificio_Tienda": {
+    "tris": 744,
+    "dims": [
+      36.4,
+      27.87,
+      23.86
+    ],
+    "tex": 1024,
+    "regiones": [
+      "yeso",
+      "interior",
+      "vidrio",
+      "hormigon",
+      "madera_vieja",
+      "tejado",
+      "letrero",
+      "toldo",
+      "metal_gris",
+      "escombro"
+    ]
+  },
+  "Edificio_Bloque": {
+    "tris": 1384,
+    "dims": [
+      33.39,
+      30.3,
+      46.69
+    ],
+    "tex": 1024,
+    "regiones": [
+      "ladrillo",
+      "interior",
+      "hormigon",
+      "madera_vieja",
+      "vidrio",
+      "tejado",
+      "hierro",
+      "escombro"
+    ]
+  },
+  "Edificio_Almacen": {
+    "tris": 364,
+    "dims": [
+      45.0,
+      31.3,
+      21.0
+    ],
+    "tex": 1024,
+    "regiones": [
+      "chapa",
+      "interior",
+      "vidrio",
+      "hormigon",
+      "metal_gris"
+    ]
+  }
+}

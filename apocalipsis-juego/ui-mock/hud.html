@@ -1,0 +1,81 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><title>Luto HUD mock</title>
+<style>
+:root{--bg:#1b1c20;--panel:rgba(22,23,27,.82);--line:#5b5d63;--txt:#e8e4d8;--mut:#9a978c;--red:#b33a3a;--amb:#e3b95c;--grn:#6f9d62}
+*{box-sizing:border-box;margin:0}
+body{width:1600px;height:900px;position:relative;overflow:hidden;background:
+ radial-gradient(ellipse at 50% 80%,#3a3d44 0,#1c1d22 60%,#0e0f12 100%);font-family:"Oswald","Arial Narrow",Impact,sans-serif;color:var(--txt)}
+.ground{position:absolute;left:0;right:0;bottom:0;height:38%;background:linear-gradient(#2b2d31,#18191c)}
+.panel{position:absolute;background:var(--panel);border:1px solid var(--line);}
+.panel::before,.panel::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--amb)}
+.panel::before{left:-3px;top:-3px;border-right:0;border-bottom:0}.panel::after{right:-3px;bottom:-3px;border-left:0;border-top:0}
+.lbl{font-size:13px;letter-spacing:.22em;color:var(--mut);text-transform:uppercase}
+/* ronda */
+#ronda{left:50%;top:18px;transform:translateX(-50%);width:360px;padding:8px 0 10px;text-align:center}
+#ronda .n{font-size:52px;line-height:1;letter-spacing:.08em;font-weight:700}
+#ronda .z{margin-top:4px;font-size:16px;color:var(--mut);letter-spacing:.14em}
+#ronda .z b{color:var(--txt)}
+/* vida y monedas */
+#vida{left:28px;bottom:28px;width:380px;padding:14px 16px}
+.bar{height:16px;background:#0e0e10;border:1px solid #000;margin-top:6px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(#c24b4b,#8f2c2c)}
+.bar i.ok{background:linear-gradient(#80b072,#57824d)}
+.vrow{display:flex;justify-content:space-between;align-items:baseline}
+.vnum{font-size:34px;font-weight:700;letter-spacing:.04em}
+.coins{margin-top:12px;display:flex;align-items:center;gap:10px;font-size:26px;color:var(--amb)}
+.coin{width:22px;height:22px;background:var(--amb);transform:rotate(45deg) scale(.8);border:2px solid #8a6a1c}
+/* arma */
+#arma{right:28px;bottom:28px;width:380px;padding:14px 18px}
+#arma .nm{font-size:20px;letter-spacing:.14em;color:var(--mut)}
+#arma .am{display:flex;align-items:baseline;gap:10px;margin-top:2px}
+#arma .am b{font-size:64px;line-height:1;font-weight:700}#arma .am span{font-size:26px;color:var(--mut)}
+.slots{display:flex;gap:8px;margin-top:10px}
+.slot{flex:1;height:34px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;gap:6px;color:var(--mut);font-size:15px;letter-spacing:.1em;background:rgba(0,0,0,.25)}
+.slot.on{border-color:var(--amb);color:var(--txt);background:rgba(227,185,92,.12)}
+.slot em{font-style:normal;color:var(--amb);font-size:13px}
+/* mira */
+#mira{position:absolute;left:50%;top:50%;width:0;height:0}
+#mira i{position:absolute;background:#fff;box-shadow:0 0 0 1px #0008}
+#mira .a{left:-1px;top:-18px;width:2px;height:10px}#mira .b{left:-1px;top:8px;width:2px;height:10px}
+#mira .c{top:-1px;left:-18px;height:2px;width:10px}#mira .d{top:-1px;left:8px;height:2px;width:10px}
+#mira .hit{left:-12px;top:-12px;width:24px;height:24px;background:none;border:2px solid var(--red);transform:rotate(45deg);box-shadow:none}
+/* equipo */
+#equipo{left:28px;top:18px;width:250px;padding:10px 14px}
+.mate{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:15px;letter-spacing:.1em}
+.mate .bar{flex:1;height:10px;margin:0}
+/* feed */
+#feed{position:absolute;right:28px;top:90px;width:260px;text-align:right;font-size:18px;letter-spacing:.06em;line-height:1.6}
+#feed div{color:var(--amb)}#feed div span{color:var(--mut)}
+/* anuncio */
+#anun{position:absolute;left:50%;top:230px;transform:translateX(-50%);text-align:center}
+#anun .t{font-size:16px;letter-spacing:.5em;color:var(--mut)}
+#anun .g{font-size:88px;font-weight:700;letter-spacing:.12em;line-height:1;text-shadow:0 4px 0 #000}
+#anun .g u{text-decoration:none;color:var(--red)}
+/* vineta de dano */
+#vig{position:absolute;inset:0;box-shadow:inset 0 0 160px 30px rgba(140,20,20,.28);pointer-events:none}
+/* zombis y piso como siluetas */
+.zom{position:absolute;bottom:30%;width:46px;height:120px;background:#33392f;clip-path:polygon(20% 0,80% 0,90% 30%,75% 100%,25% 100%,10% 30%)}
+</style>
+<body>
+<div class="ground"></div>
+<div class="zom" style="left:700px;bottom:36%;transform:scale(.8)"></div><div class="zom" style="left:820px;bottom:34%"></div><div class="zom" style="left:960px;bottom:37%;transform:scale(.7)"></div>
+<div id="vig"></div>
+
+<div class="panel" id="ronda"><div class="lbl">ronda</div><div class="n">07</div><div class="z">ZOMBIS <b>12</b> · VIVOS <b>2/3</b></div></div>
+
+<div class="panel" id="equipo"><div class="lbl">equipo</div>
+ <div class="mate">MARTA<div class="bar"><i class="ok" style="width:80%"></i></div></div>
+ <div class="mate">LEO<div class="bar"><i style="width:35%"></i></div></div></div>
+
+<div id="feed"><div>+10 <span>ZOMBI</span></div><div>+10 <span>ZOMBI</span></div><div>+150 <span>JEFE</span></div></div>
+
+<div id="anun"><div class="t">COMIENZA LA</div><div class="g">RONDA <u>7</u></div></div>
+
+<div id="mira"><i class="a"></i><i class="b"></i><i class="c"></i><i class="d"></i><i class="hit"></i></div>
+
+<div class="panel" id="vida"><div class="vrow"><span class="lbl">vida</span><span class="vnum">64</span></div>
+ <div class="bar"><i style="width:64%"></i></div>
+ <div class="coins"><div class="coin"></div>340 <span class="lbl" style="margin-left:4px">monedas</span></div></div>
+
+<div class="panel" id="arma"><div class="nm">PISTOLA 9 MM</div><div class="am"><b>11</b><span>/ 75</span></div>
+ <div class="slots"><div class="slot on"><em>1</em>PISTOLA</div><div class="slot"><em>2</em>ESCOPETA</div><div class="slot"><em>3</em>SUBFUSIL</div></div></div>
+</body></html>
