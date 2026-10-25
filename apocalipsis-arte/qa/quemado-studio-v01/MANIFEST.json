@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-25",
+  "algorithm": "sha256",
+  "files": {
+    ".gitattributes": "308a40fa1d89ae5ea4390b4c9b46a0108b09f171f07898f25d451fa0c69c4e9f",
+    "avisos-studio-2026-10-25.log": "0de47525a633a23490d59349d908df668255bce53d8422076d9465c0b501e6a7",
+    "construir.lua": "2984fe228b35b5cd53205eb87baea410e1c5582dcab7107239c52fd47810c3c8",
+    "datos/clips.json": "475e66ef38bc76ec6191e6307cea71d3debd4c79dd58aa80839869fda1a3d649",
+    "datos/Quemado-local.rbxmx": "d17d2d9875e2a9f7137ab5a5a68207c1dcc0209eb95d05028f0d076ffda4faf7",
+    "exportar_clips.py": "241bb7b4aefa759b4e53ca14f3836d1a564c66ab3ad27e86f17ac09c673ce8c3",
+    "LEEME.md": "566630126b98f099e7f66606db3226ab50d3f8e359812fcc254ce3294cc83d39",
+    "Preparar.server.lua": "fa0e8a0991f0fac94799578ac368978af5b1e2193121a70966eb169fb29e6033",
+    "previews/Chorro-y-reacciones-04-2026-10-25-MOTOR.png": "4073e118118667e153abe349ca933335002d56baa556b2195cb4f6978ed45ac7",
+    "previews/Quemado-y-caida-03-2026-10-25-MOTOR.png": "a8c43eb4e19a87bbad05b845bb0946cb2a9b9b249b44ddb077c88fe7f9538ed5",
+    "Prueba.client.lua": "367264d3b96be60c58fc06f0d2b519c31a66fe69b7dafde7edf2d2952271490b",
+    "runtime-01.log": "f9fcf9288bea6db58a84c8afd4b945d8eb103e92c4dfba5996aed3b296328ecf",
+    "runtime-02.log": "8fdfd44f1a2ad6da0ee1d5660223568be34fc8c8a4fa8f61089f4e52736fe514",
+    "runtime-03-2026-10-25.log": "81ce222c0b9e8acf02a577b8c63b5ea9026c0e479519e2484a236eb97a2729f1",
+    "VALIDACION-MOTOR.json": "ea083ec9d3ed34c40c3541a41ac8b16211c424dba498a1005297150884d1080d",
+    "validar_copia.lua": "01d3b8eb62ce557a9c261beb24730429c7725d452be282a3ebc143c7f13a9959"
+  }
+}

@@ -16,3 +16,7 @@ El ciclo «Continuar arte de LUTO» ya agotó los tres bloques acotados. Al cerr
 Solo Blender nuevo background con máximo tres hilos. No controlar ventanas útiles, cerrar programas ni publicar assets/juego. No push, compras, borrado de datos, permisos de API o cambios de seguridad. Commits locales de trabajo propio. Cambios actuales de apocalipsis-juego/client y src, además de Slime Rush server/client, son ajenos a este bloque.
 
 No confundir Blender, exportación y Play. Fotos con nombres únicos, backups, validación apropiada y ZIP/hash. Notas para cerebro en DE-CODEX si no hay vault. No avisos repetitivos sin cambios útiles.
+
+## Actualización 25/10/2026 — continuación humana posterior
+
+El bloque nocturno offline anterior se conserva. Ahora existe prueba local de quemado en Roblox (FXv02, tres clips, seis comprobaciones y botones), documentada en `RELEVO-QUEMADO-LUTO.md` y DE-CODEX. El lanzallamas completo, la IA/daño, La Lamentadora v05 y hospital siguen pendientes de integración; no confundir el nuevo Play aislado con el juego terminado. No se recreó la automatización.

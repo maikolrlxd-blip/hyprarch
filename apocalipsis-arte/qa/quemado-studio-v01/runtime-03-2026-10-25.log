@@ -1,0 +1,20 @@
+2026-10-25T08:47:25.715Z,76.715919,5ca8,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA SERVER_READY existing_meshes=true combat=false
+2026-10-25T08:47:26.219Z,77.219154,61b0,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA GROUND {"y":0.08589333295822144,"index":1,"part":"Calle_Cruce_60_01"}
+2026-10-25T08:47:26.220Z,77.220146,61b0,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA GROUND {"y":0.08829721808433533,"index":2,"part":"Calle_Cruce_60_01"}
+2026-10-25T08:47:26.222Z,77.222130,61b0,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA GROUND {"y":0.08589334785938263,"index":3,"part":"Calle_Cruce_60_01"}
+2026-10-25T08:47:31.310Z,82.310898,6980,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA clip_load_and_motion {"pass":true,"detail":{"QuemadoBucle":{"movingJoints":9,"length":1.2000000476837159},"QuemadoInicio":{"movingJoints":7,"length":0.8500000238418579},"QuemadoCaer":{"movingJoints":11,"length":1.7999999523162842}}}
+2026-10-25T08:47:32.163Z,83.163269,4500,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA burn_refresh_no_stack {"pass":true,"detail":"three emitters, same attachments, expiry clean"}
+2026-10-25T08:47:32.168Z,83.168289,4500,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA stop_and_destroy {"pass":true,"detail":"all burn attachments cleaned"}
+2026-10-25T08:47:32.285Z,83.285789,4f60,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA removed_model_cleanup {"pass":true,"detail":"detached model cleaned"}
+2026-10-25T08:47:32.285Z,83.285789,4f60,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA muzzle_toggle_cleanup {"pass":true,"detail":"toggle and repeated Destroy passed"}
+2026-10-25T08:47:32.323Z,83.323685,59f8,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA FALL_POSITION {"headY":0.9853089451789856,"loweringY":-2.286444902420044,"rootY":3.0867977142333986}
+2026-10-25T08:47:32.323Z,83.323685,59f8,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA fall_root_translation {"pass":true,"detail":-2.286444902420044}
+2026-10-25T08:47:42.345Z,93.345100,59f8,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA PERFORMANCE {"baseline":{"seconds":5.02014370681718,"p95FrameMs":38.718901574611667,"meanFPS":43.22585421316158,"frames":217,"viewport":[1096,635]},"clients":1,"combat":false,"npc":3,"burning":{"seconds":5.0021031075157229,"p95FrameMs":37.95960173010826,"meanFPS":41.98234132448657,"frames":210,"viewport":[1096,635]}}
+2026-10-25T08:47:42.348Z,93.348114,59f8,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA COMPLETE {"localPreview":true,"failures":0}
+2026-10-25T08:47:55.621Z,106.621407,59f8,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA UI_CLICK {"button":"CAÍDA"}
+2026-10-25T08:47:57.436Z,108.436348,4500,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA UI_HOLD {"rootY":0.07456512004137039,"time":1.7799999713897706,"clip":"QuemadoCaer","playing":true}
+2026-10-25T08:48:32.847Z,143.847565,59f8,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA UI_CLICK {"button":"INICIO"}
+2026-10-25T08:48:33.718Z,144.718887,5ca8,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA UI_HOLD {"rootY":0.029999971389770509,"time":0.8300000429153442,"clip":"QuemadoInicio","playing":true}
+2026-10-25T08:52:08.780Z,359.780609,59f8,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA UI_CLICK {"button":"BUCLE"}
+2026-10-25T08:52:15.787Z,366.787354,59f8,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA UI_MUZZLE {"active":true}
+2026-10-25T08:52:24.485Z,375.485596,59f8,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA UI_MUZZLE {"active":false}

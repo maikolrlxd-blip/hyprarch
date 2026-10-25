@@ -1,0 +1,11 @@
+2026-10-24T17:11:08.327Z,11306.327148,6f88,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA SERVER_READY existing_meshes=true combat=false
+2026-10-24T17:11:13.725Z,11311.725586,15a4,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA clip_load_and_motion {"pass":true,"detail":{"QuemadoBucle":{"movingJoints":9,"length":1.2000000476837159},"QuemadoInicio":{"movingJoints":7,"length":0.8500000238418579},"QuemadoCaer":{"movingJoints":11,"length":1.7999999523162842}}}
+2026-10-24T17:11:14.580Z,11312.580078,6904,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA burn_refresh_no_stack {"pass":true,"detail":"three emitters, same attachments, expiry clean"}
+2026-10-24T17:11:14.582Z,11312.582031,6904,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA stop_and_destroy {"pass":true,"detail":"all burn attachments cleaned"}
+2026-10-24T17:11:14.687Z,11312.687500,15a4,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA removed_model_cleanup {"pass":true,"detail":"detached model cleaned"}
+2026-10-24T17:11:14.687Z,11312.687500,15a4,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA muzzle_toggle_cleanup {"pass":true,"detail":"toggle and repeated Destroy passed"}
+2026-10-24T17:11:14.703Z,11312.703125,34fc,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA FALL_POSITION {"headY":1.424415946006775,"loweringY":-2.286444902420044,"rootY":3.525904655456543}
+2026-10-24T17:11:14.703Z,11312.703125,34fc,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA fall_root_translation {"pass":true,"detail":-2.286444902420044}
+2026-10-24T17:11:24.719Z,11322.719727,34fc,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA PERFORMANCE {"baseline":{"seconds":5.009234993252903,"p95FrameMs":38.31839933991432,"meanFPS":41.72293779020323,"frames":209,"viewport":[1096,457]},"clients":1,"combat":false,"npc":3,"burning":{"seconds":5.007498221471906,"p95FrameMs":36.87230125069618,"meanFPS":40.53920561160581,"frames":203,"viewport":[1096,457]}}
+2026-10-24T17:11:24.723Z,11322.723633,34fc,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA COMPLETE {"localPreview":true,"failures":0}
+2026-10-24T17:11:47.812Z,11345.812500,34fc,6,Info [FLog::CreatorOutput] LUTO_FIRE_QA UI_CLICK {"button":"BUCLE"}

@@ -1,0 +1,143 @@
+{
+  "date": "2026-10-25",
+  "scope": "Roblox Studio local client preview; not combat integration",
+  "fixture": "LUTO-Quemado-QA-03.rbxl",
+  "fixture_sha256": "c213432ae6002ffc0d4af71da4890ac4195e5fa53e75b37d69a9a85a29869cef",
+  "original_place": "C:\\Users\\maiko\\Documents\\Luto\\Luto-jugable.rbxl",
+  "original_unchanged_sha256": "fb5b74921b09731a672c4c78f1ba38738db2588b8df494a8647407f1f5c5a6af",
+  "source_log_name": "0.744.0.7441077_20261025T084609Z_Studio_377C2_last.log",
+  "archived_output": "runtime-03-2026-10-25.log",
+  "checks": [
+    {
+      "utc": "2026-10-25T08:47:31.310Z",
+      "name": "clip_load_and_motion",
+      "data": {
+        "pass": true,
+        "detail": {
+          "QuemadoBucle": {
+            "movingJoints": 9,
+            "length": 1.2000000476837158
+          },
+          "QuemadoInicio": {
+            "movingJoints": 7,
+            "length": 0.8500000238418579
+          },
+          "QuemadoCaer": {
+            "movingJoints": 11,
+            "length": 1.7999999523162842
+          }
+        }
+      }
+    },
+    {
+      "utc": "2026-10-25T08:47:32.163Z",
+      "name": "burn_refresh_no_stack",
+      "data": {
+        "pass": true,
+        "detail": "three emitters, same attachments, expiry clean"
+      }
+    },
+    {
+      "utc": "2026-10-25T08:47:32.168Z",
+      "name": "stop_and_destroy",
+      "data": {
+        "pass": true,
+        "detail": "all burn attachments cleaned"
+      }
+    },
+    {
+      "utc": "2026-10-25T08:47:32.285Z",
+      "name": "removed_model_cleanup",
+      "data": {
+        "pass": true,
+        "detail": "detached model cleaned"
+      }
+    },
+    {
+      "utc": "2026-10-25T08:47:32.285Z",
+      "name": "muzzle_toggle_cleanup",
+      "data": {
+        "pass": true,
+        "detail": "toggle and repeated Destroy passed"
+      }
+    },
+    {
+      "utc": "2026-10-25T08:47:32.323Z",
+      "name": "fall_root_translation",
+      "data": {
+        "pass": true,
+        "detail": -2.286444902420044
+      }
+    }
+  ],
+  "performance": {
+    "baseline": {
+      "seconds": 5.02014370681718,
+      "p95FrameMs": 38.718901574611664,
+      "meanFPS": 43.22585421316158,
+      "frames": 217,
+      "viewport": [
+        1096,
+        635
+      ]
+    },
+    "clients": 1,
+    "combat": false,
+    "npc": 3,
+    "burning": {
+      "seconds": 5.0021031075157225,
+      "p95FrameMs": 37.95960173010826,
+      "meanFPS": 41.98234132448657,
+      "frames": 210,
+      "viewport": [
+        1096,
+        635
+      ]
+    }
+  },
+  "manual_ui": {
+    "buttons": [
+      "INICIO",
+      "BUCLE",
+      "CAÍDA"
+    ],
+    "muzzle_on_off": true,
+    "method": "Clicked normal Studio Play GUI controls; screenshots and UI events archived"
+  },
+  "offline_structure": {
+    "result": "pass",
+    "source_matches": 3,
+    "active_qa_scripts": 2,
+    "disabled_original_scripts": 6,
+    "keyframe_sequences": 3,
+    "keyframes": 119,
+    "original_zombie_meshes_exact": 15,
+    "evidence": "validar_copia.lua; STRUCTURE_PASS observed before Play"
+  },
+  "screenshots": [
+    "previews/Quemado-y-caida-03-2026-10-25-MOTOR.png",
+    "previews/Chorro-y-reacciones-04-2026-10-25-MOTOR.png"
+  ],
+  "limitations": [
+    "One local client; no combat or NPC AI",
+    "Anchored roots, clone collisions disabled; no physical floor-contact validation",
+    "Temporary KeyframeSequenceProvider IDs; no uploaded clips",
+    "Weapon/viewmodel and weapon animations not imported",
+    "No replication, multiplayer, mobile, audio or carbonization test",
+    "Performance is two 5-second samples, not a whole-game benchmark",
+    "UI_HOLD rootY is sampled before Animator evaluates the seek; use fall_root_translation after RenderStepped for lowering evidence"
+  ],
+  "studio_end": "Play stopped via Shift+F5; one Studio remains editing QA03; no native save over delivered place",
+  "shared_gameplay_files_not_modified": {
+    "apocalipsis-juego/client/ImpactoFX.lua": "a1ca7e113c8a0d1b174c9b3a21074e545d8164a99a9b1b3b2636eee2e8f3a2c1",
+    "apocalipsis-juego/client/Viewmodel.client.lua": "1ab1bcee75aa23407fe4e9df9a10ebb5a0bd50c7b94bd7f8a38e05f5b53ec5ba",
+    "apocalipsis-juego/src/Disparo.lua": "90f3fea5551fd88032a3a4fd3c3a76ced144190ca05798e613ec64cd6e2e783e",
+    "apocalipsis-juego/src/Impactos.lua": "dd3aa15895953919c28ee469d147d3d9b0fef8c2bfdd809e6bce2f15da5fd967",
+    "slime-rush-juego/client/Hud.client.lua": "60ea024448293add4b71a25f7e6a779f1f857bec6f599008bfef819e31b362a0",
+    "slime-rush-juego/server/GameServer.server.lua": "23657f1c87af0077cbed766a6082267d0b2628094712014ae0ec68f4245b1cd6"
+  },
+  "warnings": {
+    "asset_203785492": "Observed before Play and during Play. Exact origin unresolved; not found in place XML or new sources. No player avatar spawned. Do not attribute to avatar or FX as fact.",
+    "rojo": "Existing plugin reports localhost connection failure; no Rojo server started or settings changed."
+  }
+}

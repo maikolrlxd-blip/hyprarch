@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-25",
+  "algorithm": "sha256",
+  "files": {
+    ".gitattributes": "308a40fa1d89ae5ea4390b4c9b46a0108b09f171f07898f25d451fa0c69c4e9f",
+    "LEEME.md": "1d9b1603fac5c0946f1f2419008c6dadb2cb9e4d182c27329358e4778b51bb1a",
+    "QuemadoFX.lua": "df03fb3d2e9d56127a379d3bc62434696fd1526114c63cdcbff5a0db54c644d3"
+  }
+}
