@@ -81,8 +81,18 @@ def revisar_fbx(ruta, clip):
                 mov = max(mov, max(vals) - min(vals))
                 cierre = max(cierre, abs(vals[0] - vals[-1]))
             esperado = int(round(datos['clips_30fps'][clip]['duracion_s'] * 30)) + 1
+            # envergadura (extension en X) de la malla deformada en cada fotograma, en studs (el FBX va a escala 0.01): razon plegada/extendida
+            spans = []
+            for f in range(f0, f1 + 1, 2):
+                bpy.context.scene.frame_set(f)
+                e = m.evaluated_get(bpy.context.evaluated_depsgraph_get())
+                me = e.to_mesh()
+                xs = [(e.matrix_world @ v.co).x for v in me.vertices]
+                e.to_mesh_clear()
+                spans.append((max(xs) - min(xs)) * 100.0)
             r['acciones'].append({'nombre': act.name, 'frames': [f0, f1], 'curvas_de_rotacion': len(rot), 'mov_max_rad': round(mov, 3),
-                                  'diferencia_primer_ultimo': round(cierre, 4)})
+                                  'diferencia_primer_ultimo': round(cierre, 4), 'envergadura_studs': [round(min(spans), 2), round(max(spans), 2)],
+                                  'razon_plegada_extendida': round(min(spans) / max(spans), 3)})
             if f1 - f0 + 1 != esperado:
                 fallo('%s: %d fotogramas, esperados %d' % (base, f1 - f0 + 1, esperado))
             if mov < 0.05:
@@ -95,6 +105,31 @@ def revisar_fbx(ruta, clip):
 revisar_fbx(os.path.join(D, NAME + '_Rig.fbx'), None)
 for c in CLIPS:
     revisar_fbx(os.path.join(D, 'clips', '%s_%s.fbx' % (NAME, c)), c)
+if 'contorno' in datos:
+    # variante con contorno: misma malla mas la carcasa (el doble de poligonos), los mismos huesos y ningun vertice sin peso
+    limpio()
+    ruta = os.path.join(D, datos['contorno']['archivo'])
+    bpy.ops.import_scene.fbx(filepath=ruta, axis_forward=EJE, axis_up='Y')
+    ms = [o for o in bpy.data.objects if o.type == 'MESH']
+    rs = [o for o in bpy.data.objects if o.type == 'ARMATURE']
+    c = {'mallas': len(ms), 'armaduras': len(rs)}
+    if len(ms) == 1 and len(rs) == 1:
+        m = ms[0]
+        c['triangulos'] = sum(len(p.vertices) - 2 for p in m.data.polygons)
+        c['huesos'] = sorted(b.name for b in rs[0].data.bones)
+        c['vertices_sin_peso'] = sum(1 for v in m.data.vertices if not [g for g in v.groups if g.weight > 0.001])
+        c['texturas'] = [(i.name, tuple(i.size)) for i in bpy.data.images if i.size[0] > 0]
+        if c['triangulos'] != datos['contorno']['poligonos_con_contorno']:
+            fallo('%s: %d triangulos, esperados %d' % (datos['contorno']['archivo'], c['triangulos'], datos['contorno']['poligonos_con_contorno']))
+        if c['vertices_sin_peso']:
+            fallo('%s: %d vertices de la carcasa sin peso' % (datos['contorno']['archivo'], c['vertices_sin_peso']))
+        if c['huesos'] != sorted(datos['huesos']):
+            fallo('%s: huesos %s' % (datos['contorno']['archivo'], c['huesos']))
+        if not c['texturas'] or max(t[1][0] for t in c['texturas']) != 1024:
+            fallo('%s: la textura 1024 no llega incrustada' % datos['contorno']['archivo'])
+    else:
+        fallo('%s: %d mallas y %d armaduras' % (datos['contorno']['archivo'], len(ms), len(rs)))
+    informe['archivos'][datos['contorno']['archivo']] = c
 limpio()
 bpy.ops.import_scene.gltf(filepath=os.path.join(D, NAME + '.glb'))
 mallas = [o for o in bpy.data.objects if o.type == 'MESH' and o.name != 'Icosphere']      # Icosphere = forma de hueso que anade el importador
