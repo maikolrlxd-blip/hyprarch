@@ -1,0 +1,17 @@
+{
+ "triangulos": 316,
+ "huesos": [
+  "Raiz",
+  "AlaI_1",
+  "AlaI_2",
+  "AlaD_1",
+  "AlaD_2"
+ ],
+ "clips": {
+  "Deploy": 1.0,
+  "Flap": 0.75,
+  "Glide": 2.0
+ },
+ "envergadura_studs": 12.2,
+ "exportacion": "FBX global_scale=0.01, -Z delante / Y arriba (1 unidad = 1 stud)"
+}

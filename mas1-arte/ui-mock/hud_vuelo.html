@@ -1,0 +1,61 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><title>+1 Lanzamiento - HUD de vuelo (boceto)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap">
+<style>
+:root{--ink:#1c1530;--sun:#ffd23f;--sky:#4ec8ff;--mint:#3ddc97;--pink:#ff5d8f;--violet:#7c5cff;--cream:#fff7e0}
+*{box-sizing:border-box;margin:0}
+body{width:1600px;height:900px;position:relative;overflow:hidden;font-family:"Lilita One","Arial Rounded MT Bold",Impact,sans-serif;color:var(--cream);
+ background:linear-gradient(#6fd3ff 0,#bdeaff 55%,#fff0b8 100%)}
+.nube{position:absolute;background:#fff;border-radius:60px;box-shadow:0 10px 0 #d8f1ff;opacity:.95}
+.suelo{position:absolute;left:0;right:0;bottom:0;height:170px;background:linear-gradient(#7be25b,#4fb83a);border-top:8px solid #2f8a2a}
+.suelo i{position:absolute;top:30px;font-style:normal;font-size:64px;color:#fff;text-shadow:0 5px 0 #2f8a2a;transform:skewX(-8deg)}
+.panel{position:absolute;background:var(--violet);border:6px solid var(--ink);border-radius:18px;box-shadow:0 8px 0 var(--ink);padding:10px 18px}
+.lbl{font-size:18px;letter-spacing:.06em;opacity:.9;text-transform:uppercase}
+.num{font-size:44px;line-height:1;text-shadow:0 4px 0 rgba(0,0,0,.28)}
+/* energia */
+#energia{left:50%;top:22px;transform:translateX(-50%);width:640px;background:var(--cream);color:var(--ink);padding:10px 16px 14px}
+#energia .fila{display:flex;justify-content:space-between;align-items:baseline}
+.barra{height:34px;border:5px solid var(--ink);border-radius:20px;background:#3a2c63;margin-top:6px;overflow:hidden;position:relative}
+.barra i{position:absolute;inset:0 auto 0 0;background:linear-gradient(#ffe86b,#ffb300);border-right:5px solid var(--ink)}
+/* puntos / distancia */
+#puntos{left:24px;top:22px;background:var(--pink);width:300px}
+#dist{right:24px;top:22px;background:var(--sky);color:var(--ink);width:300px;text-align:right}
+#dist .num{text-shadow:0 4px 0 rgba(255,255,255,.6)}
+#potencia{left:24px;top:150px;background:var(--mint);color:var(--ink);width:240px}
+#potencia .num{text-shadow:0 4px 0 rgba(255,255,255,.6)}
+/* multiplicador */
+#mult{left:50%;top:150px;transform:translateX(-50%) rotate(-3deg);background:var(--sun);color:var(--ink);width:210px;text-align:center}
+#mult .num{font-size:64px}
+/* aros */
+#aros{right:24px;top:150px;background:var(--cream);color:var(--ink);width:240px}
+/* personaje */
+.pj{position:absolute;left:760px;top:430px;width:90px;height:110px;background:#ff9d4d;border:6px solid var(--ink);border-radius:20px;box-shadow:0 8px 0 var(--ink)}
+.ala{position:absolute;top:-20px;width:150px;height:60px;background:#fff;border:6px solid var(--ink);border-radius:40px 10px 40px 10px}
+.ala.l{left:-150px;transform:rotate(-14deg)}.ala.r{right:-150px;transform:rotate(14deg) scaleX(-1)}
+/* botones */
+.btn{position:absolute;border:6px solid var(--ink);border-radius:50%;box-shadow:0 8px 0 var(--ink);display:flex;align-items:center;justify-content:center;font-size:30px;text-align:center;line-height:1}
+#b1{right:150px;bottom:60px;width:130px;height:130px;background:var(--pink)}
+#b2{right:34px;bottom:130px;width:110px;height:110px;background:var(--sun);color:var(--ink)}
+#b3{right:300px;bottom:30px;width:96px;height:96px;background:var(--mint);color:var(--ink)}
+.tecla{position:absolute;bottom:-14px;background:var(--ink);color:var(--cream);font-size:18px;padding:2px 10px;border-radius:10px}
+#mascota{left:24px;bottom:30px;width:260px;background:var(--cream);color:var(--ink)}
+.chip{display:inline-block;margin-top:6px;background:var(--mint);border:4px solid var(--ink);border-radius:12px;padding:0 10px;font-size:20px}
+</style>
+<body>
+<div class="nube" style="left:120px;top:300px;width:220px;height:70px"></div><div class="nube" style="left:1180px;top:360px;width:280px;height:80px"></div><div class="nube" style="left:420px;top:620px;width:200px;height:60px"></div>
+<div class="suelo"><i style="left:240px">x2</i><i style="left:760px">x3</i><i style="left:1280px">x5</i></div>
+
+<div class="panel" id="energia"><div class="fila"><span class="lbl" style="color:var(--ink)">Energía</span><span class="num" style="font-size:30px">62%</span></div><div class="barra"><i style="width:62%"></i></div></div>
+<div class="panel" id="puntos"><div class="lbl">Puntos del vuelo</div><div class="num">12.480</div></div>
+<div class="panel" id="dist"><div class="lbl">Distancia</div><div class="num">846 m</div></div>
+<div class="panel" id="potencia"><div class="lbl">Potencia</div><div class="num">+1.250</div></div>
+<div class="panel" id="mult"><div class="lbl">Zona</div><div class="num">x3</div></div>
+<div class="panel" id="aros"><div class="lbl">Aros</div><div class="num">7 / 12</div></div>
+
+<div class="pj"><div class="ala l"></div><div class="ala r"></div></div>
+
+<div class="panel" id="mascota"><div class="lbl">Mascota</div><div class="num" style="font-size:30px">Gorrión Miga</div><span class="chip">x1.5 ganancias</span></div>
+
+<div class="btn" id="b1">PUÑO<span class="tecla">CLIC</span></div>
+<div class="btn" id="b2">PATADA<span class="tecla">E</span></div>
+<div class="btn" id="b3">TURBO<span class="tecla">W</span></div>
+</body></html>
