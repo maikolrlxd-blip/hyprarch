@@ -153,13 +153,21 @@ def clips_pet(rig, amp=None, aleteo=None):
             _claves(c, t, **fn(min(t, dur - 1e-9) if t >= dur else t))
         # cierre exacto del bucle: la ultima clave repite la primera
         acts[nombre] = c.build(huesos)
-    # parpadeo: los parpados avanzan y tapan el ojo (0,06-0,18 s) y vuelven; solo Lid_R/L para no pisar el clip de vuelo
-    c = A.Clip(rig, 'Blink', 0.3, loop=False, fps=30)
-    for t, cerrado in ((0.0, 0.0), (0.06, 1.0), (0.18, 1.0), (0.26, 0.0), (0.3, 0.0)):
+    acts['Blink'] = clip_parpadeo(rig)
+    return acts, {'Fly': 1.0, 'Glide': 2.0, 'Celebrate': 2.0, 'Blink': DUR_PARPADEO}
+
+
+DUR_PARPADEO = 8 / 30.0
+
+
+def clip_parpadeo(rig):
+    """Blink (8 fotogramas a 30 fps, sin bucle): los parpados avanzan y tapan el ojo (fotogramas 2-5) y vuelven (8). Claves en
+    fotogramas enteros: el FBX se exporta sin canales constantes (solo Lid_R/L) y asi no se pierde ninguna clave al simplificar."""
+    c = A.Clip(rig, 'Blink', DUR_PARPADEO, loop=False, fps=30)
+    for f, cerrado in ((0, 0.0), (2, 1.0), (5, 1.0), (8, 0.0)):
         for lado in ('R', 'L'):
-            c.k('Lid_' + lado, t, loc=(0, PARPADO_DY['dy'] * cerrado, 0))
-    acts['Blink'] = c.build(['Lid_R', 'Lid_L'])
-    return acts, {'Fly': 1.0, 'Glide': 2.0, 'Celebrate': 2.0, 'Blink': 0.3}
+            c.k('Lid_' + lado, f / 30.0, loc=(0, PARPADO_DY['dy'] * cerrado, 0))
+    return c.build(['Lid_R', 'Lid_L'])
 
 
 def en(rig, acts, nombre, t):
@@ -175,7 +183,7 @@ def exportar_pet(out, nombre, ob, rig, acts, clips, pose0, datos):
     fbx(os.path.join(out, nombre + '_Rig.fbx'), [ob, rig], False)
     for c in clips:
         A.set_action(rig, acts[c])
-        fbx(os.path.join(out, 'clips', '%s_%s.fbx' % (nombre, c)), [ob, rig], True)
+        fbx(os.path.join(out, 'clips', '%s_%s.fbx' % (nombre, c)), [ob, rig], True, todos_huesos=(c != 'Blink'))
     glb_con_clips(os.path.join(out, nombre + '.glb'), ob, rig, acts)
     for tr in rig.animation_data.nla_tracks:
         tr.mute = True

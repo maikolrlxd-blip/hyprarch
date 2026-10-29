@@ -16,8 +16,8 @@
       "bucle": true
     },
     "Blink": {
-      "duracion_s": 0.3,
-      "frames": 9,
+      "duracion_s": 0.2667,
+      "frames": 8,
       "bucle": false
     }
   },

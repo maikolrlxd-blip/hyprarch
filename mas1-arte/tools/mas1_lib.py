@@ -161,15 +161,17 @@ def armar(nombre, mbs, huesos, coll, escala=1.0):
 
 
 # ------------------------------------------------------------------ exportacion
-def fbx(path, objs, anim):
+def fbx(path, objs, anim, todos_huesos=True):
+    """todos_huesos=False: solo se hornean los huesos que tienen curvas en la accion (Blink: solo Lid_R/L), para que en Roblox el clip
+    se superponga al vuelo sin fijar el resto del esqueleto en la pose neutra."""
     A.select_only(objs)
     kw = dict(filepath=path, use_selection=True, object_types={'MESH', 'ARMATURE', 'EMPTY'}, global_scale=0.01,
               apply_scale_options='FBX_SCALE_ALL', apply_unit_scale=True, bake_space_transform=False, axis_forward=FBX_FORWARD,
               axis_up='Y', path_mode='COPY', embed_textures=True, mesh_smooth_type='FACE', use_mesh_modifiers=False,
               add_leaf_bones=False, primary_bone_axis='Y', secondary_bone_axis='X', armature_nodetype='NULL', bake_anim=anim)
     if anim:
-        kw.update(bake_anim_use_all_bones=True, bake_anim_use_nla_strips=False, bake_anim_use_all_actions=False,
-                  bake_anim_force_startend_keying=True, bake_anim_step=1.0, bake_anim_simplify_factor=0.0)
+        kw.update(bake_anim_use_all_bones=todos_huesos, bake_anim_use_nla_strips=False, bake_anim_use_all_actions=False,
+                  bake_anim_force_startend_keying=todos_huesos, bake_anim_step=1.0, bake_anim_simplify_factor=0.0 if todos_huesos else 1.0)
     bpy.ops.export_scene.fbx(**kw)
 
 
