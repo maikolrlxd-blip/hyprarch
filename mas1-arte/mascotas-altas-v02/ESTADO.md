@@ -13,6 +13,7 @@ Hechas por el Coordinador (Claude en el PC de Maikol) el 29/10/2026. **Sustituye
 9. **Fénix**: el fuego va aparte (partículas); `datos.json` de `fenix/` trae `puntos_fuego` (cresta, puntas de ala y de cola, pecho) y el hueso al que atar cada emisor.
 10. **Textura**: atlas 1024, un material, bordes de las islas UV sangrados 5 texeles para que el filtrado de Roblox no dibuje líneas oscuras entre caras; sombras frías (lavanda) en águila y grifo, cálidas en el fénix.
 11. Sin las mascotas comunes poco comunes / raras (2 + 2): las hace Codex; si no llega, las hago yo (orden del encargo).
+12. **Pendiente (comentario de Maikol, 29/10, tras ver la v02): los pies están muy tiesos; al volar deben guindar.** Hoy las patas son parte del hueso `Body` (rígidas, de pie). Plan: huesos `Leg_R/Leg_L` (rig de 10 huesos), patas colgando en la pose neutra y péndulo suave con el aleteo en `Fly`, más rectas en `Glide`, patadita en `Celebrate`; regenerar y revalidar las tres.
 
 ## Qué cambió respecto a la v01
 - **Proporciones**: cuerpo rechoncho y cabeza grande (celda de 0,2 studs, volúmenes escalonados como los de Codex), patas cortas, ojos diminutos con brillo, ceja fiera, pico ancho en gancho.
