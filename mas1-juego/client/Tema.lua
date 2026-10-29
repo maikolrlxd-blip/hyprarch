@@ -22,7 +22,7 @@ end
 -- Panel con contorno oscuro (UIStroke 5), esquinas redondeadas y sombra dura debajo
 function T.panel(padre, props, color)
 	props = props or {}
-	local sombra = n("Frame", { Size = props.Size, Position = props.Position, AnchorPoint = props.AnchorPoint, BackgroundColor3 = T.col.tinta, BorderSizePixel = 0 }, padre)
+	local sombra = n("Frame", { Size = props.Size, Position = props.Position, AnchorPoint = props.AnchorPoint, Rotation = props.Rotation or 0, BackgroundColor3 = T.col.tinta, BorderSizePixel = 0 }, padre)
 	sombra.Position = props.Position + UDim2.fromOffset(0, 7); n("UICorner", { CornerRadius = UDim.new(0, 18) }, sombra)
 	props.BackgroundColor3 = color or T.col.violeta; props.BorderSizePixel = 0
 	local p = n("Frame", props, padre)
@@ -58,6 +58,7 @@ function T.boton(padre, props, color, alAplastar)
 	n("UICorner", { CornerRadius = UDim.new(1, 0) }, b); n("UIStroke", { Color = T.col.tinta, Thickness = 6 }, b)
 	b.MouseButton1Down:Connect(function() b.Size = b.Size - UDim2.fromOffset(6, 6); if alAplastar then alAplastar() end end)
 	b.MouseButton1Up:Connect(function() b.Size = props.Size end)
+	b.MouseLeave:Connect(function() b.Size = props.Size end) -- si el dedo se desliza fuera no queda hundido
 	return b
 end
 

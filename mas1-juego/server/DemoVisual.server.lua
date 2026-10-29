@@ -3,7 +3,7 @@
 local Players, RS = game:GetService("Players"), game:GetService("ReplicatedStorage")
 local Efecto = Instance.new("RemoteEvent"); Efecto.Name = "MAS1_Efecto"; Efecto.Parent = RS
 local Accion = Instance.new("RemoteEvent"); Accion.Name = "MAS1_Accion"; Accion.Parent = RS
-if workspace:GetAttribute("MAS1_Demo") ~= true then return end
+while workspace:GetAttribute("MAS1_Demo") ~= true do workspace:GetAttributeChangedSignal("MAS1_Demo"):Wait() end -- sirve activarlo antes o durante el Play
 
 local function raiz(plr) local c = plr.Character; return c and c:FindFirstChild("HumanoidRootPart") end
 Accion.OnServerEvent:Connect(function(plr, nombre)
@@ -14,7 +14,7 @@ end)
 
 local ZONAS = { 1, 2, 3, 5 }
 task.spawn(function()
-	local t0 = os.clock(); local mult = 1
+	local t0 = os.clock()
 	while true do
 		task.wait(0.25)
 		local t = os.clock() - t0; local ciclo = t % 20 -- un "vuelo" de 20 s que se repite
