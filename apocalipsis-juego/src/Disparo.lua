@@ -28,13 +28,16 @@ function Disparo.zona(nombrePieza) return ZONAS[nombrePieza] or "torso" end -- a
 -- Agujeros de bala: lo que se dibuja DONDE da la bala (en paredes, suelo y tambien una marca en el enemigo).
 Disparo.AGUJERO = {
 	tam = { pistola = 0.45, escopeta = 0.3, subfusil = 0.38 }, -- diametro en studs
-	vida_mapa = 40, vida_enemigo = 8, max_mapa = 150, max_enemigo = 40,
+	vida_mapa = 40, vida_enemigo = 1.5, max_mapa = 150, max_enemigo = 40,
 	color_centro = { 18, 18, 20 }, color_borde = { 70, 68, 66 }, borde = 1.6, -- el borde (astillado) es 1,6 veces el hueco
+	-- marca en el enemigo: pequena, oscura y pegada al cuerpo; se borra en 1,5 s (antes era casi tan grande como la cabeza)
+	factor_enemigo = 0.4, borde_enemigo = 1.35, centro_enemigo = { 55, 8, 12 }, borde_color_enemigo = { 85, 14, 18 },
 }
 function Disparo.agujero(weaponId, sobreEnemigo)
 	local a = Disparo.AGUJERO
-	return { tam = a.tam[weaponId] or 0.4, borde = a.borde, vida = sobreEnemigo and a.vida_enemigo or a.vida_mapa,
-		color_centro = sobreEnemigo and { 90, 8, 14 } or a.color_centro, color_borde = sobreEnemigo and { 140, 20, 26 } or a.color_borde }
+	local tam = (a.tam[weaponId] or 0.4) * (sobreEnemigo and a.factor_enemigo or 1)
+	return { tam = tam, borde = sobreEnemigo and a.borde_enemigo or a.borde, vida = sobreEnemigo and a.vida_enemigo or a.vida_mapa,
+		color_centro = sobreEnemigo and a.centro_enemigo or a.color_centro, color_borde = sobreEnemigo and a.borde_color_enemigo or a.color_borde }
 end
 
 return Disparo

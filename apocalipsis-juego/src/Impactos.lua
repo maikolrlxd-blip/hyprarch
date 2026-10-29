@@ -8,15 +8,16 @@ local Impactos = {}
 Impactos.ZONAS = { cabeza = { mult = 1.0, stagger = 0.9, fx = "grande" }, torso = { mult = 1.0, stagger = 0.25, fx = "medio" },
 	brazo = { mult = 0.75, stagger = 0.1, fx = "chico" }, pierna = { mult = 0.75, stagger = 0.35, fx = "chico" } }
 
--- Especificacion de efectos (para ParticleEmitter): cantidad, velocidad, vida, tamano, color. Valores PROVISIONALES.
+-- Especificacion de efectos (para ParticleEmitter): cantidad, velocidad, vida, tamano, color. Salpicadura pequena y oscura: en la prueba
+-- de Maikol (2026-10-23) la sangre era enorme y quedaba flotando en el aire; la marca en el cuerpo la pone ImpactoFX.agujero.
 Impactos.FX = {
-	chico = { count = 6, speed = 14, life = 0.35, size = 0.35, color = { 150, 20, 25 } },
-	medio = { count = 12, speed = 18, life = 0.45, size = 0.5, color = { 135, 15, 22 } },
-	grande = { count = 22, speed = 24, life = 0.6, size = 0.65, color = { 120, 10, 20 } },
+	chico = { count = 4, speed = 8, life = 0.25, size = 0.12, color = { 92, 12, 16 } },
+	medio = { count = 6, speed = 10, life = 0.3, size = 0.15, color = { 84, 10, 14 } },
+	grande = { count = 9, speed = 12, life = 0.35, size = 0.19, color = { 76, 8, 12 } },
 }
 Impactos.NEUTRO = { color = { 230, 210, 120 } } -- chispas amarillas cuando la sangre esta apagada
 
-Impactos.MANCHAS = { max = 60, vida = 20, tam_min = 1.5, tam_max = 3.5 } -- tope de manchas en el mapa y segundos antes de desvanecerse
+Impactos.MANCHAS = { max = 60, vida = 2, tam_min = 0.25, tam_max = 0.45 } -- tope de manchas en el mapa y segundos antes de desvanecerse
 
 -- Resuelve un impacto. weaponId: 'pistola'|'escopeta'|'subfusil'; zona: clave de ZONAS; dist en studs; normal = {x,y,z} de la superficie golpeada;
 -- opts.sangre (por defecto true), opts.pellets_en_zona (escopeta: perdigones que dieron a la misma zona, se suman).

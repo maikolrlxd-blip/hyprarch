@@ -68,11 +68,17 @@ function FX.agujero(pos, normal, pieza, armaId, sobreEnemigo)
 	local centro = disco(a.tam, a.color_centro, 0.05, 0.035)
 	local viejo = Impactos.agregarMancha(reserva, { borde, centro }, os.clock())
 	if viejo and viejo.mancha then for _, p in ipairs(viejo.mancha) do if p.Parent then p:Destroy() end end end
+	if sobreEnemigo then -- la marca del cuerpo se desvanece en su ultimo medio segundo
+		task.delay(math.max(0, a.vida - 0.5), function()
+			for _, p in ipairs({ borde, centro }) do if p.Parent then TweenService:Create(p, TweenInfo.new(0.5), { Transparency = 1 }):Play() end end
+		end)
+	end
 end
 
+-- Al acertar a un enemigo: solo la salpicadura. La marca pegada al cuerpo la pone FX.agujero; la mancha anclada (mancha()) quedaba
+-- flotando en el aire cuando la zombi se movia, asi que ya no se dibuja sobre enemigos.
 function FX.mostrar(pos, spec, normal)
 	emisor(pos, spec.efecto)
-	if spec.mancha and typeof(normal) == "Vector3" then mancha(pos, { x = normal.X, y = normal.Y, z = normal.Z }, spec.mancha.tam, Impactos and Impactos.MANCHAS.vida or 20) end
 end
 
 return FX
