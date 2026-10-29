@@ -1,0 +1,17 @@
+{
+ "AroBronce": {
+  "triangulos": 192,
+  "diametro_studs": 11.3,
+  "grosor_studs": 1.3
+ },
+ "AroPlata": {
+  "triangulos": 192,
+  "diametro_studs": 11.3,
+  "grosor_studs": 1.3
+ },
+ "AroOro": {
+  "triangulos": 192,
+  "diametro_studs": 11.3,
+  "grosor_studs": 1.3
+ }
+}
