@@ -23,3 +23,7 @@ Regenerar: `python3 tools/build_aros.py` (necesita `bpy`, numpy y Pillow).
 - ✘ El turquesa es muy neón comparado con una referencia "oscura/turquesa" que no he visto (pendiente de la imagen que dio Maikol).
 - ✘ El clip Deploy no pliega del todo (en el fotograma 1 las alas aún quedan casi abiertas): revisar ángulos de pliegue.
 - ✘ Sin importar ni probar en Roblox: los 5 huesos están como huesos de Blender, no como Motor6D; hay que armarlo en Studio.
+
+## Capa visual en Luau (mas1-juego/) — SIN PROBAR EN STUDIO
+- Tema.lua, HudVuelo.client.lua, Efectos.client.lua, Efectos.lua, DemoVisual.server.lua (demo con `workspace:SetAttribute("MAS1_Demo", true)`).
+- Solo comprobada la sintaxis con lupa. Falta: Rojo + capturas 1920x1080 y móvil.
