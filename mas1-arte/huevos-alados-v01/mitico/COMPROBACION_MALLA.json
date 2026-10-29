@@ -1,0 +1,9 @@
+{
+ "blend": "huevos-alados-v01/mitico/HuevoAladoMitico.blend",
+ "malla": "HuevoAladoMitico",
+ "triangulos": 1332,
+ "islas": 42,
+ "piezas_sueltas": [],
+ "pares_coplanares_solapados": 0,
+ "ejemplos": []
+}

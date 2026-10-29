@@ -1,0 +1,9 @@
+{
+ "blend": "huevos-alados-v01/legendario/HuevoAladoLegendario.blend",
+ "malla": "HuevoAladoLegendario",
+ "triangulos": 1068,
+ "islas": 23,
+ "piezas_sueltas": [],
+ "pares_coplanares_solapados": 0,
+ "ejemplos": []
+}

@@ -1,0 +1,54 @@
+{
+  "clips_30fps": {
+    "Fly": {
+      "duracion_s": 0.6,
+      "frames": 18,
+      "bucle": true
+    },
+    "Glide": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Hatch": {
+      "duracion_s": 1.5,
+      "frames": 45,
+      "bucle": false
+    }
+  },
+  "textura": "texturas/HuevoAladoMitico_paleta_1024.png (1024, un material, una malla)",
+  "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y global_scale=0.01",
+  "sin_probar_en_roblox": true,
+  "pieza": "Huevo volador con alas MITICO v01 (da mascotas; idea de Maikol del 29/10)",
+  "rareza": "MITICO",
+  "triangulos": 1332,
+  "limites_studs": {
+    "envergadura": 5.14,
+    "alto": 3.3,
+    "largo": 2.07,
+    "z_min": 0.1
+  },
+  "huesos": [
+    "Root",
+    "Body",
+    "Cap",
+    "Wing_R",
+    "Tip_R",
+    "Wing_L",
+    "Tip_L"
+  ],
+  "paleta": {
+    "cascara": "#6a3fd0",
+    "patron": "#bff7ff",
+    "interior": "#e9d8ff",
+    "ala_base": "#e6dcff",
+    "ala_medio": "#a88cf5",
+    "ala_punta": "#ffd24a",
+    "oro": "#ffc42e"
+  },
+  "patron": "estrellas",
+  "adorno": "corona",
+  "escala_alas": 1.16,
+  "piezas_sueltas": [],
+  "caras_coplanares_solapadas": 0
+}

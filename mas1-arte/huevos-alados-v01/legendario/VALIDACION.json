@@ -1,0 +1,211 @@
+{
+  "archivos": {
+    "HuevoAladoLegendario_Rig.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1068,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "HuevoAladoLegendario_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Cap",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L"
+      ],
+      "vertices": 580,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.049,
+        0.0201,
+        0.0264
+      ]
+    },
+    "HuevoAladoLegendario_Fly.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1068,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "HuevoAladoLegendario_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Cap",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L"
+      ],
+      "vertices": 580,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.049,
+        0.0201,
+        0.0264
+      ],
+      "acciones": [
+        {
+          "nombre": "HuevoAladoLegendario_Rig|Scene",
+          "frames": [
+            1,
+            19
+          ],
+          "curvas_de_rotacion": 55,
+          "mov_max_rad": 0.605,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            3.32,
+            4.73
+          ],
+          "razon_plegada_extendida": 0.702
+        }
+      ]
+    },
+    "HuevoAladoLegendario_Glide.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1068,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "HuevoAladoLegendario_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Cap",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L"
+      ],
+      "vertices": 580,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.049,
+        0.0201,
+        0.0264
+      ],
+      "acciones": [
+        {
+          "nombre": "HuevoAladoLegendario_Rig|Scene",
+          "frames": [
+            1,
+            61
+          ],
+          "curvas_de_rotacion": 55,
+          "mov_max_rad": 0.16,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            4.54,
+            4.66
+          ],
+          "razon_plegada_extendida": 0.974
+        }
+      ]
+    },
+    "HuevoAladoLegendario_Hatch.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1068,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "HuevoAladoLegendario_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Cap",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L"
+      ],
+      "vertices": 580,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.049,
+        0.0201,
+        0.0264
+      ],
+      "acciones": [
+        {
+          "nombre": "HuevoAladoLegendario_Rig|Scene",
+          "frames": [
+            1,
+            46
+          ],
+          "curvas_de_rotacion": 55,
+          "mov_max_rad": 0.618,
+          "diferencia_primer_ultimo": 0.5,
+          "envergadura_studs": [
+            3.84,
+            4.75
+          ],
+          "razon_plegada_extendida": 0.809
+        }
+      ]
+    },
+    "HuevoAladoLegendario.glb": {
+      "mallas": [
+        [
+          "HuevoAladoLegendario",
+          1068
+        ]
+      ],
+      "armaduras": 1,
+      "acciones": [
+        "Fly",
+        "Glide",
+        "Hatch"
+      ]
+    }
+  },
+  "fallos": [],
+  "correcto": true
+}

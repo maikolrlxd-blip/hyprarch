@@ -176,7 +176,7 @@ def en(rig, acts, nombre, t):
     bpy.context.view_layer.update()
 
 
-def exportar_pet(out, nombre, ob, rig, acts, clips, pose0, datos):
+def exportar_pet(out, nombre, ob, rig, acts, clips, pose0, datos, sin_bucle=('Blink',)):
     """FBX del rig (pose neutra), un FBX por clip, GLB con los clips, .blend (con las pistas NLA silenciadas) y datos.json."""
     rig.animation_data_clear()
     pose0()
@@ -189,7 +189,7 @@ def exportar_pet(out, nombre, ob, rig, acts, clips, pose0, datos):
         tr.mute = True
     pose0()
     A.save_blend(os.path.join(out, nombre + '.blend'))
-    base = {'clips_30fps': {k: {'duracion_s': v, 'frames': int(round(v * 30)), 'bucle': k != 'Blink'} for k, v in clips.items()},
+    base = {'clips_30fps': {k: {'duracion_s': v, 'frames': int(round(v * 30)), 'bucle': k not in sin_bucle} for k, v in clips.items()},
             'textura': 'texturas/%s_paleta_1024.png (1024, un material, una malla)' % nombre,
             'ejes': 'Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=%s axis_up=Y global_scale=0.01' % FBX_FORWARD,
             'sin_probar_en_roblox': True}

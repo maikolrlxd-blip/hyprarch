@@ -1,0 +1,54 @@
+{
+  "clips_30fps": {
+    "Fly": {
+      "duracion_s": 0.6,
+      "frames": 18,
+      "bucle": true
+    },
+    "Glide": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Hatch": {
+      "duracion_s": 1.5,
+      "frames": 45,
+      "bucle": false
+    }
+  },
+  "textura": "texturas/HuevoAladoRaro_paleta_1024.png (1024, un material, una malla)",
+  "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y global_scale=0.01",
+  "sin_probar_en_roblox": true,
+  "pieza": "Huevo volador con alas RARO v01 (da mascotas; idea de Maikol del 29/10)",
+  "rareza": "RARO",
+  "triangulos": 1068,
+  "limites_studs": {
+    "envergadura": 4.66,
+    "alto": 2.64,
+    "largo": 2.01,
+    "z_min": 0.1
+  },
+  "huesos": [
+    "Root",
+    "Body",
+    "Cap",
+    "Wing_R",
+    "Tip_R",
+    "Wing_L",
+    "Tip_L"
+  ],
+  "paleta": {
+    "cascara": "#7cc6ff",
+    "patron": "#ffffff",
+    "interior": "#d8f4ff",
+    "ala_base": "#ffffff",
+    "ala_medio": "#cfe9ff",
+    "ala_punta": "#2b6fc4",
+    "oro": "#5fe0ff"
+  },
+  "patron": "rayas",
+  "adorno": "gema",
+  "escala_alas": 1.0,
+  "piezas_sueltas": [],
+  "caras_coplanares_solapadas": 0
+}

@@ -23,11 +23,12 @@ def tr(v):
 
 
 # ------------------------------------------------------------------ plumas
-def pluma(mb, M, raiz, ang, largo, ancho, grosor, zc, bandas, afilar=0.86, chaflan=0.12, lado_mat=None):
+def pluma(mb, M, raiz, ang, largo, ancho, grosor, zc, bandas, afilar=0.86, chaflan=0.12, lado_mat=None, punta=None):
     """Una pluma plana de punta achaflanada. raiz=(x, y) y ang (grados, contra el reloj desde +X) en el plano plano del marco; M es la matriz
     del marco. bandas=[(fraccion_final, region), ...] de la raiz a la punta: se corta la pluma en bandas de color (sin caras internas).
     zc = altura del centro en el marco, grosor en Z. Los vecinos que se solapan deben tener zc distintos (mas de 0,04) para no
-    tener caras coplanares (parpadeo en Roblox)."""
+    tener caras coplanares (parpadeo en Roblox). punta = fraccion del largo donde empieza la punta afilada (pluma en flecha, como las del
+    cofre de Codex); None = punta achaflanada de siempre."""
     a = math.radians(ang)
     d = Vector((math.cos(a), math.sin(a), 0.0))
     n = Vector((-d.y, d.x, 0.0))
@@ -41,6 +42,8 @@ def pluma(mb, M, raiz, ang, largo, ancho, grosor, zc, bandas, afilar=0.86, chafl
     P = lambda t, k: R + d * (t * largo) + n * (k * ancho_en(t) / 2.0)
     tc = max(0.0, 1.0 - c / largo)
     poly = [P(0.0, -1), P(tc, -1), P(1.0, -1.0 + 2.0 * c / w1), P(1.0, 1.0 - 2.0 * c / w1), P(tc, 1), P(0.0, 1)]
+    if punta is not None:
+        poly = [P(0.0, -1), P(punta, -1), P(1.0, 0.0), P(punta, 1), P(0.0, 1)]
     poly = [(p.x, p.y) for p in poly]
     antes = mb.mark()
     mb.prism(poly, zc - grosor / 2.0, zc + grosor / 2.0, bandas[0][1], plane='XY', side_mat=lado_mat or bandas[0][1])
