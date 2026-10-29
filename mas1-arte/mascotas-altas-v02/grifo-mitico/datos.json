@@ -1,0 +1,74 @@
+{
+  "clips_30fps": {
+    "Fly": {
+      "duracion_s": 1.0,
+      "frames": 30,
+      "bucle": true
+    },
+    "Glide": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Celebrate": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    }
+  },
+  "textura": "texturas/GrifoMitico_paleta_1024.png (1024, un material, una malla)",
+  "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y global_scale=0.01",
+  "sin_probar_en_roblox": true,
+  "pieza": "Grifo mitico v02 (mascota voladora alta)",
+  "triangulos": 4446,
+  "limites_studs": {
+    "envergadura": 8.48,
+    "alto": 4.43,
+    "largo": 6.0,
+    "z_min": 0.1
+  },
+  "huesos": [
+    "Root",
+    "Body",
+    "Head",
+    "Tail",
+    "Wing_R",
+    "Tip_R",
+    "Wing_L",
+    "Tip_L"
+  ],
+  "rejilla_voxel_studs": 0.2,
+  "paleta": {
+    "cuerpo": "#c9923f",
+    "cuerpo_osc": "#9c6a2b",
+    "escama_osc": "#b57d33",
+    "pecho": "#f6efe0",
+    "escama": "#e6dcf4",
+    "vientre": "#eadbb8",
+    "cabeza": "#fbf7ee",
+    "pico": "#f5b82e",
+    "pico_inf": "#d99a1c",
+    "cera": "#ffd54a",
+    "ojo": "#7ee8ff",
+    "pupila": "#10161f",
+    "brillo": "#ffffff",
+    "ceja": "#9c6a2b",
+    "oro": "#ffc42e",
+    "oreja": "#efe6d2",
+    "ala_a": "#4a2aa6",
+    "ala_b": "#6a3fd0",
+    "ala_c": "#9a7bf0",
+    "ala_c2": "#cdbcff",
+    "ala_punta": "#ffd66e",
+    "cola": "#c9923f",
+    "cola_punta": "#6a3fd0",
+    "garra": "#f1b222",
+    "una": "#2a2024",
+    "pata": "#a9742f",
+    "dedo": "#6e4a1f",
+    "melena": "#7b4be0"
+  },
+  "piezas_sueltas": [],
+  "caras_coplanares_solapadas": 0,
+  "escamas": 88
+}

@@ -1,0 +1,215 @@
+{
+  "archivos": {
+    "GrifoMitico_Rig.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 4446,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "GrifoMitico_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Head",
+        "Tail",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L"
+      ],
+      "vertices": 2607,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0848,
+        0.06,
+        0.0443
+      ]
+    },
+    "GrifoMitico_Fly.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 4446,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "GrifoMitico_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Head",
+        "Tail",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L"
+      ],
+      "vertices": 2607,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0848,
+        0.06,
+        0.0443
+      ],
+      "acciones": [
+        {
+          "nombre": "GrifoMitico_Rig|Scene",
+          "frames": [
+            1,
+            31
+          ],
+          "curvas_de_rotacion": 35,
+          "mov_max_rad": 0.613,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            4.73,
+            8.62
+          ],
+          "razon_plegada_extendida": 0.549
+        }
+      ]
+    },
+    "GrifoMitico_Glide.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 4446,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "GrifoMitico_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Head",
+        "Tail",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L"
+      ],
+      "vertices": 2607,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0848,
+        0.06,
+        0.0443
+      ],
+      "acciones": [
+        {
+          "nombre": "GrifoMitico_Rig|Scene",
+          "frames": [
+            1,
+            61
+          ],
+          "curvas_de_rotacion": 35,
+          "mov_max_rad": 0.103,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            7.53,
+            7.99
+          ],
+          "razon_plegada_extendida": 0.943
+        }
+      ]
+    },
+    "GrifoMitico_Celebrate.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 4446,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "GrifoMitico_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Head",
+        "Tail",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L"
+      ],
+      "vertices": 2607,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0848,
+        0.06,
+        0.0443
+      ],
+      "acciones": [
+        {
+          "nombre": "GrifoMitico_Rig|Scene",
+          "frames": [
+            1,
+            61
+          ],
+          "curvas_de_rotacion": 35,
+          "mov_max_rad": 0.741,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            4.56,
+            8.56
+          ],
+          "razon_plegada_extendida": 0.533
+        }
+      ]
+    },
+    "GrifoMitico.glb": {
+      "mallas": [
+        [
+          "GrifoMitico",
+          4446
+        ]
+      ],
+      "armaduras": 1,
+      "acciones": [
+        "Celebrate",
+        "Fly",
+        "Glide"
+      ]
+    }
+  },
+  "fallos": [],
+  "correcto": true
+}
