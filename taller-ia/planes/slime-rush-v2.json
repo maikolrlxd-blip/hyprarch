@@ -1,0 +1,188 @@
+{
+ "plan": "Slime Rush v2",
+ "autor": "claude (director)",
+ "criterio": "mundo generado por semilla; arte en Blender (opus); reglas y generador puros con pruebas (claude); integración, robo y rendimiento en Studio (chatgpt); crítica e interfaz (antigravity); decisiones (humano)",
+ "tasks": [
+  {
+   "title": "Diseño v2: respuestas del usuario aplicadas (falta confirmar 'una sola llegada' y la duración)",
+   "assignee": "claude",
+   "needs": "",
+   "asset": "Slime Rush v2",
+   "detail": "DISENO-v2.md ya refleja: robo por inconsciencia, volcán con erupción asegurada, 24 jugadores, colapso con desastres e historia de botes. Pendiente del humano: duración total y 'una sola llegada'.",
+   "status": "done"
+  },
+  {
+   "title": "KIT completo en Blender: terreno por teselas, playa, botes, desierto, bosque, roca, volcán, cofres, meta, desastres",
+   "assignee": "opus",
+   "needs": "modelado 3D dificil",
+   "asset": "Kit y mundo Slime Rush",
+   "status": "todo",
+   "detail": "TODO en Blender, NADA básico de Roblox Studio. El kit v0.2.0 fue RECHAZADO ('plastilina'): rehacer con facetado limpio y textura pintada a mano (pinceladas, veta, variación de color), no formas lisas de un solo color. Lista de piezas en DISENO-v2.md §7. Entregar por tandas pequeñas con commit."
+  },
+  {
+   "title": "Árboles 0.6.0: estilo ORIGINAL (0.4.0) con texturas pintadas — sin 'plastilina'",
+   "assignee": "opus",
+   "needs": "modelado 3D dificil",
+   "asset": "Arboles Slime Rush",
+   "status": "todo",
+   "detail": "Los 0.5.0 fueron RECHAZADOS (lisos, de un solo color, 'plastilina'). Volver al estilo 0.4.0: copas anchas de hojas en capas, troncos gruesos retorcidos con surcos, mate. Arreglar SOLO los huecos negros y el plato plano. Corteza y hojas con TEXTURA pintada (veta, pinceladas, variación de color), facetado limpio, nada de superficies subdivididas lisas. Todo en Blender. Referencia: renders de 0.4.0 que el usuario mostró. PARTIR DE 'Slime Rush - Arboles cartoon v04.blend' (en Documents\\Codex\\...\\art\\trees\\models\\), que ya es el estilo original."
+  },
+  {
+   "title": "Generador de isla con semilla, volcán y botes (Luau puro) + 34 pruebas",
+   "assignee": "claude",
+   "needs": "programar",
+   "asset": "Mundo Slime Rush",
+   "detail": "Hecho y probado en slime-rush-juego/src/World.lua (y Rules.lua). Falta integrarlo en Studio (tarea del ingeniero).",
+   "status": "done"
+  },
+  {
+   "title": "Reglas de partida: fases, inconsciencia y saqueo, volcán, colapso, bonos de llegada (Luau puro + pruebas)",
+   "assignee": "claude",
+   "needs": "programar",
+   "asset": "Reglas Slime Rush",
+   "detail": "Hecho y probado en slime-rush-juego/src/Rules.lua. Falta conectarlo al combate real y a la UI en Studio.",
+   "status": "done"
+  },
+  {
+   "title": "Combate, derrota e inconsciencia, saqueo y depósito en la meta (en Studio)",
+   "assignee": "chatgpt",
+   "needs": "programar",
+   "asset": "Slime Rush v2",
+   "detail": "Conectar Rules:knockOut / lootDowned / startDeposit / finishDeposit al combate y a la interfaz. El servidor es la autoridad. Animación de caído y barra de despertar."
+  },
+  {
+   "title": "Cofres y nodos de recurso: apertura, tablas de botín, pistas de cofres ocultos",
+   "assignee": "chatgpt",
+   "needs": "programar",
+   "asset": "Slime Rush v2",
+   "detail": "DESPUÉS de aprobar el diseño y del kit de arte. Servidor decide un solo ganador por cofre; un solo Studio salvo pruebas de 2 clientes."
+  },
+  {
+   "title": "Terreno de la isla con MODELOS PROPIOS (teselas de Blender o mallas por trozos), sin Terrain de fábrica",
+   "assignee": "chatgpt",
+   "needs": "programar",
+   "asset": "Mundo Slime Rush",
+   "detail": "Verificar en Studio la opción A (teselas de 48 studs) y B (EditableMesh por trozos). Mide tiempo de generación y FPS; Streaming."
+  },
+  {
+   "title": "Slimes raros y accesorios raros: modelos en Blender + tabla de aparición",
+   "assignee": "opus",
+   "needs": "modelado 3D dificil",
+   "asset": "Raros Slime Rush",
+   "detail": "3–4 slimes raros (silueta clara y 'brillo' distinto) y 6–8 accesorios (sombreros, alitas, coronas...). Las probabilidades y su lógica las integra el ingeniero."
+  },
+  {
+   "title": "Rayo y Miga: correcciones de forma (Blender)",
+   "assignee": "chatgpt",
+   "needs": "modelado 3D dificil",
+   "asset": "Razas Slime Rush",
+   "detail": "Rayo más alto y alas más grandes y pegadas; Miga: bajar la masa frontal que tapa la boca. Render antes/después."
+  },
+  {
+   "title": "Bongo: animación de resorte gruesa con la cara visible (Blender)",
+   "assignee": "opus",
+   "needs": "modelado 3D dificil",
+   "asset": "Bongo",
+   "detail": "Resorte blando que conserve volumen y mantenga los ojos visibles todo el clip."
+  },
+  {
+   "title": "Crítica visual de biomas, kit, árboles y slimes contra la referencia",
+   "assignee": "antigravity",
+   "needs": "critica visual",
+   "asset": "Kit y mundo Slime Rush",
+   "detail": "Compara con 'A Bizarre Run' (hojas legibles, verdes/tierras, mate). Fallos concretos: qué, dónde, cómo arreglarlo."
+  },
+  {
+   "title": "Diseñar interfaz: marcador de tiempo y regreso, mochila, depósito, aviso de robo, resultados",
+   "assignee": "antigravity",
+   "needs": "UI e imagenes",
+   "asset": "UI Slime Rush",
+   "detail": "Mockups legibles en móvil (320x568) y escritorio. Incluye el aviso 'la meta se abrió' y el podio de llegada."
+  },
+  {
+   "title": "Documentar el giro a v2 y el reparto en Obsidian",
+   "assignee": "claude",
+   "needs": "escribir",
+   "asset": "",
+   "detail": "Orden permanente del usuario: registrar todo en la base."
+  },
+  {
+   "title": "Recuperar la historia de Genesis desde el chat 'Linux' y anotarla en la base",
+   "assignee": "claude",
+   "needs": "investigar",
+   "asset": "Genesis",
+   "detail": "Genesis solo vive en ese historial."
+  },
+  {
+   "title": "Copias del juego: ENCONTRADAS en Documents\\Codex\\2026-10-21\\c\\outputs\\slime-rush",
+   "assignee": "opus",
+   "needs": "",
+   "asset": "Slime Rush",
+   "detail": "La sesión del PC halló los .blend de árboles v01–v04 (estilo original 0.4.0), Characters.blend, el valle y QA rondas. Falta una COPIA DE SEGURIDAD fuera de esa carpeta.",
+   "status": "done"
+  },
+  {
+   "title": "Prueba con 2+ clientes: derrota, saqueo, cofres, depósito, volcán y colapso",
+   "assignee": "chatgpt",
+   "needs": "programar",
+   "asset": "Slime Rush v2",
+   "detail": "Al final, con todo integrado. Aquí sí 2 clientes; ciérralos al terminar."
+  },
+  {
+   "title": "Intro: animación de llegada de los botes y desembarco (Blender + Studio)",
+   "assignee": "opus",
+   "needs": "modelado 3D dificil",
+   "asset": "Intro Slime Rush",
+   "detail": "Modelos de bote (4–6 diseños) con clips de navegar y atracar; el generador ya da la posición de bote y de playa por jugador (spawns[i].boat y spawns[i]). Luego el ingeniero lo monta en cámara y secuencia."
+  },
+  {
+   "title": "Volcán y erupción: modelos y efectos propios (cono, lava que crece, ceniza)",
+   "assignee": "opus",
+   "needs": "modelado 3D dificil",
+   "asset": "Volcan",
+   "detail": "Reglas listas: Rules:enterCrater, lavaRadius(now), inLava. Falta el arte y la integración."
+  },
+  {
+   "title": "Desastres del colapso: modelos propios (tornado, grietas, tormenta, rayo, hundimiento)",
+   "assignee": "opus",
+   "needs": "modelado 3D dificil",
+   "asset": "Desastres",
+   "detail": "Rules:disasterSchedule() entrega la lista determinista de eventos con tiempo y posición. Nada de partículas básicas por defecto: mallas propias."
+  },
+  {
+   "title": "Integrar el colapso y el volcán en Studio con la lista de desastres",
+   "assignee": "chatgpt",
+   "needs": "programar",
+   "asset": "Slime Rush v2",
+   "detail": "Después del arte. Sincronizar tiempos con el servidor y que quien no depositó pierda todo."
+  },
+  {
+   "title": "Crítica de la historia: guion de la intro y del torneo (botes, dinero y fama)",
+   "assignee": "antigravity",
+   "needs": "escribir",
+   "asset": "Historia",
+   "detail": "Texto corto de presentación, nombre del torneo, tono. Debe caber en la animación de llegada."
+  },
+  {
+   "title": "Instalar Blender en el PC (necesita permiso de Maikol)",
+   "assignee": "humano",
+   "needs": "",
+   "asset": "PC",
+   "detail": "El PC no tiene Blender (revisado por la sesión del PC). Opción: winget install BlenderFoundation.Blender o el portable oficial verificando el hash. Sin Blender en el PC, el arte solo se puede hacer en la nube (bpy 5.0.1)."
+  },
+  {
+   "title": "Cerrar ventanas sobrantes de Roblox Studio: hay 7 y la regla dice UNA",
+   "assignee": "humano",
+   "needs": "",
+   "asset": "PC",
+   "detail": "La sesión del PC las contó y NO cerró ninguna. Que liste cuál ventana tiene cada archivo y cuáles tienen cambios sin guardar; Maikol decide cuáles cerrar."
+  },
+  {
+   "title": "Copia de seguridad de la carpeta Codex (copiar, no mover) antes de tocar o cerrar nada",
+   "assignee": "opus",
+   "needs": "",
+   "asset": "PC",
+   "detail": "robocopy/Copy-Item de C:\\Users\\maiko\\Documents\\Codex\\2026-10-21 a C:\\Users\\maiko\\Backups\\Codex-2026-10-22; verificar número de archivos y tamaño. Recomendar además subirla a OneDrive."
+  }
+ ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Mas1Lanzamiento",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": { "$className": "ReplicatedStorage", "Mas1": { "$path": "src" } },
+    "ServerScriptService": { "$className": "ServerScriptService", "Mas1Servidor": { "$path": "server" } },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": { "$className": "StarterPlayerScripts", "Mas1Cliente": { "$path": "client" } }
+    }
+  }
+}

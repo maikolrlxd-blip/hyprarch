@@ -1,0 +1,156 @@
+{
+  "Barricada_Sacos": {
+    "tris": 616,
+    "dims": [
+      13.34,
+      1.54,
+      2.19
+    ],
+    "tex": 1024,
+    "regiones": [
+      "saco"
+    ]
+  },
+  "Barricada_Madera": {
+    "tris": 616,
+    "dims": [
+      9.05,
+      1.87,
+      3.85
+    ],
+    "tex": 1024,
+    "regiones": [
+      "madera_vieja"
+    ]
+  },
+  "Barrera_Hormigon": {
+    "tris": 120,
+    "dims": [
+      11.31,
+      2.4,
+      3.26
+    ],
+    "tex": 1024,
+    "regiones": [
+      "hormigon",
+      "hierro"
+    ]
+  },
+  "Valla_Chapa": {
+    "tris": 140,
+    "dims": [
+      12.46,
+      0.53,
+      7.0
+    ],
+    "tex": 1024,
+    "regiones": [
+      "chapa",
+      "metal_gris"
+    ]
+  },
+  "Contenedor_Basura": {
+    "tris": 248,
+    "dims": [
+      6.3,
+      5.26,
+      7.1
+    ],
+    "tex": 1024,
+    "regiones": [
+      "metal_pintado",
+      "metal_gris",
+      "interior",
+      "goma",
+      "bolsa"
+    ]
+  },
+  "Farola_Doblada": {
+    "tris": 150,
+    "dims": [
+      5.58,
+      1.84,
+      13.77
+    ],
+    "tex": 512,
+    "regiones": [
+      "metal_gris",
+      "cristal_luz"
+    ]
+  },
+  "Hidrante": {
+    "tris": 168,
+    "dims": [
+      1.4,
+      1.23,
+      2.6
+    ],
+    "tex": 512,
+    "regiones": [
+      "rojo_senal"
+    ]
+  },
+  "Barriles": {
+    "tris": 144,
+    "dims": [
+      7.51,
+      4.88,
+      4.0
+    ],
+    "tex": 1024,
+    "regiones": [
+      "barril"
+    ]
+  },
+  "Senal_Alto": {
+    "tris": 48,
+    "dims": [
+      2.4,
+      0.21,
+      8.37
+    ],
+    "tex": 512,
+    "regiones": [
+      "metal_gris",
+      "rojo_senal"
+    ]
+  },
+  "Semaforo_Torcido": {
+    "tris": 114,
+    "dims": [
+      5.47,
+      0.92,
+      14.5
+    ],
+    "tex": 512,
+    "regiones": [
+      "metal_gris",
+      "amarillo"
+    ]
+  },
+  "Cajas_Madera": {
+    "tris": 176,
+    "dims": [
+      5.95,
+      2.62,
+      3.8
+    ],
+    "tex": 512,
+    "regiones": [
+      "caja"
+    ]
+  },
+  "Neumaticos": {
+    "tris": 224,
+    "dims": [
+      4.69,
+      2.4,
+      2.44
+    ],
+    "tex": 512,
+    "regiones": [
+      "goma",
+      "interior"
+    ]
+  }
+}

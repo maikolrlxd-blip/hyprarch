@@ -1,0 +1,92 @@
+{
+  "Coche_Sedan_Oxidado": {
+    "tris": 760,
+    "dims": [
+      7.0,
+      15.8,
+      5.15
+    ],
+    "tex": 1024,
+    "regiones": [
+      "pintura_azul",
+      "cromo",
+      "faro",
+      "luz_t",
+      "placa",
+      "goma",
+      "llanta"
+    ]
+  },
+  "Coche_Sedan_Quemado": {
+    "tris": 692,
+    "dims": [
+      6.55,
+      15.8,
+      5.73
+    ],
+    "tex": 1024,
+    "regiones": [
+      "quemado",
+      "cromo",
+      "faro",
+      "luz_t",
+      "placa",
+      "llanta"
+    ]
+  },
+  "Coche_Sedan_Volcado": {
+    "tris": 760,
+    "dims": [
+      7.0,
+      15.8,
+      5.1
+    ],
+    "tex": 1024,
+    "regiones": [
+      "pintura_roja",
+      "cromo",
+      "faro",
+      "luz_t",
+      "placa",
+      "goma",
+      "llanta"
+    ]
+  },
+  "Pickup_Abandonada": {
+    "tris": 988,
+    "dims": [
+      7.2,
+      17.8,
+      5.5
+    ],
+    "tex": 1024,
+    "regiones": [
+      "pintura_verde",
+      "madera",
+      "chatarra",
+      "cromo",
+      "faro",
+      "luz_t",
+      "goma",
+      "llanta"
+    ]
+  },
+  "Furgoneta_Blanca": {
+    "tris": 716,
+    "dims": [
+      7.35,
+      17.85,
+      7.68
+    ],
+    "tex": 1024,
+    "regiones": [
+      "pintura_blanca",
+      "cromo",
+      "faro",
+      "luz_t",
+      "chatarra",
+      "goma",
+      "llanta"
+    ]
+  }
+}

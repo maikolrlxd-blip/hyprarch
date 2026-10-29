@@ -1,0 +1,46 @@
+{
+  "nombre": "La Lamentadora",
+  "version": "0.1.0",
+  "triangulos": 3924,
+  "triangulos_lod1": 2564,
+  "mallas": 37,
+  "huesos": 38,
+  "dimensiones_reposo_blender_XYZ_studs": [
+    4.739423990249634,
+    2.2409024238586426,
+    9.264373049139977
+  ],
+  "clips": {
+    "Reposo": {
+      "segundos": 3.0,
+      "bucle": true
+    },
+    "Acechar": {
+      "segundos": 1.6,
+      "bucle": true
+    },
+    "Zarpazo": {
+      "segundos": 1.1333333333333333,
+      "bucle": false
+    },
+    "Lamento": {
+      "segundos": 2.4,
+      "bucle": false
+    },
+    "Impacto": {
+      "segundos": 0.6666666666666666,
+      "bucle": false
+    },
+    "Caer": {
+      "segundos": 2.0,
+      "bucle": false
+    }
+  },
+  "texturas": [
+    "LaLamentadora_Rostro_Color.png",
+    "LaLamentadora_Cuerpo_Color.png"
+  ],
+  "estado": "Blender; pendiente reimportacion y Roblox Studio",
+  "estilo": "mujer zombi adulta, terror sin gore",
+  "export": "FBX global_scale .01 -Z/Y; GLB escala Blender distinta, verificar importador"
+}

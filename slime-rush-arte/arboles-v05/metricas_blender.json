@@ -1,0 +1,43 @@
+{
+  "roble": {
+    "arbol": "RobleAbuelo",
+    "LOD0": {
+      "RobleAbuelo_Tronco_LOD0": {
+        "triangulos": 8500,
+        "vertices": 4252,
+        "degenerados": 0,
+        "vertices_sueltos": 0,
+        "aristas_no_manifold": 0
+      },
+      "RobleAbuelo_Copa_LOD0": {
+        "triangulos": 12500,
+        "vertices": 6242,
+        "degenerados": 1,
+        "vertices_sueltos": 0,
+        "aristas_no_manifold": 0
+      },
+      "total_triangulos": 21000
+    },
+    "LOD1": {
+      "RobleAbuelo_Tronco_LOD1": {
+        "triangulos": 2630,
+        "vertices": 1317,
+        "degenerados": 0,
+        "vertices_sueltos": 0,
+        "aristas_no_manifold": 0
+      },
+      "RobleAbuelo_Copa_LOD1": {
+        "triangulos": 3868,
+        "vertices": 1926,
+        "degenerados": 0,
+        "vertices_sueltos": 0,
+        "aristas_no_manifold": 0
+      },
+      "total_triangulos": 6498
+    },
+    "altura": 53.16,
+    "ancho_x": 42.27,
+    "ancho_y": 38.47
+  },
+  "_generado_con": "Blender (bpy) 5.0.1"
+}

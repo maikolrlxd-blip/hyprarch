@@ -1,0 +1,5 @@
+__pycache__/
+_prueba/
+*.blend1
+# texturas que extrae el importador 3D de Roblox Studio al leer un FBX
+*.fbm/

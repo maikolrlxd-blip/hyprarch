@@ -1,0 +1,2783 @@
+{
+  "descripcion": "Mapa apocaliptico 300x300 studs: calle principal (eje X) y calle lateral (eje Y) en cruz, 4 edificios, 6 vehiculos, barricadas, props y vegetacion. Posiciones en studs (Roblox: x = x, y_roblox = z, z_roblox = -y), giro alrededor de la vertical.",
+  "unidades": "1 stud; superficie de la calzada en z = 0, aceras y solares en z = 0.55",
+  "triangulos_totales": 30850,
+  "instancias": [
+    {
+      "nombre": "Calle_Recto_60_01",
+      "pieza": "Calle_Recto_60",
+      "fbx": "mapa/calles/fbx/Calle_Recto_60.fbx",
+      "pos_studs": [
+        -120,
+        0,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Recto_60_02",
+      "pieza": "Calle_Recto_60",
+      "fbx": "mapa/calles/fbx/Calle_Recto_60.fbx",
+      "pos_studs": [
+        -60,
+        0,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Recto_60_03",
+      "pieza": "Calle_Recto_60",
+      "fbx": "mapa/calles/fbx/Calle_Recto_60.fbx",
+      "pos_studs": [
+        60,
+        0,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Recto_60_04",
+      "pieza": "Calle_Recto_60",
+      "fbx": "mapa/calles/fbx/Calle_Recto_60.fbx",
+      "pos_studs": [
+        120,
+        0,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Cruce_60_01",
+      "pieza": "Calle_Cruce_60",
+      "fbx": "mapa/calles/fbx/Calle_Cruce_60.fbx",
+      "pos_studs": [
+        0,
+        0,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Rota_60_01",
+      "pieza": "Calle_Rota_60",
+      "fbx": "mapa/calles/fbx/Calle_Rota_60.fbx",
+      "pos_studs": [
+        0,
+        60,
+        0.0
+      ],
+      "giro_z_grados": 90
+    },
+    {
+      "nombre": "Calle_Recto_60_05",
+      "pieza": "Calle_Recto_60",
+      "fbx": "mapa/calles/fbx/Calle_Recto_60.fbx",
+      "pos_studs": [
+        0,
+        120,
+        0.0
+      ],
+      "giro_z_grados": 90
+    },
+    {
+      "nombre": "Calle_Recto_60_06",
+      "pieza": "Calle_Recto_60",
+      "fbx": "mapa/calles/fbx/Calle_Recto_60.fbx",
+      "pos_studs": [
+        0,
+        -60,
+        0.0
+      ],
+      "giro_z_grados": 90
+    },
+    {
+      "nombre": "Calle_Recto_60_07",
+      "pieza": "Calle_Recto_60",
+      "fbx": "mapa/calles/fbx/Calle_Recto_60.fbx",
+      "pos_studs": [
+        0,
+        -120,
+        0.0
+      ],
+      "giro_z_grados": 90
+    },
+    {
+      "nombre": "Suelo_Solar_60_01",
+      "pieza": "Suelo_Solar_60",
+      "fbx": "mapa/calles/fbx/Suelo_Solar_60.fbx",
+      "pos_studs": [
+        -60,
+        -60,
+        0.0
+      ],
+      "giro_z_grados": 180
+    },
+    {
+      "nombre": "Suelo_Solar_60_02",
+      "pieza": "Suelo_Solar_60",
+      "fbx": "mapa/calles/fbx/Suelo_Solar_60.fbx",
+      "pos_studs": [
+        -60,
+        -120,
+        0.0
+      ],
+      "giro_z_grados": 270
+    },
+    {
+      "nombre": "Suelo_Solar_60_03",
+      "pieza": "Suelo_Solar_60",
+      "fbx": "mapa/calles/fbx/Suelo_Solar_60.fbx",
+      "pos_studs": [
+        -120,
+        -60,
+        0.0
+      ],
+      "giro_z_grados": 270
+    },
+    {
+      "nombre": "Suelo_Solar_60_04",
+      "pieza": "Suelo_Solar_60",
+      "fbx": "mapa/calles/fbx/Suelo_Solar_60.fbx",
+      "pos_studs": [
+        -120,
+        -120,
+        0.0
+      ],
+      "giro_z_grados": 0
+    },
+    {
+      "nombre": "Suelo_Solar_60_05",
+      "pieza": "Suelo_Solar_60",
+      "fbx": "mapa/calles/fbx/Suelo_Solar_60.fbx",
+      "pos_studs": [
+        -60,
+        60,
+        0.0
+      ],
+      "giro_z_grados": 180
+    },
+    {
+      "nombre": "Suelo_Solar_60_06",
+      "pieza": "Suelo_Solar_60",
+      "fbx": "mapa/calles/fbx/Suelo_Solar_60.fbx",
+      "pos_studs": [
+        -60,
+        120,
+        0.0
+      ],
+      "giro_z_grados": 270
+    },
+    {
+      "nombre": "Suelo_Solar_60_07",
+      "pieza": "Suelo_Solar_60",
+      "fbx": "mapa/calles/fbx/Suelo_Solar_60.fbx",
+      "pos_studs": [
+        -120,
+        60,
+        0.0
+      ],
+      "giro_z_grados": 270
+    },
+    {
+      "nombre": "Suelo_Solar_60_08",
+      "pieza": "Suelo_Solar_60",
+      "fbx": "mapa/calles/fbx/Suelo_Solar_60.fbx",
+      "pos_studs": [
+        -120,
+        120,
+        0.0
+      ],
+      "giro_z_grados": 0
+    },
+    {
+      "nombre": "Suelo_Solar_60_09",
+      "pieza": "Suelo_Solar_60",
+      "fbx": "mapa/calles/fbx/Suelo_Solar_60.fbx",
+      "pos_studs": [
+        60,
+        -60,
+        0.0
+      ],
+      "giro_z_grados": 180
+    },
+    {
+      "nombre": "Suelo_Solar_60_10",
+      "pieza": "Suelo_Solar_60",
+      "fbx": "mapa/calles/fbx/Suelo_Solar_60.fbx",
+      "pos_studs": [
+        60,
+        -120,
+        0.0
+      ],
+      "giro_z_grados": 270
+    },
+    {
+      "nombre": "Suelo_Solar_60_11",
+      "pieza": "Suelo_Solar_60",
+      "fbx": "mapa/calles/fbx/Suelo_Solar_60.fbx",
+      "pos_studs": [
+        120,
+        -60,
+        0.0
+      ],
+      "giro_z_grados": 270
+    },
+    {
+      "nombre": "Suelo_Solar_60_12",
+      "pieza": "Suelo_Solar_60",
+      "fbx": "mapa/calles/fbx/Suelo_Solar_60.fbx",
+      "pos_studs": [
+        120,
+        -120,
+        0.0
+      ],
+      "giro_z_grados": 0
+    },
+    {
+      "nombre": "Suelo_Solar_60_13",
+      "pieza": "Suelo_Solar_60",
+      "fbx": "mapa/calles/fbx/Suelo_Solar_60.fbx",
+      "pos_studs": [
+        60,
+        60,
+        0.0
+      ],
+      "giro_z_grados": 180
+    },
+    {
+      "nombre": "Suelo_Solar_60_14",
+      "pieza": "Suelo_Solar_60",
+      "fbx": "mapa/calles/fbx/Suelo_Solar_60.fbx",
+      "pos_studs": [
+        60,
+        120,
+        0.0
+      ],
+      "giro_z_grados": 270
+    },
+    {
+      "nombre": "Suelo_Solar_60_15",
+      "pieza": "Suelo_Solar_60",
+      "fbx": "mapa/calles/fbx/Suelo_Solar_60.fbx",
+      "pos_studs": [
+        120,
+        60,
+        0.0
+      ],
+      "giro_z_grados": 270
+    },
+    {
+      "nombre": "Suelo_Solar_60_16",
+      "pieza": "Suelo_Solar_60",
+      "fbx": "mapa/calles/fbx/Suelo_Solar_60.fbx",
+      "pos_studs": [
+        120,
+        120,
+        0.0
+      ],
+      "giro_z_grados": 0
+    },
+    {
+      "nombre": "Edificio_Tienda_01",
+      "pieza": "Edificio_Tienda",
+      "fbx": "mapa/edificios/fbx/Edificio_Tienda.fbx",
+      "pos_studs": [
+        -78,
+        45,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Edificio_Bloque_01",
+      "pieza": "Edificio_Bloque",
+      "fbx": "mapa/edificios/fbx/Edificio_Bloque.fbx",
+      "pos_studs": [
+        78,
+        47,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Edificio_Almacen_01",
+      "pieza": "Edificio_Almacen",
+      "fbx": "mapa/edificios/fbx/Edificio_Almacen.fbx",
+      "pos_studs": [
+        82,
+        -52,
+        0.0
+      ],
+      "giro_z_grados": 180
+    },
+    {
+      "nombre": "Edificio_Tienda_02",
+      "pieza": "Edificio_Tienda",
+      "fbx": "mapa/edificios/fbx/Edificio_Tienda.fbx",
+      "pos_studs": [
+        -120,
+        -46,
+        0.0
+      ],
+      "giro_z_grados": 180
+    },
+    {
+      "nombre": "Coche_Sedan_Oxidado_01",
+      "pieza": "Coche_Sedan_Oxidado",
+      "fbx": "mapa/vehiculos/fbx/Coche_Sedan_Oxidado.fbx",
+      "pos_studs": [
+        -96,
+        8,
+        0.0
+      ],
+      "giro_z_grados": 98
+    },
+    {
+      "nombre": "Coche_Sedan_Volcado_01",
+      "pieza": "Coche_Sedan_Volcado",
+      "fbx": "mapa/vehiculos/fbx/Coche_Sedan_Volcado.fbx",
+      "pos_studs": [
+        34,
+        -7,
+        0.0
+      ],
+      "giro_z_grados": 160
+    },
+    {
+      "nombre": "Coche_Sedan_Quemado_01",
+      "pieza": "Coche_Sedan_Quemado",
+      "fbx": "mapa/vehiculos/fbx/Coche_Sedan_Quemado.fbx",
+      "pos_studs": [
+        112,
+        9,
+        0.0
+      ],
+      "giro_z_grados": -84
+    },
+    {
+      "nombre": "Pickup_Abandonada_01",
+      "pieza": "Pickup_Abandonada",
+      "fbx": "mapa/vehiculos/fbx/Pickup_Abandonada.fbx",
+      "pos_studs": [
+        -42,
+        -9,
+        0.0
+      ],
+      "giro_z_grados": 272
+    },
+    {
+      "nombre": "Furgoneta_Blanca_01",
+      "pieza": "Furgoneta_Blanca",
+      "fbx": "mapa/vehiculos/fbx/Furgoneta_Blanca.fbx",
+      "pos_studs": [
+        7,
+        102,
+        0.0
+      ],
+      "giro_z_grados": 4
+    },
+    {
+      "nombre": "Coche_Sedan_Oxidado_02",
+      "pieza": "Coche_Sedan_Oxidado",
+      "fbx": "mapa/vehiculos/fbx/Coche_Sedan_Oxidado.fbx",
+      "pos_studs": [
+        -6,
+        -128,
+        0.0
+      ],
+      "giro_z_grados": 12
+    },
+    {
+      "nombre": "Barricada_Sacos_01",
+      "pieza": "Barricada_Sacos",
+      "fbx": "mapa/props/fbx/Barricada_Sacos.fbx",
+      "pos_studs": [
+        -1,
+        -96,
+        0.0
+      ],
+      "giro_z_grados": 0
+    },
+    {
+      "nombre": "Barricada_Sacos_02",
+      "pieza": "Barricada_Sacos",
+      "fbx": "mapa/props/fbx/Barricada_Sacos.fbx",
+      "pos_studs": [
+        11,
+        -98,
+        0.0
+      ],
+      "giro_z_grados": 12
+    },
+    {
+      "nombre": "Barrera_Hormigon_01",
+      "pieza": "Barrera_Hormigon",
+      "fbx": "mapa/props/fbx/Barrera_Hormigon.fbx",
+      "pos_studs": [
+        136,
+        -12,
+        0.0
+      ],
+      "giro_z_grados": 90
+    },
+    {
+      "nombre": "Barrera_Hormigon_02",
+      "pieza": "Barrera_Hormigon",
+      "fbx": "mapa/props/fbx/Barrera_Hormigon.fbx",
+      "pos_studs": [
+        136,
+        0,
+        0.0
+      ],
+      "giro_z_grados": 90
+    },
+    {
+      "nombre": "Barrera_Hormigon_03",
+      "pieza": "Barrera_Hormigon",
+      "fbx": "mapa/props/fbx/Barrera_Hormigon.fbx",
+      "pos_studs": [
+        136,
+        12,
+        0.0
+      ],
+      "giro_z_grados": 90
+    },
+    {
+      "nombre": "Barricada_Madera_01",
+      "pieza": "Barricada_Madera",
+      "fbx": "mapa/props/fbx/Barricada_Madera.fbx",
+      "pos_studs": [
+        -60,
+        20,
+        0.0
+      ],
+      "giro_z_grados": 0
+    },
+    {
+      "nombre": "Barricada_Madera_02",
+      "pieza": "Barricada_Madera",
+      "fbx": "mapa/props/fbx/Barricada_Madera.fbx",
+      "pos_studs": [
+        0,
+        140,
+        0.0
+      ],
+      "giro_z_grados": 0
+    },
+    {
+      "nombre": "Valla_Chapa_01",
+      "pieza": "Valla_Chapa",
+      "fbx": "mapa/props/fbx/Valla_Chapa.fbx",
+      "pos_studs": [
+        -60,
+        -33,
+        0.0
+      ],
+      "giro_z_grados": 0
+    },
+    {
+      "nombre": "Valla_Chapa_02",
+      "pieza": "Valla_Chapa",
+      "fbx": "mapa/props/fbx/Valla_Chapa.fbx",
+      "pos_studs": [
+        -80,
+        -33,
+        0.0
+      ],
+      "giro_z_grados": 0
+    },
+    {
+      "nombre": "Valla_Chapa_03",
+      "pieza": "Valla_Chapa",
+      "fbx": "mapa/props/fbx/Valla_Chapa.fbx",
+      "pos_studs": [
+        -100,
+        -33,
+        0.0
+      ],
+      "giro_z_grados": 0
+    },
+    {
+      "nombre": "Farola_Doblada_01",
+      "pieza": "Farola_Doblada",
+      "fbx": "mapa/props/fbx/Farola_Doblada.fbx",
+      "pos_studs": [
+        -130,
+        23,
+        0.0
+      ],
+      "giro_z_grados": 180
+    },
+    {
+      "nombre": "Farola_Doblada_02",
+      "pieza": "Farola_Doblada",
+      "fbx": "mapa/props/fbx/Farola_Doblada.fbx",
+      "pos_studs": [
+        -70,
+        23,
+        0.0
+      ],
+      "giro_z_grados": 180
+    },
+    {
+      "nombre": "Farola_Doblada_03",
+      "pieza": "Farola_Doblada",
+      "fbx": "mapa/props/fbx/Farola_Doblada.fbx",
+      "pos_studs": [
+        100,
+        23,
+        0.0
+      ],
+      "giro_z_grados": 180
+    },
+    {
+      "nombre": "Farola_Doblada_04",
+      "pieza": "Farola_Doblada",
+      "fbx": "mapa/props/fbx/Farola_Doblada.fbx",
+      "pos_studs": [
+        40,
+        -23,
+        0.0
+      ],
+      "giro_z_grados": 0
+    },
+    {
+      "nombre": "Farola_Doblada_05",
+      "pieza": "Farola_Doblada",
+      "fbx": "mapa/props/fbx/Farola_Doblada.fbx",
+      "pos_studs": [
+        -100,
+        -23,
+        0.0
+      ],
+      "giro_z_grados": 0
+    },
+    {
+      "nombre": "Farola_Doblada_06",
+      "pieza": "Farola_Doblada",
+      "fbx": "mapa/props/fbx/Farola_Doblada.fbx",
+      "pos_studs": [
+        23,
+        70,
+        0.0
+      ],
+      "giro_z_grados": 270
+    },
+    {
+      "nombre": "Farola_Doblada_07",
+      "pieza": "Farola_Doblada",
+      "fbx": "mapa/props/fbx/Farola_Doblada.fbx",
+      "pos_studs": [
+        -23,
+        -80,
+        0.0
+      ],
+      "giro_z_grados": 90
+    },
+    {
+      "nombre": "Hidrante_01",
+      "pieza": "Hidrante",
+      "fbx": "mapa/props/fbx/Hidrante.fbx",
+      "pos_studs": [
+        -45,
+        21,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Hidrante_02",
+      "pieza": "Hidrante",
+      "fbx": "mapa/props/fbx/Hidrante.fbx",
+      "pos_studs": [
+        55,
+        -21,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Contenedor_Basura_01",
+      "pieza": "Contenedor_Basura",
+      "fbx": "mapa/props/fbx/Contenedor_Basura.fbx",
+      "pos_studs": [
+        -56,
+        40,
+        0.0
+      ],
+      "giro_z_grados": 90
+    },
+    {
+      "nombre": "Contenedor_Basura_02",
+      "pieza": "Contenedor_Basura",
+      "fbx": "mapa/props/fbx/Contenedor_Basura.fbx",
+      "pos_studs": [
+        104,
+        -30,
+        0.0
+      ],
+      "giro_z_grados": 0
+    },
+    {
+      "nombre": "Barriles_01",
+      "pieza": "Barriles",
+      "fbx": "mapa/props/fbx/Barriles.fbx",
+      "pos_studs": [
+        96,
+        -31,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Senal_Alto_01",
+      "pieza": "Senal_Alto",
+      "fbx": "mapa/props/fbx/Senal_Alto.fbx",
+      "pos_studs": [
+        22,
+        22,
+        0.0
+      ],
+      "giro_z_grados": 180
+    },
+    {
+      "nombre": "Semaforo_Torcido_01",
+      "pieza": "Semaforo_Torcido",
+      "fbx": "mapa/props/fbx/Semaforo_Torcido.fbx",
+      "pos_studs": [
+        -22,
+        -22,
+        0.0
+      ],
+      "giro_z_grados": 0
+    },
+    {
+      "nombre": "Cajas_Madera_01",
+      "pieza": "Cajas_Madera",
+      "fbx": "mapa/props/fbx/Cajas_Madera.fbx",
+      "pos_studs": [
+        -62,
+        33,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Neumaticos_01",
+      "pieza": "Neumaticos",
+      "fbx": "mapa/props/fbx/Neumaticos.fbx",
+      "pos_studs": [
+        -110,
+        -64,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Escombros_Grande_01",
+      "pieza": "Escombros_Grande",
+      "fbx": "mapa/natura/fbx/Escombros_Grande.fbx",
+      "pos_studs": [
+        92,
+        30,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Escombros_Pequeno_01",
+      "pieza": "Escombros_Pequeno",
+      "fbx": "mapa/natura/fbx/Escombros_Pequeno.fbx",
+      "pos_studs": [
+        -20,
+        40,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Escombros_Ladrillos_01",
+      "pieza": "Escombros_Ladrillos",
+      "fbx": "mapa/natura/fbx/Escombros_Ladrillos.fbx",
+      "pos_studs": [
+        60,
+        28,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Escombros_Pequeno_02",
+      "pieza": "Escombros_Pequeno",
+      "fbx": "mapa/natura/fbx/Escombros_Pequeno.fbx",
+      "pos_studs": [
+        40,
+        -100,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Arbol_Muerto_01",
+      "pieza": "Arbol_Muerto",
+      "fbx": "mapa/natura/fbx/Arbol_Muerto.fbx",
+      "pos_studs": [
+        -88,
+        -92,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Arbol_Invasor_01",
+      "pieza": "Arbol_Invasor",
+      "fbx": "mapa/natura/fbx/Arbol_Invasor.fbx",
+      "pos_studs": [
+        -60,
+        -72,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Arbol_Invasor_02",
+      "pieza": "Arbol_Invasor",
+      "fbx": "mapa/natura/fbx/Arbol_Invasor.fbx",
+      "pos_studs": [
+        120,
+        110,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Arbol_Muerto_02",
+      "pieza": "Arbol_Muerto",
+      "fbx": "mapa/natura/fbx/Arbol_Muerto.fbx",
+      "pos_studs": [
+        60,
+        120,
+        0.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Arbusto_01",
+      "pieza": "Arbusto",
+      "fbx": "mapa/natura/fbx/Arbusto.fbx",
+      "pos_studs": [
+        -75,
+        -55,
+        0.0
+      ],
+      "giro_z_grados": 0
+    },
+    {
+      "nombre": "Arbusto_02",
+      "pieza": "Arbusto",
+      "fbx": "mapa/natura/fbx/Arbusto.fbx",
+      "pos_studs": [
+        -95,
+        -70,
+        0.0
+      ],
+      "giro_z_grados": 47
+    },
+    {
+      "nombre": "Arbusto_03",
+      "pieza": "Arbusto",
+      "fbx": "mapa/natura/fbx/Arbusto.fbx",
+      "pos_studs": [
+        -120,
+        -100,
+        0.0
+      ],
+      "giro_z_grados": 94
+    },
+    {
+      "nombre": "Arbusto_04",
+      "pieza": "Arbusto",
+      "fbx": "mapa/natura/fbx/Arbusto.fbx",
+      "pos_studs": [
+        -45,
+        -110,
+        0.0
+      ],
+      "giro_z_grados": 141
+    },
+    {
+      "nombre": "Arbusto_05",
+      "pieza": "Arbusto",
+      "fbx": "mapa/natura/fbx/Arbusto.fbx",
+      "pos_studs": [
+        -130,
+        70,
+        0.0
+      ],
+      "giro_z_grados": 188
+    },
+    {
+      "nombre": "Arbusto_06",
+      "pieza": "Arbusto",
+      "fbx": "mapa/natura/fbx/Arbusto.fbx",
+      "pos_studs": [
+        40,
+        130,
+        0.0
+      ],
+      "giro_z_grados": 235
+    },
+    {
+      "nombre": "Arbusto_07",
+      "pieza": "Arbusto",
+      "fbx": "mapa/natura/fbx/Arbusto.fbx",
+      "pos_studs": [
+        130,
+        -120,
+        0.0
+      ],
+      "giro_z_grados": 282
+    },
+    {
+      "nombre": "Arbusto_08",
+      "pieza": "Arbusto",
+      "fbx": "mapa/natura/fbx/Arbusto.fbx",
+      "pos_studs": [
+        60,
+        -130,
+        0.0
+      ],
+      "giro_z_grados": 329
+    },
+    {
+      "nombre": "Hierba_Alta_01",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        29.47,
+        87.37,
+        0.55
+      ],
+      "giro_z_grados": 209.5783329831724
+    },
+    {
+      "nombre": "Hierba_Alta_02",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        -117.7,
+        -29.87,
+        0.55
+      ],
+      "giro_z_grados": 172.45846733070024
+    },
+    {
+      "nombre": "Hierba_Alta_03",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        -30.47,
+        -112.04,
+        0.55
+      ],
+      "giro_z_grados": 140.84214857843833
+    },
+    {
+      "nombre": "Hierba_Alta_04",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        4.85,
+        -29.86,
+        0.55
+      ],
+      "giro_z_grados": 211.24748571773065
+    },
+    {
+      "nombre": "Hierba_Alta_05",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        -30.91,
+        -62.58,
+        0.55
+      ],
+      "giro_z_grados": 233.47699454873703
+    },
+    {
+      "nombre": "Hierba_Alta_06",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        56.9,
+        29.59,
+        0.55
+      ],
+      "giro_z_grados": 0.5364300631810215
+    },
+    {
+      "nombre": "Hierba_Alta_07",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        -29.6,
+        -53.94,
+        0.55
+      ],
+      "giro_z_grados": 321.0159853602566
+    },
+    {
+      "nombre": "Hierba_Alta_08",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        24.7,
+        29.94,
+        0.55
+      ],
+      "giro_z_grados": 278.3797234735739
+    },
+    {
+      "nombre": "Hierba_Alta_09",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        -30.41,
+        -36.47,
+        0.55
+      ],
+      "giro_z_grados": 32.70697686153282
+    },
+    {
+      "nombre": "Hierba_Alta_10",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        46.55,
+        -30.86,
+        0.55
+      ],
+      "giro_z_grados": 74.58882050916044
+    },
+    {
+      "nombre": "Hierba_Alta_11",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        29.6,
+        70.11,
+        0.55
+      ],
+      "giro_z_grados": 259.9793309311623
+    },
+    {
+      "nombre": "Hierba_Alta_12",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        -81.57,
+        30.66,
+        0.55
+      ],
+      "giro_z_grados": 236.75479591436755
+    },
+    {
+      "nombre": "Hierba_Alta_13",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        -30.64,
+        -20.71,
+        0.55
+      ],
+      "giro_z_grados": 273.13396601577085
+    },
+    {
+      "nombre": "Hierba_Alta_14",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        109.76,
+        29.2,
+        0.55
+      ],
+      "giro_z_grados": 305.91660148781534
+    },
+    {
+      "nombre": "Hierba_Alta_15",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        29.96,
+        -102.56,
+        0.55
+      ],
+      "giro_z_grados": 251.43348418095368
+    },
+    {
+      "nombre": "Hierba_Alta_16",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        -60.33,
+        -30.74,
+        0.55
+      ],
+      "giro_z_grados": 99.13477570130776
+    },
+    {
+      "nombre": "Hierba_Alta_17",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        29.8,
+        32.74,
+        0.55
+      ],
+      "giro_z_grados": 70.79012631796454
+    },
+    {
+      "nombre": "Hierba_Alta_18",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        -92.72,
+        30.49,
+        0.55
+      ],
+      "giro_z_grados": 270.80043061293986
+    },
+    {
+      "nombre": "Hierba_Alta_19",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        -30.84,
+        -85.33,
+        0.55
+      ],
+      "giro_z_grados": 306.3244048529945
+    },
+    {
+      "nombre": "Hierba_Alta_20",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        -95.99,
+        30.93,
+        0.55
+      ],
+      "giro_z_grados": 224.5293821182146
+    },
+    {
+      "nombre": "Hierba_Alta_21",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        30.94,
+        83.24,
+        0.55
+      ],
+      "giro_z_grados": 284.37029139187956
+    },
+    {
+      "nombre": "Hierba_Alta_22",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        -129.31,
+        29.74,
+        0.55
+      ],
+      "giro_z_grados": 30.56211797956849
+    },
+    {
+      "nombre": "Hierba_Alta_23",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        -29.43,
+        104.01,
+        0.55
+      ],
+      "giro_z_grados": 45.63179269858995
+    },
+    {
+      "nombre": "Hierba_Alta_24",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        -58.94,
+        -29.99,
+        0.55
+      ],
+      "giro_z_grados": 305.80574802823327
+    },
+    {
+      "nombre": "Hierba_Alta_25",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        30.42,
+        -83.03,
+        0.55
+      ],
+      "giro_z_grados": 196.19376532488147
+    },
+    {
+      "nombre": "Hierba_Alta_26",
+      "pieza": "Hierba_Alta",
+      "fbx": "mapa/natura/fbx/Hierba_Alta.fbx",
+      "pos_studs": [
+        59.73,
+        29.1,
+        0.55
+      ],
+      "giro_z_grados": 244.7583002006657
+    },
+    {
+      "nombre": "Maleza_01",
+      "pieza": "Maleza",
+      "fbx": "mapa/natura/fbx/Maleza.fbx",
+      "pos_studs": [
+        -36.88,
+        -17.6,
+        0.0
+      ],
+      "giro_z_grados": 240.8858986125369
+    },
+    {
+      "nombre": "Maleza_02",
+      "pieza": "Maleza",
+      "fbx": "mapa/natura/fbx/Maleza.fbx",
+      "pos_studs": [
+        6.45,
+        17.53,
+        0.0
+      ],
+      "giro_z_grados": 71.33389690087186
+    },
+    {
+      "nombre": "Maleza_03",
+      "pieza": "Maleza",
+      "fbx": "mapa/natura/fbx/Maleza.fbx",
+      "pos_studs": [
+        -1.35,
+        17.49,
+        0.0
+      ],
+      "giro_z_grados": 193.04817320513214
+    },
+    {
+      "nombre": "Maleza_04",
+      "pieza": "Maleza",
+      "fbx": "mapa/natura/fbx/Maleza.fbx",
+      "pos_studs": [
+        76.75,
+        -17.44,
+        0.0
+      ],
+      "giro_z_grados": 7.056150678579436
+    },
+    {
+      "nombre": "Maleza_05",
+      "pieza": "Maleza",
+      "fbx": "mapa/natura/fbx/Maleza.fbx",
+      "pos_studs": [
+        7.77,
+        -17.64,
+        0.0
+      ],
+      "giro_z_grados": 139.93100295002523
+    },
+    {
+      "nombre": "Maleza_06",
+      "pieza": "Maleza",
+      "fbx": "mapa/natura/fbx/Maleza.fbx",
+      "pos_studs": [
+        -33.47,
+        -17.75,
+        0.0
+      ],
+      "giro_z_grados": 141.46935982387524
+    },
+    {
+      "nombre": "Maleza_07",
+      "pieza": "Maleza",
+      "fbx": "mapa/natura/fbx/Maleza.fbx",
+      "pos_studs": [
+        -42.32,
+        17.49,
+        0.0
+      ],
+      "giro_z_grados": 33.58515915050897
+    },
+    {
+      "nombre": "Maleza_08",
+      "pieza": "Maleza",
+      "fbx": "mapa/natura/fbx/Maleza.fbx",
+      "pos_studs": [
+        13.09,
+        -17.75,
+        0.0
+      ],
+      "giro_z_grados": 202.65194335670523
+    },
+    {
+      "nombre": "Maleza_09",
+      "pieza": "Maleza",
+      "fbx": "mapa/natura/fbx/Maleza.fbx",
+      "pos_studs": [
+        68.29,
+        -17.71,
+        0.0
+      ],
+      "giro_z_grados": 267.84228370049317
+    },
+    {
+      "nombre": "Maleza_10",
+      "pieza": "Maleza",
+      "fbx": "mapa/natura/fbx/Maleza.fbx",
+      "pos_studs": [
+        87.69,
+        17.69,
+        0.0
+      ],
+      "giro_z_grados": 91.35187011433196
+    },
+    {
+      "nombre": "Maleza_11",
+      "pieza": "Maleza",
+      "fbx": "mapa/natura/fbx/Maleza.fbx",
+      "pos_studs": [
+        -5.05,
+        17.36,
+        0.0
+      ],
+      "giro_z_grados": 205.758569924147
+    },
+    {
+      "nombre": "Maleza_12",
+      "pieza": "Maleza",
+      "fbx": "mapa/natura/fbx/Maleza.fbx",
+      "pos_studs": [
+        -50.99,
+        -17.57,
+        0.0
+      ],
+      "giro_z_grados": 209.66995089783256
+    },
+    {
+      "nombre": "Maleza_13",
+      "pieza": "Maleza",
+      "fbx": "mapa/natura/fbx/Maleza.fbx",
+      "pos_studs": [
+        -110.77,
+        17.43,
+        0.0
+      ],
+      "giro_z_grados": 254.39486799613846
+    },
+    {
+      "nombre": "Maleza_14",
+      "pieza": "Maleza",
+      "fbx": "mapa/natura/fbx/Maleza.fbx",
+      "pos_studs": [
+        -115.32,
+        -17.3,
+        0.0
+      ],
+      "giro_z_grados": 184.53508414397683
+    },
+    {
+      "nombre": "Maleza_15",
+      "pieza": "Maleza",
+      "fbx": "mapa/natura/fbx/Maleza.fbx",
+      "pos_studs": [
+        -26.71,
+        17.4,
+        0.0
+      ],
+      "giro_z_grados": 70.99875660419855
+    },
+    {
+      "nombre": "Maleza_16",
+      "pieza": "Maleza",
+      "fbx": "mapa/natura/fbx/Maleza.fbx",
+      "pos_studs": [
+        120.92,
+        17.35,
+        0.0
+      ],
+      "giro_z_grados": 52.94315067596446
+    },
+    {
+      "nombre": "Enredadera_Muro_01",
+      "pieza": "Enredadera_Muro",
+      "fbx": "mapa/natura/fbx/Enredadera_Muro.fbx",
+      "pos_studs": [
+        66,
+        35.0,
+        0.0
+      ],
+      "giro_z_grados": 0
+    },
+    {
+      "nombre": "Enredadera_Muro_02",
+      "pieza": "Enredadera_Muro",
+      "fbx": "mapa/natura/fbx/Enredadera_Muro.fbx",
+      "pos_studs": [
+        -96.4,
+        45,
+        0.0
+      ],
+      "giro_z_grados": 270
+    }
+  ],
+  "colisiones": [
+    {
+      "nombre": "Calle_Recto_60_01_Colision",
+      "centro": [
+        -120.0,
+        0.0,
+        -0.5
+      ],
+      "tamano": [
+        60,
+        36,
+        1.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Recto_60_01_Colision_2",
+      "centro": [
+        -120.0,
+        24.0,
+        -0.225
+      ],
+      "tamano": [
+        60,
+        12,
+        1.55
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Recto_60_01_Colision_3",
+      "centro": [
+        -120.0,
+        -24.0,
+        -0.225
+      ],
+      "tamano": [
+        60,
+        12,
+        1.55
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Recto_60_02_Colision",
+      "centro": [
+        -60.0,
+        0.0,
+        -0.5
+      ],
+      "tamano": [
+        60,
+        36,
+        1.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Recto_60_02_Colision_2",
+      "centro": [
+        -60.0,
+        24.0,
+        -0.225
+      ],
+      "tamano": [
+        60,
+        12,
+        1.55
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Recto_60_02_Colision_3",
+      "centro": [
+        -60.0,
+        -24.0,
+        -0.225
+      ],
+      "tamano": [
+        60,
+        12,
+        1.55
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Recto_60_03_Colision",
+      "centro": [
+        60.0,
+        0.0,
+        -0.5
+      ],
+      "tamano": [
+        60,
+        36,
+        1.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Recto_60_03_Colision_2",
+      "centro": [
+        60.0,
+        24.0,
+        -0.225
+      ],
+      "tamano": [
+        60,
+        12,
+        1.55
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Recto_60_03_Colision_3",
+      "centro": [
+        60.0,
+        -24.0,
+        -0.225
+      ],
+      "tamano": [
+        60,
+        12,
+        1.55
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Recto_60_04_Colision",
+      "centro": [
+        120.0,
+        0.0,
+        -0.5
+      ],
+      "tamano": [
+        60,
+        36,
+        1.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Recto_60_04_Colision_2",
+      "centro": [
+        120.0,
+        24.0,
+        -0.225
+      ],
+      "tamano": [
+        60,
+        12,
+        1.55
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Recto_60_04_Colision_3",
+      "centro": [
+        120.0,
+        -24.0,
+        -0.225
+      ],
+      "tamano": [
+        60,
+        12,
+        1.55
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Cruce_60_01_Colision",
+      "centro": [
+        0.0,
+        0.0,
+        -0.5
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Cruce_60_01_Colision_2",
+      "centro": [
+        -24.0,
+        -24.0,
+        0.05
+      ],
+      "tamano": [
+        12,
+        12,
+        1.2
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Cruce_60_01_Colision_3",
+      "centro": [
+        -24.0,
+        24.0,
+        0.05
+      ],
+      "tamano": [
+        12,
+        12,
+        1.2
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Cruce_60_01_Colision_4",
+      "centro": [
+        24.0,
+        -24.0,
+        0.05
+      ],
+      "tamano": [
+        12,
+        12,
+        1.2
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Cruce_60_01_Colision_5",
+      "centro": [
+        24.0,
+        24.0,
+        0.05
+      ],
+      "tamano": [
+        12,
+        12,
+        1.2
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Calle_Rota_60_01_Colision",
+      "centro": [
+        -0.0,
+        40.5,
+        -0.5
+      ],
+      "tamano": [
+        21,
+        36,
+        1
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Calle_Rota_60_01_Colision_2",
+      "centro": [
+        0.0,
+        79.5,
+        -0.5
+      ],
+      "tamano": [
+        21,
+        36,
+        1
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Calle_Rota_60_01_Colision_3",
+      "centro": [
+        -13.5,
+        60.0,
+        -0.5
+      ],
+      "tamano": [
+        18,
+        9,
+        1
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Calle_Rota_60_01_Colision_4",
+      "centro": [
+        13.5,
+        60.0,
+        -0.5
+      ],
+      "tamano": [
+        18,
+        9,
+        1
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Calle_Rota_60_01_Colision_5",
+      "centro": [
+        0.0,
+        60.0,
+        -2.2
+      ],
+      "tamano": [
+        18.4,
+        18.4,
+        0.6
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Calle_Rota_60_01_Colision_6",
+      "centro": [
+        -24.0,
+        60.0,
+        -0.225
+      ],
+      "tamano": [
+        60,
+        12,
+        1.55
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Calle_Rota_60_01_Colision_7",
+      "centro": [
+        24.0,
+        60.0,
+        -0.225
+      ],
+      "tamano": [
+        60,
+        12,
+        1.55
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Calle_Recto_60_05_Colision",
+      "centro": [
+        0.0,
+        120.0,
+        -0.5
+      ],
+      "tamano": [
+        60,
+        36,
+        1.0
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Calle_Recto_60_05_Colision_2",
+      "centro": [
+        -24.0,
+        120.0,
+        -0.225
+      ],
+      "tamano": [
+        60,
+        12,
+        1.55
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Calle_Recto_60_05_Colision_3",
+      "centro": [
+        24.0,
+        120.0,
+        -0.225
+      ],
+      "tamano": [
+        60,
+        12,
+        1.55
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Calle_Recto_60_06_Colision",
+      "centro": [
+        0.0,
+        -60.0,
+        -0.5
+      ],
+      "tamano": [
+        60,
+        36,
+        1.0
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Calle_Recto_60_06_Colision_2",
+      "centro": [
+        -24.0,
+        -60.0,
+        -0.225
+      ],
+      "tamano": [
+        60,
+        12,
+        1.55
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Calle_Recto_60_06_Colision_3",
+      "centro": [
+        24.0,
+        -60.0,
+        -0.225
+      ],
+      "tamano": [
+        60,
+        12,
+        1.55
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Calle_Recto_60_07_Colision",
+      "centro": [
+        0.0,
+        -120.0,
+        -0.5
+      ],
+      "tamano": [
+        60,
+        36,
+        1.0
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Calle_Recto_60_07_Colision_2",
+      "centro": [
+        -24.0,
+        -120.0,
+        -0.225
+      ],
+      "tamano": [
+        60,
+        12,
+        1.55
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Calle_Recto_60_07_Colision_3",
+      "centro": [
+        24.0,
+        -120.0,
+        -0.225
+      ],
+      "tamano": [
+        60,
+        12,
+        1.55
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Suelo_Solar_60_01_Colision",
+      "centro": [
+        -60.0,
+        -60.0,
+        0.05
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 180.0
+    },
+    {
+      "nombre": "Suelo_Solar_60_02_Colision",
+      "centro": [
+        -60.0,
+        -120.0,
+        0.05
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 270.0
+    },
+    {
+      "nombre": "Suelo_Solar_60_03_Colision",
+      "centro": [
+        -120.0,
+        -60.0,
+        0.05
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 270.0
+    },
+    {
+      "nombre": "Suelo_Solar_60_04_Colision",
+      "centro": [
+        -120.0,
+        -120.0,
+        0.05
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Suelo_Solar_60_05_Colision",
+      "centro": [
+        -60.0,
+        60.0,
+        0.05
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 180.0
+    },
+    {
+      "nombre": "Suelo_Solar_60_06_Colision",
+      "centro": [
+        -60.0,
+        120.0,
+        0.05
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 270.0
+    },
+    {
+      "nombre": "Suelo_Solar_60_07_Colision",
+      "centro": [
+        -120.0,
+        60.0,
+        0.05
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 270.0
+    },
+    {
+      "nombre": "Suelo_Solar_60_08_Colision",
+      "centro": [
+        -120.0,
+        120.0,
+        0.05
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Suelo_Solar_60_09_Colision",
+      "centro": [
+        60.0,
+        -60.0,
+        0.05
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 180.0
+    },
+    {
+      "nombre": "Suelo_Solar_60_10_Colision",
+      "centro": [
+        60.0,
+        -120.0,
+        0.05
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 270.0
+    },
+    {
+      "nombre": "Suelo_Solar_60_11_Colision",
+      "centro": [
+        120.0,
+        -60.0,
+        0.05
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 270.0
+    },
+    {
+      "nombre": "Suelo_Solar_60_12_Colision",
+      "centro": [
+        120.0,
+        -120.0,
+        0.05
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Suelo_Solar_60_13_Colision",
+      "centro": [
+        60.0,
+        60.0,
+        0.05
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 180.0
+    },
+    {
+      "nombre": "Suelo_Solar_60_14_Colision",
+      "centro": [
+        60.0,
+        120.0,
+        0.05
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 270.0
+    },
+    {
+      "nombre": "Suelo_Solar_60_15_Colision",
+      "centro": [
+        120.0,
+        60.0,
+        0.05
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 270.0
+    },
+    {
+      "nombre": "Suelo_Solar_60_16_Colision",
+      "centro": [
+        120.0,
+        120.0,
+        0.05
+      ],
+      "tamano": [
+        60,
+        60,
+        1.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Edificio_Tienda_01_Colision",
+      "centro": [
+        -78.0,
+        43.067,
+        11.571
+      ],
+      "tamano": [
+        36.4,
+        27.865,
+        23.857
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Edificio_Bloque_01_Colision",
+      "centro": [
+        79.694,
+        43.852,
+        23.055
+      ],
+      "tamano": [
+        33.388,
+        30.296,
+        46.69
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Edificio_Almacen_01_Colision",
+      "centro": [
+        82.0,
+        -51.449,
+        10.5
+      ],
+      "tamano": [
+        45.0,
+        31.297,
+        21.0
+      ],
+      "giro_z_grados": 180.0
+    },
+    {
+      "nombre": "Edificio_Tienda_02_Colision",
+      "centro": [
+        -120.0,
+        -44.067,
+        11.571
+      ],
+      "tamano": [
+        36.4,
+        27.865,
+        23.857
+      ],
+      "giro_z_grados": 180.0
+    },
+    {
+      "nombre": "Coche_Sedan_Oxidado_01_Colision",
+      "centro": [
+        -96.0,
+        8.0,
+        2.525
+      ],
+      "tamano": [
+        7.0,
+        15.8,
+        5.15
+      ],
+      "giro_z_grados": 98.0
+    },
+    {
+      "nombre": "Coche_Sedan_Volcado_01_Colision",
+      "centro": [
+        34.0,
+        -7.0,
+        2.55
+      ],
+      "tamano": [
+        7.0,
+        15.8,
+        5.1
+      ],
+      "giro_z_grados": 160.0
+    },
+    {
+      "nombre": "Coche_Sedan_Quemado_01_Colision",
+      "centro": [
+        112.0,
+        9.0,
+        2.913
+      ],
+      "tamano": [
+        6.55,
+        15.8,
+        5.726
+      ],
+      "giro_z_grados": -84.0
+    },
+    {
+      "nombre": "Pickup_Abandonada_01_Colision",
+      "centro": [
+        -42.25,
+        -9.009,
+        2.75
+      ],
+      "tamano": [
+        7.2,
+        17.8,
+        5.5
+      ],
+      "giro_z_grados": 272.0
+    },
+    {
+      "nombre": "Furgoneta_Blanca_01_Colision",
+      "centro": [
+        7.009,
+        101.875,
+        3.838
+      ],
+      "tamano": [
+        7.35,
+        17.85,
+        7.675
+      ],
+      "giro_z_grados": 4.0
+    },
+    {
+      "nombre": "Coche_Sedan_Oxidado_02_Colision",
+      "centro": [
+        -6.0,
+        -128.0,
+        2.525
+      ],
+      "tamano": [
+        7.0,
+        15.8,
+        5.15
+      ],
+      "giro_z_grados": 12.0
+    },
+    {
+      "nombre": "Barricada_Sacos_01_Colision",
+      "centro": [
+        -0.422,
+        -96.032,
+        1.023
+      ],
+      "tamano": [
+        13.345,
+        1.542,
+        2.191
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Barricada_Sacos_02_Colision",
+      "centro": [
+        11.572,
+        -97.912,
+        1.023
+      ],
+      "tamano": [
+        13.345,
+        1.542,
+        2.191
+      ],
+      "giro_z_grados": 12.0
+    },
+    {
+      "nombre": "Barrera_Hormigon_01_Colision",
+      "centro": [
+        136.0,
+        -11.344,
+        1.523
+      ],
+      "tamano": [
+        11.313,
+        2.4,
+        3.256
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Barrera_Hormigon_02_Colision",
+      "centro": [
+        136.0,
+        0.656,
+        1.523
+      ],
+      "tamano": [
+        11.313,
+        2.4,
+        3.256
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Barrera_Hormigon_03_Colision",
+      "centro": [
+        136.0,
+        12.656,
+        1.523
+      ],
+      "tamano": [
+        11.313,
+        2.4,
+        3.256
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Barricada_Madera_01_Colision",
+      "centro": [
+        -60.029,
+        20.296,
+        1.77
+      ],
+      "tamano": [
+        9.053,
+        1.874,
+        3.845
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Barricada_Madera_02_Colision",
+      "centro": [
+        -0.029,
+        140.296,
+        1.77
+      ],
+      "tamano": [
+        9.053,
+        1.874,
+        3.845
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Valla_Chapa_01_Colision",
+      "centro": [
+        -60.0,
+        -32.955,
+        3.5
+      ],
+      "tamano": [
+        12.46,
+        0.535,
+        7.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Valla_Chapa_02_Colision",
+      "centro": [
+        -80.0,
+        -32.955,
+        3.5
+      ],
+      "tamano": [
+        12.46,
+        0.535,
+        7.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Valla_Chapa_03_Colision",
+      "centro": [
+        -100.0,
+        -32.955,
+        3.5
+      ],
+      "tamano": [
+        12.46,
+        0.535,
+        7.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Farola_Doblada_01_Colision",
+      "centro": [
+        -130.0,
+        23.0,
+        3.5
+      ],
+      "tamano": [
+        0.6,
+        0.6,
+        7.0
+      ],
+      "giro_z_grados": 180.0
+    },
+    {
+      "nombre": "Farola_Doblada_02_Colision",
+      "centro": [
+        -70.0,
+        23.0,
+        3.5
+      ],
+      "tamano": [
+        0.6,
+        0.6,
+        7.0
+      ],
+      "giro_z_grados": 180.0
+    },
+    {
+      "nombre": "Farola_Doblada_03_Colision",
+      "centro": [
+        100.0,
+        23.0,
+        3.5
+      ],
+      "tamano": [
+        0.6,
+        0.6,
+        7.0
+      ],
+      "giro_z_grados": 180.0
+    },
+    {
+      "nombre": "Farola_Doblada_04_Colision",
+      "centro": [
+        40.0,
+        -23.0,
+        3.5
+      ],
+      "tamano": [
+        0.6,
+        0.6,
+        7.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Farola_Doblada_05_Colision",
+      "centro": [
+        -100.0,
+        -23.0,
+        3.5
+      ],
+      "tamano": [
+        0.6,
+        0.6,
+        7.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Farola_Doblada_06_Colision",
+      "centro": [
+        23.0,
+        70.0,
+        3.5
+      ],
+      "tamano": [
+        0.6,
+        0.6,
+        7.0
+      ],
+      "giro_z_grados": 270.0
+    },
+    {
+      "nombre": "Farola_Doblada_07_Colision",
+      "centro": [
+        -23.0,
+        -80.0,
+        3.5
+      ],
+      "tamano": [
+        0.6,
+        0.6,
+        7.0
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Hidrante_01_Colision",
+      "centro": [
+        -45.0,
+        20.894,
+        1.3
+      ],
+      "tamano": [
+        1.4,
+        1.228,
+        2.6
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Hidrante_02_Colision",
+      "centro": [
+        55.0,
+        -21.106,
+        1.3
+      ],
+      "tamano": [
+        1.4,
+        1.228,
+        2.6
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Contenedor_Basura_01_Colision",
+      "centro": [
+        -55.518,
+        40.0,
+        3.55
+      ],
+      "tamano": [
+        6.3,
+        5.264,
+        7.099
+      ],
+      "giro_z_grados": 90.0
+    },
+    {
+      "nombre": "Contenedor_Basura_02_Colision",
+      "centro": [
+        104.0,
+        -30.482,
+        3.55
+      ],
+      "tamano": [
+        6.3,
+        5.264,
+        7.099
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Barriles_01_Colision",
+      "centro": [
+        95.492,
+        -29.609,
+        2.0
+      ],
+      "tamano": [
+        7.513,
+        4.881,
+        4.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Senal_Alto_01_Colision",
+      "centro": [
+        22.0,
+        22.0,
+        3.15
+      ],
+      "tamano": [
+        0.3,
+        0.3,
+        6.3
+      ],
+      "giro_z_grados": 180.0
+    },
+    {
+      "nombre": "Semaforo_Torcido_01_Colision",
+      "centro": [
+        -22.0,
+        -22.0,
+        7.25
+      ],
+      "tamano": [
+        0.55,
+        0.55,
+        14.5
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Cajas_Madera_01_Colision",
+      "centro": [
+        -61.866,
+        33.231,
+        1.9
+      ],
+      "tamano": [
+        5.949,
+        2.619,
+        3.8
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Neumaticos_01_Colision",
+      "centro": [
+        -108.85,
+        -63.95,
+        1.218
+      ],
+      "tamano": [
+        4.687,
+        2.4,
+        2.436
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Escombros_Grande_01_Colision",
+      "centro": [
+        91.948,
+        30.044,
+        0.676
+      ],
+      "tamano": [
+        9.169,
+        8.313,
+        2.572
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Escombros_Pequeno_01_Colision",
+      "centro": [
+        -20.28,
+        40.361,
+        0.531
+      ],
+      "tamano": [
+        4.586,
+        4.295,
+        1.564
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Escombros_Ladrillos_01_Colision",
+      "centro": [
+        60.344,
+        27.898,
+        0.216
+      ],
+      "tamano": [
+        5.661,
+        5.758,
+        1.053
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Escombros_Pequeno_02_Colision",
+      "centro": [
+        39.72,
+        -99.639,
+        0.531
+      ],
+      "tamano": [
+        4.586,
+        4.295,
+        1.564
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Arbol_Muerto_01_Colision",
+      "centro": [
+        -88.0,
+        -92.0,
+        3.0
+      ],
+      "tamano": [
+        1.4,
+        1.4,
+        6.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Arbol_Invasor_01_Colision",
+      "centro": [
+        -60.0,
+        -72.0,
+        3.0
+      ],
+      "tamano": [
+        1.4,
+        1.4,
+        6.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Arbol_Invasor_02_Colision",
+      "centro": [
+        120.0,
+        110.0,
+        3.0
+      ],
+      "tamano": [
+        1.4,
+        1.4,
+        6.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Arbol_Muerto_02_Colision",
+      "centro": [
+        60.0,
+        120.0,
+        3.0
+      ],
+      "tamano": [
+        1.4,
+        1.4,
+        6.0
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Borde_N_Colision",
+      "centro": [
+        0,
+        152,
+        10
+      ],
+      "tamano": [
+        312,
+        4,
+        20
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Borde_S_Colision",
+      "centro": [
+        0,
+        -152,
+        10
+      ],
+      "tamano": [
+        312,
+        4,
+        20
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Borde_E_Colision",
+      "centro": [
+        152,
+        0,
+        10
+      ],
+      "tamano": [
+        4,
+        312,
+        20
+      ],
+      "giro_z_grados": 0.0
+    },
+    {
+      "nombre": "Borde_O_Colision",
+      "centro": [
+        -152,
+        0,
+        10
+      ],
+      "tamano": [
+        4,
+        312,
+        20
+      ],
+      "giro_z_grados": 0.0
+    }
+  ],
+  "marcadores": {
+    "SpawnJugadores": [
+      [
+        0,
+        -4,
+        0.0
+      ]
+    ],
+    "SpawnZombis": [
+      [
+        -145,
+        6,
+        0.0
+      ],
+      [
+        145,
+        -6,
+        0.0
+      ],
+      [
+        6,
+        145,
+        0.0
+      ],
+      [
+        -6,
+        -145,
+        0.0
+      ],
+      [
+        -135,
+        -135,
+        0.55
+      ],
+      [
+        135,
+        135,
+        0.55
+      ],
+      [
+        -135,
+        135,
+        0.55
+      ],
+      [
+        135,
+        -135,
+        0.55
+      ],
+      [
+        -145,
+        80,
+        0.55
+      ],
+      [
+        145,
+        -80,
+        0.55
+      ],
+      [
+        80,
+        145,
+        0.55
+      ],
+      [
+        -80,
+        -145,
+        0.55
+      ]
+    ],
+    "Tienda_municion": [
+      [
+        -26,
+        -28,
+        0.65
+      ]
+    ],
+    "Tienda_curar": [
+      [
+        27,
+        26,
+        0.65
+      ]
+    ]
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "arma": "Pistola9mm",
+  "fps": 60,
+  "unidades": "studs, ejes Roblox: X derecha, Y arriba, -Z delante (LookVector del Handle)",
+  "handle_centro_desde_origen": [
+    -0.0004,
+    -0.1024,
+    -0.4488
+  ],
+  "puntos": {
+    "Boca": {
+      "desde_origen": [
+        0.0,
+        0.3952,
+        -1.35
+      ],
+      "desde_centro_handle": [
+        0.0004,
+        0.4976,
+        -0.9012
+      ]
+    },
+    "Expulsion": {
+      "desde_origen": [
+        0.1028,
+        0.4355,
+        -0.3016
+      ],
+      "desde_centro_handle": [
+        0.1032,
+        0.5379,
+        0.1472
+      ]
+    },
+    "MiraTrasera": {
+      "desde_origen": [
+        0.0,
+        0.5645,
+        0.0492
+      ],
+      "desde_centro_handle": [
+        0.0004,
+        0.6669,
+        0.498
+      ]
+    },
+    "MiraDelantera": {
+      "desde_origen": [
+        0.0,
+        0.5629,
+        -1.2532
+      ],
+      "desde_centro_handle": [
+        0.0004,
+        0.6653,
+        -0.8044
+      ]
+    }
+  },
+  "clips": {
+    "Equipar": {
+      "duracion_s": 0.8,
+      "frames": 48,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0.48,
+          "frame": 29,
+          "nombre": "corredera_atras"
+        },
+        {
+          "t": 0.53,
+          "frame": 32,
+          "nombre": "corredera_adelante"
+        }
+      ]
+    },
+    "Disparo": {
+      "duracion_s": 0.25,
+      "frames": 15,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0.0,
+          "frame": 0,
+          "nombre": "disparo"
+        },
+        {
+          "t": 0.033,
+          "frame": 2,
+          "nombre": "corredera_atras"
+        },
+        {
+          "t": 0.05,
+          "frame": 3,
+          "nombre": "casquillo_sale"
+        },
+        {
+          "t": 0.11,
+          "frame": 7,
+          "nombre": "corredera_adelante"
+        }
+      ]
+    },
+    "Recargar": {
+      "duracion_s": 1.7,
+      "frames": 102,
+      "bucle": false,
+      "eventos": [
+        {
+          "t": 0.22,
+          "frame": 13,
+          "nombre": "cargador_suelta"
+        },
+        {
+          "t": 0.32,
+          "frame": 19,
+          "nombre": "cargador_fuera"
+        },
+        {
+          "t": 0.56,
+          "frame": 34,
+          "nombre": "cargador_nuevo"
+        },
+        {
+          "t": 1.04,
+          "frame": 62,
+          "nombre": "cargador_dentro"
+        },
+        {
+          "t": 1.18,
+          "frame": 71,
+          "nombre": "corredera_atras"
+        },
+        {
+          "t": 1.24,
+          "frame": 74,
+          "nombre": "corredera_adelante"
+        }
+      ]
+    },
+    "Reposo": {
+      "duracion_s": 2.0,
+      "frames": 120,
+      "bucle": true,
+      "eventos": []
+    },
+    "Inspeccionar": {
+      "duracion_s": 3.3,
+      "frames": 198,
+      "bucle": false,
+      "eventos": []
+    }
+  }
+}
