@@ -1,0 +1,9 @@
+{
+ "blend": "mascotas-altas-v02/aguila-legendaria/AguilaLegendaria.blend",
+ "malla": "AguilaLegendaria",
+ "triangulos": 3974,
+ "islas": 183,
+ "piezas_sueltas": [],
+ "pares_coplanares_solapados": 0,
+ "ejemplos": []
+}

@@ -1,0 +1,69 @@
+{
+  "clips_30fps": {
+    "Fly": {
+      "duracion_s": 1.0,
+      "frames": 30,
+      "bucle": true
+    },
+    "Glide": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Celebrate": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    }
+  },
+  "textura": "texturas/AguilaLegendaria_paleta_1024.png (1024, un material, una malla)",
+  "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y global_scale=0.01",
+  "sin_probar_en_roblox": true,
+  "pieza": "Aguila legendaria v02 (mascota voladora alta)",
+  "triangulos": 3974,
+  "limites_studs": {
+    "envergadura": 8.1,
+    "alto": 4.31,
+    "largo": 4.91,
+    "z_min": 0.1
+  },
+  "huesos": [
+    "Root",
+    "Body",
+    "Head",
+    "Tail",
+    "Wing_R",
+    "Tip_R",
+    "Wing_L",
+    "Tip_L"
+  ],
+  "rejilla_voxel_studs": 0.2,
+  "paleta": {
+    "cuerpo": "#5d3b23",
+    "cuerpo_osc": "#47291a",
+    "pecho": "#a77848",
+    "escama": "#d1a263",
+    "escama_osc": "#744c2b",
+    "vientre": "#dcc79d",
+    "cabeza": "#f6f0e3",
+    "pico": "#f5b82e",
+    "pico_inf": "#d99a1c",
+    "cera": "#ffd54a",
+    "ojo": "#fffbe8",
+    "pupila": "#15100e",
+    "ceja": "#6b4a26",
+    "oro": "#ffc42e",
+    "ala_a": "#553520",
+    "ala_b": "#74502e",
+    "ala_c": "#a47845",
+    "ala_c2": "#d3aa68",
+    "ala_punta": "#ffd66e",
+    "cola": "#f6f0e3",
+    "cola_punta": "#553520",
+    "garra": "#f1b222",
+    "una": "#2a2024"
+  },
+  "piezas_sueltas": [],
+  "caras_coplanares_solapadas": 0,
+  "escamas": 87
+}
