@@ -1,0 +1,140 @@
+{
+  "clips_30fps": {
+    "Fly": {
+      "duracion_s": 1.0,
+      "frames": 30,
+      "bucle": true
+    },
+    "Glide": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Celebrate": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    }
+  },
+  "textura": "texturas/FenixDeFuego_paleta_1024.png (1024, un material, una malla)",
+  "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y global_scale=0.01",
+  "sin_probar_en_roblox": true,
+  "pieza": "Fenix v02 (mascota voladora alta, Robux; el fuego va aparte)",
+  "triangulos": 4382,
+  "limites_studs": {
+    "envergadura": 8.79,
+    "alto": 5.25,
+    "largo": 6.04,
+    "z_min": -0.1
+  },
+  "huesos": [
+    "Root",
+    "Body",
+    "Head",
+    "Tail",
+    "Wing_R",
+    "Tip_R",
+    "Wing_L",
+    "Tip_L"
+  ],
+  "rejilla_voxel_studs": 0.2,
+  "paleta": {
+    "cuerpo": "#d8321c",
+    "cuerpo_osc": "#a31f12",
+    "pecho": "#ff8a1f",
+    "vientre": "#ffd23f",
+    "escama": "#ffb02e",
+    "escama_osc": "#bf2a18",
+    "cabeza": "#e8431f",
+    "pico": "#ffc42e",
+    "pico_inf": "#e29a1a",
+    "cera": "#ffe27a",
+    "ojo": "#fff4c8",
+    "pupila": "#2a0d08",
+    "brillo": "#ffffff",
+    "ceja": "#7d160d",
+    "oro": "#ffd23f",
+    "ala_a": "#b3200f",
+    "ala_b": "#e8431f",
+    "ala_c": "#ff8a1f",
+    "ala_c2": "#ffc04a",
+    "ala_punta": "#fff08a",
+    "cola_a": "#c4271a",
+    "cola_b": "#ff7a1a",
+    "cola_c": "#ffd23f",
+    "llama_a": "#e8431f",
+    "llama_b": "#ff9a1f",
+    "llama_c": "#ffe27a",
+    "garra": "#ffc42e",
+    "una": "#3a1a10"
+  },
+  "piezas_sueltas": [],
+  "caras_coplanares_solapadas": 0,
+  "escamas": 77,
+  "puntos_fuego": {
+    "cresta": [
+      -0.0,
+      -0.759,
+      5.131
+    ],
+    "punta_ala_R": [
+      4.312,
+      -1.446,
+      4.129
+    ],
+    "punta_ala_L": [
+      -4.312,
+      -1.446,
+      4.129
+    ],
+    "puntas_cola": [
+      [
+        -1.447,
+        -2.213,
+        0.199
+      ],
+      [
+        -1.176,
+        -2.807,
+        0.031
+      ],
+      [
+        -0.703,
+        -3.446,
+        -0.088
+      ],
+      [
+        0.0,
+        -3.8,
+        -0.032
+      ],
+      [
+        0.703,
+        -3.446,
+        -0.088
+      ],
+      [
+        1.176,
+        -2.807,
+        0.031
+      ],
+      [
+        1.447,
+        -2.213,
+        0.199
+      ]
+    ],
+    "pecho": [
+      0.0,
+      0.8,
+      1.9
+    ],
+    "huesos_recomendados": {
+      "cresta": "Head",
+      "punta_ala_R": "Tip_R",
+      "punta_ala_L": "Tip_L",
+      "puntas_cola": "Tail",
+      "pecho": "Body"
+    }
+  }
+}
