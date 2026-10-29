@@ -73,7 +73,7 @@ def revisar_fbx(ruta, clip):
                     cb = anim_utils.action_get_channelbag_for_slot(act, slot)
                     if cb:
                         fcs += list(cb.fcurves)
-            rot = [fc for fc in fcs if 'rotation' in fc.data_path]
+            rot = [fc for fc in fcs if 'rotation' in fc.data_path or 'location' in fc.data_path]   # el parpadeo (Blink) solo mueve huesos
             f0, f1 = int(act.frame_range[0]), int(act.frame_range[1])
             mov = cierre = 0.0
             for fc in rot:

@@ -56,7 +56,7 @@ V.elipsoide((0, -0.10, 1.58), (0.92, 0.86, 1.02), 'Body', reg_torso, exp=2.7)
 V.elipsoide((0, 0.55, 3.02), (0.90, 0.86, 0.82), 'Head', 'cabeza', exp=2.6)
 for s in (-1, 1):
     V.elipsoide((s * 0.50, 0.02, 0.88), (0.40, 0.48, 0.48), 'Body', 'cuerpo_osc', exp=2.4)
-    V.caja((s * 0.50, 0.16, 0.40), (0.28, 0.32, 0.52), 'Body', 'garra')
+    V.caja((s * 0.50, 0.16, 0.40), (0.28, 0.32, 0.52), 'Leg_R' if s > 0 else 'Leg_L', 'garra')       # tarso (hueso de la pata)
 V.construir(MBS)
 N_ESC = 0
 N_ESC += escamas(V, MBS, 'Body', 'escama', (0, 1, 0), lambda p: 0.75 < p.z < 2.40 and abs(p.x) < 0.78, alto=0.09, patron=tresbolillo)
@@ -74,6 +74,7 @@ b('Head', (0, 1.16, 3.40), (0.62, 0.16, 0.14), 'cera')
 for s in (-1, 1):
     b('Head', (s * 0.56, 1.24, 3.20), (0.20, 0.14, 0.25), 'pupila')
     b('Head', (s * 0.53, 1.32, 3.27), (0.07, 0.04, 0.08), 'brillo')
+    DY_PARPADO = parpado(MBS['Lid_R' if s > 0 else 'Lid_L'], (s * 0.56, 1.24, 3.20), (0.20, 0.14, 0.25), 1.34, 'cabeza', 'pupila')
     cubo_girado(MBS['Head'], (s * 0.54, 1.24, 3.46), (0.44, 0.15, 0.13), 'ceja', rot=(0, -s * 16, 0))
 rombo(MBS['Body'], (0, 0.76, 1.95), 0.50, 0.11, 'oro', 'Y')                # gema dorada en el pecho
 
@@ -87,9 +88,13 @@ for j, (x_, tilt, L_) in enumerate(((-0.44, 62, 1.00), (-0.22, 48, 1.35), (0.0, 
 # pies: tres dedos al frente con unas negras, dedo trasero
 for s in (-1, 1):
     for k in (-1, 0, 1):
-        b('Body', (s * 0.50 + k * 0.18, 0.42, 0.20), (0.14, 0.64, 0.14), 'garra')
-        b('Body', (s * 0.50 + k * 0.18, 0.78, 0.17), (0.11, 0.15, 0.11), 'una')
-    b('Body', (s * 0.50, -0.20, 0.20), (0.14, 0.32, 0.14), 'garra')
+        b('Leg_R' if s > 0 else 'Leg_L', (s * 0.50 + k * 0.18, 0.42, 0.20), (0.14, 0.64, 0.14), 'garra')
+        b('Leg_R' if s > 0 else 'Leg_L', (s * 0.50 + k * 0.18, 0.78, 0.17), (0.11, 0.15, 0.11), 'una')
+    b('Leg_R' if s > 0 else 'Leg_L', (s * 0.50, -0.20, 0.20), (0.14, 0.32, 0.14), 'garra')
+# patas que cuelgan al volar (Maikol): tarso y dedos giran desde la cadera, dentro del muslo; los dedos apuntan hacia abajo
+PIVOTE_PATA = {lado: Vector((s * 0.50, 0.10, 0.68)) for s, lado in ((1, 'R'), (-1, 'L'))}
+for s, lado in ((1, 'R'), (-1, 'L')):
+    colgar_pata(MBS['Leg_' + lado], PIVOTE_PATA[lado], -48.0, s * 4.0)
 
 # ---------------------------------------------------------------- alas grandes de plumas con degradado rojo-naranja-amarillo, en arco
 S_HOMBRO = Vector((0.92, -0.15, 2.12))
@@ -152,6 +157,10 @@ for lado in ('R', 'L'):
     M1, M2, H, Sv = MARCOS[lado]
     HUESOS.append(('Wing_' + lado, tuple(Sv), 'Body', 0.6))
     HUESOS.append(('Tip_' + lado, tuple(H), 'Wing_' + lado, 0.6))
+for s, lado in ((1, 'R'), (-1, 'L')):
+    HUESOS.append(('Leg_' + lado, tuple(PIVOTE_PATA[lado]), 'Body', 0.4))
+    HUESOS.append(('Lid_' + lado, (s * 0.56, 1.24, 3.20), 'Head', 0.3))
+PARPADO_DY['dy'] = DY_PARPADO
 ob, rig = armar(NOMBRE, MBS, HUESOS, CM)
 TRIS = A.tris([ob])
 mn = Vector([min(v.co[a] for v in ob.data.vertices) for a in range(3)])
@@ -247,6 +256,9 @@ if RENDER:
     shots.append((shot('Fenix-espalda', 0, 12, 23.0), 'ESPALDA'))
     shots.append((shot('Fenix-arriba', 180, 82, 25.0), 'DESDE ARRIBA'))
     shots.append((shot('Fenix-cara', 160, 10, 9.5, target=(0, 0.6, 3.0)), 'CARA'))
+    pose(lid=1.0)
+    shots.append((shot('Fenix-cara-parpadeo', 160, 10, 9.5, target=(0, 0.6, 3.0)), 'PARPADEO (CLIP BLINK)'))
+    pose()
     en(rig, acts, 'Fly', 0.0)
     shots.append((shot('Fenix-aleteo-alto', 150, 10, 23.0), 'ALETEO ARRIBA (EXTENDIDA)'))
     en(rig, acts, 'Fly', 0.46)

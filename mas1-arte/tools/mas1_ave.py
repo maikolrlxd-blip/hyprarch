@@ -110,6 +110,36 @@ def cubo_girado(mb, c, size, mat, rot=(0, 0, 0)):
     mb.xform_since(antes, M)
 
 
+# ------------------------------------------------------------------ patas que cuelgan y parpados (lo que pidio Maikol: pies que guindan al volar, ojos que parpadean)
+def colgar_pata(mb, pivote, angulo=-35.0, abrir=0.0):
+    """Gira toda la pieza de un hueso de pata alrededor de su pivote (cadera/rodilla): angulo < 0 lleva el pie hacia atras y los dedos
+    apuntan hacia abajo; abrir separa un poco la pata hacia fuera (grados, con signo del lado). La pata queda colgando en la pose neutra."""
+    M = tr(pivote) @ ry(abrir) @ rx(angulo) @ tr(Vector(pivote) * -1)
+    bmesh.ops.transform(mb.bm, matrix=M, verts=mb.bm.verts[:])
+
+
+def parpado(mb, ojo_c, ojo_tam, frente, piel, linea, holgura=0.06):
+    """Parpado de un ojo en su hueso Lid: un bloque del color de la piel (un poco mayor que el ojo) escondido justo detras del ojo, tocando su
+    cara trasera (asi no flota), con una raya oscura de ojo cerrado. Para parpadear el hueso avanza `dy` en +Y y el bloque tapa el ojo y su
+    brillo (frente = la cara mas adelantada del ojo). En Roblox un hueso no se escala, por eso es un bloque que avanza.
+    Devuelve dy (studs)."""
+    cx, cy, cz = ojo_c
+    w, d, h = ojo_tam
+    fondo = 0.10
+
+    def lejos(c, half, rejilla=0.2):
+        # las caras del bloque no deben caer en un plano de cara de voxel (multiplos impares de 0,1): serian coplanares y parpadearian
+        while any(abs(((c + sg * half) - rejilla / 2) / rejilla - round(((c + sg * half) - rejilla / 2) / rejilla)) * rejilla < 0.012
+                  for sg in (-1, 1)):
+            half -= 0.004
+        return half
+    y_esc = cy - d / 2.0 - fondo / 2.0                    # escondido detras del ojo
+    mb.box((cx, y_esc, cz), (2 * lejos(cx, (w + holgura) / 2), fondo, 2 * lejos(cz, (h + holgura) / 2)), piel)
+    mb.box((cx, y_esc, cz - 0.02), (2 * lejos(cx, (w - 0.02) / 2), fondo + 0.03, 2 * lejos(cz - 0.02, 0.025)), linea)   # raya de ojo cerrado
+    y_cerrado = frente + 0.025 - fondo / 2.0              # cerrado: el bloque queda 0,025 por delante de la cara mas adelantada del ojo
+    return y_cerrado - y_esc
+
+
 # ------------------------------------------------------------------ escamas (plaquitas) sobre las caras expuestas de los voxeles
 def escamas(V, MBS, bone, mat, normal, filtro, alto=0.08, patron=None, tam=None):
     """Plaquitas de `alto` studs sobre las caras expuestas (mirando a `normal`) de las celdas de `bone` que cumplan filtro(p).

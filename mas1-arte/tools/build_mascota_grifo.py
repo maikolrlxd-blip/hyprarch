@@ -31,7 +31,7 @@ PAL = {
 }
 C = 0.2
 V = Vox(C)
-MBS = {b: A.MB('G_' + b) for b in BONES}
+MBS = {b: A.MB('G_' + b) for b in BONES + BONES_PATAS_TRASERAS}
 
 
 def reg_cuerpo(p, n):
@@ -57,8 +57,8 @@ for s in (-1, 1):
 V.elipsoide((0, 1.20, 3.12), (0.94, 0.88, 0.84), 'Head', 'cabeza', exp=2.6)
 # patas delanteras de aguila (amarillas) y traseras de leon (pardas)
 for s in (-1, 1):
-    V.caja((s * 0.46, 0.78, 0.50), (0.34, 0.34, 0.80), 'Body', 'garra')
-    V.caja((s * 0.70, -1.40, 0.36), (0.46, 0.52, 0.56), 'Body', 'pata')
+    V.caja((s * 0.46, 0.78, 0.50), (0.34, 0.34, 0.80), 'Leg_R' if s > 0 else 'Leg_L', 'garra')
+    V.caja((s * 0.70, -1.40, 0.36), (0.46, 0.52, 0.56), 'LegB_R' if s > 0 else 'LegB_L', 'pata')
 # cola de leon: cadena de elipsoides que se tocan, sube en S y acaba en la borla violeta (todo unido)
 cola = [((0, -2.05, 1.40), 0.36), ((0, -2.30, 1.58), 0.34), ((0, -2.50, 1.84), 0.32), ((0, -2.58, 2.14), 0.31)]
 for c_, r_ in cola:
@@ -88,6 +88,7 @@ for s in (-1, 1):
     b('Head', (s * 0.58, 1.90, 3.30), (0.22, 0.15, 0.28), 'ojo')
     b('Head', (s * 0.58, 1.98, 3.32), (0.10, 0.05, 0.16), 'pupila')
     b('Head', (s * 0.54, 1.99, 3.40), (0.06, 0.04, 0.07), 'brillo')
+    DY_PARPADO = parpado(MBS['Lid_R' if s > 0 else 'Lid_L'], (s * 0.58, 1.90, 3.30), (0.22, 0.15, 0.28), 2.01, 'cabeza', 'pupila')
     cubo_girado(MBS['Head'], (s * 0.56, 1.90, 3.58), (0.48, 0.16, 0.13), 'ceja', rot=(0, -s * 14, 0))
     # orejas-pluma: bloques girados hacia fuera, crema con la punta dorada
     cubo_girado(MBS['Head'], (s * 0.62, 1.00, 3.98), (0.36, 0.40, 0.56), 'oreja', rot=(0, s * 22, 0))
@@ -101,10 +102,16 @@ rombo(MBS['Body'], (0, 1.34, 1.95), 0.50, 0.11, 'oro', 'Y')                 # me
 # pies: tres dedos al frente con unas negras (delanteros), garras de leon atras
 for s in (-1, 1):
     for k in (-1, 0, 1):
-        b('Body', (s * 0.46 + k * 0.19, 1.02, 0.20), (0.15, 0.66, 0.15), 'garra')
-        b('Body', (s * 0.46 + k * 0.19, 1.40, 0.17), (0.12, 0.16, 0.12), 'una')
+        b('Leg_R' if s > 0 else 'Leg_L', (s * 0.46 + k * 0.19, 1.02, 0.20), (0.15, 0.66, 0.15), 'garra')
+        b('Leg_R' if s > 0 else 'Leg_L', (s * 0.46 + k * 0.19, 1.40, 0.17), (0.12, 0.16, 0.12), 'una')
     for k in (-1, 0, 1):
-        b('Body', (s * 0.70 + k * 0.17, -1.12, 0.21), (0.15, 0.30, 0.15), 'dedo')
+        b('LegB_R' if s > 0 else 'LegB_L', (s * 0.70 + k * 0.17, -1.12, 0.21), (0.15, 0.30, 0.15), 'dedo')
+# patas que cuelgan al volar (Maikol): las delanteras giran desde el pecho y las traseras desde el anca; los pies apuntan hacia abajo
+PIVOTE_PATA = {lado: Vector((s * 0.46, 0.74, 0.98)) for s, lado in ((1, 'R'), (-1, 'L'))}
+PIVOTE_PATA_B = {lado: Vector((s * 0.70, -1.36, 0.70)) for s, lado in ((1, 'R'), (-1, 'L'))}
+for s, lado in ((1, 'R'), (-1, 'L')):
+    colgar_pata(MBS['Leg_' + lado], PIVOTE_PATA[lado], -40.0, s * 4.0)
+    colgar_pata(MBS['LegB_' + lado], PIVOTE_PATA_B[lado], -36.0, s * 3.0)
 
 # ---------------------------------------------------------------- alas grandes violetas con puntas doradas, en arco
 S_HOMBRO = Vector((0.92, 0.10, 2.22))
@@ -144,6 +151,11 @@ for lado in ('R', 'L'):
     M1, M2, H, Sv = MARCOS[lado]
     HUESOS.append(('Wing_' + lado, tuple(Sv), 'Body', 0.6))
     HUESOS.append(('Tip_' + lado, tuple(H), 'Wing_' + lado, 0.6))
+for s, lado in ((1, 'R'), (-1, 'L')):
+    HUESOS.append(('Leg_' + lado, tuple(PIVOTE_PATA[lado]), 'Body', 0.4))
+    HUESOS.append(('LegB_' + lado, tuple(PIVOTE_PATA_B[lado]), 'Body', 0.4))
+    HUESOS.append(('Lid_' + lado, (s * 0.58, 1.90, 3.30), 'Head', 0.3))
+PARPADO_DY['dy'] = DY_PARPADO
 ob, rig = armar(NOMBRE, MBS, HUESOS, CM)
 TRIS = A.tris([ob])
 mn = Vector([min(v.co[a] for v in ob.data.vertices) for a in range(3)])
@@ -237,6 +249,9 @@ if RENDER:
     shots.append((shot('Grifo-mitico-espalda', 0, 12, 21.0), 'ESPALDA'))
     shots.append((shot('Grifo-mitico-arriba', 180, 82, 23.0), 'DESDE ARRIBA'))
     shots.append((shot('Grifo-mitico-cara', 160, 10, 9.5, target=(0, 1.2, 3.0)), 'CARA'))
+    pose(lid=1.0)
+    shots.append((shot('Grifo-mitico-cara-parpadeo', 160, 10, 9.5, target=(0, 1.2, 3.0)), 'PARPADEO (CLIP BLINK)'))
+    pose()
     en(rig, acts, 'Fly', 0.0)
     shots.append((shot('Grifo-mitico-aleteo-alto', 150, 10, 21.0), 'ALETEO ARRIBA (EXTENDIDA)'))
     en(rig, acts, 'Fly', 0.46)

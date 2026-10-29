@@ -1,10 +1,13 @@
-# Tramo comun de las mascotas altas del proyecto +1 (aguila, grifo, fenix): rig de ocho huesos como las mascotas de Codex
-# (Root, Body, Head, Tail, Wing_R/L, Tip_R/L), clips Fly / Glide / Celebrate a 30 fps en bucle, pintura de plumas y exportacion.
+# Tramo comun de las mascotas altas del proyecto +1 (aguila, grifo, fenix): rig de los ocho huesos de las mascotas de Codex
+# (Root, Body, Head, Tail, Wing_R/L, Tip_R/L) mas patas que cuelgan (Leg_R/L, y LegB_R/L en el grifo) y parpados (Lid_R/L),
+# clips Fly / Glide / Celebrate a 30 fps en bucle y Blink (parpadeo, sin bucle), pintura de plumas y exportacion.
 # Convenio de pose (el ala derecha manda; la izquierda sale espejada): aleteo + baja la punta del ala, barrido + la lleva hacia atras.
 from mas1_lib import *
 import contorno_negro as CN
 
-BONES = ('Root', 'Body', 'Head', 'Tail', 'Wing_R', 'Tip_R', 'Wing_L', 'Tip_L')
+BONES = ('Root', 'Body', 'Head', 'Tail', 'Wing_R', 'Tip_R', 'Wing_L', 'Tip_L', 'Leg_R', 'Leg_L', 'Lid_R', 'Lid_L')
+BONES_PATAS_TRASERAS = ('LegB_R', 'LegB_L')     # solo el grifo (patas de leon)
+PARPADO_DY = {'dy': 0.18}                         # cuanto avanza el parpado (studs) para tapar el ojo; lo fija cada mascota
 
 
 def claro(h, k=0.28):
@@ -25,7 +28,8 @@ def chevrones(col, per=0.34, k=0.16, desv=0.45):
 
 
 def hacer_pose(rig):
-    def pose(wing=0, tip=0, bodyz=0.0, pitch=0.0, head=(0, 0, 0), tailp=0.0, tailw=0.0, wyaw=0.0, tyaw=0.0):
+    def pose(wing=0, tip=0, bodyz=0.0, pitch=0.0, head=(0, 0, 0), tailp=0.0, tailw=0.0, wyaw=0.0, tyaw=0.0, legs=(0.0, 0.0), legsb=(0.0, 0.0),
+             lid=0.0):
         for pb in rig.pose.bones:
             pb.rotation_mode = 'XYZ'
             pb.rotation_euler = (0, 0, 0)
@@ -37,11 +41,19 @@ def hacer_pose(rig):
         rig.pose.bones['Body'].rotation_euler = Euler((math.radians(pitch), 0, 0), 'XYZ')
         rig.pose.bones['Head'].rotation_euler = Euler([math.radians(a) for a in head], 'XYZ')
         rig.pose.bones['Tail'].rotation_euler = Euler((math.radians(tailp), 0, math.radians(tailw)), 'XYZ')
+        for (nombre, valores) in (('Leg', legs), ('LegB', legsb)):
+            for k, lado in enumerate(('R', 'L')):
+                if nombre + '_' + lado in rig.pose.bones:
+                    rig.pose.bones[nombre + '_' + lado].rotation_euler = Euler((math.radians(valores[k]), 0, 0), 'XYZ')
+        for lado in ('R', 'L'):
+            if 'Lid_' + lado in rig.pose.bones:
+                rig.pose.bones['Lid_' + lado].location = (0, PARPADO_DY['dy'] * lid, 0)
         bpy.context.view_layer.update()
     return pose
 
 
-def _claves(c, t, wing=0.0, tip=0.0, bodyz=0.0, pitch=0.0, head=(0, 0, 0), tailp=0.0, tailw=0.0, wyaw=0.0, tyaw=0.0):
+def _claves(c, t, wing=0.0, tip=0.0, bodyz=0.0, pitch=0.0, head=(0, 0, 0), tailp=0.0, tailw=0.0, wyaw=0.0, tyaw=0.0, legs=(0.0, 0.0),
+            legsb=(0.0, 0.0), lid=0.0, traseras=False):
     for s, lado in ((1, 'R'), (-1, 'L')):
         c.k('Wing_' + lado, t, rot=(0, s * wing, -s * wyaw))
         c.k('Tip_' + lado, t, rot=(0, s * tip, -s * tyaw))
@@ -49,6 +61,11 @@ def _claves(c, t, wing=0.0, tip=0.0, bodyz=0.0, pitch=0.0, head=(0, 0, 0), tailp
     c.k('Head', t, rot=head)
     c.k('Tail', t, rot=(tailp, 0, tailw))
     c.k('Root', t)
+    for k, lado in enumerate(('R', 'L')):
+        c.k('Leg_' + lado, t, rot=(legs[k], 0, 0))
+        c.k('Lid_' + lado, t, loc=(0, PARPADO_DY['dy'] * lid, 0))
+        if traseras:
+            c.k('LegB_' + lado, t, rot=(legsb[k], 0, 0))
 
 
 def _suave(x):
@@ -77,12 +94,16 @@ def _ciclo(knots, fase):
 
 
 def clips_pet(rig, amp=None, aleteo=None):
-    """Fly 1,0 s, Glide 2,0 s y Celebrate 2,0 s, todos en bucle (la ultima clave repite la primera).
-    amp: multiplicadores {'ala', 'cola', 'cabeza', 'cuerpo', 'pliegue'} (1.0 por defecto); aleteo: lista de claves ALETEO propia."""
-    k = dict(ala=1.0, cola=1.0, cabeza=1.0, cuerpo=1.0, pliegue=1.0)
+    """Fly 1,0 s, Glide 2,0 s y Celebrate 2,0 s en bucle (la ultima clave repite la primera) y Blink 0,3 s (sin bucle, solo parpados).
+    Las patas cuelgan ya en la pose neutra (estan modeladas colgando); los clips las balancean como un pendulo que va detras del cuerpo.
+    Blink solo anima Lid_R/L: el juego lo reproduce cada 3-5 s con prioridad Action encima del clip de vuelo.
+    amp: multiplicadores {'ala', 'cola', 'cabeza', 'cuerpo', 'pliegue', 'patas'} (1.0 por defecto); aleteo: lista de claves ALETEO propia."""
+    k = dict(ala=1.0, cola=1.0, cabeza=1.0, cuerpo=1.0, pliegue=1.0, patas=1.0)
     k.update(amp or {})
-    a, co, ca, cu, pl = k['ala'], k['cola'], k['cabeza'], k['cuerpo'], k['pliegue']
+    a, co, ca, cu, pl, pa = k['ala'], k['cola'], k['cabeza'], k['cuerpo'], k['pliegue'], k['patas']
     kn = aleteo or ALETEO
+    traseras = 'LegB_R' in rig.pose.bones
+    huesos = list(BONES) + (list(BONES_PATAS_TRASERAS) if traseras else [])
 
     def ala(fase, f=1.0):
         E, tipR, wy, ty = _ciclo(kn, fase)
@@ -92,14 +113,20 @@ def clips_pet(rig, amp=None, aleteo=None):
         p = t / 1.0
         d = ala(p)
         d.update(bodyz=cu * 0.20 * math.sin(2 * math.pi * (p - 0.15)), pitch=3 * math.cos(2 * math.pi * p),
-                 head=(-3 * ca * math.cos(2 * math.pi * p), 0, 0), tailp=co * 8 * math.sin(2 * math.pi * (p + 0.6)))
+                 head=(-3 * ca * math.cos(2 * math.pi * p), 0, 0), tailp=co * 8 * math.sin(2 * math.pi * (p + 0.6)),
+                 # patas: pendulo que va detras de la subida del cuerpo (cuando el cuerpo sube, los pies se quedan atras y abajo)
+                 legs=(pa * 11 * math.sin(2 * math.pi * (p - 0.40)), pa * 11 * math.sin(2 * math.pi * (p - 0.47))),
+                 legsb=(pa * 9 * math.sin(2 * math.pi * (p - 0.45)), pa * 9 * math.sin(2 * math.pi * (p - 0.52))), traseras=traseras)
         return d
 
     def f_glide(t):
         p = 2 * math.pi * t / 2.0
         return dict(wing=a * (-6 - 3.5 * math.sin(p)), tip=a * (-4 + 5 * math.sin(p - 0.9)), bodyz=cu * 0.07 * math.sin(p),
                     pitch=2 * math.sin(p + 0.5), head=(0, 4 * ca * math.sin(p), 6 * ca * math.sin(p - 0.6)), tailw=co * 5 * math.sin(p),
-                    wyaw=3, tyaw=0)
+                    wyaw=3, tyaw=0,
+                    # planeo: las patas se van hacia atras (mas rectas, aerodinamicas) y apenas se mecen
+                    legs=(pa * (-16 + 3 * math.sin(p - 1.0)), pa * (-16 + 3 * math.sin(p - 1.3))),
+                    legsb=(pa * (-12 + 2 * math.sin(p - 1.1)), pa * (-12 + 2 * math.sin(p - 1.4))), traseras=traseras)
 
     def f_celebrate(t):
         p = (t / 1.0) % 1.0
@@ -107,7 +134,10 @@ def clips_pet(rig, amp=None, aleteo=None):
         d = ala(p, 1.22)
         d.update(bodyz=cu * 0.34 * (0.5 + 0.5 * math.sin(2 * math.pi * (p - 0.15))), pitch=-6 + 6 * math.sin(2 * q),
                  head=(-8 * ca * math.sin(2 * q), 0, 26 * ca * math.sin(2 * q + 0.4)),
-                 tailp=co * 14 * math.sin(2 * q + 0.5), tailw=co * 18 * math.sin(2 * q))
+                 tailp=co * 14 * math.sin(2 * q + 0.5), tailw=co * 18 * math.sin(2 * q),
+                 # patadita: las patas patalean alternadas
+                 legs=(pa * 24 * math.sin(2 * q), pa * 24 * math.sin(2 * q + math.pi)),
+                 legsb=(pa * 16 * math.sin(2 * q + 0.6), pa * 16 * math.sin(2 * q + 0.6 + math.pi)), traseras=traseras)
         return d
 
     acts = {}
@@ -122,8 +152,14 @@ def clips_pet(rig, amp=None, aleteo=None):
         for t in ts:
             _claves(c, t, **fn(min(t, dur - 1e-9) if t >= dur else t))
         # cierre exacto del bucle: la ultima clave repite la primera
-        acts[nombre] = c.build(list(BONES))
-    return acts, {'Fly': 1.0, 'Glide': 2.0, 'Celebrate': 2.0}
+        acts[nombre] = c.build(huesos)
+    # parpadeo: los parpados avanzan y tapan el ojo (0,06-0,18 s) y vuelven; solo Lid_R/L para no pisar el clip de vuelo
+    c = A.Clip(rig, 'Blink', 0.3, loop=False, fps=30)
+    for t, cerrado in ((0.0, 0.0), (0.06, 1.0), (0.18, 1.0), (0.26, 0.0), (0.3, 0.0)):
+        for lado in ('R', 'L'):
+            c.k('Lid_' + lado, t, loc=(0, PARPADO_DY['dy'] * cerrado, 0))
+    acts['Blink'] = c.build(['Lid_R', 'Lid_L'])
+    return acts, {'Fly': 1.0, 'Glide': 2.0, 'Celebrate': 2.0, 'Blink': 0.3}
 
 
 def en(rig, acts, nombre, t):
@@ -133,7 +169,7 @@ def en(rig, acts, nombre, t):
 
 
 def exportar_pet(out, nombre, ob, rig, acts, clips, pose0, datos):
-    """FBX del rig (pose neutra), un FBX por clip, GLB con los tres clips, .blend (con las pistas NLA silenciadas) y datos.json."""
+    """FBX del rig (pose neutra), un FBX por clip, GLB con los clips, .blend (con las pistas NLA silenciadas) y datos.json."""
     rig.animation_data_clear()
     pose0()
     fbx(os.path.join(out, nombre + '_Rig.fbx'), [ob, rig], False)
@@ -145,7 +181,7 @@ def exportar_pet(out, nombre, ob, rig, acts, clips, pose0, datos):
         tr.mute = True
     pose0()
     A.save_blend(os.path.join(out, nombre + '.blend'))
-    base = {'clips_30fps': {k: {'duracion_s': v, 'frames': int(round(v * 30)), 'bucle': True} for k, v in clips.items()},
+    base = {'clips_30fps': {k: {'duracion_s': v, 'frames': int(round(v * 30)), 'bucle': k != 'Blink'} for k, v in clips.items()},
             'textura': 'texturas/%s_paleta_1024.png (1024, un material, una malla)' % nombre,
             'ejes': 'Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=%s axis_up=Y global_scale=0.01' % FBX_FORWARD,
             'sin_probar_en_roblox': True}
