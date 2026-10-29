@@ -1,12 +1,12 @@
 # Estado del encargo "apocalipsis" (arte en Blender) — juego Luto
 
-Actualizado el 2026-10-23 a las 17:00 por la sesión del PC (Claude). El encargo completo está en `ENCARGO.md` y el estilo en `taller-ia/ESTILO.md` (Poli Pintado). El resumen de la noche está en `RESUMEN-NOCHE.md`.
+Actualizado el 2026-10-29 por la sesión del PC (Claude). **El traspaso con el estado exacto de las armas en mano, los archivos y el git está en `PUNTO-DE-RETOMA.md`.** El encargo completo está en `ENCARGO.md` y el estilo en `taller-ia/ESTILO.md` (Poli Pintado). El resumen de la noche está en `RESUMEN-NOCHE.md`. Lo que va después del 23/10 (armas en mano) está en este mismo archivo, más abajo.
 
 ## Qué falla o falta (primero)
-- **Armas y manos en primera persona:** lo siguiente que hay que montar, porque Maikol lo quiere sí o sí en la primera versión.
-  - Faltan en Studio las plantillas `LUTO_VM` (viewmodels) y `LUTO_Armas` (Tool con el modelo de mundo).
-  - Faltan los 19 clips de los viewmodels, que Maikol ya aprobó publicar.
-  - Ahora, en primera persona Roblox oculta todo el cuerpo y no se ve nada.
+- **Armas y manos** (2026-10-23, probado en Studio): las plantillas `LUTO_VM` y `LUTO_Armas` están montadas y los 19 clips de primera persona, publicados (ids en `apocalipsis-juego/src/Animaciones.lua`).
+  - En primera persona se ve el arma abajo a la derecha con manga oliva y mano piel; 1/2/3, R y F la cambian y la animan.
+  - Tras la prueba de Maikol se arregló que el arma desapareciera (la raíz suelta caía por debajo del mapa), que estorbara y que la sangre fuera enorme. Esos arreglos están en el repo (`b8fb176`), pero **no en el `.rbxl`**.
+  - **Falta animar al personaje en tercera persona** (Maikol eligió animarlo): unos 19 clips R15 más. Sin empezar.
 - **Partida de prueba completa en `Luto-jugable.rbxl`** (2026-10-23, configuración real). Funciona:
   - ronda 1 superada y ronda 2 empezada;
   - 6 zombis muertas que dan 10 monedas cada una;

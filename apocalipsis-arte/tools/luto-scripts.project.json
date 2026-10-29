@@ -1,0 +1,4 @@
+{ "name": "LutoScripts", "tree": { "$className": "Folder",
+  "Luto": { "$path": "../../apocalipsis-juego/src" },
+  "LutoServidor": { "$path": "../../apocalipsis-juego/server" },
+  "LutoCliente": { "$path": "../../apocalipsis-juego/client" } } }
