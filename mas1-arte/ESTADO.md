@@ -6,6 +6,7 @@ Proyecto de Codex; aquí solo lo que hace Claude para ayudar, sin tocar nada de 
 |---|---|---|---|
 | Aro de bronce / plata / oro | `aros/` | 192 cada uno | v0.1 (borrador): diámetro 11,3 studs, grosor 1,3; FBX (escala Roblox: global_scale 0.01) y GLB; textura pintada con franjas y rayas oscuras |
 | Alas AVANZADAS (oscuras con turquesa y pinchos) | `alas-avanzadas/` | 316 | v0.1 (borrador): una malla, un material (atlas 512), 5 huesos (Raiz, AlaI_1/2, AlaD_1/2), clips Deploy 1,0 s / Flap 0,75 s / Glide 2,0 s; FBX del rig, FBX por clip y GLB con los 3 clips; 16 plumas-prisma, espolón y placas, envergadura ≈ 12,2 studs |
+| **Alas AVANZADAS v0.2** (rehechas desde cero por el Coordinador, estilo Codex) | `alas-avanzadas-v02/` | 2.868 | v0.2: brazo óseo con espinas y cuerno, 4 filas de plumas lanceoladas, turquesa apagado, 7 huesos, clips Deploy/Flap/Glide; fallos y límites en su `ESTADO.md`. Sustituye a v0.1 |
 | Boceto HUD de vuelo | `ui-mock/hud_vuelo.png` | — | boceto HTML (no es Roblox) |
 
 ## Crítica (v0.1)

@@ -1,0 +1,59 @@
+{
+  "pieza": "Alas avanzadas v0.2 (oscuras con turquesa y pinchos)",
+  "triangulos": 2868,
+  "limites_studs": {
+    "envergadura": 9.99,
+    "z_min": -3.39,
+    "z_max": 3.15,
+    "y_min": -1.88,
+    "y_max": -0.04
+  },
+  "huesos": [
+    "Root",
+    "Wing_R",
+    "Mid_R",
+    "Tip_R",
+    "Wing_L",
+    "Mid_L",
+    "Tip_L"
+  ],
+  "clips_30fps": {
+    "Deploy": {
+      "duracion_s": 1.2,
+      "frames": 36,
+      "bucle": false
+    },
+    "Flap": {
+      "duracion_s": 0.9,
+      "frames": 27,
+      "bucle": true
+    },
+    "Glide": {
+      "duracion_s": 2.4,
+      "frames": 72,
+      "bucle": true
+    }
+  },
+  "textura": "texturas/AlasAvanzadas_paleta_1024.png (1024, un material, una malla)",
+  "escala_final": 0.88,
+  "ejes": "Blender +Y delante, +Z arriba, +X derecha; origen = BodyBackAttachment; FBX axis_forward=Z axis_up=Y global_scale=0.01",
+  "paleta": {
+    "pluma_c": "#2a3558",
+    "pluma_s": "#222b4a",
+    "pluma_p": "#1b2340",
+    "pluma_u": "#131929",
+    "borde": "#0b0f1c",
+    "punta": "#1d9186",
+    "punta_m": "#13706a",
+    "punta_d": "#0d4d4c",
+    "punta_borde": "#093a39",
+    "hueso": "#454e6e",
+    "espina": "#323953",
+    "espina_punta": "#27a899",
+    "placa": "#28304c",
+    "gema": "#34c8b5",
+    "aro": "#177f76",
+    "remache": "#5a6890"
+  },
+  "sin_probar_en_roblox": true
+}

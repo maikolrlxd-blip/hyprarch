@@ -1,0 +1,196 @@
+{
+  "archivos": {
+    "AlasAvanzadas_v02_Rig.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 2868,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "AlasAvanzadas_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Wing_R",
+        "Mid_R",
+        "Tip_R",
+        "Wing_L",
+        "Mid_L",
+        "Tip_L"
+      ],
+      "vertices": 1848,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0999,
+        0.0184,
+        0.0654
+      ]
+    },
+    "AlasAvanzadas_v02_Deploy.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 2868,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "AlasAvanzadas_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Wing_R",
+        "Mid_R",
+        "Tip_R",
+        "Wing_L",
+        "Mid_L",
+        "Tip_L"
+      ],
+      "vertices": 1848,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0999,
+        0.0184,
+        0.0654
+      ],
+      "acciones": [
+        {
+          "nombre": "AlasAvanzadas_Rig|Scene",
+          "frames": [
+            1,
+            37
+          ],
+          "curvas_de_rotacion": 31,
+          "mov_max_rad": 0.603,
+          "diferencia_primer_ultimo": 0.4784
+        }
+      ]
+    },
+    "AlasAvanzadas_v02_Flap.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 2868,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "AlasAvanzadas_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Wing_R",
+        "Mid_R",
+        "Tip_R",
+        "Wing_L",
+        "Mid_L",
+        "Tip_L"
+      ],
+      "vertices": 1848,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0999,
+        0.0184,
+        0.0654
+      ],
+      "acciones": [
+        {
+          "nombre": "AlasAvanzadas_Rig|Scene",
+          "frames": [
+            1,
+            28
+          ],
+          "curvas_de_rotacion": 31,
+          "mov_max_rad": 0.38,
+          "diferencia_primer_ultimo": 0.0
+        }
+      ]
+    },
+    "AlasAvanzadas_v02_Glide.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 2868,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "AlasAvanzadas_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Wing_R",
+        "Mid_R",
+        "Tip_R",
+        "Wing_L",
+        "Mid_L",
+        "Tip_L"
+      ],
+      "vertices": 1848,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0999,
+        0.0184,
+        0.0654
+      ],
+      "acciones": [
+        {
+          "nombre": "AlasAvanzadas_Rig|Scene",
+          "frames": [
+            1,
+            73
+          ],
+          "curvas_de_rotacion": 31,
+          "mov_max_rad": 0.07,
+          "diferencia_primer_ultimo": 0.0
+        }
+      ]
+    },
+    "AlasAvanzadas_v02.glb": {
+      "mallas": [
+        [
+          "AlasAvanzadas",
+          2868
+        ]
+      ],
+      "armaduras": 1,
+      "acciones": [
+        "Deploy",
+        "Flap",
+        "Glide"
+      ]
+    }
+  },
+  "fallos": [],
+  "correcto": true
+}
