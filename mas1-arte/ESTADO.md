@@ -27,3 +27,9 @@ Regenerar: `python3 tools/build_aros.py` (necesita `bpy`, numpy y Pillow).
 ## Capa visual en Luau (mas1-juego/) — SIN PROBAR EN STUDIO
 - Tema.lua, HudVuelo.client.lua, Efectos.client.lua, Efectos.lua, DemoVisual.server.lua (demo con `workspace:SetAttribute("MAS1_Demo", true)`).
 - Solo comprobada la sintaxis con lupa. Falta: Rojo + capturas 1920x1080 y móvil.
+
+## 29/10 — Aviso del Coordinador
+- Alas avanzadas v0.2 rehechas por él en estilo Codex (2.788 tris, ~10 studs, rig Root+Wing/Mid/Tip, clips Deploy/Flap/Glide); en textura y exportación. Mis alas v0.1 quedan reemplazadas.
+- Studio: Maikol denegó el control del equipo a la versión nueva. Bloqueado: refrescar Luto-jugable.rbxl, probar mas1-juego, tarea de Antigravity.
+- FBX con axis_forward='-Z' entran girados 180° en el importador de Studio (Luto). Mis aros/alas v0.1 usan '-Z': reexportar con 'Z' si se usan. Sin confirmar con rig.
+- Sin push de lo del Coordinador/Codex hasta OK de Maikol.
