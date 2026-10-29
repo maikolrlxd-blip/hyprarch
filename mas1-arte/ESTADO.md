@@ -31,5 +31,5 @@ Regenerar: `python3 tools/build_aros.py` (necesita `bpy`, numpy y Pillow).
 ## 29/10 — Aviso del Coordinador
 - Alas avanzadas v0.2 rehechas por él en estilo Codex (2.788 tris, ~10 studs, rig Root+Wing/Mid/Tip, clips Deploy/Flap/Glide); en textura y exportación. Mis alas v0.1 quedan reemplazadas.
 - Studio: Maikol denegó el control del equipo a la versión nueva. Bloqueado: refrescar Luto-jugable.rbxl, probar mas1-juego, tarea de Antigravity.
-- FBX con axis_forward='-Z' entran girados 180° en el importador de Studio (Luto). Mis aros/alas v0.1 usan '-Z': reexportar con 'Z' si se usan. Sin confirmar con rig.
+- CORRECCIÓN del Coordinador: el giro de 180° de Luto fue porque esas mallas miraban a +Y y salieron con '-Z'. Modelos que miran a -Y salen con '-Z' (Codex); los que miran a +Y, con 'Z'. Mis aros son simétricos; las alas v0.1 quedan reemplazadas. Sin comprobar con rig en Studio.
 - Sin push de lo del Coordinador/Codex hasta OK de Maikol.
