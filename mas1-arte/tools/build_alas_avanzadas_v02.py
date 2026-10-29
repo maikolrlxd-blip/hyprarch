@@ -79,8 +79,10 @@ ROW = {   # off: profundidad respecto al brazo (negativo = hacia quien mira desd
     'c': dict(off=-0.14, T=0.085, cut=0.76, lean=0.10, tip='punta_d', ph=0.0),
     's': dict(off=-0.04, T=0.085, cut=0.72, lean=-0.08, tip='punta_m', ph=1.7),
     'p': dict(off=0.07, T=0.085, cut=0.68, lean=0.06, tip='punta', ph=3.1),
-    'u': dict(off=0.18, T=0.075, cut=0.74, lean=-0.05, tip='punta_d', ph=4.4),
+    'u': dict(off=0.12, T=0.09, cut=0.74, lean=-0.05, tip='punta_d', ph=4.4),     # la fila de debajo toca a la de las primarias (con 0,18 quedaba suelta 0,09-0,14 studs); 0,12 es el escalon con menos caras casi coplanares sin piezas sueltas
 }
+if os.environ.get('ALAS_U_OFF'):
+    ROW['u']['off'] = float(os.environ['ALAS_U_OFF'])      # solo para buscar el escalon de la fila de debajo (ALAS_FASE=check)
 BLADES = []     # datos de cada pluma (en el espacio de diseno, antes de SCL) para pintar el eje y las barbas
 
 
@@ -228,6 +230,14 @@ mn = Vector([min(v.co[a] for v in ob.data.vertices) for a in range(3)])      # d
 mx = Vector([max(v.co[a] for v in ob.data.vertices) for a in range(3)])
 A.log('triangulos', TRIS, 'envergadura %.2f  alto %.2f..%.2f  fondo %.2f..%.2f' % (mx.x - mn.x, mn.z, mx.z, mn.y, mx.y))
 BOUNDS = dict(envergadura=round(mx.x - mn.x, 2), z_min=round(mn.z, 2), z_max=round(mx.z, 2), y_min=round(mn.y, 2), y_max=round(mx.y, 2))
+if FASE == 'check':
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from mas1_ave import piezas_sueltas, caras_coplanares
+    _s, _n = piezas_sueltas(ob)
+    _p, _e = caras_coplanares(ob, maximo=0)
+    _p3, _ = caras_coplanares(ob, eps=0.003, maximo=0)
+    A.log('COMPROBACION off_u=%s sueltas=%d coplanares(<=0,008)=%d coplanares(<=0,003)=%d' % (ROW['u']['off'], len(_s), _p, _p3))
+    sys.exit(0)
 
 
 # ------------------------------------------------------------------ pose (para los renders y para los clips)

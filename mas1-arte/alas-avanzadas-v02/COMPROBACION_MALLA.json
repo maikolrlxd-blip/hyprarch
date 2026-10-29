@@ -4,7 +4,7 @@
  "triangulos": 2868,
  "islas": 179,
  "piezas_sueltas": [],
- "pares_coplanares_solapados": 81,
+ "pares_coplanares_solapados": 96,
  "ejemplos": [
   {
    "centro": [
@@ -416,193 +416,6 @@
   },
   {
    "centro": [
-    1.34,
-    -0.98,
-    0.33
-   ],
-   "normal": [
-    0.0,
-    -1.0,
-    0.0
-   ],
-   "dist": 0.0061,
-   "materiales": [
-    "AlasAvanzadas",
-    "AlasAvanzadas"
-   ]
-  },
-  {
-   "centro": [
-    1.43,
-    -0.98,
-    0.14
-   ],
-   "normal": [
-    0.0,
-    -1.0,
-    0.0
-   ],
-   "dist": 0.0061,
-   "materiales": [
-    "AlasAvanzadas",
-    "AlasAvanzadas"
-   ]
-  },
-  {
-   "centro": [
-    1.38,
-    -0.98,
-    0.55
-   ],
-   "normal": [
-    0.0,
-    -1.0,
-    0.0
-   ],
-   "dist": 0.0061,
-   "materiales": [
-    "AlasAvanzadas",
-    "AlasAvanzadas"
-   ]
-  },
-  {
-   "centro": [
-    1.25,
-    -0.98,
-    0.31
-   ],
-   "normal": [
-    0.0,
-    -1.0,
-    0.0
-   ],
-   "dist": 0.0061,
-   "materiales": [
-    "AlasAvanzadas",
-    "AlasAvanzadas"
-   ]
-  },
-  {
-   "centro": [
-    1.34,
-    -0.98,
-    0.12
-   ],
-   "normal": [
-    0.0,
-    -1.0,
-    0.0
-   ],
-   "dist": 0.0061,
-   "materiales": [
-    "AlasAvanzadas",
-    "AlasAvanzadas"
-   ]
-  },
-  {
-   "centro": [
-    1.29,
-    -0.98,
-    0.53
-   ],
-   "normal": [
-    0.0,
-    -1.0,
-    0.0
-   ],
-   "dist": 0.0061,
-   "materiales": [
-    "AlasAvanzadas",
-    "AlasAvanzadas"
-   ]
-  },
-  {
-   "centro": [
-    -1.42,
-    -0.98,
-    0.35
-   ],
-   "normal": [
-    0.0,
-    -1.0,
-    -0.0
-   ],
-   "dist": 0.0061,
-   "materiales": [
-    "AlasAvanzadas",
-    "AlasAvanzadas"
-   ]
-  },
-  {
-   "centro": [
-    -1.51,
-    -0.98,
-    0.36
-   ],
-   "normal": [
-    0.0,
-    -1.0,
-    -0.0
-   ],
-   "dist": 0.0061,
-   "materiales": [
-    "AlasAvanzadas",
-    "AlasAvanzadas"
-   ]
-  },
-  {
-   "centro": [
-    -1.26,
-    -0.98,
-    0.78
-   ],
-   "normal": [
-    0.0,
-    -1.0,
-    0.0
-   ],
-   "dist": 0.0061,
-   "materiales": [
-    "AlasAvanzadas",
-    "AlasAvanzadas"
-   ]
-  },
-  {
-   "centro": [
-    -1.36,
-    -0.98,
-    0.79
-   ],
-   "normal": [
-    0.0,
-    -1.0,
-    0.0
-   ],
-   "dist": 0.0061,
-   "materiales": [
-    "AlasAvanzadas",
-    "AlasAvanzadas"
-   ]
-  },
-  {
-   "centro": [
-    -1.45,
-    -0.98,
-    -0.11
-   ],
-   "normal": [
-    0.0,
-    -1.0,
-    0.0
-   ],
-   "dist": 0.0061,
-   "materiales": [
-    "AlasAvanzadas",
-    "AlasAvanzadas"
-   ]
-  },
-  {
-   "centro": [
     1.77,
     -1.07,
     0.51
@@ -679,6 +492,193 @@
     0.0,
     -1.0,
     0.0
+   ],
+   "dist": 0.0036,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.7,
+    -1.07,
+    0.75
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0036,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.66,
+    -1.07,
+    0.94
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "dist": 0.0036,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.95,
+    -1.07,
+    0.55
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "dist": 0.0036,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.76,
+    -1.07,
+    0.96
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0036,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -2.01,
+    -1.07,
+    0.09
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0036,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.66,
+    -0.99,
+    0.94
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0036,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.95,
+    -0.99,
+    0.55
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0036,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.76,
+    -0.99,
+    0.96
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0036,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    2.01,
+    -0.99,
+    0.09
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0036,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.77,
+    -0.99,
+    0.51
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "dist": 0.0036,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.68,
+    -0.99,
+    0.48
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
    ],
    "dist": 0.0036,
    "materiales": [

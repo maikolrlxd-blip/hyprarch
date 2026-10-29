@@ -12,7 +12,7 @@ Hechas por el Coordinador (Claude en el PC de Maikol) el 29/10/2026, tras el «u
 8. **Perfil lateral de lámina fina** (como casi todas las alas de accesorio); la profundidad total es 1,8 studs.
 9. **Turquesa**: ya no es neón como en v0.1, pero las puntas de las primarias siguen siendo lo más vivo; se baja en una línea de `PAL` (`punta`).
 10. No probado con el torso R6 ni con ropa por capas. El origen es el punto de montaje: la placa dorsal toca la espalda (y = −0,04) y las alas quedan detrás.
-11. **Caras casi coplanares**: `tools/comprobar_malla.py` encuentra 81 pares de caras de plumas vecinas a 0,004–0,008 studs de distancia (el escalón de capas `0.012 * i` de `blade()`): riesgo bajo de parpadeo (z-fighting) en Roblox, imposible de ver en Blender. Si aparece en Studio, subir ese escalón a 0,03 y regenerar. No hay piezas sueltas (0 de 179 islas).
+11. **Caras casi coplanares**: `tools/comprobar_malla.py` encuentra 96 pares de caras de plumas vecinas a ≤ 0,008 studs de distancia (18 de ellos a ≤ 0,003; sale del escalón de capas `0.012 * i` de `blade()`): riesgo bajo de parpadeo (z-fighting) en Roblox, imposible de ver en Blender. Si aparece en Studio, subir ese escalón a 0,03 y regenerar. **Piezas sueltas: 0 de 179 islas** (la fila de plumas de debajo, `ROW['u']`, quedaba suelta 0,09–0,14 studs por delante de las demás; el 29/10 la acerqué a `off = 0.12`, el escalón con menos caras casi coplanares sin piezas sueltas; `ALAS_FASE=check` y `ALAS_U_OFF` sirven para volver a buscarlo).
 12. **Sangrado de bordes de la textura** (desde el 29/10): los bordes de las islas UV se extienden 5 texeles hacia el fondo para que el filtrado y los mipmaps de Roblox no dibujen líneas oscuras entre caras al alejarse.
 
 ## Qué hay

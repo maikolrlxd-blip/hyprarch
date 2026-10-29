@@ -151,14 +151,17 @@ def dispersas(prob=0.5, seed=0):
 
 
 # ------------------------------------------------------------------ comprobacion de piezas sueltas
-def piezas_sueltas(ob, tol=0.05, minimo_verts=1):
-    """Islas de vertices conectados -> grafo por cajas con margen `tol`. Devuelve las islas (caja min/max, numero de vertices) que no
-    quedan unidas al cuerpo principal (la isla con mas vertices). Vacio = nada flota."""
+def piezas_sueltas(ob, paso=0.04, tol=0.06):
+    """Islas de vertices conectados; dos islas cuentan como unidas si sus superficies se tocan o se cruzan (puntos muestreados cada `paso`
+    studs a menos de `tol`). Devuelve (las islas o grupos de islas que no quedan unidos al cuerpo principal, numero de islas).
+    Vacio = nada flota. Mas fiel que comparar cajas: un bloque girado cuya caja roza otra pieza sin tocarla se detecta."""
+    from mathutils.kdtree import KDTree
     me = ob.data
+    me.calc_loop_triangles()
     n = len(me.vertices)
     co = np.empty(n * 3, np.float32)
     me.vertices.foreach_get('co', co)
-    co = co.reshape(n, 3)
+    co = co.reshape(n, 3).astype(np.float64)
     parent = list(range(n))
 
     def find(a):
@@ -170,14 +173,31 @@ def piezas_sueltas(ob, tol=0.05, minimo_verts=1):
         a, b = find(e.vertices[0]), find(e.vertices[1])
         if a != b:
             parent[a] = b
-    raiz = {}
-    for i in range(n):
-        raiz.setdefault(find(i), []).append(i)
-    islas = []
-    for r, idx in raiz.items():
-        p = co[idx]
-        islas.append((p.min(0) - tol, p.max(0) + tol, len(idx)))
-    m = len(islas)
+    isla_v = np.array([find(i) for i in range(n)])
+    raices = sorted(set(isla_v.tolist()))
+    idx_isla = {r: k for k, r in enumerate(raices)}
+    m = len(raices)
+    nt = len(me.loop_triangles)
+    tris = np.empty(nt * 3, np.int32)
+    me.loop_triangles.foreach_get('vertices', tris)
+    tris = tris.reshape(nt, 3)
+    P = co[tris]
+    lab_t = np.array([idx_isla[isla_v[t[0]]] for t in tris])
+    area = 0.5 * np.linalg.norm(np.cross(P[:, 1] - P[:, 0], P[:, 2] - P[:, 0]), axis=1)
+    ns = np.maximum(1, np.ceil(area / (paso * paso)).astype(int))
+    ti = np.repeat(np.arange(nt), ns)
+    rng = np.random.default_rng(7)
+    r1, r2 = rng.random(len(ti)), rng.random(len(ti))
+    fl = r1 + r2 > 1
+    r1[fl], r2[fl] = 1 - r1[fl], 1 - r2[fl]
+    pts = P[ti, 0] + r1[:, None] * (P[ti, 1] - P[ti, 0]) + r2[:, None] * (P[ti, 2] - P[ti, 0])
+    lab = lab_t[ti]
+    pts = np.concatenate([pts, co])                       # y los propios vertices (islas diminutas)
+    lab = np.concatenate([lab, np.array([idx_isla[r] for r in isla_v])])
+    kd = KDTree(len(pts))
+    for i, p in enumerate(pts):
+        kd.insert((p[0], p[1], p[2]), i)
+    kd.balance()
     par = list(range(m))
 
     def f2(a):
@@ -185,25 +205,26 @@ def piezas_sueltas(ob, tol=0.05, minimo_verts=1):
             par[a] = par[par[a]]
             a = par[a]
         return a
-    for i in range(m):
-        for j in range(i + 1, m):
-            a, b = islas[i], islas[j]
-            if all(a[0][k] <= b[1][k] and b[0][k] <= a[1][k] for k in range(3)):
-                x, y = f2(i), f2(j)
+    for i, p in enumerate(pts):
+        li = lab[i]
+        for (_, j, _) in kd.find_range((p[0], p[1], p[2]), tol):
+            lj = lab[j]
+            if lj != li:
+                x, y = f2(li), f2(lj)
                 if x != y:
                     par[x] = y
+    cuenta = np.bincount(lab, minlength=m)
     grupos = {}
-    for i in range(m):
-        grupos.setdefault(f2(i), []).append(i)
-    principal = max(grupos.values(), key=lambda g: sum(islas[i][2] for i in g))
+    for k in range(m):
+        grupos.setdefault(f2(k), []).append(k)
+    principal = max(grupos.values(), key=lambda g: int(sum(cuenta[k] for k in g)))
     fuera = []
     for g in grupos.values():
         if g is principal:
             continue
-        lo = np.min([islas[i][0] for i in g], axis=0) + tol
-        hi = np.max([islas[i][1] for i in g], axis=0) - tol
-        fuera.append({'caja_min': [round(float(v), 2) for v in lo], 'caja_max': [round(float(v), 2) for v in hi],
-                      'vertices': int(sum(islas[i][2] for i in g))})
+        sel = np.isin(lab, g)
+        lo, hi = pts[sel].min(0), pts[sel].max(0)
+        fuera.append({'caja_min': [round(float(v), 2) for v in lo], 'caja_max': [round(float(v), 2) for v in hi], 'puntos': int(sel.sum())})
     return fuera, m
 
 
