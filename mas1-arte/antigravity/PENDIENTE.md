@@ -1,14 +1,10 @@
-# Antigravity: encargo del proyecto +1 (pendiente de Maikol)
-Estado a 29/10/2026: **no hecho**. Pedí a Maikol el acceso de control de pantalla a Antigravity para darle `ENCARGO-ANTIGRAVITY.md` y lo denegó (`user_denied`, también denegó antes el de Studio). No insisto ni lo rodeo. Todavía no hay imágenes aquí y no he podido comprobar si la versión instalada genera imágenes.
+# Antigravity: estado del encargo del proyecto +1 (29/10/2026, noche)
+**Lo que hay**: Maikol ya tenía abierta una ventana de Antigravity con la conversación «Winged Voxel Creatures And Monsters» (modelo Claude Opus 5.5): una serie de criaturas aladas y monstruos de voxeles hechos en Blender (el primero, «Dragón Bebé», 2.618 triángulos; después el «Neko Alado»; hay una «Galería» en sus artefactos). Maikol le pidió «rig para animación en las alas, articulado, ojos que parpadeen y pies que guindan al volar» y su cuota se agotó antes de hacerlo (se restablece el 29/10/2026 a las 9:11 p.m.).
 
-## Hacerlo a mano (unos minutos)
-1. Abre Antigravity y abre la carpeta `C:\Users\maiko\slime-rush\hyprarch\mas1-arte`.
-2. En el panel del agente pega:
+**Lo que hice yo (Coordinador)**: Maikol me pidió ponerla al día con todo. Dejé el briefing completo (`BRIEFING-PARA-ANTIGRAVITY.md`: roles, estado, referencias de estilo, convenciones técnicas, herramientas reutilizables, errores a evitar, reglas y qué necesito de ella) y el mensaje listo para su chat (`MENSAJE-PARA-ANTIGRAVITY.md`). Como su cuota está agotada, **se lo envío a las 9:13 p.m.** con una tarea programada de mi sesión (vive solo mientras la sesión de Claude Code siga abierta). Maikol me dio el acceso de control de pantalla a Antigravity y a Codex para esto.
 
-```
-Lee ENCARGO-ANTIGRAVITY.md de esta carpeta y haz las seis tareas en ese orden. Guarda cada imagen como PNG o JPG numerado dentro de antigravity\ (por ejemplo 01-alas-avanzadas-espalda.png) y escribe en antigravity\LEEME.md una línea por imagen: qué es y que es un CONCEPTO (imagen), no un modelo ni algo probado en Roblox. Para las mascotas toma también como referencia de estilo el juego «Roba un huevo» (Steal an Egg): lee REFERENCIA-ROBA-UN-HUEVO.md. Tarea 6: mira los renders de alas-avanzadas-v02\previews\, alas-avanzadas\previews\ y mascotas-altas-v01\ y critica sin adornos qué falla y qué se parece o no al estilo. No cambies claves, MCP ni cuentas. Si no puedes generar imágenes, dilo y entrega solo la crítica en texto.
-```
+**Si la tarea programada no llega a hacerlo**: abre Antigravity (conversación «Winged Voxel Creatures And Monsters»), pega el contenido de `MENSAJE-PARA-ANTIGRAVITY.md` y pulsa Enter. No pulses «Enable Overages» ni planes: gastan dinero.
 
-3. Cuando termine, avísame y reviso qué imágenes se parecen al estilo, las commiteo en local (sin push) y se lo cuento al director.
+**Pendiente de Antigravity** (cuando vuelva su cuota): seguir su serie con alas articuladas con rig (aleteo recoger → extender → impulsar → recoger), ojos que parpadean (párpados en huesos `Lid_R/L`) y pies que guindan (huesos `Leg_R/L`); pasar `comprobar_malla.py` y `validar_asset.py`; dejar las entregas en `mas1-arte\antigravity\modelos\<nombre>\` y las dudas en `antigravity\LEEME.md`.
 
-Nota para quien lo revise: las alas v0.2 ya están hechas en `alas-avanzadas-v02\` (modelo propio, no concepto); lo que se le pide a Antigravity son referencias para las mascotas altas, las zonas, el icono y la interfaz.
+**Histórico**: `ENCARGO-ANTIGRAVITY.md` (el primer encargo del director: conceptos e imágenes de referencia) sigue ahí; el trabajo real de Antigravity pasó a ser modelar criaturas, así que manda el briefing nuevo.

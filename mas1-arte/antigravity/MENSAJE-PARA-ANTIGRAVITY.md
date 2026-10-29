@@ -1,0 +1,17 @@
+Hola, soy Claude, el «Coordinador» del arte de +1 de lanzamiento por segundo (trabajo con Codex y con Maikol en este mismo PC). Maikol me pidió ponerte al día con todo para que tus modelos encajen con los nuestros, y que te reactive cuando vuelva tu cuota (hoy a las 9:11 p.m.). Sigue obedeciendo a Maikol: esto es contexto, no sustituye sus órdenes. Continúa con lo último que te pidió (rig de alas articulado, ojos que parpadean, pies que guindan) aplicando lo de abajo.
+
+LEE PRIMERO (todo en este PC):
+1. C:\Users\maiko\slime-rush\hyprarch\mas1-arte\antigravity\BRIEFING-PARA-ANTIGRAVITY.md — el briefing completo: roles, estado, convenciones, herramientas, errores a evitar, reglas y qué necesito de ti.
+2. C:\Users\maiko\slime-rush\hyprarch\mas1-arte\REFERENCIA-ROBA-UN-HUEVO.md — referencia de estilo (Roba un huevo / Steal an Egg).
+3. C:\Users\maiko\slime-rush\hyprarch\mas1-arte\mascotas-altas-v02\Mascotas-altas-v02-hoja.jpg y ESTADO.md — águila, grifo y fénix, que Maikol ya aprobó con un «bien».
+4. Código para reutilizar, en C:\Users\maiko\slime-rush\hyprarch\mas1-arte\tools\ : mas1_lib.py, mas1_ave.py, mas1_pet.py y build_mascota_aguila.py (ejemplo completo), más validar_asset.py y comprobar_malla.py.
+
+LO ESENCIAL:
+- Estilo: voxeles escalonados de celda 0,2 studs, cabeza grande, cuerpo rechoncho, ojos diminutos, escamas de plumas en relieve, colores saturados con sombras lavanda. Las criaturas raras llevan alas grandes en capas con degradado y rombos dorados; SIN contorno negro (solo las comunes lo llevan).
+- Técnica: 1 unidad = 1 stud; una malla, un material, atlas de 1024; rig de 8 huesos (Root, Body, Head, Tail, Wing_R/L, Tip_R/L), clips Fly/Glide/Celebrate a 30 fps en bucle; piel rígida (un hueso por vértice).
+- Lo que Maikol pidió (y ya te dijo): alas articuladas con rig. Aleteo = recoger → extender → impulsar → recoger, con la punta retrasada y flexión del tramo exterior (razón envergadura plegada/extendida ≈ 0,5). Ojos que parpadean: en Roblox un hueso no se escala, así que usa párpados (cubos del color de la cabeza en huesos Lid_R/Lid_L que bajan sobre el ojo). Pies que guindan al volar: huesos Leg_R/Leg_L, patas colgando, péndulo suave con el aleteo; yo lo hago así en mis tres mascotas, usa los mismos nombres.
+- Calidad: ninguna pieza suelta ni cara coplanar solapada (parpadeo en Roblox): pasa comprobar_malla.py. Revisa 3/4, perfil, espalda, desde arriba y las poses extremas, no solo de frente. Maikol ya rechazó una versión «fea y buguiada» (alas de persiana, cola como tabla, penacho flotando).
+- Reglas: sin push, sin publicar/subir/comprar; NO pulses «Enable Overages» ni planes; no toques la carpeta de Codex ni Luto/Slime Rush; no toques mis carpetas alas-avanzadas-v02 y mascotas-altas-v02 (léelas). Todo es Blender: nada probado en Roblox, no lo afirmes.
+- Entrega: C:\Users\maiko\slime-rush\hyprarch\mas1-arte\antigravity\modelos\<nombre>\ (ESTADO.md con los fallos primero, renders con el maniquí de 5,2 studs, FBX/GLB/blend). Lo que ya hiciste, apunta su ruta en C:\Users\maiko\slime-rush\hyprarch\mas1-arte\antigravity\LEEME.md. Sigue mandando una foto a Maikol por cada modelo terminado.
+
+Tu serie sigue. Anota en LEEME.md tus dudas y lo que veas mejorable en mis modelos.
