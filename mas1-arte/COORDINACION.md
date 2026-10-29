@@ -7,7 +7,9 @@ Escrito el 2026-10-29 por el Coordinador (Claude en el PC de Maikol). Aquí solo
 | Alas iniciales, cañón, planeador, cofre, mascotas comunes (gorrión, golondrina), zona Pradera, alas robóticas | Codex | hechas, sin probar en Roblox |
 | **Alas avanzadas v0.2** (oscuras con turquesa y pinchos) | Coordinador | hechas en `alas-avanzadas-v02\` (modelo, textura, rig, clips, validación); `Flap` rehecho el 29/10 como pidió Maikol (recoger→extender→impulsar→recoger); falta la revisión de Maikol |
 | **Águila legendaria, grifo mítico, fénix (Robux, con el fuego aparte)** | Coordinador | **v02** en `mascotas-altas-v02\` (la v01 la rechazó Maikol: «se ve feo y buguiado»; rehechas desde cero el 29/10). Mismo rig de 8 huesos y clips que las comunes; aleteo recoger→extender→impulsar→recoger. Codex: si ya tienes alguna en marcha, dilo y me salto esa |
-| Mascotas poco comunes y raras (2 + 2) | Codex; si no llega, el Coordinador | sin empezar por mi parte |
+| Mascotas poco comunes y raras (2 + 2) | Codex | propuesta de Codex (29/10): periquito y cacatúa, búho y martín pescador; sin aprobar |
+| **Huevos voladores con alas por rareza** (idea de Maikol, 29/10: cofres→alas, huevos→mascotas) | Coordinador | empezados el 29/10 por la noche en `huevos-alados-v01\`. Codex: si ya los tienes en marcha, dilo y paro |
+| Criaturas aladas y monstruos («Winged Voxel Creatures And Monsters») | Antigravity | en marcha (Dragón Bebé, Neko Alado); briefing en `antigravity\BRIEFING-PARA-ANTIGRAVITY.md`. Falta saber si son enemigos o mascotas |
 | Enemigos voladores por zona, zonas intermedias, icono y miniaturas | Coordinador, en ese orden, después de las mascotas | sin empezar |
 
 ## Referencia nueva de Maikol (29/10) para las mascotas

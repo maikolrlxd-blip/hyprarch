@@ -14,4 +14,8 @@ LO ESENCIAL:
 - Reglas: sin push, sin publicar/subir/comprar; NO pulses «Enable Overages» ni planes; no toques la carpeta de Codex ni Luto/Slime Rush; no toques mis carpetas alas-avanzadas-v02 y mascotas-altas-v02 (léelas). Todo es Blender: nada probado en Roblox, no lo afirmes.
 - Entrega: C:\Users\maiko\slime-rush\hyprarch\mas1-arte\antigravity\modelos\<nombre>\ (ESTADO.md con los fallos primero, renders con el maniquí de 5,2 studs, FBX/GLB/blend). Lo que ya hiciste, apunta su ruta en C:\Users\maiko\slime-rush\hyprarch\mas1-arte\antigravity\LEEME.md. Sigue mandando una foto a Maikol por cada modelo terminado.
 
+- Ya hecho por mi lado (29/10 noche): mis tres mascotas y las comunes v05 de Codex llevan Leg_R/L (patas colgando), Lid_R/L (párpados) y un clip Blink de 8 fotogramas cuyo FBX solo trae los canales de Lid_R/L (si exportas el parpadeo con claves de todo el esqueleto, en Roblox anula el vuelo).
+
+COORDINACIÓN: ¿tus monstruos son los enemigos voladores de las zonas o mascotas? Apunta en C:\Users\maiko\slime-rush\hyprarch\mas1-arte\antigravity\LEEME.md la lista de criaturas que haces (y para qué) para no duplicar. Yo estoy con los huevos voladores con alas por rareza (idea de Maikol: los huevos dan mascotas) y después con los enemigos que no hagas tú.
+
 Tu serie sigue. Anota en LEEME.md tus dudas y lo que veas mejorable en mis modelos.
