@@ -1,0 +1,690 @@
+{
+ "blend": "alas-avanzadas-v02/AlasAvanzadas_v02.blend",
+ "malla": "AlasAvanzadas",
+ "triangulos": 2868,
+ "islas": 179,
+ "piezas_sueltas": [],
+ "pares_coplanares_solapados": 81,
+ "ejemplos": [
+  {
+   "centro": [
+    0.74,
+    -0.74,
+    -0.59
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0075,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    0.69,
+    -0.74,
+    -0.55
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "dist": 0.0075,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    0.82,
+    -0.74,
+    -0.58
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0075,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -0.74,
+    -0.74,
+    -0.29
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "dist": 0.0075,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -0.65,
+    -0.74,
+    -0.3
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "dist": 0.0075,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -0.82,
+    -0.74,
+    -0.31
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "dist": 0.0075,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.05,
+    -0.82,
+    -0.57
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0075,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.0,
+    -0.82,
+    -0.52
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "dist": 0.0075,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.12,
+    -0.82,
+    -0.55
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0075,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.02,
+    -0.82,
+    -0.17
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "dist": 0.0075,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -0.93,
+    -0.82,
+    -0.18
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "dist": 0.0075,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.09,
+    -0.82,
+    -0.19
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0075,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.0,
+    -0.82,
+    -0.21
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0075,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.42,
+    -0.9,
+    0.35
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.26,
+    -0.9,
+    0.78
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.45,
+    -0.9,
+    -0.11
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.51,
+    -0.9,
+    0.36
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.36,
+    -0.9,
+    0.79
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.34,
+    -0.9,
+    0.33
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.25,
+    -0.9,
+    0.31
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    -0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.43,
+    -0.9,
+    0.14
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.34,
+    -0.9,
+    0.12
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.38,
+    -0.9,
+    0.55
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.29,
+    -0.9,
+    0.53
+   ],
+   "normal": [
+    0.0,
+    1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.34,
+    -0.98,
+    0.33
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.43,
+    -0.98,
+    0.14
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.38,
+    -0.98,
+    0.55
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.25,
+    -0.98,
+    0.31
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.34,
+    -0.98,
+    0.12
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.29,
+    -0.98,
+    0.53
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.42,
+    -0.98,
+    0.35
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.51,
+    -0.98,
+    0.36
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    -0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.26,
+    -0.98,
+    0.78
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.36,
+    -0.98,
+    0.79
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    -1.45,
+    -0.98,
+    -0.11
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0061,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.77,
+    -1.07,
+    0.51
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0036,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.68,
+    -1.07,
+    0.48
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0036,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.89,
+    -1.07,
+    0.26
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0036,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.79,
+    -1.07,
+    0.78
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0036,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  },
+  {
+   "centro": [
+    1.8,
+    -1.07,
+    0.24
+   ],
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "dist": 0.0036,
+   "materiales": [
+    "AlasAvanzadas",
+    "AlasAvanzadas"
+   ]
+  }
+ ]
+}

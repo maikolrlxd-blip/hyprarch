@@ -15,6 +15,7 @@ import numpy as np
 from mathutils import Vector, Euler, Matrix
 
 FASE = os.environ.get('ALAS_FASE', 'full')
+RENDER = FASE != 'assets'          # 'assets': solo textura, rig, clips y exportacion (sin renders)
 OUT = os.path.abspath(os.path.join(HERE, '..', 'alas-avanzadas-v02'))
 PREV = os.path.join(OUT, 'previews')
 for d in ('', 'texturas', 'clips', 'previews'):
@@ -392,6 +393,17 @@ reg('placa', var=0.05, edge_col='#6070a8', edge=0.8, edge_th=0.04, ao=0.6, light
 reg('gema', var=0.02, edge_col='#bff5ec', edge=0.9, edge_th=0.05, ao=0.15, light=0.12, grad=0.5, seed=35)
 reg('aro', var=0.04, edge_col='#5fc4b6', edge=0.8, edge_th=0.04, ao=0.5, light=0.22, seed=36)
 reg('remache', var=0.04, edge_col='#a8b6e0', edge=0.8, edge_th=0.04, ao=0.5, light=0.22, seed=37)
+# sangrado de las islas UV: el filtrado y los mipmaps de Roblox no deben mezclar los bordes de las caras con el fondo negro
+_occ = Pn.ids > 0
+for _ in range(10):
+    _acc = np.zeros_like(Pn.img)
+    _cnt = np.zeros(_occ.shape, np.float32)
+    for _dy, _dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        _acc += np.roll(Pn.img, (_dy, _dx), axis=(0, 1)) * np.roll(_occ, (_dy, _dx), axis=(0, 1))[..., None]
+        _cnt += np.roll(_occ, (_dy, _dx), axis=(0, 1))
+    _nuevo = (~_occ) & (_cnt > 0)
+    Pn.img[_nuevo] = _acc[_nuevo] / _cnt[_nuevo][:, None]
+    _occ = _occ | _nuevo
 TEX = os.path.join(OUT, 'texturas', 'AlasAvanzadas_paleta_1024.png')
 Pn.save(TEX, out_size=1024)
 A.assign_final([ob], A.final_material('AlasAvanzadas', TEX))
@@ -414,11 +426,41 @@ def glide(t):
             (-1 + 4 * math.sin(p - 0.7), 3, 0), 0.06 * math.sin(p - 0.4))
 
 
+# Aleteo (Maikol, 29/10): recoger -> extender -> impulsar -> recoger. Arriba extendidas; el empuje baja las alas enteras con la punta retrasada (mas arriba);
+# abajo empiezan a recogerse: codo y punta flexionan hacia atras mientras suben; arriba se extienden otra vez.
+# Claves por fase del ciclo: (fase, (aleteo, barrido) hombro, (aleteo, barrido) codo, (aleteo, barrido) punta); aleteo + baja la punta, barrido + la lleva atras.
+FLAP_CLAVES = [
+    (0.00, -30, 6, -6, 0, -4, 2),        # arriba, extendida
+    (0.10, -26, 6, -8, 0, -12, 2),
+    (0.28, -4, 5, -10, 0, -22, 2),       # empuje: la punta se queda atras (mas arriba que el hombro)
+    (0.46, 14, 8, 0, 6, -8, 6),          # abajo
+    (0.60, 0, 28, 14, 48, 14, 26),       # recoge: codo y punta flexionan hacia atras
+    (0.78, -22, 34, 20, 56, 16, 30),     # recogida, subiendo
+    (0.90, -30, 12, -4, 12, 0, 6),       # extiende
+]
+
+
+def _suave(x):
+    x = min(1.0, max(0.0, x))
+    return x * x * (3.0 - 2.0 * x)
+
+
+def _ciclo(knots, fase):
+    f = fase % 1.0
+    ks = knots + [(knots[0][0] + 1.0,) + tuple(knots[0][1:])]
+    for i in range(len(ks) - 1):
+        a, b = ks[i], ks[i + 1]
+        fa = f if f >= a[0] else f + 1.0
+        if a[0] <= fa <= b[0] + 1e-9:
+            u = _suave((fa - a[0]) / (b[0] - a[0]))
+            return [a[j] + (b[j] - a[j]) * u for j in range(1, len(a))]
+    return list(knots[0][1:])
+
+
 def flap(t):
-    p = 2 * math.pi * t / 0.9
-    c1 = lambda ph: -math.cos(ph) + 0.15 * math.sin(2 * ph)
-    # el aleteo oscila alrededor de las alas algo levantadas (-8): hacia abajo no pasa de +14 y las plumas interiores no se cruzan
-    return ((-8 + 22 * c1(p), 8 - 6 * math.sin(p), 0), (9 * c1(p - 0.55), 0, 0), (16 * c1(p - 1.1), 2, 0), 0.18 * math.sin(p - 0.2))
+    p = (t / 0.9) % 1.0
+    v = _ciclo(FLAP_CLAVES, p)
+    return ((v[0], v[1], 0), (v[2], v[3], 0), (v[4], v[5], 0), 0.18 * math.sin(2 * math.pi * (p - 0.15)))
 
 
 acts = {}
@@ -427,8 +469,8 @@ for i in range(9):
     keys(c, i * 0.3, *glide(i * 0.3))
 acts['Glide'] = c.build(ALL)
 c = A.Clip(rig, 'Flap', 0.9, loop=True, fps=30)
-for i in range(11):                      # de 0 a 0,9 s: la ultima clave repite la primera y el bucle cierra
-    keys(c, i * 0.09, *flap(i * 0.09))
+for i in range(19):                      # de 0 a 0,9 s cada 0,05 s: la ultima clave repite la primera y el bucle cierra
+    keys(c, i * 0.05, *flap(min(i * 0.05, 0.9 - 1e-9) if i == 18 else i * 0.05))
 acts['Flap'] = c.build(ALL)
 c = A.Clip(rig, 'Deploy', 1.2, loop=False, fps=30)
 g0 = glide(0)
@@ -458,33 +500,43 @@ def a_jpg(png, jpg, escala=0.5):
     os.remove(png)
 
 
-shots = []
-rig.animation_data_clear()      # sin accion activa: la pose manual manda
-pose()
-shots.append((shot('Alas-avanzadas-v02-espalda', 0, 6, 19.0, scale=True), 'ESPALDA (REGLA 6 STUDS)'))
-shots.append((shot('Alas-avanzadas-v02-tres-cuartos', 38, 14, 18.0), '3/4'))
-shots.append((shot('Alas-avanzadas-v02-lateral', 78, 10, 18.0), 'LATERAL'))
-shots.append((shot('Alas-avanzadas-v02-frontal', 180, 6, 19.0), 'DE FRENTE'))
-shots.append((shot('Alas-avanzadas-v02-detalle', 22, 10, 8.5, target=(2.3, -1.0, 1.1)), 'DETALLE BRAZO'))
-en('Deploy', 0.0)
-shots.append((shot('Alas-avanzadas-v02-plegadas', 38, 14, 18.0), 'PLEGADAS (DEPLOY T=0)'))
-en('Flap', 0.0)
-shots.append((shot('Alas-avanzadas-v02-aleteo-alto', 25, 8, 19.0), 'ALETEO ARRIBA'))
-en('Flap', 0.45)
-shots.append((shot('Alas-avanzadas-v02-aleteo-bajo', 25, 8, 19.0), 'ALETEO ABAJO'))
-en('Glide', 0.6)
-shots.append((shot('Alas-avanzadas-v02-planeo', 20, 8, 19.0), 'PLANEO'))
-A.setup_render((560, 450), 'CYCLES', 24)
-seq = []
-for t in (0.0, 0.15, 0.30, 0.42, 0.60, 1.2):
-    en('Deploy', t)
-    seq.append((shot('_deploy_%03d' % int(round(t * 100)), 38, 14, 20.0), 'T=%.2f' % t))
-W.contact_sheet(seq, 3, os.path.join(PREV, '_deploy.png'), title='DEPLOY 1,2 S: PLEGADAS A ABIERTAS')
-a_jpg(os.path.join(PREV, '_deploy.png'), os.path.join(PREV, 'Alas-avanzadas-v02-deploy-secuencia.jpg'), 1.0)
-for p, _ in seq:
-    os.remove(p)
-W.contact_sheet(shots, 3, os.path.join(PREV, '_hoja.png'), title='ALAS AVANZADAS V02 - RENDERS DE BLENDER')
-a_jpg(os.path.join(PREV, '_hoja.png'), os.path.join(PREV, 'Alas-avanzadas-v02-hoja.jpg'), 0.5)
+if RENDER:
+    shots = []
+    rig.animation_data_clear()      # sin accion activa: la pose manual manda
+    pose()
+    shots.append((shot('Alas-avanzadas-v02-espalda', 0, 6, 19.0, scale=True), 'ESPALDA (REGLA 6 STUDS)'))
+    shots.append((shot('Alas-avanzadas-v02-tres-cuartos', 38, 14, 18.0), '3/4'))
+    shots.append((shot('Alas-avanzadas-v02-lateral', 78, 10, 18.0), 'LATERAL'))
+    shots.append((shot('Alas-avanzadas-v02-frontal', 180, 6, 19.0), 'DE FRENTE'))
+    shots.append((shot('Alas-avanzadas-v02-detalle', 22, 10, 8.5, target=(2.3, -1.0, 1.1)), 'DETALLE BRAZO'))
+    en('Deploy', 0.0)
+    shots.append((shot('Alas-avanzadas-v02-plegadas', 38, 14, 18.0), 'PLEGADAS (DEPLOY T=0)'))
+    en('Flap', 0.0)
+    shots.append((shot('Alas-avanzadas-v02-aleteo-alto', 25, 8, 19.0), 'ALETEO ARRIBA'))
+    en('Flap', 0.45)
+    shots.append((shot('Alas-avanzadas-v02-aleteo-bajo', 25, 8, 19.0), 'ALETEO ABAJO'))
+    en('Glide', 0.6)
+    shots.append((shot('Alas-avanzadas-v02-planeo', 20, 8, 19.0), 'PLANEO'))
+    A.setup_render((560, 450), 'CYCLES', 24)
+    seq = []
+    for t in (0.0, 0.15, 0.30, 0.42, 0.60, 1.2):
+        en('Deploy', t)
+        seq.append((shot('_deploy_%03d' % int(round(t * 100)), 38, 14, 20.0), 'T=%.2f' % t))
+    W.contact_sheet(seq, 3, os.path.join(PREV, '_deploy.png'), title='DEPLOY 1,2 S: PLEGADAS A ABIERTAS')
+    a_jpg(os.path.join(PREV, '_deploy.png'), os.path.join(PREV, 'Alas-avanzadas-v02-deploy-secuencia.jpg'), 1.0)
+    for p, _ in seq:
+        os.remove(p)
+    seq = []                                  # aleteo: recoger -> extender -> impulsar -> recoger (seis poses del ciclo de 0,9 s)
+    for fase, etq in ((0.00, 'ARRIBA EXTENDIDA'), (0.28, 'IMPULSO'), (0.46, 'ABAJO'), (0.60, 'RECOGE'), (0.78, 'RECOGIDA'), (0.90, 'EXTIENDE')):
+        en('Flap', fase * 0.9)
+        seq.append((shot('_flap_%03d' % int(round(fase * 100)), 25, 8, 20.0), etq))
+    W.contact_sheet(seq, 3, os.path.join(PREV, '_flap.png'), title='FLAP 0,9 S: RECOGER - EXTENDER - IMPULSAR - RECOGER')
+    a_jpg(os.path.join(PREV, '_flap.png'), os.path.join(PREV, 'Alas-avanzadas-v02-flap-secuencia.jpg'), 1.0)
+    for p, _ in seq:
+        os.remove(p)
+    W.contact_sheet(shots, 3, os.path.join(PREV, '_hoja.png'), title='ALAS AVANZADAS V02 - RENDERS DE BLENDER')
+    a_jpg(os.path.join(PREV, '_hoja.png'), os.path.join(PREV, 'Alas-avanzadas-v02-hoja.jpg'), 0.5)
+
 
 # ------------------------------------------------------------------ exportacion (FBX Roblox: global_scale 0.01, 1 unidad = 1 stud)
 
