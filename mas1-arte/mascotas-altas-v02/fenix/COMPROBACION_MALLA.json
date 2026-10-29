@@ -1,8 +1,8 @@
 {
  "blend": "mascotas-altas-v02/fenix/FenixDeFuego.blend",
  "malla": "FenixDeFuego",
- "triangulos": 4382,
- "islas": 186,
+ "triangulos": 4458,
+ "islas": 192,
  "piezas_sueltas": [],
  "pares_coplanares_solapados": 0,
  "ejemplos": []

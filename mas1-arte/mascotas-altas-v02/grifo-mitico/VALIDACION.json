@@ -3,7 +3,7 @@
     "GrifoMitico_Rig.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 4446,
+      "triangulos": 4518,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -21,25 +21,31 @@
         "Root",
         "Body",
         "Head",
+        "Lid_R",
+        "Lid_L",
         "Tail",
         "Wing_R",
         "Tip_R",
         "Wing_L",
-        "Tip_L"
+        "Tip_L",
+        "Leg_R",
+        "LegB_R",
+        "Leg_L",
+        "LegB_L"
       ],
-      "vertices": 2607,
+      "vertices": 2655,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.0848,
         0.06,
-        0.0443
+        0.047
       ]
     },
     "GrifoMitico_Fly.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 4446,
+      "triangulos": 4518,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -57,19 +63,25 @@
         "Root",
         "Body",
         "Head",
+        "Lid_R",
+        "Lid_L",
         "Tail",
         "Wing_R",
         "Tip_R",
         "Wing_L",
-        "Tip_L"
+        "Tip_L",
+        "Leg_R",
+        "LegB_R",
+        "Leg_L",
+        "LegB_L"
       ],
-      "vertices": 2607,
+      "vertices": 2655,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.0848,
         0.06,
-        0.0443
+        0.047
       ],
       "acciones": [
         {
@@ -78,7 +90,7 @@
             1,
             31
           ],
-          "curvas_de_rotacion": 35,
+          "curvas_de_rotacion": 104,
           "mov_max_rad": 0.613,
           "diferencia_primer_ultimo": 0.0,
           "envergadura_studs": [
@@ -92,7 +104,7 @@
     "GrifoMitico_Glide.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 4446,
+      "triangulos": 4518,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -110,19 +122,25 @@
         "Root",
         "Body",
         "Head",
+        "Lid_R",
+        "Lid_L",
         "Tail",
         "Wing_R",
         "Tip_R",
         "Wing_L",
-        "Tip_L"
+        "Tip_L",
+        "Leg_R",
+        "LegB_R",
+        "Leg_L",
+        "LegB_L"
       ],
-      "vertices": 2607,
+      "vertices": 2655,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.0848,
         0.06,
-        0.0443
+        0.047
       ],
       "acciones": [
         {
@@ -131,8 +149,8 @@
             1,
             61
           ],
-          "curvas_de_rotacion": 35,
-          "mov_max_rad": 0.103,
+          "curvas_de_rotacion": 104,
+          "mov_max_rad": 0.14,
           "diferencia_primer_ultimo": 0.0,
           "envergadura_studs": [
             7.53,
@@ -145,7 +163,7 @@
     "GrifoMitico_Celebrate.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 4446,
+      "triangulos": 4518,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -163,19 +181,25 @@
         "Root",
         "Body",
         "Head",
+        "Lid_R",
+        "Lid_L",
         "Tail",
         "Wing_R",
         "Tip_R",
         "Wing_L",
-        "Tip_L"
+        "Tip_L",
+        "Leg_R",
+        "LegB_R",
+        "Leg_L",
+        "LegB_L"
       ],
-      "vertices": 2607,
+      "vertices": 2655,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.0848,
         0.06,
-        0.0443
+        0.047
       ],
       "acciones": [
         {
@@ -184,7 +208,7 @@
             1,
             61
           ],
-          "curvas_de_rotacion": 35,
+          "curvas_de_rotacion": 104,
           "mov_max_rad": 0.741,
           "diferencia_primer_ultimo": 0.0,
           "envergadura_studs": [
@@ -195,15 +219,75 @@
         }
       ]
     },
+    "GrifoMitico_Blink.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 4518,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "GrifoMitico_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Head",
+        "Lid_R",
+        "Lid_L",
+        "Tail",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L",
+        "Leg_R",
+        "LegB_R",
+        "Leg_L",
+        "LegB_L"
+      ],
+      "vertices": 2655,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0848,
+        0.06,
+        0.047
+      ],
+      "acciones": [
+        {
+          "nombre": "GrifoMitico_Rig|Scene",
+          "frames": [
+            1,
+            10
+          ],
+          "curvas_de_rotacion": 104,
+          "mov_max_rad": 0.21,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            4.63,
+            4.63
+          ],
+          "razon_plegada_extendida": 1.0
+        }
+      ]
+    },
     "GrifoMitico.glb": {
       "mallas": [
         [
           "GrifoMitico",
-          4446
+          4518
         ]
       ],
       "armaduras": 1,
       "acciones": [
+        "Blink",
         "Celebrate",
         "Fly",
         "Glide"

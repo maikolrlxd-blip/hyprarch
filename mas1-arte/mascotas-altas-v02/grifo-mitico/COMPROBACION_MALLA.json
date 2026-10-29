@@ -1,8 +1,8 @@
 {
  "blend": "mascotas-altas-v02/grifo-mitico/GrifoMitico.blend",
  "malla": "GrifoMitico",
- "triangulos": 4446,
- "islas": 192,
+ "triangulos": 4518,
+ "islas": 200,
  "piezas_sueltas": [],
  "pares_coplanares_solapados": 0,
  "ejemplos": []

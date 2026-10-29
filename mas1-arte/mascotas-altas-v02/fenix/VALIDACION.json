@@ -3,7 +3,7 @@
     "FenixDeFuego_Rig.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 4382,
+      "triangulos": 4458,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -21,25 +21,29 @@
         "Root",
         "Body",
         "Head",
+        "Lid_R",
+        "Lid_L",
         "Tail",
         "Wing_R",
         "Tip_R",
         "Wing_L",
-        "Tip_L"
+        "Tip_L",
+        "Leg_R",
+        "Leg_L"
       ],
-      "vertices": 2563,
+      "vertices": 2609,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.0879,
         0.0604,
-        0.0525
+        0.0542
       ]
     },
     "FenixDeFuego_Fly.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 4382,
+      "triangulos": 4458,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -57,19 +61,23 @@
         "Root",
         "Body",
         "Head",
+        "Lid_R",
+        "Lid_L",
         "Tail",
         "Wing_R",
         "Tip_R",
         "Wing_L",
-        "Tip_L"
+        "Tip_L",
+        "Leg_R",
+        "Leg_L"
       ],
-      "vertices": 2563,
+      "vertices": 2609,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.0879,
         0.0604,
-        0.0525
+        0.0542
       ],
       "acciones": [
         {
@@ -78,7 +86,7 @@
             1,
             31
           ],
-          "curvas_de_rotacion": 35,
+          "curvas_de_rotacion": 90,
           "mov_max_rad": 0.613,
           "diferencia_primer_ultimo": 0.0,
           "envergadura_studs": [
@@ -92,7 +100,7 @@
     "FenixDeFuego_Glide.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 4382,
+      "triangulos": 4458,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -110,19 +118,23 @@
         "Root",
         "Body",
         "Head",
+        "Lid_R",
+        "Lid_L",
         "Tail",
         "Wing_R",
         "Tip_R",
         "Wing_L",
-        "Tip_L"
+        "Tip_L",
+        "Leg_R",
+        "Leg_L"
       ],
-      "vertices": 2563,
+      "vertices": 2609,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.0879,
         0.0604,
-        0.0525
+        0.0542
       ],
       "acciones": [
         {
@@ -131,8 +143,8 @@
             1,
             61
           ],
-          "curvas_de_rotacion": 35,
-          "mov_max_rad": 0.113,
+          "curvas_de_rotacion": 90,
+          "mov_max_rad": 0.14,
           "diferencia_primer_ultimo": 0.0,
           "envergadura_studs": [
             7.69,
@@ -145,7 +157,7 @@
     "FenixDeFuego_Celebrate.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 4382,
+      "triangulos": 4458,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -163,19 +175,23 @@
         "Root",
         "Body",
         "Head",
+        "Lid_R",
+        "Lid_L",
         "Tail",
         "Wing_R",
         "Tip_R",
         "Wing_L",
-        "Tip_L"
+        "Tip_L",
+        "Leg_R",
+        "Leg_L"
       ],
-      "vertices": 2563,
+      "vertices": 2609,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.0879,
         0.0604,
-        0.0525
+        0.0542
       ],
       "acciones": [
         {
@@ -184,7 +200,7 @@
             1,
             61
           ],
-          "curvas_de_rotacion": 35,
+          "curvas_de_rotacion": 90,
           "mov_max_rad": 0.741,
           "diferencia_primer_ultimo": 0.0,
           "envergadura_studs": [
@@ -195,15 +211,73 @@
         }
       ]
     },
+    "FenixDeFuego_Blink.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 4458,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "FenixDeFuego_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Head",
+        "Lid_R",
+        "Lid_L",
+        "Tail",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L",
+        "Leg_R",
+        "Leg_L"
+      ],
+      "vertices": 2609,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0879,
+        0.0604,
+        0.0542
+      ],
+      "acciones": [
+        {
+          "nombre": "FenixDeFuego_Rig|Scene",
+          "frames": [
+            1,
+            10
+          ],
+          "curvas_de_rotacion": 90,
+          "mov_max_rad": 0.195,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            4.63,
+            4.63
+          ],
+          "razon_plegada_extendida": 1.0
+        }
+      ]
+    },
     "FenixDeFuego.glb": {
       "mallas": [
         [
           "FenixDeFuego",
-          4382
+          4458
         ]
       ],
       "armaduras": 1,
       "acciones": [
+        "Blink",
         "Celebrate",
         "Fly",
         "Glide"

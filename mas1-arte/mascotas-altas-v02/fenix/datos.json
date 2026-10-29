@@ -14,18 +14,23 @@
       "duracion_s": 2.0,
       "frames": 60,
       "bucle": true
+    },
+    "Blink": {
+      "duracion_s": 0.3,
+      "frames": 9,
+      "bucle": false
     }
   },
   "textura": "texturas/FenixDeFuego_paleta_1024.png (1024, un material, una malla)",
   "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y global_scale=0.01",
   "sin_probar_en_roblox": true,
   "pieza": "Fenix v02 (mascota voladora alta, Robux; el fuego va aparte)",
-  "triangulos": 4382,
+  "triangulos": 4458,
   "limites_studs": {
     "envergadura": 8.79,
-    "alto": 5.25,
+    "alto": 5.42,
     "largo": 6.04,
-    "z_min": -0.1
+    "z_min": -0.27
   },
   "huesos": [
     "Root",
@@ -35,7 +40,11 @@
     "Wing_R",
     "Tip_R",
     "Wing_L",
-    "Tip_L"
+    "Tip_L",
+    "Leg_R",
+    "Lid_R",
+    "Leg_L",
+    "Lid_L"
   ],
   "rejilla_voxel_studs": 0.2,
   "paleta": {
