@@ -63444,10 +63444,13 @@ end)
 <string name="Name">Guardado</string>
 <ProtectedString name="Source"><![CDATA[-- Guardado de «+1 de lanzamiento por segundo» con DataStore: adaptador de Roblox de src/Datos.lua (Lua puro, probado con lupa).
 -- Carga tomando el bloqueo de sesion (si otro servidor tiene los datos del jugador, espera a que los suelte o a que su bloqueo
--- caduque), guarda con reintentos y espera creciente, y nunca pisa datos de otra sesion. Si no hay acceso al DataStore (place sin
--- publicar, o Studio sin «Enable Studio Access to API Services») se juega SIN GUARDAR y se avisa en el Output.
+-- caduque), guarda con reintentos y espera creciente, y nunca pisa datos de otra sesion. Solo EN STUDIO, si no hay acceso al
+-- DataStore (place sin publicar o sin «Enable Studio Access to API Services»), se juega sin guardar y se avisa en el Output; en un
+-- servidor de verdad nunca se juega sin guardar: si no se pueden cargar los datos, el jugador sale con un mensaje (revision de
+-- Linux 2.0: una prueba de acceso fallida al arrancar dejaba todo el servidor sin guardar en silencio).
 -- Lo usa server/Partida.server.lua (autoguardado cada G.AUTOGUARDADO s, al salir y al cerrar el servidor). SIN PROBAR EN STUDIO.
 local DataStoreService, HttpService, RS = game:GetService("DataStoreService"), game:GetService("HttpService"), game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local Mas1 = RS:WaitForChild("Mas1")
 local D = require(Mas1:WaitForChild("Datos"))
 local M = require(Mas1:WaitForChild("Mascotas"))
@@ -63461,11 +63464,18 @@ local SESION = game.JobId ~= "" and game.JobId or ("studio-" .. HttpService:Gene
 local tienda
 do
 	local ok, t = pcall(function() return DataStoreService:GetDataStore("MAS1_Datos_v1") end)
-	if ok and pcall(function() t:GetAsync("prueba_de_acceso") end) then tienda = t end -- sin publicar, las llamadas fallan
+	if ok then tienda = t end
+	-- la prueba de acceso solo en Studio: en un servidor de verdad un fallo pasajero no puede dejar a nadie sin guardar
+	if tienda and RunService:IsStudio() and not pcall(function() tienda:GetAsync("prueba_de_acceso") end) then tienda = nil end
 	if not tienda then
-		warn("[MAS1 guardado] Sin acceso al DataStore: se juega SIN GUARDAR (place sin publicar o sin acceso a las API en Studio)")
+		if RunService:IsStudio() then
+			warn("[MAS1 guardado] Studio sin acceso al DataStore: se juega SIN GUARDAR (place sin publicar o sin acceso a las API)")
+		else
+			warn("[MAS1 guardado] Servidor sin DataStore: no se dejara jugar a nadie (sus datos no se podrian guardar)")
+		end
 	end
 end
+G.sinGuardar = tienda == nil and RunService:IsStudio() -- solo Studio juega sin guardar
 G.activo = tienda ~= nil
 
 local function reintentar(f)
@@ -63484,7 +63494,10 @@ end
 
 -- Carga los datos de plr, limpios, tomando el bloqueo. Devuelve los datos, o nil y el motivo ("bloqueado", "error" o "se fue").
 function G.cargar(plr)
-	if not tienda then return D.limpiar(nil, M, Alas) end
+	if not tienda then
+		if G.sinGuardar then return D.limpiar(nil, M, Alas) end
+		return nil, "error"
+	end
 	local clave = "j_" .. plr.UserId
 	for _ = 1, 8 do -- si acaba de cambiar de servidor, el otro aun puede tener el bloqueo: se espera a que lo suelte
 		local bloqueado = false
@@ -63506,7 +63519,7 @@ end
 -- Guarda dato (soltar = al salir). Devuelve dos cosas: si el DataStore respondio y si se escribio (false = otra sesion tiene el
 -- bloqueo: este servidor ya no debe seguir con el jugador).
 function G.guardar(plr, dato, soltar)
-	if not tienda then return true, true end
+	if not tienda then return G.sinGuardar, G.sinGuardar end
 	local escrito = false
 	local ok = reintentar(function()
 		return tienda:UpdateAsync("j_" .. plr.UserId, function(viejo)

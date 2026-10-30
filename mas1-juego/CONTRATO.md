@@ -81,7 +81,7 @@ Están en ReplicatedStorage y los crea `src/Red.lua`.
   - Un servidor toma los datos con un bloqueo de sesión y otro no los pisa hasta que se sueltan o caducan (3 min).
   - Si no se pueden cargar, se expulsa al jugador con un mensaje, mejor que jugar con datos vacíos y pisar los buenos.
 - **Mientras carga**, el servidor ignora las intenciones y no entrena.
-- **En Studio sin publicar** (o sin acceso a las API) se juega sin guardar; lo avisa el Output.
+- **Solo en Studio sin publicar** (o sin acceso a las API) se juega sin guardar; lo avisa el Output. En un servidor de verdad nunca: si no hay DataStore o fallan los reintentos, el jugador sale con un mensaje.
 - **Alas**: se desbloquean solas al cumplir el requisito. Las primeras se equipan solas, y llega un `MAS1_Aviso` «¡Nuevas alas: …!».
   - iniciales: en el 3.er lanzamiento;
   - robóticas: con 3 días seguidos;
