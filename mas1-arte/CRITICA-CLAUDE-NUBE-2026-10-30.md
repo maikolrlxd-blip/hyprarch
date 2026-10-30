@@ -32,3 +32,9 @@
 ## Mascotas-enemigo
 - Bien: las caras amables funcionan (sonrisa, rubor) y se leen mejor que los enemigos.
 - Mal: Marcianito y Cometa apenas cambian respecto al enemigo (solo la cara): se sentirán "el mismo bicho". Ojos entornados al celebrar bien.
+
+# Tercera ronda (31/10): icono y miniatura v01 — NO SIRVEN todavía
+- **Avatar ilegible**: parece una mancha amarilla con rayas negras; no se reconoce a un jugador volando. Alas de canto = líneas finas negras. Es lo principal del icono y no se ve.
+- **Icono 512**: el «+1» es pequeño y queda en medio del cielo sin relación con nada; demasiado cielo y suelo vacío; el aro grande se come la mitad. No se lee a 128 px.
+- **Miniatura**: título amarillo con sombra negra choca con la nube y con el aro (el «POR SEGUNDO» pisa el borde del aro). El suelo verde fosforescente domina y cansa; el meteorito sonriente es lo más atractivo y está en un rincón.
+- Hacer (v02): avatar de espaldas o 3/4 con alas ABIERTAS enormes ocupando el centro, aro detrás en dorado, un solo foco; «+1» enorme (40 % del icono) en la parte alta con contorno grueso; menos verde saturado (cielo con degradado y nubes); mascotas pequeñas alrededor, no tres bichos a la vez.
