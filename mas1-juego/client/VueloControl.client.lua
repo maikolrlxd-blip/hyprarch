@@ -12,7 +12,7 @@ local V = require(Mas1:WaitForChild("Vuelo"))
 local Manejo = require(Mas1:WaitForChild("Manejo"))
 local Red = require(Mas1:WaitForChild("Red"))
 local T = require(script.Parent:WaitForChild("Tema"))
-local accion, resultado = Red.evento("MAS1_Accion"), Red.evento("MAS1_Resultado")
+local accion = Red.evento("MAS1_Accion")
 local C = V.CFG
 local cam = workspace.CurrentCamera
 
@@ -133,11 +133,4 @@ UIS.InputBegan:Connect(function(i, gp)
 	if not gp and i.KeyCode == Enum.KeyCode.F then pedirLanzar() end
 end)
 
--- cartel de resultado al aterrizar (PROVISIONAL)
-resultado.OnClientEvent:Connect(function(r)
-	local p = T.panel(gui, { Size = UDim2.fromOffset(520, 150), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.42) }, T.col.sol)
-	T.texto(p, { Text = "¡ATERRIZAJE!", TextSize = 40, TextColor3 = T.col.tinta, TextStrokeTransparency = 1, Size = UDim2.new(1, 0, 0, 48), Position = UDim2.fromOffset(0, 10) })
-	T.texto(p, { Text = string.format("%d m  ·  x%d  ·  +%d dinero  ·  +%d exp", r.distancia or 0, r.multiplicador or 1, r.dinero or 0, r.exp or 0),
-		TextSize = 26, TextColor3 = T.col.tinta, TextStrokeTransparency = 1, Size = UDim2.new(1, -20, 0, 40), Position = UDim2.fromOffset(10, 70) })
-	task.delay(4, function() p:Destroy() end)
-end)
+-- el cartel de resultado vive en client/Resultados.client.lua
