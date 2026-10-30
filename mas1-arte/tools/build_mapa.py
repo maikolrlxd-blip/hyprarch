@@ -196,8 +196,8 @@ def zona_cielo(P, y0, rnd):
 
 def zona_espacio(P, y0, rnd):
     suelo_baldosas(P['Suelo'], y0, ('roca', 'roca_b'))
-    for j in range(5):                                                 # cráteres (borde de bloques) en el carril
-        cx, cy, r = rnd.uniform(-22, 22), y0 + 40 + j * 70, rnd.uniform(4, 7)
+    for j in range(5):                                                 # cráteres (borde de bloques) en el carril, entre las flechas
+        cx, cy, r = rnd.uniform(-22, 22), y0 + 100 + j * 60, rnd.uniform(4, 7)   # (antes pisaban la marca x6 y una flecha)
         for k in range(10):
             a = 2 * math.pi * k / 10
             cubo_girado(P['Suelo'], (cx + r * math.cos(a), cy + r * math.sin(a), 0.5), (3.0, 1.6, 1.0), 'crater', rot=(0, 0, math.degrees(a) + 90))
@@ -259,83 +259,85 @@ def paletizar(ob, idx):
             uv[li].uv = ((c + 0.5) / 16.0, (r + 0.5) / 16.0)
 
 
-A.clean_scene()
-A.REGIONS.clear()
-for d in ('', 'exports', 'texturas', 'previews'):
-    os.makedirs(os.path.join(OUT, d), exist_ok=True)
-CM, CC = A.collection('Mapa'), A.collection('Camaras')
-rnd = random.Random(30)
-objetos, resumen = {}, []
-for i, Z in enumerate(ZONAS):
-    y0 = Y_INICIO + i * LARGO
-    P = {k: A.MB('%s_%s' % (Z['clave'], k)) for k in PIEZAS}
-    Z['crea'](P, y0, rnd)
-    poste, adorno, cartel, letra = Z['arco']
-    arco(P['Arco'], y0 + 2, Z['nombre'], poste, adorno, cartel, letra)
-    texto_suelo(P['Marcas'], Z['marca'], 0, y0 + 26, 2.2, 0.24, Z['flecha'])         # del color de las flechas: el blanco no se ve en las nubes
-    for j in range(5):
-        flecha(P['Marcas'], y0 + 70 + j * 60, Z['flecha'])
-    for j, (dy, z) in enumerate(((80, 14), (170, 20), (260, 26))):
-        aro(P['Aros'], (rnd.uniform(-12, 12), y0 + dy, z), 6.0, 0.6, Z['aro'])
-    for k in PIEZAS:
-        ob = P[k].finish(CM)
-        ob.name = 'Mapa_%s_%s' % (Z['clave'].replace('-', '_'), k)
-        objetos[(Z['clave'], k)] = ob
-        resumen.append((Z['clave'], k, A.tris([ob])))
-A.log('triangulos por pieza', resumen, 'total', sum(t for _, _, t in resumen))
-if FASE == 'check':
+# ---------------------------------------------------------------- construcción (solo al ejecutarlo; mapa_roblox.py importa las zonas)
+if __name__ == '__main__':
+    A.clean_scene()
+    A.REGIONS.clear()
+    for d in ('', 'exports', 'texturas', 'previews'):
+        os.makedirs(os.path.join(OUT, d), exist_ok=True)
+    CM, CC = A.collection('Mapa'), A.collection('Camaras')
+    rnd = random.Random(30)
+    objetos, resumen = {}, []
+    for i, Z in enumerate(ZONAS):
+        y0 = Y_INICIO + i * LARGO
+        P = {k: A.MB('%s_%s' % (Z['clave'], k)) for k in PIEZAS}
+        Z['crea'](P, y0, rnd)
+        poste, adorno, cartel, letra = Z['arco']
+        arco(P['Arco'], y0 + 2, Z['nombre'], poste, adorno, cartel, letra)
+        texto_suelo(P['Marcas'], Z['marca'], 0, y0 + 26, 2.2, 0.24, Z['flecha'])         # del color de las flechas: el blanco no se ve en las nubes
+        for j in range(5):
+            flecha(P['Marcas'], y0 + 70 + j * 60, Z['flecha'])
+        for j, (dy, z) in enumerate(((80, 14), (170, 20), (260, 26))):
+            aro(P['Aros'], (rnd.uniform(-12, 12), y0 + dy, z), 6.0, 0.6, Z['aro'])
+        for k in PIEZAS:
+            ob = P[k].finish(CM)
+            ob.name = 'Mapa_%s_%s' % (Z['clave'].replace('-', '_'), k)
+            objetos[(Z['clave'], k)] = ob
+            resumen.append((Z['clave'], k, A.tris([ob])))
+    A.log('triangulos por pieza', resumen, 'total', sum(t for _, _, t in resumen))
+    if FASE == 'check':
+        A.log('listo')
+        raise SystemExit
+
+    idx = imagen_paleta(os.path.join(OUT, 'texturas', 'Mapa_paleta_256.png'))
+    mat = A.final_material('Mapa_paleta', os.path.join(OUT, 'texturas', 'Mapa_paleta_256.png'))
+    for ob in objetos.values():
+        paletizar(ob, idx)
+        A.assign_final([ob], mat)
+    for (clave, k), ob in objetos.items():                                 # una pieza por archivo, para montarlas por separado en Studio
+        fbx(os.path.join(OUT, 'exports', '%s_%s.fbx' % (clave, k)), [ob], False)
+        A.select_only([ob])
+        bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, 'exports', '%s_%s.glb' % (clave, k)), use_selection=True, export_format='GLB',
+                                  export_animations=False)
+    A.save_blend(os.path.join(OUT, 'Mapa-v01.blend'))
+
+    # ---------------------------------------------------------------- renders (con la Pradera de Codex delante, solo para ver cómo empalma)
+    if os.path.exists(PRADERA):
+        CP = A.collection('Pradera_Codex')
+        with bpy.data.libraries.load(PRADERA, link=False) as (src, dst):
+            dst.objects = list(src.objects)
+        for o in dst.objects:
+            if o is not None and o.type == 'MESH':
+                CP.objects.link(o)
+    sol(CC, 'Sol', 3.2, (-0.4, 0.5, -0.75))
+    sol(CC, 'Relleno', 0.8, (0.6, -0.3, -0.4), 20.0)
+    A.setup_render((1600, 900), 'CYCLES', 32)
+    fotos = []
+
+
+    def foto(nombre, loc, objetivo, lente, cielo, rotulo):
+        A.setup_world(lin(cielo), 1.0)
+        cam = A.camera(CC, 'cam_' + nombre, loc, objetivo, lens=lente)
+        bpy.context.scene.render.image_settings.file_format = 'JPEG'
+        bpy.context.scene.render.image_settings.quality = 90
+        ruta = os.path.join(OUT, 'previews', nombre + '.jpg')
+        A.render(ruta, cam)
+        fotos.append((ruta, rotulo))
+
+
+    foto('Mapa-general', (-520, -140, 420), (0, 760, 0), 32, '#9fd3ff', 'MAPA COMPLETO: PRADERA (CODEX) - MAR DE NUBES - TORMENTA - CIELO ALTO - ESPACIO')
+    for i, Z in enumerate(ZONAS):
+        y0 = Y_INICIO + i * LARGO
+        foto('Zona-%s-entrada' % Z['clave'], (18, y0 - 75, 30), (0, y0 + 40, 24), 26, Z['cielo'], 'ENTRADA %s - ARCO Y CARTEL' % Z['nombre'])
+        foto('Zona-%s-dentro' % Z['clave'], (0, y0 + 14, 16), (0, y0 + 200, 8), 24, Z['cielo'], 'DENTRO DE %s (MARCA %s)' % (Z['nombre'], Z['marca'].upper()))
+        foto('Zona-%s-lado' % Z['clave'], (-170, y0 + 60, 70), (10, y0 + 200, 0), 30, Z['cielo'], '%s DESDE UN LADO' % Z['nombre'])
+    W.contact_sheet(fotos, 3, os.path.join(OUT, '_hoja.png'), title='MAPA V01 - ZONAS DESPUES DE LA PRADERA - SOLO LO VISUAL - RENDERS DE BLENDER (SIN PROBAR EN ROBLOX)')
+    a_jpg(os.path.join(OUT, '_hoja.png'), os.path.join(OUT, 'Mapa-v01-hoja.jpg'), 0.5)
+    A.write_json(os.path.join(OUT, 'datos.json'), {
+        'pieza': 'Mapa v01: zonas después de la Pradera del Despegue (solo lo visual)', 'sin_probar_en_roblox': True,
+        'zonas': [dict(clave=Z['clave'], nombre=Z['nombre'], marca_provisional=Z['marca'], y_inicio=Y_INICIO + i * LARGO,
+                       y_fin=Y_INICIO + (i + 1) * LARGO) for i, Z in enumerate(ZONAS)],
+        'carril_ancho_studs': ANCHO, 'zona_largo_studs': LARGO, 'triangulos': {'%s_%s' % (c, k): t for c, k, t in resumen},
+        'textura': 'texturas/Mapa_paleta_256.png (un material para todas las piezas)',
+        'ejes': 'Blender +Y = sentido del vuelo, +Z arriba; FBX global_scale=0.01, axis_forward=%s, axis_up=Y' % FBX_FORWARD})
     A.log('listo')
-    raise SystemExit
-
-idx = imagen_paleta(os.path.join(OUT, 'texturas', 'Mapa_paleta_256.png'))
-mat = A.final_material('Mapa_paleta', os.path.join(OUT, 'texturas', 'Mapa_paleta_256.png'))
-for ob in objetos.values():
-    paletizar(ob, idx)
-    A.assign_final([ob], mat)
-for (clave, k), ob in objetos.items():                                 # una pieza por archivo, para montarlas por separado en Studio
-    fbx(os.path.join(OUT, 'exports', '%s_%s.fbx' % (clave, k)), [ob], False)
-    A.select_only([ob])
-    bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, 'exports', '%s_%s.glb' % (clave, k)), use_selection=True, export_format='GLB',
-                              export_animations=False)
-A.save_blend(os.path.join(OUT, 'Mapa-v01.blend'))
-
-# ---------------------------------------------------------------- renders (con la Pradera de Codex delante, solo para ver cómo empalma)
-if os.path.exists(PRADERA):
-    CP = A.collection('Pradera_Codex')
-    with bpy.data.libraries.load(PRADERA, link=False) as (src, dst):
-        dst.objects = list(src.objects)
-    for o in dst.objects:
-        if o is not None and o.type == 'MESH':
-            CP.objects.link(o)
-sol(CC, 'Sol', 3.2, (-0.4, 0.5, -0.75))
-sol(CC, 'Relleno', 0.8, (0.6, -0.3, -0.4), 20.0)
-A.setup_render((1600, 900), 'CYCLES', 32)
-fotos = []
-
-
-def foto(nombre, loc, objetivo, lente, cielo, rotulo):
-    A.setup_world(lin(cielo), 1.0)
-    cam = A.camera(CC, 'cam_' + nombre, loc, objetivo, lens=lente)
-    bpy.context.scene.render.image_settings.file_format = 'JPEG'
-    bpy.context.scene.render.image_settings.quality = 90
-    ruta = os.path.join(OUT, 'previews', nombre + '.jpg')
-    A.render(ruta, cam)
-    fotos.append((ruta, rotulo))
-
-
-foto('Mapa-general', (-520, -140, 420), (0, 760, 0), 32, '#9fd3ff', 'MAPA COMPLETO: PRADERA (CODEX) - MAR DE NUBES - TORMENTA - CIELO ALTO - ESPACIO')
-for i, Z in enumerate(ZONAS):
-    y0 = Y_INICIO + i * LARGO
-    foto('Zona-%s-entrada' % Z['clave'], (18, y0 - 75, 30), (0, y0 + 40, 24), 26, Z['cielo'], 'ENTRADA %s - ARCO Y CARTEL' % Z['nombre'])
-    foto('Zona-%s-dentro' % Z['clave'], (0, y0 + 14, 16), (0, y0 + 200, 8), 24, Z['cielo'], 'DENTRO DE %s (MARCA %s)' % (Z['nombre'], Z['marca'].upper()))
-    foto('Zona-%s-lado' % Z['clave'], (-170, y0 + 60, 70), (10, y0 + 200, 0), 30, Z['cielo'], '%s DESDE UN LADO' % Z['nombre'])
-W.contact_sheet(fotos, 3, os.path.join(OUT, '_hoja.png'), title='MAPA V01 - ZONAS DESPUES DE LA PRADERA - SOLO LO VISUAL - RENDERS DE BLENDER (SIN PROBAR EN ROBLOX)')
-a_jpg(os.path.join(OUT, '_hoja.png'), os.path.join(OUT, 'Mapa-v01-hoja.jpg'), 0.5)
-A.write_json(os.path.join(OUT, 'datos.json'), {
-    'pieza': 'Mapa v01: zonas después de la Pradera del Despegue (solo lo visual)', 'sin_probar_en_roblox': True,
-    'zonas': [dict(clave=Z['clave'], nombre=Z['nombre'], marca_provisional=Z['marca'], y_inicio=Y_INICIO + i * LARGO,
-                   y_fin=Y_INICIO + (i + 1) * LARGO) for i, Z in enumerate(ZONAS)],
-    'carril_ancho_studs': ANCHO, 'zona_largo_studs': LARGO, 'triangulos': {'%s_%s' % (c, k): t for c, k, t in resumen},
-    'textura': 'texturas/Mapa_paleta_256.png (un material para todas las piezas)',
-    'ejes': 'Blender +Y = sentido del vuelo, +Z arriba; FBX global_scale=0.01, axis_forward=%s, axis_up=Y' % FBX_FORWARD})
-A.log('listo')

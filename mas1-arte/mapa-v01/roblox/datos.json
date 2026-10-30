@@ -1,0 +1,91 @@
+{
+  "pieza": "Mapa v01 en piezas nativas de Roblox (Part y WedgePart, sin mallas: no hace falta subir nada)",
+  "sin_probar_en_studio": true,
+  "archivos": {
+    "Mapa-v01.rbxmx": "modelo Mapa_v01 para insertar en una place (zonas como Model, piezas por carpeta)",
+    "Mapa-v01-prueba.rbxlx": "place de prueba: el modelo, un SpawnLocation al principio del carril y una Atmosphere"
+  },
+  "ejes": "Blender (x, y, z) -> Roblox (x, z, -y): el vuelo va hacia -Z; origen = el de la Pradera de Codex; 1 unidad = 1 stud",
+  "zonas_z_roblox": {
+    "mar-de-nubes": [
+      -172.0,
+      -532.0
+    ],
+    "tormenta": [
+      -532.0,
+      -892.0
+    ],
+    "cielo-alto": [
+      -892.0,
+      -1252.0
+    ],
+    "espacio": [
+      -1252.0,
+      -1612.0
+    ]
+  },
+  "piezas_total": 3092,
+  "piezas_por_zona": {
+    "mar-de-nubes": {
+      "Suelo": 270,
+      "LadoIzq": 231,
+      "LadoDer": 235,
+      "Arco": 119,
+      "Marcas": 31,
+      "Aros": 48
+    },
+    "tormenta": {
+      "Suelo": 262,
+      "LadoIzq": 288,
+      "LadoDer": 261,
+      "Arco": 95,
+      "Marcas": 34,
+      "Aros": 48
+    },
+    "cielo-alto": {
+      "Suelo": 257,
+      "LadoIzq": 90,
+      "LadoDer": 90,
+      "Arco": 85,
+      "Marcas": 32,
+      "Aros": 48
+    },
+    "espacio": {
+      "Suelo": 159,
+      "LadoIzq": 130,
+      "LadoDer": 130,
+      "Arco": 68,
+      "Marcas": 33,
+      "Aros": 48
+    }
+  },
+  "piezas_por_tipo": {
+    "Part/Block SmoothPlastic": 763,
+    "Part/Cylinder SmoothPlastic": 314,
+    "Part/Ball SmoothPlastic": 1267,
+    "Part/Block Neon": 688,
+    "WedgePart Neon": 60
+  },
+  "chocan": "solo las baldosas del carril (CanCollide); todo lo demás es decorado sin colisión",
+  "neon": [
+    "aro_azul",
+    "aro_oro",
+    "aurora_a",
+    "aurora_b",
+    "aurora_c",
+    "cristal",
+    "cristal_rosa",
+    "estrella",
+    "luz",
+    "rayo",
+    "rayo_claro"
+  ],
+  "transparencia": {
+    "aurora_a": 0.3,
+    "aurora_b": 0.3,
+    "aurora_c": 0.3,
+    "cristal": 0.1,
+    "cristal_rosa": 0.1
+  },
+  "caras_coplanares_solapadas": 0
+}
