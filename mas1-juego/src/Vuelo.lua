@@ -18,6 +18,12 @@ V.CFG = {
 	puntosEnemigo = 30,
 	puntosCofre = 250, -- mas que la distancia que se pierde por el boost para pillarlo
 	potenciaPorSegundo = 1,
+	-- entrenamiento y rebirth (hito 3): en tierra siempre se gana potencia; mas en las zonas AFK (aunque no te muevas) y en el
+	-- circuito de entrenamiento (corriendo). Cada rebirth reinicia la potencia, sube el entrenamiento y dobla lo que cuesta el siguiente.
+	multAFK = 1.5,
+	multEntreno = 2,
+	entrenoPorRebirth = 0.5, -- +50% de entrenamiento por rebirth
+	rebirthBase = 500, -- potencia para el primer rebirth
 	-- Manejo (src/Manejo.lua en el cliente) y limites que valida el servidor (src/Partida.lua). Faciles a proposito: avanzar es
 	-- automatico, no se puede salir del carril ni tocar el suelo mientras quede energia, y al planear se aterriza solo.
 	velocidadLateral = 22, -- A/D
@@ -118,8 +124,21 @@ end
 -- Entrenamiento en tierra (+1 potencia por segundo); rebirths aumentan principalmente la velocidad de entrenamiento.
 function V.entrenar(potencia, segundos, rebirths, cfg)
 	cfg = cfg or V.CFG
-	local vel = cfg.potenciaPorSegundo * (1 + 0.5 * (rebirths or 0))
+	local vel = cfg.potenciaPorSegundo * (1 + cfg.entrenoPorRebirth * (rebirths or 0))
 	return potencia + vel * segundos
+end
+
+-- Potencia por segundo en tierra. zona: nil, "afk" o "entreno" (el circuito solo cuenta si corres).
+function V.ritmoEntreno(rebirths, zona, corriendo, cfg)
+	cfg = cfg or V.CFG
+	local m = 1
+	if zona == "afk" then m = cfg.multAFK elseif zona == "entreno" and corriendo then m = cfg.multEntreno end
+	return cfg.potenciaPorSegundo * (1 + cfg.entrenoPorRebirth * (rebirths or 0)) * m
+end
+
+function V.costeRebirth(rebirths, cfg)
+	cfg = cfg or V.CFG
+	return cfg.rebirthBase * 2 ^ (rebirths or 0)
 end
 
 -- Rebirth: reinicia SOLO la potencia; conserva todo lo demas. Devuelve jugador nuevo.

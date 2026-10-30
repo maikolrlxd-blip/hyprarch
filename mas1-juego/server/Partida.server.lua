@@ -4,6 +4,8 @@
 -- atras), se cuentan los aros del mapa (Models «Aro» con su pieza «Centro»), los golpes a los enemigos y los cofres que huyen, y al
 -- aterrizar se pagan el dinero y la exp y se manda MAS1_Resultado. Los enemigos y los cofres son anclas invisibles en
 -- Workspace.MAS1_Entidades (atributos Tipo, Vivo y Dueno); los dibuja el cliente (client/Entidades.client.lua).
+-- En tierra se entrena (+1 potencia/s, mas en las zonas MAS1_AFK y MAS1_Entreno del mapa) y se puede hacer rebirth; el bonus del
+-- vuelo combina las mascotas equipadas y las alas (src/Alas.lua, que escalan con los rebirths).
 -- Atributos y eventos en CONTRATO.md. Todavia sin guardado (hito 5) ni mascotas equipadas (hito 4). SIN PROBAR EN STUDIO.
 local Players, RS, RunService = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService")
 local Mas1 = RS:WaitForChild("Mas1")
@@ -11,14 +13,20 @@ local V = require(Mas1:WaitForChild("Vuelo"))
 local P = require(Mas1:WaitForChild("Partida"))
 local E = require(Mas1:WaitForChild("Encuentros"))
 local M = require(Mas1:WaitForChild("Mascotas"))
+local Alas = require(Mas1:WaitForChild("Alas"))
 local Red = require(Mas1:WaitForChild("Red"))
 local accion, efecto, resultado = Red.evento("MAS1_Accion"), Red.evento("MAS1_Efecto"), Red.evento("MAS1_Resultado")
+local avisoEv = Red.evento("MAS1_Aviso")
 
-local INICIALES = { Potencia = 0, Dinero = 0, Exp = 0, Rebirths = 0, Cofres = 0, Puntos = 0, Distancia = 0, ZonaMult = 1, Aros = 0,
-	ArosTotal = 0, Energia = 1, EnergiaMax = 0, Impulso = 1, EnVuelo = false, Planeando = false, Boost = false, Mascota = "—",
-	MascotaBonus = 1 }
+local INICIALES = { Potencia = 0, Dinero = 0, Exp = 0, Rebirths = 0, Cofres = 0, Lanzamientos = 0, Puntos = 0, Distancia = 0,
+	ZonaMult = 1, Aros = 0, ArosTotal = 0, Energia = 1, EnergiaMax = 0, Impulso = 1, EnVuelo = false, Planeando = false, Boost = false,
+	Mascota = "—", MascotaBonus = 1, Alas = "", Entreno = 1, CosteRebirth = V.costeRebirth(0) }
 local MENSAJES_POR_SEGUNDO = 30
-local jugadores = {} -- [plr] = { s = sesion de Partida, msgs, desde, hud, cofre = ancla del cofre }
+local jugadores = {} -- [plr] = { s = sesion de Partida, msgs, desde, hud, cofre = ancla del cofre, potencia, entreno }
+
+local function aviso(plr, texto)
+	avisoEv:FireClient(plr, texto)
+end
 
 local function tabla(v)
 	return { x = v.X, y = v.Y, z = v.Z }
@@ -74,6 +82,22 @@ for _, en in ipairs(mundo.enemigos) do
 	en.ancla = ancla("Enemigo", v3(en.pos), { Tipo = en.tipo, Vivo = true })
 end
 
+-- zonas de entrenamiento del mapa: partes llamadas MAS1_AFK (x1,5 aunque no te muevas) y MAS1_Entreno (x2 corriendo)
+local zonasEntreno = {}
+for _, p in ipairs(workspace:GetDescendants()) do
+	if p:IsA("BasePart") and (p.Name == "MAS1_AFK" or p.Name == "MAS1_Entreno") then
+		zonasEntreno[#zonasEntreno + 1] = { parte = p, tipo = p.Name == "MAS1_AFK" and "afk" or "entreno" }
+	end
+end
+
+local function zonaDe(pos)
+	for _, z in ipairs(zonasEntreno) do
+		local rel, s = z.parte.CFrame:PointToObjectSpace(pos), z.parte.Size
+		if math.abs(rel.X) <= s.X / 2 and math.abs(rel.Z) <= s.Z / 2 and rel.Y >= -2 and rel.Y <= s.Y / 2 + 8 then return z.tipo end
+	end
+	return nil
+end
+
 local function golpeado(i)
 	local en = mundo.enemigos[i]
 	en.ancla:SetAttribute("Vivo", false)
@@ -90,7 +114,11 @@ local function alEntrar(plr)
 		if plr:GetAttribute(k) == nil then plr:SetAttribute(k, v) end
 	end
 	plr:SetAttribute("ArosTotal", #mundo.aros)
-	jugadores[plr] = { s = P.nueva(V, E), msgs = 0, desde = 0, hud = 0 }
+	jugadores[plr] = { s = P.nueva(V, E), msgs = 0, desde = 0, hud = 0, potencia = plr:GetAttribute("Potencia") or 0, entreno = 0 }
+	plr:GetAttributeChangedSignal("Potencia"):Connect(function() -- cambiada a mano (en Studio, para probar): se adopta
+		local j, v = jugadores[plr], plr:GetAttribute("Potencia")
+		if j and type(v) == "number" and math.abs(v - math.floor(j.potencia)) >= 1 then j.potencia = v end
+	end)
 end
 Players.PlayerAdded:Connect(alEntrar)
 for _, plr in ipairs(Players:GetPlayers()) do alEntrar(plr) end
@@ -108,8 +136,24 @@ Players.PlayerRemoving:Connect(function(plr)
 	jugadores[plr] = nil
 end)
 
-local function bonusDe(plr) -- hito 4: los bonus de las mascotas equipadas
-	return M.multiplicadores({})
+local function bonusDe(plr) -- mascotas equipadas (hito 4) por las alas equipadas, que escalan con los rebirths
+	return Alas.combinar(M.multiplicadores({}), Alas.bonus(plr:GetAttribute("Alas"), plr:GetAttribute("Rebirths") or 0))
+end
+
+local function rebirth(plr, j)
+	if P.enVuelo(j.s) then return end
+	local r = plr:GetAttribute("Rebirths") or 0
+	local coste = V.costeRebirth(r)
+	if j.potencia < coste then
+		aviso(plr, string.format("Te falta potencia para el rebirth: %d / %d", math.floor(j.potencia), coste))
+		return
+	end
+	j.potencia = 0
+	plr:SetAttribute("Potencia", 0)
+	plr:SetAttribute("Rebirths", r + 1)
+	plr:SetAttribute("CosteRebirth", V.costeRebirth(r + 1))
+	local hrp = raiz(plr)
+	if hrp then efecto:FireAllClients("rebirth", hrp.Position) end
 end
 
 local function cerrarVuelo(plr, j, hrp)
@@ -131,7 +175,9 @@ local function lanzar(plr, j)
 	hrp.CFrame = CFrame.lookAt(pos, pos + Vector3.new(0, 0, -1))
 	hrp.AssemblyLinearVelocity = Vector3.zero
 	local b = bonusDe(plr)
-	P.lanzar(j.s, tabla(pos), plr:GetAttribute("Potencia") or 0, b)
+	P.lanzar(j.s, tabla(pos), j.potencia, b)
+	plr:SetAttribute("Lanzamientos", (plr:GetAttribute("Lanzamientos") or 0) + 1)
+	plr:SetAttribute("Entreno", 0)
 	quitarCofre(j)
 	if j.s.cofre then j.cofre = ancla("Cofre", v3(j.s.cofre.pos), { Tipo = "cofre", Dueno = plr.UserId }) end
 	plr:SetAttribute("Impulso", b.impulso)
@@ -157,6 +203,9 @@ accion.OnServerEvent:Connect(function(plr, nombre, valor)
 	if nombre == "lanzar" then
 		lanzar(plr, j)
 		return
+	elseif nombre == "rebirth" then
+		rebirth(plr, j)
+		return
 	end
 	local fx, i = P.intencion(j.s, nombre, valor, mundo)
 	if i then
@@ -169,7 +218,20 @@ end)
 
 RunService.Heartbeat:Connect(function(dt)
 	for plr, j in pairs(jugadores) do
-		if not P.enVuelo(j.s) then continue end
+		if not P.enVuelo(j.s) then -- en tierra: entrenar (+1/s, mas en las zonas AFK y de entrenamiento y con los rebirths)
+			j.entreno += dt
+			if j.entreno >= 0.25 then
+				local hrp, hum = raiz(plr)
+				if hrp then
+					local ritmo = V.ritmoEntreno(plr:GetAttribute("Rebirths") or 0, zonaDe(hrp.Position), hum.MoveDirection.Magnitude > 0.1)
+					j.potencia += ritmo * j.entreno
+					plr:SetAttribute("Potencia", math.floor(j.potencia))
+					plr:SetAttribute("Entreno", ritmo)
+				end
+				j.entreno = 0
+			end
+			continue
+		end
 		local hrp = raiz(plr)
 		if not hrp then -- murio o se quedo sin personaje: el vuelo no paga
 			P.cancelar(j.s)

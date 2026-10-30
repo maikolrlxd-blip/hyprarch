@@ -5,6 +5,32 @@
 <Properties>
 <string name="Name">Workspace</string>
 </Properties>
+<Item class="Part" referent="RBXJ000001A">
+<Properties>
+<bool name="Anchored">true</bool>
+<token name="TopSurface">0</token>
+<token name="BottomSurface">0</token>
+<CoordinateFrame name="CFrame"><X>-20</X><Y>0.2</Y><Z>-192</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Color3uint8 name="Color3uint8">4284467455</Color3uint8>
+<token name="Material">288</token>
+<string name="Name">MAS1_AFK</string>
+<Vector3 name="size"><X>14</X><Y>0.4</Y><Z>14</Z></Vector3>
+<token name="shape">1</token>
+</Properties>
+</Item>
+<Item class="Part" referent="RBXJ000001B">
+<Properties>
+<bool name="Anchored">true</bool>
+<token name="TopSurface">0</token>
+<token name="BottomSurface">0</token>
+<CoordinateFrame name="CFrame"><X>20</X><Y>0.2</Y><Z>-192</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
+<Color3uint8 name="Color3uint8">4294941952</Color3uint8>
+<token name="Material">288</token>
+<string name="Name">MAS1_Entreno</string>
+<Vector3 name="size"><X>14</X><Y>0.4</Y><Z>14</Z></Vector3>
+<token name="shape">1</token>
+</Properties>
+</Item>
 <Item class="Model" referent="RBX000018A2">
 <Properties>
 <string name="Name">Mapa_v01</string>
@@ -62428,15 +62454,73 @@
 </Properties>
 </Item>
 </Item>
-<Item class="ReplicatedStorage" referent="RBXJ0000009">
+<Item class="ReplicatedStorage" referent="RBXJ000000A">
 <Properties>
 <string name="Name">ReplicatedStorage</string>
 </Properties>
-<Item class="Folder" referent="RBXJ0000008">
+<Item class="Folder" referent="RBXJ0000009">
 <Properties>
 <string name="Name">Mas1</string>
 </Properties>
 <Item class="ModuleScript" referent="RBXJ0000001">
+<Properties>
+<string name="Name">Alas</string>
+<ProtectedString name="Source"><![CDATA[-- Alas de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa): datos, requisitos y bonus. Maikol (30/10): las alas dan un
+-- multiplicador de resistencia y de impulso «mucho mas notorio que las mascotas», y escalan con los rebirths; se multiplican con los
+-- bonus de las mascotas. Requisitos de Maikol: iniciales en el 3.er lanzamiento, roboticas con 3 dias seguidos, avanzadas con
+-- puntos, misiones o cofres (aqui: 10 cofres, o comprarlas). La interfaz (client/Inventario.client.lua) lee LISTA con
+-- {id, nombre, requisito, precio}. CIFRAS PROVISIONALES. Modelos: Codex (iniciales, roboticas), Coordinador (avanzadas v0.2).
+local A = {}
+
+A.LISTA = {
+	{ id = "iniciales", nombre = "Alas iniciales", requisito = "Tu 3.er lanzamiento", precio = 0, impulso = 20, resistencia = 50,
+		pide = { lanzamientos = 3 } },
+	{ id = "roboticas", nombre = "Alas robóticas", requisito = "Juega 3 días seguidos", precio = 0, impulso = 40, resistencia = 100,
+		pide = { diasSeguidos = 3 } },
+	{ id = "avanzadas", nombre = "Alas avanzadas", requisito = "Atrapa 10 cofres o cómpralas", precio = 25000, impulso = 80,
+		resistencia = 200, pide = { cofres = 10 } },
+}
+A.PORREBIRTH = 0.25 -- cada rebirth sube un 25% lo que dan las alas
+
+local porId = {}
+for _, a in ipairs(A.LISTA) do porId[a.id] = a end
+
+function A.get(id)
+	return porId[id]
+end
+
+-- Multiplicadores de unas alas con cierto numero de rebirths: { impulso, resistencia } (1 = sin alas).
+function A.bonus(id, rebirths)
+	local a = porId[id]
+	if not a then return { impulso = 1, resistencia = 1 } end
+	local f = 1 + A.PORREBIRTH * (rebirths or 0)
+	return { impulso = 1 + a.impulso / 100 * f, resistencia = 1 + a.resistencia / 100 * f }
+end
+
+-- ¿Cumple los requisitos? progreso = { lanzamientos, diasSeguidos, cofres }.
+function A.desbloqueada(id, progreso)
+	local a = porId[id]
+	if not a then return false end
+	for k, n in pairs(a.pide) do
+		if (progreso[k] or 0) < n then return false end
+	end
+	return true
+end
+
+-- Bonus de un vuelo: los de las mascotas (Mascotas.multiplicadores) por los de las alas (A.bonus).
+function A.combinar(mascotas, alas)
+	local t = {}
+	for k, v in pairs(mascotas) do t[k] = v end
+	t.impulso = (t.impulso or 1) * (alas.impulso or 1)
+	t.resistencia = (t.resistencia or 1) * (alas.resistencia or 1)
+	return t
+end
+
+return A
+]]></ProtectedString>
+</Properties>
+</Item>
+<Item class="ModuleScript" referent="RBXJ0000002">
 <Properties>
 <string name="Name">Efectos</string>
 <ProtectedString name="Source"><![CDATA[-- Efectos visuales de «+1 de lanzamiento por segundo»: especificaciones de ParticleEmitter (datos puros, sin API de Roblox) para
@@ -62466,7 +62550,7 @@ return E
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000002">
+<Item class="ModuleScript" referent="RBXJ0000003">
 <Properties>
 <string name="Name">Encuentros</string>
 <ProtectedString name="Source"><![CDATA[-- Encuentros del vuelo de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa): aros que se cruzan, enemigos que se golpean y
@@ -62588,7 +62672,7 @@ return E
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000003">
+<Item class="ModuleScript" referent="RBXJ0000004">
 <Properties>
 <string name="Name">Manejo</string>
 <ProtectedString name="Source"><![CDATA[-- Manejo del vuelo de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa): a que velocidad volar en cada fotograma segun los
@@ -62648,7 +62732,7 @@ return M
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000004">
+<Item class="ModuleScript" referent="RBXJ0000005">
 <Properties>
 <string name="Name">Mascotas</string>
 <ProtectedString name="Source"><![CDATA[-- Mascotas de «+1 de lanzamiento por segundo»: datos y calculo de bonus (Lua puro, sin API de Roblox).
@@ -62729,7 +62813,7 @@ return M
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000005">
+<Item class="ModuleScript" referent="RBXJ0000006">
 <Properties>
 <string name="Name">Partida</string>
 <ProtectedString name="Source"><![CDATA[-- Sesion de vuelo de un jugador en el servidor de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa; el adaptador de
@@ -62915,7 +62999,7 @@ return P
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000006">
+<Item class="ModuleScript" referent="RBXJ0000007">
 <Properties>
 <string name="Name">Red</string>
 <ProtectedString name="Source"><![CDATA[-- RemoteEvents de «+1 de lanzamiento por segundo» en ReplicatedStorage (adaptador de Roblox, no es Lua puro): en el servidor se
@@ -62940,7 +63024,7 @@ return R
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000007">
+<Item class="ModuleScript" referent="RBXJ0000008">
 <Properties>
 <string name="Name">Vuelo</string>
 <ProtectedString name="Source"><![CDATA[-- Logica pura del vuelo de «+1 de lanzamiento por segundo» (sin API de Roblox, probada con lupa).
@@ -62963,6 +63047,12 @@ V.CFG = {
 	puntosEnemigo = 30,
 	puntosCofre = 250, -- mas que la distancia que se pierde por el boost para pillarlo
 	potenciaPorSegundo = 1,
+	-- entrenamiento y rebirth (hito 3): en tierra siempre se gana potencia; mas en las zonas AFK (aunque no te muevas) y en el
+	-- circuito de entrenamiento (corriendo). Cada rebirth reinicia la potencia, sube el entrenamiento y dobla lo que cuesta el siguiente.
+	multAFK = 1.5,
+	multEntreno = 2,
+	entrenoPorRebirth = 0.5, -- +50% de entrenamiento por rebirth
+	rebirthBase = 500, -- potencia para el primer rebirth
 	-- Manejo (src/Manejo.lua en el cliente) y limites que valida el servidor (src/Partida.lua). Faciles a proposito: avanzar es
 	-- automatico, no se puede salir del carril ni tocar el suelo mientras quede energia, y al planear se aterriza solo.
 	velocidadLateral = 22, -- A/D
@@ -63063,8 +63153,21 @@ end
 -- Entrenamiento en tierra (+1 potencia por segundo); rebirths aumentan principalmente la velocidad de entrenamiento.
 function V.entrenar(potencia, segundos, rebirths, cfg)
 	cfg = cfg or V.CFG
-	local vel = cfg.potenciaPorSegundo * (1 + 0.5 * (rebirths or 0))
+	local vel = cfg.potenciaPorSegundo * (1 + cfg.entrenoPorRebirth * (rebirths or 0))
 	return potencia + vel * segundos
+end
+
+-- Potencia por segundo en tierra. zona: nil, "afk" o "entreno" (el circuito solo cuenta si corres).
+function V.ritmoEntreno(rebirths, zona, corriendo, cfg)
+	cfg = cfg or V.CFG
+	local m = 1
+	if zona == "afk" then m = cfg.multAFK elseif zona == "entreno" and corriendo then m = cfg.multEntreno end
+	return cfg.potenciaPorSegundo * (1 + cfg.entrenoPorRebirth * (rebirths or 0)) * m
+end
+
+function V.costeRebirth(rebirths, cfg)
+	cfg = cfg or V.CFG
+	return cfg.rebirthBase * 2 ^ (rebirths or 0)
 end
 
 -- Rebirth: reinicia SOLO la potencia; conserva todo lo demas. Devuelve jugador nuevo.
@@ -63081,15 +63184,15 @@ return V
 </Item>
 </Item>
 </Item>
-<Item class="ServerScriptService" referent="RBXJ000000D">
+<Item class="ServerScriptService" referent="RBXJ000000E">
 <Properties>
 <string name="Name">ServerScriptService</string>
 </Properties>
-<Item class="Folder" referent="RBXJ000000C">
+<Item class="Folder" referent="RBXJ000000D">
 <Properties>
 <string name="Name">Mas1Servidor</string>
 </Properties>
-<Item class="Script" referent="RBXJ000000A">
+<Item class="Script" referent="RBXJ000000B">
 <Properties>
 <string name="Name">DemoVisual</string>
 <ProtectedString name="Source"><![CDATA[-- SOLO PARA VER LA CAPA VISUAL antes de que exista el juego: si workspace tiene el atributo MAS1_Demo = true, simula un vuelo (energia que baja,
@@ -63126,7 +63229,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="Script" referent="RBXJ000000B">
+<Item class="Script" referent="RBXJ000000C">
 <Properties>
 <string name="Name">Partida</string>
 <ProtectedString name="Source"><![CDATA[-- Partida de «+1 de lanzamiento por segundo» en el servidor: adaptador de Roblox de src/Partida.lua y src/Encuentros.lua (Lua puro,
@@ -63135,6 +63238,8 @@ end)
 -- atras), se cuentan los aros del mapa (Models «Aro» con su pieza «Centro»), los golpes a los enemigos y los cofres que huyen, y al
 -- aterrizar se pagan el dinero y la exp y se manda MAS1_Resultado. Los enemigos y los cofres son anclas invisibles en
 -- Workspace.MAS1_Entidades (atributos Tipo, Vivo y Dueno); los dibuja el cliente (client/Entidades.client.lua).
+-- En tierra se entrena (+1 potencia/s, mas en las zonas MAS1_AFK y MAS1_Entreno del mapa) y se puede hacer rebirth; el bonus del
+-- vuelo combina las mascotas equipadas y las alas (src/Alas.lua, que escalan con los rebirths).
 -- Atributos y eventos en CONTRATO.md. Todavia sin guardado (hito 5) ni mascotas equipadas (hito 4). SIN PROBAR EN STUDIO.
 local Players, RS, RunService = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService")
 local Mas1 = RS:WaitForChild("Mas1")
@@ -63142,14 +63247,20 @@ local V = require(Mas1:WaitForChild("Vuelo"))
 local P = require(Mas1:WaitForChild("Partida"))
 local E = require(Mas1:WaitForChild("Encuentros"))
 local M = require(Mas1:WaitForChild("Mascotas"))
+local Alas = require(Mas1:WaitForChild("Alas"))
 local Red = require(Mas1:WaitForChild("Red"))
 local accion, efecto, resultado = Red.evento("MAS1_Accion"), Red.evento("MAS1_Efecto"), Red.evento("MAS1_Resultado")
+local avisoEv = Red.evento("MAS1_Aviso")
 
-local INICIALES = { Potencia = 0, Dinero = 0, Exp = 0, Rebirths = 0, Cofres = 0, Puntos = 0, Distancia = 0, ZonaMult = 1, Aros = 0,
-	ArosTotal = 0, Energia = 1, EnergiaMax = 0, Impulso = 1, EnVuelo = false, Planeando = false, Boost = false, Mascota = "—",
-	MascotaBonus = 1 }
+local INICIALES = { Potencia = 0, Dinero = 0, Exp = 0, Rebirths = 0, Cofres = 0, Lanzamientos = 0, Puntos = 0, Distancia = 0,
+	ZonaMult = 1, Aros = 0, ArosTotal = 0, Energia = 1, EnergiaMax = 0, Impulso = 1, EnVuelo = false, Planeando = false, Boost = false,
+	Mascota = "—", MascotaBonus = 1, Alas = "", Entreno = 1, CosteRebirth = V.costeRebirth(0) }
 local MENSAJES_POR_SEGUNDO = 30
-local jugadores = {} -- [plr] = { s = sesion de Partida, msgs, desde, hud, cofre = ancla del cofre }
+local jugadores = {} -- [plr] = { s = sesion de Partida, msgs, desde, hud, cofre = ancla del cofre, potencia, entreno }
+
+local function aviso(plr, texto)
+	avisoEv:FireClient(plr, texto)
+end
 
 local function tabla(v)
 	return { x = v.X, y = v.Y, z = v.Z }
@@ -63205,6 +63316,22 @@ for _, en in ipairs(mundo.enemigos) do
 	en.ancla = ancla("Enemigo", v3(en.pos), { Tipo = en.tipo, Vivo = true })
 end
 
+-- zonas de entrenamiento del mapa: partes llamadas MAS1_AFK (x1,5 aunque no te muevas) y MAS1_Entreno (x2 corriendo)
+local zonasEntreno = {}
+for _, p in ipairs(workspace:GetDescendants()) do
+	if p:IsA("BasePart") and (p.Name == "MAS1_AFK" or p.Name == "MAS1_Entreno") then
+		zonasEntreno[#zonasEntreno + 1] = { parte = p, tipo = p.Name == "MAS1_AFK" and "afk" or "entreno" }
+	end
+end
+
+local function zonaDe(pos)
+	for _, z in ipairs(zonasEntreno) do
+		local rel, s = z.parte.CFrame:PointToObjectSpace(pos), z.parte.Size
+		if math.abs(rel.X) <= s.X / 2 and math.abs(rel.Z) <= s.Z / 2 and rel.Y >= -2 and rel.Y <= s.Y / 2 + 8 then return z.tipo end
+	end
+	return nil
+end
+
 local function golpeado(i)
 	local en = mundo.enemigos[i]
 	en.ancla:SetAttribute("Vivo", false)
@@ -63221,7 +63348,11 @@ local function alEntrar(plr)
 		if plr:GetAttribute(k) == nil then plr:SetAttribute(k, v) end
 	end
 	plr:SetAttribute("ArosTotal", #mundo.aros)
-	jugadores[plr] = { s = P.nueva(V, E), msgs = 0, desde = 0, hud = 0 }
+	jugadores[plr] = { s = P.nueva(V, E), msgs = 0, desde = 0, hud = 0, potencia = plr:GetAttribute("Potencia") or 0, entreno = 0 }
+	plr:GetAttributeChangedSignal("Potencia"):Connect(function() -- cambiada a mano (en Studio, para probar): se adopta
+		local j, v = jugadores[plr], plr:GetAttribute("Potencia")
+		if j and type(v) == "number" and math.abs(v - math.floor(j.potencia)) >= 1 then j.potencia = v end
+	end)
 end
 Players.PlayerAdded:Connect(alEntrar)
 for _, plr in ipairs(Players:GetPlayers()) do alEntrar(plr) end
@@ -63239,8 +63370,24 @@ Players.PlayerRemoving:Connect(function(plr)
 	jugadores[plr] = nil
 end)
 
-local function bonusDe(plr) -- hito 4: los bonus de las mascotas equipadas
-	return M.multiplicadores({})
+local function bonusDe(plr) -- mascotas equipadas (hito 4) por las alas equipadas, que escalan con los rebirths
+	return Alas.combinar(M.multiplicadores({}), Alas.bonus(plr:GetAttribute("Alas"), plr:GetAttribute("Rebirths") or 0))
+end
+
+local function rebirth(plr, j)
+	if P.enVuelo(j.s) then return end
+	local r = plr:GetAttribute("Rebirths") or 0
+	local coste = V.costeRebirth(r)
+	if j.potencia < coste then
+		aviso(plr, string.format("Te falta potencia para el rebirth: %d / %d", math.floor(j.potencia), coste))
+		return
+	end
+	j.potencia = 0
+	plr:SetAttribute("Potencia", 0)
+	plr:SetAttribute("Rebirths", r + 1)
+	plr:SetAttribute("CosteRebirth", V.costeRebirth(r + 1))
+	local hrp = raiz(plr)
+	if hrp then efecto:FireAllClients("rebirth", hrp.Position) end
 end
 
 local function cerrarVuelo(plr, j, hrp)
@@ -63262,7 +63409,9 @@ local function lanzar(plr, j)
 	hrp.CFrame = CFrame.lookAt(pos, pos + Vector3.new(0, 0, -1))
 	hrp.AssemblyLinearVelocity = Vector3.zero
 	local b = bonusDe(plr)
-	P.lanzar(j.s, tabla(pos), plr:GetAttribute("Potencia") or 0, b)
+	P.lanzar(j.s, tabla(pos), j.potencia, b)
+	plr:SetAttribute("Lanzamientos", (plr:GetAttribute("Lanzamientos") or 0) + 1)
+	plr:SetAttribute("Entreno", 0)
 	quitarCofre(j)
 	if j.s.cofre then j.cofre = ancla("Cofre", v3(j.s.cofre.pos), { Tipo = "cofre", Dueno = plr.UserId }) end
 	plr:SetAttribute("Impulso", b.impulso)
@@ -63288,6 +63437,9 @@ accion.OnServerEvent:Connect(function(plr, nombre, valor)
 	if nombre == "lanzar" then
 		lanzar(plr, j)
 		return
+	elseif nombre == "rebirth" then
+		rebirth(plr, j)
+		return
 	end
 	local fx, i = P.intencion(j.s, nombre, valor, mundo)
 	if i then
@@ -63300,7 +63452,20 @@ end)
 
 RunService.Heartbeat:Connect(function(dt)
 	for plr, j in pairs(jugadores) do
-		if not P.enVuelo(j.s) then continue end
+		if not P.enVuelo(j.s) then -- en tierra: entrenar (+1/s, mas en las zonas AFK y de entrenamiento y con los rebirths)
+			j.entreno += dt
+			if j.entreno >= 0.25 then
+				local hrp, hum = raiz(plr)
+				if hrp then
+					local ritmo = V.ritmoEntreno(plr:GetAttribute("Rebirths") or 0, zonaDe(hrp.Position), hum.MoveDirection.Magnitude > 0.1)
+					j.potencia += ritmo * j.entreno
+					plr:SetAttribute("Potencia", math.floor(j.potencia))
+					plr:SetAttribute("Entreno", ritmo)
+				end
+				j.entreno = 0
+			end
+			continue
+		end
 		local hrp = raiz(plr)
 		if not hrp then -- murio o se quedo sin personaje: el vuelo no paga
 			P.cancelar(j.s)
@@ -63352,19 +63517,19 @@ end)
 </Item>
 </Item>
 </Item>
-<Item class="StarterPlayer" referent="RBXJ0000018">
+<Item class="StarterPlayer" referent="RBXJ0000019">
 <Properties>
 <string name="Name">StarterPlayer</string>
 </Properties>
-<Item class="StarterPlayerScripts" referent="RBXJ0000017">
+<Item class="StarterPlayerScripts" referent="RBXJ0000018">
 <Properties>
 <string name="Name">StarterPlayerScripts</string>
 </Properties>
-<Item class="Folder" referent="RBXJ0000016">
+<Item class="Folder" referent="RBXJ0000017">
 <Properties>
 <string name="Name">Mas1Cliente</string>
 </Properties>
-<Item class="LocalScript" referent="RBXJ000000E">
+<Item class="LocalScript" referent="RBXJ000000F">
 <Properties>
 <string name="Name">Efectos</string>
 <ProtectedString name="Source"><![CDATA[-- Dibuja los efectos de src/Efectos.lua con ParticleEmitter. El servidor (o el juego) dispara RemoteEvent MAS1_Efecto:
@@ -63406,7 +63571,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ000000F">
+<Item class="LocalScript" referent="RBXJ0000010">
 <Properties>
 <string name="Name">Entidades</string>
 <ProtectedString name="Source"><![CDATA[-- Enemigos y cofres de «+1 de lanzamiento por segundo» vistos en el cliente. El servidor solo pone anclas invisibles en
@@ -63559,7 +63724,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000010">
+<Item class="LocalScript" referent="RBXJ0000011">
 <Properties>
 <string name="Name">HudVuelo</string>
 <ProtectedString name="Source"><![CDATA[-- HUD de vuelo de «+1 de lanzamiento por segundo». Lee atributos del jugador local (los pone el juego o DemoVisual.server.lua):
@@ -63648,7 +63813,7 @@ refrescar()
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000011">
+<Item class="LocalScript" referent="RBXJ0000012">
 <Properties>
 <string name="Name">Inventario</string>
 <ProtectedString name="Source"><![CDATA[-- Inventario de «+1 de lanzamiento por segundo»: pestañas MASCOTAS (equipar hasta 3), HUEVOS (abrir con dinero) y ALAS (comprar y
@@ -63834,7 +63999,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000012">
+<Item class="LocalScript" referent="RBXJ0000013">
 <Properties>
 <string name="Name">Resultados</string>
 <ProtectedString name="Source"><![CDATA[-- Pantalla de resultados del vuelo de «+1 de lanzamiento por segundo»: aparece al aterrizar (MAS1_Resultado), cuenta hacia arriba
@@ -63906,7 +64071,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000013">
+<Item class="ModuleScript" referent="RBXJ0000014">
 <Properties>
 <string name="Name">Tema</string>
 <ProtectedString name="Source"><![CDATA[-- Tema de interfaz de «+1 de lanzamiento por segundo»: paneles gruesos con contorno oscuro y sombra dura, colores vivos, tipografia redondeada.
@@ -63977,7 +64142,7 @@ return T
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000014">
+<Item class="LocalScript" referent="RBXJ0000015">
 <Properties>
 <string name="Name">VueloControl</string>
 <ProtectedString name="Source"><![CDATA[-- Control del vuelo en el cliente de «+1 de lanzamiento por segundo». El cliente mueve su propio personaje (asi responde al instante)
@@ -64119,7 +64284,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000015">
+<Item class="LocalScript" referent="RBXJ0000016">
 <Properties>
 <string name="Name">Zonas</string>
 <ProtectedString name="Source"><![CDATA[-- Cielo y niebla por zona en el cliente de «+1 de lanzamiento por segundo»: al cruzar el arco de cada zona cambian la hora y la

@@ -32,12 +32,15 @@ Los escribe el servidor; la interfaz solo los lee.
 | `Puntos` | entero | puntos del vuelo en curso: (distancia + bote) × zona × bonus de dinero | hito 1 |
 | `Dinero` | entero | **nuevo**: total del jugador; se suma al aterrizar | hito 1 (sin guardar hasta el hito 5) |
 | `Exp` | entero | **nuevo**: total del jugador | hito 1 (sin guardar hasta el hito 5) |
-| `Potencia` | número | potencia del jugador | hito 3 (ahora 0; en Studio se puede cambiar a mano en la vista del servidor) |
-| `Rebirths` | entero | — | hito 3 |
+| `Potencia` | entero | potencia del jugador: +1/s en tierra (más en las zonas, con los rebirths); en Studio se puede cambiar a mano en la vista del servidor | hito 3 |
+| `Entreno` | número | **nuevo**: potencia por segundo ahora mismo (0 volando). La interfaz puede pintar «AFK x1,5» o «ENTRENANDO x2» | hito 3 |
+| `Rebirths` | entero | rebirths hechos | hito 3 |
+| `CosteRebirth` | entero | **nuevo**: potencia que pide el siguiente rebirth (500, 1.000, 2.000…) | hito 3 |
+| `Lanzamientos` | entero | **nuevo**: lanzamientos en total (las alas iniciales salen en el 3.º, hito 6) | hito 3 |
 | `Aros`, `ArosTotal` | entero | aros cruzados en este vuelo / aros del mapa | hito 2 |
 | `Cofres` | entero | **nuevo**: cofres voladores atrapados en total (para las alas avanzadas del hito 6) | hito 2 (sin guardar hasta el hito 5) |
 | `Mascota`, `MascotaBonus` | texto, número | — | hito 4 (ahora «—» y 1) |
-| `Alas` | texto | id de las alas equipadas | hito 6 |
+| `Alas` | texto | id de las alas equipadas (`""` = ninguna). El servidor ya aplica su bonus (`Alas.bonus`, que sube con los rebirths); equiparlas y desbloquearlas llega en el hito 6 | hito 3 / 6 |
 
 ## RemoteEvents
 Están en ReplicatedStorage y los crea `src/Red.lua`.
@@ -47,14 +50,29 @@ Están en ReplicatedStorage y los crea `src/Red.lua`.
   - `"boost", bool`: mantener pulsado (W o joystick arriba). El servidor lo confirma en el atributo `Boost`.
   - `"turbo"`: un toque (botón TURBO del HUD) que da 1,2 s de boost.
   - `"ataque"`, `"puno"` o `"patada"`: gasta `Vuelo.CFG.costeAtaque` de energía y no se puede planeando. Golpea al enemigo vivo más cercano a 12 studs (`Encuentros.CFG.alcance`); vuelve a los 15 s.
-  - Pendientes: `"equipar", tipo, id`; `"abrirHuevo", rareza`; `"rebirth"`; `"comprarAla", id`.
+  - `"rebirth"`: solo en tierra y con `Potencia ≥ CosteRebirth`. Reinicia solo la potencia, suma un rebirth y lanza el efecto `"rebirth"`. Si falta potencia, llega un `MAS1_Aviso`.
+  - Pendientes: `"equipar", tipo, id`; `"desequipar", "mascota", id`; `"abrirHuevo", rareza`; `"comprarAla", id`.
 - **`MAS1_Efecto`** (servidor → clientes), con nombres de `src/Efectos.lua`:
   - `"lanzamiento", pos`;
   - `"golpe", pos`: un golpe, a un enemigo o al aire;
   - `"aro", pos`: solo al jugador, cuando cruza un aro o atrapa un cofre;
   - `"estela", nil, raíz, bool`: el rastro del boost, que se enciende y se apaga.
 - **`MAS1_Resultado`** (servidor → cliente), al aterrizar: `{ distancia, aros, golpes, cofres, multiplicador, dinero, exp, tiempo }`.
-- Pendientes: `MAS1_Huevo` (`{ rareza, mascotaId }`) y `MAS1_Inventario` (`{ mascotas = {id = cantidad}, equipadas = {ids}, alas = {ids} }`).
+- **`MAS1_Aviso`** (servidor → cliente): `texto` para mostrar, como «Te falta potencia para el rebirth: 320 / 500».
+- Pendientes (hito 4, formas acordadas con Linux 2.0):
+  - `MAS1_Huevo`: `{ rareza, mascotaId, nueva }`;
+  - `MAS1_Inventario`: `{ mascotas = {id = cantidad}, equipadas = {ids, máx. 3}, alas = {ids}, alaEquipada = id | nil }`, al entrar y en cada cambio.
+
+## Entrenamiento y rebirth (hito 3)
+- Zonas del mapa (irán en la Pradera; en la place de prueba son dos placas junto al spawn):
+  - partes llamadas `MAS1_AFK` (×1,5 aunque no te muevas);
+  - partes llamadas `MAS1_Entreno` (×2 si corres).
+  - Cuentan la huella de la parte y hasta 8 studs por encima.
+- Ritmo: `Vuelo.ritmoEntreno(rebirths, zona, corriendo)` = 1/s × (1 + 0,5 × rebirths) × zona.
+- Coste del rebirth: `Vuelo.costeRebirth(r)` = 500 × 2^r.
+- Alas (`src/Alas.lua`): la `LISTA` lleva `{ id, nombre, requisito, precio, impulso, resistencia, pide }`.
+  - `Alas.bonus(id, rebirths)` sube un 25 % por rebirth.
+  - `Alas.combinar(mascotas, alas)` multiplica las alas con las mascotas.
 
 ## Mundo (hito 2)
 - **Aros**: son los Models `Aro` del mapa, cada uno con una pieza invisible `Centro`. El radio es la distancia media de sus bloques al centro. Cada aro cuenta una vez por vuelo, con 1,5 studs de margen por fuera.
@@ -80,5 +98,6 @@ Si algo no cuadra, devuelve al personaje a la última posición buena. La distan
 - `src/Manejo.lua`: cómo se vuela.
 - `src/Partida.lua`: sesión y validación.
 - `src/Encuentros.lua`: aros, golpes, reparto de enemigos y cofres.
+- `src/Alas.lua`: alas, requisitos y bonus.
 
 La interfaz no calcula bonus: se los pide al servidor.

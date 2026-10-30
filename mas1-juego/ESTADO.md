@@ -15,7 +15,8 @@ Programación de «+1 de lanzamiento por segundo» (Maikol, 30/10: «todo seguid
   - con potencia 0, unos 12 s de energía, un vuelo de unos 670 studs y aterrizaje en la Tormenta (x4);
   - la energía crece con la raíz de la potencia.
 - **Sin guardado** (hito 5): el dinero, la exp y los cofres se pierden al salir.
-- **Sin mascotas equipadas** (hito 4) **y sin potencia que suba** (hito 3, lo siguiente): de momento todos los vuelos son con potencia 0.
+- **Sin mascotas equipadas** (hito 4). **Las alas aún no se consiguen ni se equipan** (hito 6): su bonus ya se aplica si el atributo `Alas` tiene un id.
+- **Multiplicadores grandes sin medir**: con alas avanzadas, rebirths y mascotas fuertes, el impulso puede multiplicar mucho la velocidad. Hay que ver en Studio si sigue siendo divertido o hay que suavizarlo.
 - **Enemigos y cofres hechos con piezas, PROVISIONALES.** Las mallas voxel de `mas1-arte/enemigos-v02` hay que importarlas en Studio. Los enemigos no hacen daño: solo se golpean.
 - **Cielo por zona**: solo cambian la hora y la `Atmosphere`. El Espacio de noche usa las estrellas por defecto de Roblox.
 - **El botón LANZAR y el cartel de resultado son provisionales**: la interfaz buena la hace Linux 2.0.
@@ -42,7 +43,16 @@ Programación de «+1 de lanzamiento por segundo» (Maikol, 30/10: «todo seguid
    - **Cielo y niebla por zona**.
    - **Mapa**: aros más grandes, bordes del carril en Neon y flechas y xN más grandes (crítica del director).
    - **Ajustes**: el boost gasta +1,5/s (antes +2,5/s), para que perseguir un cofre compense.
-3. Entrenamiento (+1 potencia/s), zonas AFK, rebirth y alas que escalan con el rebirth.
+3. **Entrenamiento, zonas AFK, rebirth y alas que escalan — hecho, sin probar en Studio.**
+   - En tierra se gana +1 de potencia por segundo; ×1,5 en las zonas `MAS1_AFK` aunque no te muevas, y ×2 en `MAS1_Entreno` si corres.
+   - Cada rebirth suma +50 % al entrenamiento. Cuesta 500 de potencia y el coste se dobla cada vez; solo reinicia la potencia. Si falta potencia, sale un aviso.
+   - Alas (`src/Alas.lua`):
+     - iniciales: +20 % de impulso y +50 % de resistencia;
+     - robóticas: +40 % y +100 %;
+     - avanzadas: +80 % y +200 %.
+     - Suben un 25 % por rebirth y se multiplican con las mascotas.
+   - Contadores nuevos: `Lanzamientos` y `Cofres`, para desbloquear alas en el hito 6.
+   - Pruebas en `tests/test_progreso.py`.
 4. Mascotas: abrir huevos, inventario, equipar 3 y bonus aplicados al vuelo; el fénix solo con Robux, sin productos configurados.
 5. Guardado con DataStore y antitrampas básicas.
 6. Alas: iniciales, robóticas y avanzadas.
@@ -50,6 +60,8 @@ Programación de «+1 de lanzamiento por segundo» (Maikol, 30/10: «todo seguid
 ## Cómo probarlo
 1. Abre `build/Mas1-prueba.rbxlx` en Studio con `File → Open from File`. Es local: no sube nada. Lleva el mapa v01 en piezas y todos los scripts, colocados como los pondría Rojo.
 2. Dale a Play. Sales al principio del Mar de Nubes.
-3. Pulsa F o el botón ¡LANZAR!. Para vuelos más largos, sube el atributo `Potencia` del jugador en la vista del servidor.
+3. Pulsa F o el botón ¡LANZAR!.
+   - Junto al spawn hay dos placas: la cian es AFK (×1,5) y la naranja, entrenamiento (×2 corriendo).
+   - Para ir más rápido, sube el atributo `Potencia` del jugador en la vista del servidor.
 4. Regenerar la place: `python tools/construir_place.py`.
 5. Pruebas, desde `mas1-juego`: `python tests/test_partida.py`, `test_encuentros.py`, `test_vuelo.py` y `test_mascotas.py`.
