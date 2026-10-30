@@ -1,0 +1,9 @@
+{
+ "blend": "enemigos-v02/globo/GloboGrunon.blend",
+ "malla": "GloboGrunon",
+ "triangulos": 664,
+ "islas": 16,
+ "piezas_sueltas": [],
+ "pares_coplanares_solapados": 0,
+ "ejemplos": []
+}

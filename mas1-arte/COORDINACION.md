@@ -10,11 +10,18 @@ Escrito el 2026-10-29 por el Coordinador (Claude en el PC de Maikol). Aquí solo
 | Mascotas poco comunes y raras (2 + 2) | Codex | propuesta de Codex (29/10): periquito y cacatúa, búho y martín pescador; sin aprobar |
 | **Huevos voladores con alas por rareza** (idea de Maikol, 29/10: cofres→alas, huevos→mascotas) | Coordinador | **v01 hecha el 29/10** en `huevos-alados-v01\`: común, poco común, raro, legendario y mítico. Huevo facetado como tu cofre (no voxel), grieta en zigzag, tapa que salta (`Hatch`) y alas de plumas en flecha como las del cofre, que crecen con la rareza. Sin probar en Roblox; falta la revisión de Maikol |
 | Criaturas aladas y monstruos («Winged Voxel Creatures And Monsters») | Antigravity | en marcha (Dragón Bebé, Neko Alado); briefing en `antigravity\BRIEFING-PARA-ANTIGRAVITY.md`. Falta saber si son enemigos o mascotas |
-| **Enemigos voladores por zona** | Coordinador: objetos y elementos con cara (las criaturas, para Antigravity si sus monstruos son enemigos) | **v01 hecha el 29/10** en `enemigos-v01\`: nube gruñona, nubarrón de tormenta, ovni y meteorito; clips Idle/Hit/Defeat/Blink. El reparto por zona es una propuesta mía sin aprobar (en su `ESTADO.md`). Sin probar en Roblox |
+| **Enemigos voladores por zona** | Coordinador: objetos y elementos con cara (Antigravity propone criaturas enemigas en su `antigravity\LEEME.md`) | **v02 (voxel) hecha el 30/10** en `enemigos-v02\`: globo, nube gruñona, nubarrón, cometa, ovni y meteorito, una sola familia en voxel como pidió Maikol; clips Idle/Hit/Defeat/Blink. La v01 (estilos mezclados) sigue en `enemigos-v01\`. Reparto por zona propuesto, sin cerrar. Sin probar en Roblox |
+| **Mascotas de enemigos** (versión amable, salen de los huevos) | Coordinador | en marcha el 30/10 en `mascotas-enemigos-v01\`, con las rarezas de `mas1-juego\src\Mascotas.lua` |
+| **Huevos alados v02** (seis rarezas con el épico) | Coordinador | en marcha el 30/10 en `huevos-alados-v02\` |
 | Zonas intermedias, icono y miniaturas | Coordinador, en ese orden | sin empezar |
 
 ## Referencia nueva de Maikol (29/10) para las mascotas
 Maikol pidió «tomar referencia de Roba un huevo (Steal an Egg) en los diseños de las mascotas». Lo que saqué de sus iconos está en `REFERENCIA-ROBA-UN-HUEVO.md` (voxeles chunky, ojos diminutos, escamas de plumas en relieve, sombras lavanda; **el contorno negro grueso es de las comunes y medias, las raras no lo llevan**; el detalle sube con la rareza: alas grandes en capas con degradado y adornos dorados en rombo). Lo apliqué a águila, grifo y fénix (v02, sin contorno). **Codex:** las comunes no llevan escamas ni contorno; decide si las adaptas (el contorno está hecho para cualquier malla de Blender en `tools\contorno_negro.py`, solo depende de `bpy`; las raras de Roba un huevo no lo llevan).
+
+## Decisiones de Maikol (30/10, en el chat del Coordinador)
+- **Ojos: pequeños** (estilo Roba un huevo: ojo diminuto con un brillo) en **todas** las mascotas. Codex: tus comunes con ojos grandes tendrían que pasar a ojos pequeños.
+- **Contorno negro grueso en las comunes** (y medias); las raras sin contorno, como en Roba un huevo. La herramienta está en `tools\contorno_negro.py` (solo depende de `bpy`).
+- **Prioridades del Coordinador tras la crítica de Claude nube** (`CRITICA-CLAUDE-NUBE-2026-10-30.md`): 1) los seis enemigos en voxel, como una sola familia; 2) huevos más distintos por rareza (forma, tamaño y alas, no solo color; el aura la pone Claude nube con efectos). Águila/grifo/fénix y alas avanzadas se quedan como están de momento (Maikol ya les dio el «bien»).
 
 ## Convenciones que sigo para encajar con las de Codex
 - **Alas:** una malla, un material, atlas 1024, origen en el punto de montaje de la espalda (`BodyBackAttachment`). Huesos `Root`, `Wing_R/L`, `Tip_R/L` como las suyas, más `Mid_R/L` (codo). Clips `Deploy`, `Flap`, `Glide`.

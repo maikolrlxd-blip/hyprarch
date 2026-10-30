@@ -1,0 +1,269 @@
+{
+  "archivos": {
+    "CometaEnfadada_Rig.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 428,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "CometaEnfadada_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Tail_1",
+        "Tail_2",
+        "Tail_3",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 254,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.022,
+        0.0046,
+        0.044
+      ]
+    },
+    "CometaEnfadada_Idle.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 428,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "CometaEnfadada_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Tail_1",
+        "Tail_2",
+        "Tail_3",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 254,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.022,
+        0.0046,
+        0.044
+      ],
+      "acciones": [
+        {
+          "nombre": "CometaEnfadada_Rig|Scene",
+          "frames": [
+            1,
+            61
+          ],
+          "curvas_de_rotacion": 62,
+          "mov_max_rad": 0.4,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            2.2,
+            2.4
+          ],
+          "razon_plegada_extendida": 0.915
+        }
+      ]
+    },
+    "CometaEnfadada_Hit.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 428,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "CometaEnfadada_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Tail_1",
+        "Tail_2",
+        "Tail_3",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 254,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.022,
+        0.0046,
+        0.044
+      ],
+      "acciones": [
+        {
+          "nombre": "CometaEnfadada_Rig|Scene",
+          "frames": [
+            1,
+            16
+          ],
+          "curvas_de_rotacion": 62,
+          "mov_max_rad": 0.477,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            2.2,
+            2.2
+          ],
+          "razon_plegada_extendida": 1.0
+        }
+      ]
+    },
+    "CometaEnfadada_Defeat.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 428,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "CometaEnfadada_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Tail_1",
+        "Tail_2",
+        "Tail_3",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 254,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.022,
+        0.0046,
+        0.044
+      ],
+      "acciones": [
+        {
+          "nombre": "CometaEnfadada_Rig|Scene",
+          "frames": [
+            1,
+            31
+          ],
+          "curvas_de_rotacion": 62,
+          "mov_max_rad": 1.957,
+          "diferencia_primer_ultimo": 1.3,
+          "envergadura_studs": [
+            0.9,
+            2.21
+          ],
+          "razon_plegada_extendida": 0.406
+        }
+      ]
+    },
+    "CometaEnfadada_Blink.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 428,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "CometaEnfadada_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Tail_1",
+        "Tail_2",
+        "Tail_3",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 254,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.022,
+        0.0046,
+        0.044
+      ],
+      "acciones": [
+        {
+          "nombre": "CometaEnfadada_Rig|Scene",
+          "frames": [
+            1,
+            9
+          ],
+          "curvas_de_rotacion": 14,
+          "mov_max_rad": 0.21,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            1.51,
+            1.51
+          ],
+          "razon_plegada_extendida": 1.0
+        }
+      ]
+    },
+    "CometaEnfadada.glb": {
+      "mallas": [
+        [
+          "CometaEnfadada",
+          428
+        ]
+      ],
+      "armaduras": 1,
+      "acciones": [
+        "Blink",
+        "Defeat",
+        "Hit",
+        "Idle"
+      ]
+    }
+  },
+  "fallos": [],
+  "correcto": true
+}

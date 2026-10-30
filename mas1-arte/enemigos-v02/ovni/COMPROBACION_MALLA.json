@@ -1,0 +1,9 @@
+{
+ "blend": "enemigos-v02/ovni/OvniEnfadado.blend",
+ "malla": "OvniEnfadado",
+ "triangulos": 1488,
+ "islas": 27,
+ "piezas_sueltas": [],
+ "pares_coplanares_solapados": 0,
+ "ejemplos": []
+}

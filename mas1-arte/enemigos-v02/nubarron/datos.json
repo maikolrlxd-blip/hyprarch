@@ -1,0 +1,60 @@
+{
+  "clips_30fps": {
+    "Idle": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Hit": {
+      "duracion_s": 0.5,
+      "frames": 15,
+      "bucle": false
+    },
+    "Defeat": {
+      "duracion_s": 1.0,
+      "frames": 30,
+      "bucle": false
+    },
+    "Blink": {
+      "duracion_s": 0.26666666666666666,
+      "frames": 8,
+      "bucle": false
+    }
+  },
+  "textura": "texturas/NubarronTormenta_paleta_1024.png (1024, un material, una malla)",
+  "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y global_scale=0.01",
+  "sin_probar_en_roblox": true,
+  "pieza": "NUBARRON DE TORMENTA v02 (igual que la v01): enemigo volador de la zona de nubes (se golpea en vuelo para sumar puntos)",
+  "triangulos": 1274,
+  "limites_studs": {
+    "ancho": 4.2,
+    "alto": 3.36,
+    "fondo": 2.36,
+    "z_min": 0.14
+  },
+  "huesos": [
+    "Root",
+    "Body",
+    "Puff_R",
+    "Puff_L",
+    "Brow",
+    "Lid_R",
+    "Lid_L",
+    "Bolt"
+  ],
+  "rejilla_voxel_studs": 0.2,
+  "paleta": {
+    "nube": "#7484a8",
+    "parpado": "#7484a8",
+    "nube_base": "#48526f",
+    "pupila": "#ffe14d",
+    "ojo": "#fffbe0",
+    "ceja": "#1d2235",
+    "boca": "#1d2235",
+    "rayo": "#ffd23f",
+    "rayo_claro": "#fff6b0"
+  },
+  "parpadeo_dy_studs": 0.21,
+  "piezas_sueltas": [],
+  "caras_coplanares_solapadas": 0
+}

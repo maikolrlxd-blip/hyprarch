@@ -1,0 +1,269 @@
+{
+  "archivos": {
+    "OvniEnfadado_Rig.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1488,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "OvniEnfadado_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Rim",
+        "Alien",
+        "Antenna",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 798,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0424,
+        0.0446,
+        0.024
+      ]
+    },
+    "OvniEnfadado_Idle.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1488,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "OvniEnfadado_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Rim",
+        "Alien",
+        "Antenna",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 798,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0424,
+        0.0446,
+        0.024
+      ],
+      "acciones": [
+        {
+          "nombre": "OvniEnfadado_Rig|Scene",
+          "frames": [
+            1,
+            61
+          ],
+          "curvas_de_rotacion": 62,
+          "mov_max_rad": 2.0,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            4.25,
+            4.45
+          ],
+          "razon_plegada_extendida": 0.954
+        }
+      ]
+    },
+    "OvniEnfadado_Hit.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1488,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "OvniEnfadado_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Rim",
+        "Alien",
+        "Antenna",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 798,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0424,
+        0.0446,
+        0.024
+      ],
+      "acciones": [
+        {
+          "nombre": "OvniEnfadado_Rig|Scene",
+          "frames": [
+            1,
+            16
+          ],
+          "curvas_de_rotacion": 62,
+          "mov_max_rad": 0.477,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            4.24,
+            4.24
+          ],
+          "razon_plegada_extendida": 1.0
+        }
+      ]
+    },
+    "OvniEnfadado_Defeat.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1488,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "OvniEnfadado_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Rim",
+        "Alien",
+        "Antenna",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 798,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0424,
+        0.0446,
+        0.024
+      ],
+      "acciones": [
+        {
+          "nombre": "OvniEnfadado_Rig|Scene",
+          "frames": [
+            1,
+            31
+          ],
+          "curvas_de_rotacion": 62,
+          "mov_max_rad": 1.999,
+          "diferencia_primer_ultimo": 1.3,
+          "envergadura_studs": [
+            4.04,
+            4.45
+          ],
+          "razon_plegada_extendida": 0.909
+        }
+      ]
+    },
+    "OvniEnfadado_Blink.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1488,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "OvniEnfadado_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Rim",
+        "Alien",
+        "Antenna",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 798,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0424,
+        0.0446,
+        0.024
+      ],
+      "acciones": [
+        {
+          "nombre": "OvniEnfadado_Rig|Scene",
+          "frames": [
+            1,
+            9
+          ],
+          "curvas_de_rotacion": 14,
+          "mov_max_rad": 0.19,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            4.36,
+            4.36
+          ],
+          "razon_plegada_extendida": 1.0
+        }
+      ]
+    },
+    "OvniEnfadado.glb": {
+      "mallas": [
+        [
+          "OvniEnfadado",
+          1488
+        ]
+      ],
+      "armaduras": 1,
+      "acciones": [
+        "Blink",
+        "Defeat",
+        "Hit",
+        "Idle"
+      ]
+    }
+  },
+  "fallos": [],
+  "correcto": true
+}

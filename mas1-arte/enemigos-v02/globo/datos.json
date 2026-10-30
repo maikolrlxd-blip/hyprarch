@@ -1,0 +1,57 @@
+{
+  "clips_30fps": {
+    "Idle": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Hit": {
+      "duracion_s": 0.5,
+      "frames": 15,
+      "bucle": false
+    },
+    "Defeat": {
+      "duracion_s": 1.0,
+      "frames": 30,
+      "bucle": false
+    },
+    "Blink": {
+      "duracion_s": 0.26666666666666666,
+      "frames": 8,
+      "bucle": false
+    }
+  },
+  "textura": "texturas/GloboGrunon_paleta_1024.png (1024, un material, una malla)",
+  "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y global_scale=0.01",
+  "sin_probar_en_roblox": true,
+  "pieza": "GLOBO GRUNON v02 (voxel): enemigo volador de la pradera (se golpea en vuelo para sumar puntos)",
+  "triangulos": 664,
+  "limites_studs": {
+    "ancho": 1.8,
+    "alto": 3.63,
+    "fondo": 1.93,
+    "z_min": 0.07
+  },
+  "huesos": [
+    "Root",
+    "Body",
+    "String",
+    "Brow",
+    "Lid_R",
+    "Lid_L"
+  ],
+  "paleta": {
+    "globo": "#ff4f6d",
+    "parpado": "#ff4f6d",
+    "globo_osc": "#d63452",
+    "brillo": "#ffd3dc",
+    "cuerda": "#f4f1ea",
+    "pupila": "#2a1420",
+    "ojo": "#ffffff",
+    "ceja": "#5a1a2c",
+    "boca": "#2a1420"
+  },
+  "parpadeo_dy_studs": 0.21,
+  "piezas_sueltas": [],
+  "caras_coplanares_solapadas": 0
+}

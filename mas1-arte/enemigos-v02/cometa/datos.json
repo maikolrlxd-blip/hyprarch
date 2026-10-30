@@ -1,0 +1,61 @@
+{
+  "clips_30fps": {
+    "Idle": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Hit": {
+      "duracion_s": 0.5,
+      "frames": 15,
+      "bucle": false
+    },
+    "Defeat": {
+      "duracion_s": 1.0,
+      "frames": 30,
+      "bucle": false
+    },
+    "Blink": {
+      "duracion_s": 0.26666666666666666,
+      "frames": 8,
+      "bucle": false
+    }
+  },
+  "textura": "texturas/CometaEnfadada_paleta_1024.png (1024, un material, una malla)",
+  "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y global_scale=0.01",
+  "sin_probar_en_roblox": true,
+  "pieza": "COMETA ENFADADA v02 (voxel): enemigo volador de el cielo alto (se golpea en vuelo para sumar puntos)",
+  "triangulos": 428,
+  "limites_studs": {
+    "ancho": 2.2,
+    "alto": 4.4,
+    "fondo": 0.46,
+    "z_min": 0.3
+  },
+  "huesos": [
+    "Root",
+    "Body",
+    "Tail_1",
+    "Tail_2",
+    "Tail_3",
+    "Brow",
+    "Lid_R",
+    "Lid_L"
+  ],
+  "paleta": {
+    "vela_a": "#ffd23f",
+    "parpado": "#ff5a4f",
+    "vela_b": "#ff5a4f",
+    "vela_borde": "#f2f2f2",
+    "vela_tras": "#e9a93a",
+    "palo": "#9a6a3a",
+    "cuerda": "#f4f1ea",
+    "pupila": "#2a1810",
+    "ojo": "#ffffff",
+    "ceja": "#4a2a14",
+    "boca": "#2a1810"
+  },
+  "parpadeo_dy_studs": 0.21,
+  "piezas_sueltas": [],
+  "caras_coplanares_solapadas": 0
+}

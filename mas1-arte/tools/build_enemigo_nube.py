@@ -16,7 +16,7 @@ import mas1_pet
 
 FASE = os.environ.get('NUBE_FASE', 'full')
 SOLO = os.environ.get('NUBE_SOLO')
-BASE_OUT = os.path.abspath(os.path.join(HERE, '..', 'enemigos-v01'))
+BASE_OUT = os.path.abspath(os.path.join(HERE, '..', 'enemigos-v02'))
 
 VARIANTES = [
     dict(clave='nube-grunona', nombre='NubeGrunona', titulo='NUBE GRUNONA', rayo=False,
@@ -30,6 +30,21 @@ CZ = 2.2                          # centro del bulto principal
 OJO = (0.36, 0.945, 2.30)          # ojo derecho (x se espeja)
 OJO_TAM = (0.20, 0.15, 0.26)
 FRENTE_OJO = OJO[1] + OJO_TAM[1] / 2
+
+
+def cara_nube(MBS):
+    """Ojos diminutos con brillo, cejas enfadadas y morro gruñón sobre la cara plana (y = 0,9). Devuelve el recorrido del párpado.
+    La versión mascota (build_mascotas_enemigos.py) la cambia por cara_amable()."""
+    dy = 0.0
+    for s, lado in ((1, 'R'), (-1, 'L')):
+        c = (s * OJO[0], OJO[1], OJO[2])
+        MBS['Body'].box(c, OJO_TAM, 'pupila')
+        MBS['Body'].box((s * (OJO[0] - 0.04), FRENTE_OJO + 0.015, OJO[2] + 0.06), (0.07, 0.04, 0.08), 'ojo')
+        dy = parpado(MBS['Lid_' + lado], c, OJO_TAM, FRENTE_OJO + 0.035, 'parpado', 'boca')
+        cubo_girado(MBS['Brow'], (s * 0.37, 0.95, 2.58), (0.40, 0.14, 0.12), 'ceja', rot=(0, -s * 22, 0))
+    frown = [(-0.27, 1.95), (-0.14, 2.04), (0.14, 2.04), (0.27, 1.95), (0.20, 1.90), (0.10, 1.96), (-0.10, 1.96), (-0.20, 1.90)]
+    MBS['Body'].prism(frown, 0.87, 1.00, 'boca', plane='XZ')
+    return dy
 
 
 def construir_nube(var):
@@ -53,17 +68,7 @@ def construir_nube(var):
     V.elipsoide((-1.30, 0.05, 1.90), (0.72, 0.76, 0.66), 'Puff_L', piel, cortar=plano)
     V.borrar_caja((0, 1.0, 2.25), (1.4, 0.2, 0.9))                 # cara plana (frente en y = 0,9)
     V.construir(MBS)
-
-    # ---------------------------------------------------------------- cara: ojos diminutos con brillo, cejas enfadadas, morro gruñón
-    dy = 0.0
-    for s, lado in ((1, 'R'), (-1, 'L')):
-        c = (s * OJO[0], OJO[1], OJO[2])
-        MBS['Body'].box(c, OJO_TAM, 'pupila')
-        MBS['Body'].box((s * (OJO[0] - 0.04), FRENTE_OJO + 0.015, OJO[2] + 0.06), (0.07, 0.04, 0.08), 'ojo')
-        dy = parpado(MBS['Lid_' + lado], c, OJO_TAM, FRENTE_OJO + 0.035, 'parpado', 'boca')
-        cubo_girado(MBS['Brow'], (s * 0.37, 0.95, 2.58), (0.40, 0.14, 0.12), 'ceja', rot=(0, -s * 22, 0))
-    frown = [(-0.27, 1.95), (-0.14, 2.04), (0.14, 2.04), (0.27, 1.95), (0.20, 1.90), (0.10, 1.96), (-0.10, 1.96), (-0.20, 1.90)]
-    MBS['Body'].prism(frown, 0.87, 1.00, 'boca', plane='XZ')
+    dy = cara_nube(MBS)
     if var['rayo']:
         bolt = [(0.16, 1.46), (-0.34, 0.78), (-0.05, 0.78), (-0.26, 0.14), (0.44, 0.98), (0.11, 0.98), (0.36, 1.46)]   # rayo grande
         MBS['Bolt'].prism(bolt, -0.11, 0.11, 'rayo', plane='XZ', side_mat='rayo_claro')
@@ -194,11 +199,11 @@ for var in VARIANTES:
     rig.animation_data_clear()                                     # Blink solo mueve los párpados: el resto vuelve a la pose neutra
     pose_nube(rig, DY, 1.0)
     shots.append((shot(pref + '-parpadeo', 180, 4, 6.0, target=(0, 0.9, 2.3)), 'PARPADEO (BLINK)'))
-    W.contact_sheet(shots, 4, os.path.join(PREV, '_hoja.png'), title='%s V01 - ENEMIGO DE LA ZONA DE NUBES - RENDERS DE BLENDER' % var['titulo'])
+    W.contact_sheet(shots, 4, os.path.join(PREV, '_hoja.png'), title='%s V02 - ENEMIGO DE LA ZONA DE NUBES - RENDERS DE BLENDER' % var['titulo'])
     a_jpg(os.path.join(PREV, '_hoja.png'), os.path.join(PREV, pref + '-hoja.jpg'), 0.5)
     E.reiniciar_render()
     exportar_pet(OUT, var['nombre'], ob, rig, acts, CLIPS, lambda: pose_nube(rig), {
-        'pieza': '%s v01: enemigo volador de la zona de nubes (se golpea en vuelo para sumar puntos)' % var['titulo'],
+        'pieza': '%s v02 (igual que la v01): enemigo volador de la zona de nubes (se golpea en vuelo para sumar puntos)' % var['titulo'],
         'triangulos': TRIS, 'limites_studs': BOUNDS, 'huesos': [h[0] for h in HUESOS], 'rejilla_voxel_studs': C, 'paleta': PAL,
         'parpadeo_dy_studs': round(DY, 3), 'piezas_sueltas': SUELTAS, 'caras_coplanares_solapadas': COPL},
         sin_bucle=('Hit', 'Defeat', 'Blink'))

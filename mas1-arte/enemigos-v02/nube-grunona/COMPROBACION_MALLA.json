@@ -1,0 +1,9 @@
+{
+ "blend": "enemigos-v02/nube-grunona/NubeGrunona.blend",
+ "malla": "NubeGrunona",
+ "triangulos": 1250,
+ "islas": 14,
+ "piezas_sueltas": [],
+ "pares_coplanares_solapados": 0,
+ "ejemplos": []
+}

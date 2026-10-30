@@ -1,0 +1,9 @@
+{
+ "blend": "enemigos-v02/cometa/CometaEnfadada.blend",
+ "malla": "CometaEnfadada",
+ "triangulos": 428,
+ "islas": 20,
+ "piezas_sueltas": [],
+ "pares_coplanares_solapados": 0,
+ "ejemplos": []
+}
