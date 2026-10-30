@@ -1,0 +1,9 @@
+{
+ "blend": "mascotas-enemigos-v01/globo/MascotaGlobo.blend",
+ "malla": "MascotaGlobo",
+ "triangulos": 664,
+ "islas": 16,
+ "piezas_sueltas": [],
+ "pares_coplanares_solapados": 0,
+ "ejemplos": []
+}

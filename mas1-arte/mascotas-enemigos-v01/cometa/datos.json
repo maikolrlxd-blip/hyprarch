@@ -1,0 +1,65 @@
+{
+  "clips_30fps": {
+    "Fly": {
+      "duracion_s": 1.0,
+      "frames": 30,
+      "bucle": true
+    },
+    "Glide": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Celebrate": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Blink": {
+      "duracion_s": 0.26666666666666666,
+      "frames": 8,
+      "bucle": false
+    }
+  },
+  "textura": "texturas/MascotaCometa_paleta_1024.png (1024, un material, una malla)",
+  "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y global_scale=0.01",
+  "sin_probar_en_roblox": true,
+  "pieza": "Mascota COMETA ENFADADA v01: versión amable del enemigo (sale de los huevos alados)",
+  "id_mascota": "cometa",
+  "rareza": "EPICO",
+  "escala_respecto_al_enemigo": 0.8,
+  "triangulos": 428,
+  "limites_studs": {
+    "ancho": 1.76,
+    "alto": 3.52,
+    "fondo": 0.36,
+    "z_min": 0.24
+  },
+  "huesos": [
+    "Root",
+    "Body",
+    "Tail_1",
+    "Tail_2",
+    "Tail_3",
+    "Brow",
+    "Lid_R",
+    "Lid_L"
+  ],
+  "paleta": {
+    "vela_a": "#ffd23f",
+    "parpado": "#ff5a4f",
+    "vela_b": "#ff5a4f",
+    "vela_borde": "#f2f2f2",
+    "vela_tras": "#e9a93a",
+    "palo": "#9a6a3a",
+    "cuerda": "#f4f1ea",
+    "pupila": "#1d1626",
+    "ojo": "#ffffff",
+    "ceja": "#4a2a14",
+    "boca": "#3a1a2a",
+    "mejilla": "#ff9fb5"
+  },
+  "parpadeo_dy_studs": 0.168,
+  "piezas_sueltas": [],
+  "caras_coplanares_solapadas": 0
+}

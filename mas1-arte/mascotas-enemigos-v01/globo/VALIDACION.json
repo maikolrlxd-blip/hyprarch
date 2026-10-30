@@ -1,0 +1,259 @@
+{
+  "archivos": {
+    "MascotaGlobo_Rig.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 664,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MascotaGlobo_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "String",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 364,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0135,
+        0.0145,
+        0.0272
+      ]
+    },
+    "MascotaGlobo_Fly.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 664,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MascotaGlobo_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "String",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 364,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0135,
+        0.0145,
+        0.0272
+      ],
+      "acciones": [
+        {
+          "nombre": "MascotaGlobo_Rig|Scene",
+          "frames": [
+            1,
+            31
+          ],
+          "curvas_de_rotacion": 48,
+          "mov_max_rad": 0.234,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            1.36,
+            1.4
+          ],
+          "razon_plegada_extendida": 0.966
+        }
+      ]
+    },
+    "MascotaGlobo_Glide.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 664,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MascotaGlobo_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "String",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 364,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0135,
+        0.0145,
+        0.0272
+      ],
+      "acciones": [
+        {
+          "nombre": "MascotaGlobo_Rig|Scene",
+          "frames": [
+            1,
+            61
+          ],
+          "curvas_de_rotacion": 48,
+          "mov_max_rad": 0.105,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            1.35,
+            1.37
+          ],
+          "razon_plegada_extendida": 0.983
+        }
+      ]
+    },
+    "MascotaGlobo_Celebrate.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 664,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MascotaGlobo_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "String",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 364,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0135,
+        0.0145,
+        0.0272
+      ],
+      "acciones": [
+        {
+          "nombre": "MascotaGlobo_Rig|Scene",
+          "frames": [
+            1,
+            61
+          ],
+          "curvas_de_rotacion": 48,
+          "mov_max_rad": 2.0,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            1.35,
+            1.58
+          ],
+          "razon_plegada_extendida": 0.853
+        }
+      ]
+    },
+    "MascotaGlobo_Blink.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 664,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MascotaGlobo_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "String",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 364,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0135,
+        0.0145,
+        0.0272
+      ],
+      "acciones": [
+        {
+          "nombre": "MascotaGlobo_Rig|Scene",
+          "frames": [
+            1,
+            9
+          ],
+          "curvas_de_rotacion": 14,
+          "mov_max_rad": 0.157,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            1.35,
+            1.35
+          ],
+          "razon_plegada_extendida": 1.0
+        }
+      ]
+    },
+    "MascotaGlobo.glb": {
+      "mallas": [
+        [
+          "MascotaGlobo",
+          664
+        ]
+      ],
+      "armaduras": 1,
+      "acciones": [
+        "Blink",
+        "Celebrate",
+        "Fly",
+        "Glide"
+      ]
+    }
+  },
+  "fallos": [],
+  "correcto": true
+}

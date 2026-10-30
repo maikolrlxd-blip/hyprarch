@@ -1,0 +1,61 @@
+{
+  "clips_30fps": {
+    "Fly": {
+      "duracion_s": 1.0,
+      "frames": 30,
+      "bucle": true
+    },
+    "Glide": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Celebrate": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Blink": {
+      "duracion_s": 0.26666666666666666,
+      "frames": 8,
+      "bucle": false
+    }
+  },
+  "textura": "texturas/MascotaGlobo_paleta_1024.png (1024, un material, una malla)",
+  "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y global_scale=0.01",
+  "sin_probar_en_roblox": true,
+  "pieza": "Mascota GLOBO GRUNON v01: versión amable del enemigo (sale de los huevos alados)",
+  "id_mascota": "globo",
+  "rareza": "POCO COMUN",
+  "escala_respecto_al_enemigo": 0.75,
+  "triangulos": 664,
+  "limites_studs": {
+    "ancho": 1.35,
+    "alto": 2.72,
+    "fondo": 1.45,
+    "z_min": 0.05
+  },
+  "huesos": [
+    "Root",
+    "Body",
+    "String",
+    "Brow",
+    "Lid_R",
+    "Lid_L"
+  ],
+  "paleta": {
+    "globo": "#ff4f6d",
+    "parpado": "#ff4f6d",
+    "globo_osc": "#d63452",
+    "brillo": "#ffd3dc",
+    "cuerda": "#f4f1ea",
+    "pupila": "#1d1626",
+    "ojo": "#ffffff",
+    "ceja": "#5a1a2c",
+    "boca": "#3a1a2a",
+    "mejilla": "#ff9fb5"
+  },
+  "parpadeo_dy_studs": 0.157,
+  "piezas_sueltas": [],
+  "caras_coplanares_solapadas": 0
+}

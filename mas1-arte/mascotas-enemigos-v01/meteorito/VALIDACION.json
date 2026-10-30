@@ -1,0 +1,259 @@
+{
+  "archivos": {
+    "MascotaMeteorito_Rig.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 938,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MascotaMeteorito_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Tail",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 502,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0209,
+        0.0307,
+        0.0281
+      ]
+    },
+    "MascotaMeteorito_Fly.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 938,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MascotaMeteorito_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Tail",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 502,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0209,
+        0.0307,
+        0.0281
+      ],
+      "acciones": [
+        {
+          "nombre": "MascotaMeteorito_Rig|Scene",
+          "frames": [
+            1,
+            31
+          ],
+          "curvas_de_rotacion": 48,
+          "mov_max_rad": 0.296,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            2.1,
+            2.17
+          ],
+          "razon_plegada_extendida": 0.968
+        }
+      ]
+    },
+    "MascotaMeteorito_Glide.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 938,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MascotaMeteorito_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Tail",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 502,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0209,
+        0.0307,
+        0.0281
+      ],
+      "acciones": [
+        {
+          "nombre": "MascotaMeteorito_Rig|Scene",
+          "frames": [
+            1,
+            61
+          ],
+          "curvas_de_rotacion": 48,
+          "mov_max_rad": 0.133,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            2.09,
+            2.13
+          ],
+          "razon_plegada_extendida": 0.984
+        }
+      ]
+    },
+    "MascotaMeteorito_Celebrate.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 938,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MascotaMeteorito_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Tail",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 502,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0209,
+        0.0307,
+        0.0281
+      ],
+      "acciones": [
+        {
+          "nombre": "MascotaMeteorito_Rig|Scene",
+          "frames": [
+            1,
+            61
+          ],
+          "curvas_de_rotacion": 48,
+          "mov_max_rad": 2.0,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            2.09,
+            3.06
+          ],
+          "razon_plegada_extendida": 0.683
+        }
+      ]
+    },
+    "MascotaMeteorito_Blink.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 938,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MascotaMeteorito_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Tail",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 502,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0209,
+        0.0307,
+        0.0281
+      ],
+      "acciones": [
+        {
+          "nombre": "MascotaMeteorito_Rig|Scene",
+          "frames": [
+            1,
+            9
+          ],
+          "curvas_de_rotacion": 14,
+          "mov_max_rad": 0.2,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            2.09,
+            2.09
+          ],
+          "razon_plegada_extendida": 1.0
+        }
+      ]
+    },
+    "MascotaMeteorito.glb": {
+      "mallas": [
+        [
+          "MascotaMeteorito",
+          938
+        ]
+      ],
+      "armaduras": 1,
+      "acciones": [
+        "Blink",
+        "Celebrate",
+        "Fly",
+        "Glide"
+      ]
+    }
+  },
+  "fallos": [],
+  "correcto": true
+}

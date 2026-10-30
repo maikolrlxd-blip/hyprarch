@@ -1,0 +1,63 @@
+{
+  "clips_30fps": {
+    "Fly": {
+      "duracion_s": 1.0,
+      "frames": 30,
+      "bucle": true
+    },
+    "Glide": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Celebrate": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Blink": {
+      "duracion_s": 0.26666666666666666,
+      "frames": 8,
+      "bucle": false
+    }
+  },
+  "textura": "texturas/MascotaNubarron_paleta_1024.png (1024, un material, una malla)",
+  "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y global_scale=0.01",
+  "sin_probar_en_roblox": true,
+  "pieza": "Mascota NUBARRON DE TORMENTA v01: versión amable del enemigo (sale de los huevos alados)",
+  "id_mascota": "nubarron",
+  "rareza": "RARO",
+  "escala_respecto_al_enemigo": 0.7,
+  "triangulos": 1274,
+  "limites_studs": {
+    "ancho": 2.94,
+    "alto": 2.35,
+    "fondo": 1.63,
+    "z_min": 0.1
+  },
+  "huesos": [
+    "Root",
+    "Body",
+    "Puff_R",
+    "Puff_L",
+    "Brow",
+    "Lid_R",
+    "Lid_L",
+    "Bolt"
+  ],
+  "paleta": {
+    "nube": "#7484a8",
+    "parpado": "#7484a8",
+    "nube_base": "#48526f",
+    "pupila": "#1d1626",
+    "ojo": "#ffffff",
+    "ceja": "#1d2235",
+    "boca": "#3a1a2a",
+    "rayo": "#ffd23f",
+    "rayo_claro": "#fff6b0",
+    "mejilla": "#ff9fb5"
+  },
+  "parpadeo_dy_studs": 0.147,
+  "piezas_sueltas": [],
+  "caras_coplanares_solapadas": 0
+}

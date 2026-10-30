@@ -1,0 +1,269 @@
+{
+  "archivos": {
+    "MascotaOvni_Rig.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1488,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MascotaOvni_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Rim",
+        "Alien",
+        "Antenna",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 798,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0297,
+        0.0312,
+        0.0168
+      ]
+    },
+    "MascotaOvni_Fly.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1488,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MascotaOvni_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Rim",
+        "Alien",
+        "Antenna",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 798,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0297,
+        0.0312,
+        0.0168
+      ],
+      "acciones": [
+        {
+          "nombre": "MascotaOvni_Rig|Scene",
+          "frames": [
+            1,
+            31
+          ],
+          "curvas_de_rotacion": 62,
+          "mov_max_rad": 2.0,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            2.97,
+            3.12
+          ],
+          "razon_plegada_extendida": 0.953
+        }
+      ]
+    },
+    "MascotaOvni_Glide.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1488,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MascotaOvni_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Rim",
+        "Alien",
+        "Antenna",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 798,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0297,
+        0.0312,
+        0.0168
+      ],
+      "acciones": [
+        {
+          "nombre": "MascotaOvni_Rig|Scene",
+          "frames": [
+            1,
+            61
+          ],
+          "curvas_de_rotacion": 62,
+          "mov_max_rad": 2.0,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            2.97,
+            3.12
+          ],
+          "razon_plegada_extendida": 0.953
+        }
+      ]
+    },
+    "MascotaOvni_Celebrate.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1488,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MascotaOvni_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Rim",
+        "Alien",
+        "Antenna",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 798,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0297,
+        0.0312,
+        0.0168
+      ],
+      "acciones": [
+        {
+          "nombre": "MascotaOvni_Rig|Scene",
+          "frames": [
+            1,
+            61
+          ],
+          "curvas_de_rotacion": 62,
+          "mov_max_rad": 2.0,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            2.96,
+            3.12
+          ],
+          "razon_plegada_extendida": 0.949
+        }
+      ]
+    },
+    "MascotaOvni_Blink.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1488,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MascotaOvni_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Rim",
+        "Alien",
+        "Antenna",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 798,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0297,
+        0.0312,
+        0.0168
+      ],
+      "acciones": [
+        {
+          "nombre": "MascotaOvni_Rig|Scene",
+          "frames": [
+            1,
+            9
+          ],
+          "curvas_de_rotacion": 14,
+          "mov_max_rad": 0.133,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            3.1,
+            3.1
+          ],
+          "razon_plegada_extendida": 1.0
+        }
+      ]
+    },
+    "MascotaOvni.glb": {
+      "mallas": [
+        [
+          "MascotaOvni",
+          1488
+        ]
+      ],
+      "armaduras": 1,
+      "acciones": [
+        "Blink",
+        "Celebrate",
+        "Fly",
+        "Glide"
+      ]
+    }
+  },
+  "fallos": [],
+  "correcto": true
+}

@@ -1,0 +1,9 @@
+{
+ "blend": "mascotas-enemigos-v01/cometa/MascotaCometa.blend",
+ "malla": "MascotaCometa",
+ "triangulos": 428,
+ "islas": 20,
+ "piezas_sueltas": [],
+ "pares_coplanares_solapados": 0,
+ "ejemplos": []
+}

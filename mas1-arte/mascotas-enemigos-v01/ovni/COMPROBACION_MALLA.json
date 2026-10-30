@@ -1,0 +1,9 @@
+{
+ "blend": "mascotas-enemigos-v01/ovni/MascotaOvni.blend",
+ "malla": "MascotaOvni",
+ "triangulos": 1488,
+ "islas": 27,
+ "piezas_sueltas": [],
+ "pares_coplanares_solapados": 0,
+ "ejemplos": []
+}
