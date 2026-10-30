@@ -52,7 +52,12 @@ Están en ReplicatedStorage y los crea `src/Red.lua`.
   - `"turbo"`: un toque (botón TURBO del HUD) que da 1,2 s de boost.
   - `"ataque"`, `"puno"` o `"patada"`: gasta `Vuelo.CFG.costeAtaque` de energía y no se puede planeando. Golpea al enemigo vivo más cercano a 12 studs (`Encuentros.CFG.alcance`); vuelve a los 15 s.
   - `"rebirth"`: solo en tierra y con `Potencia ≥ CosteRebirth`. Reinicia solo la potencia, suma un rebirth y lanza el efecto `"rebirth"`. Si falta potencia, llega un `MAS1_Aviso`.
-  - Pendientes: `"equipar", tipo, id`; `"desequipar", "mascota", id`; `"abrirHuevo", rareza`; `"comprarAla", id`.
+  - Inventario (hito 4; solo en tierra, y si algo falla llega un `MAS1_Aviso` con el motivo):
+    - `"abrirHuevo", rareza`: cobra `Mascotas.PRECIO_HUEVO[rareza]` del `Dinero`;
+    - `"equipar", "mascota", id` y `"desequipar", "mascota", id`: hasta `Mascotas.MAX_EQUIPADAS` (3); se puede repetir una si tienes varias;
+    - `"equipar", "ala", id` y `"desequipar", "ala"`;
+    - `"comprarAla", id`: solo las que tienen precio; las de requisito se desbloquean solas;
+    - `"inventario"`: vuelve a pedir `MAS1_Inventario`. El servidor también lo manda al entrar y cada vez que aparece el personaje.
 - **`MAS1_Efecto`** (servidor → clientes), con nombres de `src/Efectos.lua`:
   - `"lanzamiento", pos`;
   - `"golpe", pos`: un golpe, a un enemigo o al aire;
