@@ -57,7 +57,7 @@ resultado.OnClientEvent:Connect(function(r)
 		accion:FireServer("lanzar")
 	end)
 	TweenService:Create(raiz, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Position = UDim2.fromScale(0.5, 0.45) }):Play()
-	task.delay(12, function() if actual == raiz then cerrar() end end)
+	task.delay(30, function() if actual == raiz then cerrar() end end)
 end)
 
 -- al volver a volar se esconde
