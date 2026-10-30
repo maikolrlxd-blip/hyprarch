@@ -119,6 +119,7 @@ function P.tick(s, dt, pos, mundo)
 		s.gracia = s.gracia - dt -- el presupuesto sigue creciendo: lo avanzado mientras tanto se mide despues
 	elseif dZ > s.presZ + T.salto or dX > s.presX + T.salto or dY > s.presY + T.salto or fuera or media then
 		s.violaciones = s.violaciones + 1
+		r.motivo = fuera and 'fuera' or media and 'media' or dZ > s.presZ + T.salto and 'z' or dX > s.presX + T.salto and 'x' or 'y'
 		s.gracia = T.gracia
 		s.hist, s.pendiente = {}, 0
 		r.corregir = { x = u.x, y = u.y, z = u.z }

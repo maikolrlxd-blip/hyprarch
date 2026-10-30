@@ -104,10 +104,10 @@ RunService:BindToRenderStep("Mas1Vuelo", Enum.RenderPriority.Camera.Value + 1, f
 	vuelo.lv.VectorVelocity = Vector3.new(m.vx, m.vy, -m.vf)
 	-- tumbado hacia delante (como un superheroe), mirando hacia donde va y alabeado en los giros
 	local dir = Vector3.new(m.vx * 0.3, m.vy * 0.3, -math.max(m.vf, 1)).Unit
-	vuelo.ao.CFrame = CFrame.lookAt(Vector3.zero, dir) * CFrame.Angles(0, 0, m.alabeo) * CFrame.Angles(math.rad(-75) + m.cabeceo, 0, 0)
+	vuelo.ao.CFrame = CFrame.lookAt(Vector3.zero, dir) * CFrame.Angles(0, 0, m.alabeo) * CFrame.Angles(math.rad(-65) + m.cabeceo, 0, 0)
 	-- camara: detras y por encima, mas lejos cuanto mas rapido
 	local objetivo = p + Vector3.new(0, 1.5, 0)
-	local deseo = objetivo + Vector3.new(-m.vx * 0.12, 6 + m.vf * 0.02, 15 + m.vf * 0.08)
+	local deseo = objetivo + Vector3.new(-m.vx * 0.12 + 3, 3 + m.vf * 0.01, 13 + m.vf * 0.06) -- baja y algo de lado: se ve el cuerpo tumbado
 	camPos = camPos and camPos:Lerp(deseo, 1 - math.exp(-8 * dt)) or deseo
 	fov += ((info.boost and 88 or info.planeando and 66 or 74) - fov) * (1 - math.exp(-4 * dt))
 	cam.FieldOfView = fov

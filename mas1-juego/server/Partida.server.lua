@@ -394,7 +394,9 @@ RunService.Heartbeat:Connect(function(dt)
 			continue
 		end
 		local r = P.tick(j.s, dt, tabla(hrp.Position), mundo)
-		if r.corregir then
+		if r.corregir then -- diagnostico para las pruebas: cada correccion sale en el Output con el control que la provoco
+			warn(string.format("[MAS1 vuelo] correccion %d de %s (%s) a los %.1f s", j.s.violaciones, plr.Name, tostring(r.motivo), j.s.t))
+			plr:SetAttribute("Correcciones", j.s.violaciones)
 			hrp.CFrame = CFrame.new(r.corregir.x, r.corregir.y, r.corregir.z) * hrp.CFrame.Rotation
 		end
 		if r.aros then
