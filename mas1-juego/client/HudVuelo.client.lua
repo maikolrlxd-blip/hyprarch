@@ -58,8 +58,11 @@ local bPat = T.boton(gui, { Size = UDim2.fromOffset(110, 110), AnchorPoint = Vec
 local bTur = T.boton(gui, { Size = UDim2.fromOffset(100, 100), AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -300, 1, -34), Text = "TURBO" }, C.menta, function() lanzar("turbo") end); bTur.TextColor3 = C.tinta
 if not UIS.TouchEnabled then
 	for _, b in ipairs({ bPuno, bPat, bTur }) do b.Active = false end
+	local focoDesde = 0 -- el clic que da el foco a la ventana no es un golpe
+	UIS.WindowFocused:Connect(function() focoDesde = os.clock() end)
 	UIS.InputBegan:Connect(function(i, gp)
-		if gp then return end
+		if gp or plr:GetAttribute("EnVuelo") ~= true then return end -- solo se golpea volando
+		if i.UserInputType == Enum.UserInputType.MouseButton1 and os.clock() - focoDesde < 0.4 then return end
 		if i.UserInputType == Enum.UserInputType.MouseButton1 then lanzar("puno") elseif i.KeyCode == Enum.KeyCode.E then lanzar("patada") elseif i.KeyCode == Enum.KeyCode.W then lanzar("turbo") end
 	end)
 end
