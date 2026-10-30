@@ -11,9 +11,14 @@ E.TIPOS = {
 	golpe = { count = 14, life = { 0.25, 0.45 }, speed = { 12, 22 }, size = { 1.4, 0 }, spread = 180, accel = { 0, 0, 0 }, colors = { "#ffffff", "#ff5d8f" }, light = 0.5 },
 	rebirth = { count = 120, life = { 0.8, 1.6 }, speed = { 10, 30 }, size = { 3, 0 }, spread = 180, accel = { 0, 6, 0 }, colors = { "#7c5cff", "#3ddc97", "#ffd23f" }, light = 0.7 },
 	fuego_fenix = { rate = 70, life = { 0.4, 0.8 }, speed = { 3, 8 }, size = { 2.2, 0 }, spread = 25, accel = { 0, 10, 0 }, colors = { "#fff3b0", "#ff9d00", "#ff3d00" }, light = 0.8 },
+	-- Auras de huevos/mascotas por rareza (continuas, sobre el modelo). Comun: sin aura.
+	aura_poco_comun = { rate = 6, life = { 0.8, 1.2 }, speed = { 0, 1 }, size = { 0.6, 0 }, spread = 180, accel = { 0, 1, 0 }, colors = { "#8fe38f", "#d8ffd8" }, light = 0.2 },
+	aura_raro = { rate = 14, life = { 0.8, 1.4 }, speed = { 0, 2 }, size = { 0.9, 0 }, spread = 180, accel = { 0, 2, 0 }, colors = { "#4da6ff", "#d8f1ff" }, light = 0.4 },
+	aura_legendario = { rate = 26, life = { 1.0, 1.6 }, speed = { 1, 3 }, size = { 1.2, 0 }, spread = 180, accel = { 0, 3, 0 }, colors = { "#ffd23f", "#fff7e0", "#ff9d00" }, light = 0.6 },
+	aura_mitico = { rate = 45, life = { 1.0, 1.8 }, speed = { 1, 4 }, size = { 1.6, 0 }, spread = 180, accel = { 0, 4, 0 }, colors = { "#7c5cff", "#ff5d8f", "#bdeaff", "#ffd23f" }, light = 0.9 },
 }
 
 -- Orden fijo para las pruebas (sin depender de pairs)
-E.ORDEN = { "lanzamiento", "estela", "aleteo", "aro", "golpe", "rebirth", "fuego_fenix" }
+E.ORDEN = { "lanzamiento", "estela", "aleteo", "aro", "golpe", "rebirth", "fuego_fenix", "aura_poco_comun", "aura_raro", "aura_legendario", "aura_mitico" }
 
 return E
