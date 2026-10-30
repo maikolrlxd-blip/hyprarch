@@ -41,3 +41,7 @@ Regenerar: `python3 tools/build_aros.py` (necesita `bpy`, numpy y Pillow).
 ## 29/10 — Relevo de Codex
 - Mascotas: nueva referencia «Roba un huevo / Steal an Egg» (aún no aplicada por Codex). Alas iniciales-v02, robóticas-v02 y comunes-v03 con extender/recoger (Blender, sin Roblox).
 - mas1-juego existe en el repo; Codex no lo auditó ni lo probó.
+
+## 30/10 — Decisión de Maikol: los enemigos también se consiguen como mascotas
+- Falta definir cómo se obtienen, rareza y bonus. Como mascota necesitan clips Fly/Glide/Celebrate (+Blink) y expresión amable.
+- Propuesta: cubrir con ellos las 2 poco comunes + 2 raras que faltan (hoy 5/9 mascotas).
