@@ -43,7 +43,7 @@ function M.paso(s, dt, entrada, info, x, y, cfg, z)
 		vxObj = vxObj - signo * (math.abs(x) - borde) * 6
 		if signo * vxObj > 0 and math.abs(x) >= cfg.anchoLibre then vxObj = 0 end
 	end
-	s.vx = hacia(s.vx, vxObj, 6, dt)
+	s.vx = hacia(s.vx, vxObj, 9, dt) -- giros rapidos: el lado responde al momento
 	s.vy = hacia(s.vy, vyObj, 5, dt)
 	-- suelo y techo blandos sobre la velocidad (no sobre el objetivo, para no pasarse): frenan antes del limite y empujan si se pasa
 	if s.t >= L.duracion and not info.planeando then s.vy = math.max(s.vy, (cfg.alturaMin - y) * 4) end

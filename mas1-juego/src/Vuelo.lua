@@ -12,7 +12,7 @@ V.CFG = {
 	consumoBoost = 1.5, -- extra/s con W (era 2,5: con potencia 0 el boost vaciaba la energia en 3 s y pillar un cofre no compensaba)
 	costeAtaque = 3, -- por golpe
 	velocidadBase = 40, -- studs/s
-	velocidadBoost = 70,
+	velocidadBoost = 85, -- era 70: el boost tiene que notarse (Maikol, 30/10: «se siente aburrido»)
 	velocidadPlaneo = 30,
 	puntosAro = 25, -- sumados al "bote" del vuelo (que se multiplica por la zona al aterrizar): que merezca la pena buscarlos
 	puntosEnemigo = 30,
@@ -26,7 +26,7 @@ V.CFG = {
 	rebirthBase = 500, -- potencia para el primer rebirth
 	-- Manejo (src/Manejo.lua en el cliente) y limites que valida el servidor (src/Partida.lua). Faciles a proposito: avanzar es
 	-- automatico, no se puede salir del carril ni tocar el suelo mientras quede energia, y al planear se aterriza solo.
-	velocidadLateral = 22, -- A/D
+	velocidadLateral = 34, -- A/D (era 22: casi no se movia de lado)
 	velocidadSubir = 16, -- Espacio / salto
 	velocidadBajar = 20, -- S / joystick abajo
 	alturaMin = 6, -- altura minima de la raiz del personaje mientras queda energia

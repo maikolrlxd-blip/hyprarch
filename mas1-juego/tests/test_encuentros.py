@@ -80,7 +80,7 @@ def vuelo_con_mundo(boost):
     mundo = T({'aros': T({1: aro(0, 22, -300)}), 'enemigos': T({1: T({'pos': vec(0, 22, -420), 'vivo': True})})})
     m, dt, aros_vistos, golpe, atrapados = Man.nuevo(), 1 / 60, 0, None, 0
     for _ in range(60 * 60):
-        P.intencion(s, 'boost', boost)
+        P.intencion(s, 'boost', boost and pos[2] < -430)  # como jugaria alguien: boost al ir a por el cofre
         Man.paso(m, dt, T({}), T({'planeando': s.v.planeando, 'boost': P.boostActivo(s), 'impulso': 1}), pos[0], pos[1], VC)
         pos = [pos[0] + m.vx * dt, max(3.0, pos[1] + m.vy * dt), pos[2] - m.vf * dt]
         if s.cofre and pos[2] < -430:  # pasados el aro y el enemigo, va a por el cofre (de lado y de alto)

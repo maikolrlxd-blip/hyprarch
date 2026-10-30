@@ -25,14 +25,45 @@ end)
 local ultimoSalto = 0
 UIS.JumpRequest:Connect(function() ultimoSalto = os.clock() end) -- Espacio y boton de salto del movil y del mando
 
+local function tecla(...)
+	for _, k in ipairs({ ... }) do
+		if UIS:IsKeyDown(k) then return true end
+	end
+	return false
+end
+
 local function mandos()
+	-- teclado leido directamente (en estado Physics el modulo de control puede dar el vector a cero) y, si no hay teclas, el
+	-- joystick del movil o el mando
+	local K = Enum.KeyCode
 	local mv = controles and controles:GetMoveVector() or Vector3.zero
+	local lateral = (tecla(K.D, K.Right) and 1 or 0) - (tecla(K.A, K.Left) and 1 or 0)
+	if lateral == 0 then lateral = math.clamp(mv.X, -1, 1) end
 	return {
-		lateral = math.clamp(mv.X, -1, 1),
-		boost = mv.Z < -0.5,
-		bajar = mv.Z > 0.5 or UIS:IsKeyDown(Enum.KeyCode.LeftControl),
-		subir = UIS:IsKeyDown(Enum.KeyCode.Space) or os.clock() - ultimoSalto < 0.25,
+		lateral = lateral,
+		boost = tecla(K.W, K.Up) or mv.Z < -0.5,
+		bajar = tecla(K.S, K.Down, K.LeftControl) or mv.Z > 0.5,
+		subir = tecla(K.Space) or os.clock() - ultimoSalto < 0.25,
 	}
+end
+
+-- lineas de viento: una lamina invisible delante de la camara suelta rayas blancas que pasan a los lados; mas cuanto mas rapido
+local lamina = Instance.new("Part")
+lamina.Name, lamina.Anchored, lamina.CanCollide, lamina.CanQuery, lamina.CanTouch = "Mas1Viento", true, false, false, false
+lamina.Transparency, lamina.Size = 1, Vector3.new(46, 26, 1)
+lamina.Parent = workspace.CurrentCamera
+local rayas = Instance.new("ParticleEmitter")
+rayas.EmissionDirection = Enum.NormalId.Back
+rayas.Lifetime = NumberRange.new(0.25, 0.4)
+rayas.Speed = NumberRange.new(90, 130)
+rayas.Size = NumberSequence.new(0.07)
+rayas.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.85), NumberSequenceKeypoint.new(0.5, 0.45), NumberSequenceKeypoint.new(1, 1) })
+rayas.LightEmission, rayas.Rate, rayas.Squash = 1, 0, NumberSequence.new(-6) -- Squash negativo: rayas estiradas
+rayas.Parent = lamina
+
+function viento(vf, boost)
+	lamina.CFrame = workspace.CurrentCamera.CFrame * CFrame.new(0, 0, -30)
+	rayas.Rate = vf > 20 and (boost and 160 or vf * 1.2) or 0
 end
 
 -- vuelo: el personaje en estado Physics, con una velocidad lineal y una orientacion que se fijan cada fotograma
@@ -109,9 +140,11 @@ RunService:BindToRenderStep("Mas1Vuelo", Enum.RenderPriority.Camera.Value + 1, f
 	local objetivo = p + Vector3.new(0, 1.5, 0)
 	local deseo = objetivo + Vector3.new(-m.vx * 0.12 + 3, 3 + m.vf * 0.01, 13 + m.vf * 0.06) -- baja y algo de lado: se ve el cuerpo tumbado
 	camPos = camPos and camPos:Lerp(deseo, 1 - math.exp(-8 * dt)) or deseo
-	fov += ((info.boost and 88 or info.planeando and 66 or 74) - fov) * (1 - math.exp(-4 * dt))
+	fov += ((info.boost and 96 or info.planeando and 68 or 78) - fov) * (1 - math.exp(-4 * dt))
+	if info.boost then camPos += Vector3.new(math.random() - 0.5, math.random() - 0.5, 0) * 0.35 end -- vibracion con el boost
+	viento(m.vf, info.boost)
 	cam.FieldOfView = fov
-	cam.CFrame = CFrame.lookAt(camPos, objetivo + Vector3.new(m.vx * 0.2, 0, -16)) * CFrame.Angles(0, 0, m.alabeo * 0.2)
+	cam.CFrame = CFrame.lookAt(camPos, objetivo + Vector3.new(m.vx * 0.2, 0, -16)) * CFrame.Angles(0, 0, m.alabeo * 0.35)
 	if info.planeando and p.Y < C.suelo + 3.3 then -- toco el suelo: el servidor cierra el vuelo y paga
 		terminar()
 		esperaFin = true
