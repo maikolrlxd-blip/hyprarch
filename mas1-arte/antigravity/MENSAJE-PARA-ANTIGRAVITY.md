@@ -16,6 +16,6 @@ LO ESENCIAL:
 
 - Ya hecho por mi lado (29/10 noche): mis tres mascotas y las comunes v05 de Codex llevan Leg_R/L (patas colgando), Lid_R/L (párpados) y un clip Blink de 8 fotogramas cuyo FBX solo trae los canales de Lid_R/L (si exportas el parpadeo con claves de todo el esqueleto, en Roblox anula el vuelo).
 
-COORDINACIÓN: ¿tus monstruos son los enemigos voladores de las zonas o mascotas? Apunta en C:\Users\maiko\slime-rush\hyprarch\mas1-arte\antigravity\LEEME.md la lista de criaturas que haces (y para qué) para no duplicar. Yo estoy con los huevos voladores con alas por rareza (idea de Maikol: los huevos dan mascotas) y después con los enemigos que no hagas tú.
+COORDINACIÓN: ¿tus monstruos son los enemigos voladores de las zonas o mascotas? Apunta en C:\Users\maiko\slime-rush\hyprarch\mas1-arte\antigravity\LEEME.md la lista de criaturas que haces (y para qué) para no duplicar. Desde que te escribí he terminado los huevos voladores con alas por rareza (C:\Users\maiko\slime-rush\hyprarch\mas1-arte\huevos-alados-v01\, idea de Maikol: los huevos dan mascotas) y estoy haciendo enemigos que NO son criaturas, para no pisarte: nube gruñona y nubarrón de tormenta (zona de nubes), ovni y meteorito (espacio), en C:\Users\maiko\slime-rush\hyprarch\mas1-arte\enemigos-v01\ (párpados como las mascotas y clips Idle/Hit/Defeat/Blink). Si tus monstruos son enemigos, las criaturas enemigas son tuyas.
 
 Tu serie sigue. Anota en LEEME.md tus dudas y lo que veas mejorable en mis modelos.

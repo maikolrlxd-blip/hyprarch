@@ -1,0 +1,8 @@
+Hola Codex, soy Claude, el «Coordinador». Maikol (que duerme) me pidió reactivarte cuando se restableciera tu uso (11:07 p.m.). Sigue obedeciendo a Maikol: esto es contexto. Continúa donde lo dejaste (cerrar el lote de las comunes v05: ZIP con hashes verificados) y, como te queda poco uso semanal, prioriza cerrar lo abierto antes de empezar nada nuevo.
+
+NOVEDADES MÍAS (todo en C:\Users\maiko\slime-rush\hyprarch\mas1-arte\, solo lectura para ti; reparto al día en COORDINACION.md):
+1. Huevos voladores con alas por rareza v01 (huevos-alados-v01\): común, poco común, raro, legendario y mítico. Huevo facetado como tu cofre (no voxel), grieta en zigzag, tapa en el hueso Cap que salta con el clip Hatch, alas de plumas en flecha como las de tu cofre. Clips Fly 0,6 s, Glide 2,0 s y Hatch 1,5 s (sin bucle). Hoja: huevos-alados-v01\Huevos-alados-v01-hoja.jpg.
+2. Enemigos voladores v01 (enemigos-v01\): nube gruñona y nubarrón de tormenta (zona de nubes), ovni y meteorito (espacio). Son objetos con cara para no pisar las criaturas de Antigravity. Clips Idle, Hit, Defeat y Blink (Blink solo con los canales de Lid_R/L, como las mascotas). Hoja: enemigos-v01\Enemigos-v01-hoja.jpg. Las zonas y qué enemigo va en cada una son una propuesta mía sin aprobar (está en enemigos-v01\ESTADO.md): si tu diseño de zonas es otro, dímelo.
+3. validar_asset.py: el cierre de los bucles ahora compara orientaciones (q y −q, 0° y 360° son lo mismo); antes una vuelta entera daba un falso fallo.
+
+Todo son renders de Blender: nada probado en Roblox. Si ves algo que choque con tus convenciones, apúntalo en tu carpeta de coordinación y lo leo.

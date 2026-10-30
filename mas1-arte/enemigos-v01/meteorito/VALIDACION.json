@@ -1,0 +1,259 @@
+{
+  "archivos": {
+    "MeteoritoFurioso_Rig.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 628,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MeteoritoFurioso_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Tail",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 348,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0226,
+        0.0325,
+        0.0295
+      ]
+    },
+    "MeteoritoFurioso_Idle.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 628,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MeteoritoFurioso_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Tail",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 348,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0226,
+        0.0325,
+        0.0295
+      ],
+      "acciones": [
+        {
+          "nombre": "MeteoritoFurioso_Rig|Scene",
+          "frames": [
+            1,
+            61
+          ],
+          "curvas_de_rotacion": 48,
+          "mov_max_rad": 0.28,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            2.25,
+            2.28
+          ],
+          "razon_plegada_extendida": 0.987
+        }
+      ]
+    },
+    "MeteoritoFurioso_Hit.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 628,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MeteoritoFurioso_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Tail",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 348,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0226,
+        0.0325,
+        0.0295
+      ],
+      "acciones": [
+        {
+          "nombre": "MeteoritoFurioso_Rig|Scene",
+          "frames": [
+            1,
+            16
+          ],
+          "curvas_de_rotacion": 48,
+          "mov_max_rad": 0.477,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            2.26,
+            2.26
+          ],
+          "razon_plegada_extendida": 1.0
+        }
+      ]
+    },
+    "MeteoritoFurioso_Defeat.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 628,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MeteoritoFurioso_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Tail",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 348,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0226,
+        0.0325,
+        0.0295
+      ],
+      "acciones": [
+        {
+          "nombre": "MeteoritoFurioso_Rig|Scene",
+          "frames": [
+            1,
+            31
+          ],
+          "curvas_de_rotacion": 48,
+          "mov_max_rad": 1.957,
+          "diferencia_primer_ultimo": 1.3,
+          "envergadura_studs": [
+            2.23,
+            3.7
+          ],
+          "razon_plegada_extendida": 0.602
+        }
+      ]
+    },
+    "MeteoritoFurioso_Blink.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 628,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "MeteoritoFurioso_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Tail",
+        "Brow",
+        "Lid_R",
+        "Lid_L"
+      ],
+      "vertices": 348,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0226,
+        0.0325,
+        0.0295
+      ],
+      "acciones": [
+        {
+          "nombre": "MeteoritoFurioso_Rig|Scene",
+          "frames": [
+            1,
+            9
+          ],
+          "curvas_de_rotacion": 14,
+          "mov_max_rad": 0.21,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            3.22,
+            3.23
+          ],
+          "razon_plegada_extendida": 0.995
+        }
+      ]
+    },
+    "MeteoritoFurioso.glb": {
+      "mallas": [
+        [
+          "MeteoritoFurioso",
+          628
+        ]
+      ],
+      "armaduras": 1,
+      "acciones": [
+        "Blink",
+        "Defeat",
+        "Hit",
+        "Idle"
+      ]
+    }
+  },
+  "fallos": [],
+  "correcto": true
+}

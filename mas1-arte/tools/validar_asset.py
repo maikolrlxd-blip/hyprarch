@@ -2,7 +2,7 @@
 #   ASSET_DIR=alas-avanzadas-v02 ASSET_NAME=AlasAvanzadas_v02 ASSET_CLIPS=Deploy,Flap,Glide ASSET_LOOPS=Flap,Glide \
 #   blender -b --factory-startup --python-exit-code 1 -P validar_asset.py
 # Espera <dir>/datos.json (triangulos, huesos, ejes), <NAME>_Rig.fbx, clips/<NAME>_<Clip>.fbx y <NAME>.glb; escribe <dir>/VALIDACION.json.
-import sys, os, json
+import sys, os, json, math
 import bpy
 from mathutils import Vector
 
@@ -76,10 +76,22 @@ def revisar_fbx(ruta, clip):
             rot = [fc for fc in fcs if 'rotation' in fc.data_path or 'location' in fc.data_path]   # el parpadeo (Blink) solo mueve huesos
             f0, f1 = int(act.frame_range[0]), int(act.frame_range[1])
             mov = cierre = 0.0
+            quats = {}
             for fc in rot:
                 vals = [fc.evaluate(f) for f in range(f0, f1 + 1)]
                 mov = max(mov, max(vals) - min(vals))
-                cierre = max(cierre, abs(vals[0] - vals[-1]))
+                if fc.data_path.endswith('rotation_quaternion'):
+                    quats.setdefault(fc.data_path, {})[fc.array_index] = (vals[0], vals[-1])
+                    continue
+                d = abs(vals[0] - vals[-1])
+                if 'rotation_euler' in fc.data_path:
+                    d = d % (2 * math.pi)
+                    d = min(d, 2 * math.pi - d)                    # 0 y 360 grados son el mismo giro
+                cierre = max(cierre, d)
+            for comps in quats.values():                           # q y -q son la misma orientacion (una vuelta entera cambia el signo)
+                q0 = [comps.get(i, (0.0, 0.0))[0] for i in range(4)]
+                q1 = [comps.get(i, (0.0, 0.0))[1] for i in range(4)]
+                cierre = max(cierre, min(max(abs(a - b) for a, b in zip(q0, q1)), max(abs(a + b) for a, b in zip(q0, q1))))
             esperado = int(round(datos['clips_30fps'][clip]['duracion_s'] * 30)) + 1
             # envergadura (extension en X) de la malla deformada en cada fotograma, en studs (el FBX va a escala 0.01): razon plegada/extendida
             spans = []

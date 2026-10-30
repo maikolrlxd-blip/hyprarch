@@ -1,0 +1,9 @@
+{
+ "blend": "enemigos-v01/meteorito/MeteoritoFurioso.blend",
+ "malla": "MeteoritoFurioso",
+ "triangulos": 628,
+ "islas": 17,
+ "piezas_sueltas": [],
+ "pares_coplanares_solapados": 0,
+ "ejemplos": []
+}
