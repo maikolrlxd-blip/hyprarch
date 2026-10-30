@@ -118,7 +118,7 @@ function V.aterrizar(v, posZona)
 	local base = v.distancia + v.bote
 	local dinero = math.floor(base * mult * (v.bonus.dinero or 1))
 	local exp = math.floor((v.distancia / 10 + v.aros * 2 + v.golpes) * (v.bonus.exp or 1))
-	return { distancia = v.distancia, aros = v.aros, golpes = v.golpes, cofres = v.cofres or 0, multiplicador = mult, dinero = dinero, exp = exp,
+	return { distancia = v.distancia, aros = v.aros, golpes = v.golpes, cofres = v.cofres or 0, orbes = v.orbes or 0, multiplicador = mult, dinero = dinero, exp = exp,
 		tiempo = v.tiempo }
 end
 

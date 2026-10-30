@@ -88,6 +88,47 @@ function E.colocarEnemigos(aros, aleatorio, cfg)
 	return lista
 end
 
+-- Orbes «+1» (Maikol, 30/10: el vuelo «aburre»): trazos de 7 orbes por el carril, en eslalon, en subida o en diagonal, para que
+-- haya que moverse todo el rato. Cada uno da +1 de potencia. Cliente y servidor los generan iguales con la misma semilla (E.azar).
+E.CFG.orbe = { radio = 3.5, porZona = 6, porTrazo = 7, paso = 9, semilla = 3017 }
+
+function E.azar(semilla) -- generador congruencial propio: mismo resultado en el cliente, en el servidor y en las pruebas
+	local x = semilla % 2147483647
+	return function()
+		x = (x * 48271) % 2147483647
+		return x / 2147483647
+	end
+end
+
+function E.colocarOrbes(cfg)
+	cfg = cfg or E.CFG
+	local o, azar, lista = cfg.orbe, E.azar(cfg.orbe.semilla), {}
+	for _, z in ipairs(cfg.zonas) do
+		local tramo = (z.hasta - z.desde) / o.porZona
+		for g = 1, o.porZona do
+			local z0, forma, x0 = z.desde + (g - 0.5) * tramo - o.paso * 3, g % 3, (azar() - 0.5) * 28
+			for k = 0, o.porTrazo - 1 do
+				local t = k / (o.porTrazo - 1)
+				local x, y
+				if forma == 0 then x, y = x0 + math.sin(t * math.pi * 2) * 10, 18 -- eslalon
+				elseif forma == 1 then x, y = x0, 10 + t * 16 -- subida
+				else x, y = x0 - 12 + t * 24, 24 - t * 10 end -- diagonal
+				lista[#lista + 1] = { pos = { x = math.max(-26, math.min(26, x)), y = y, z = -(z0 + k * o.paso) } }
+			end
+		end
+	end
+	return lista
+end
+
+-- ¿El tramo a -> b pasa a menos de radio del orbe?
+function E.tocaOrbe(a, b, orbe, radio)
+	local p = orbe.pos
+	local abx, aby, abz = b.x - a.x, b.y - a.y, b.z - a.z
+	local l2 = abx * abx + aby * aby + abz * abz
+	local t = l2 > 0 and math.max(0, math.min(1, ((p.x - a.x) * abx + (p.y - a.y) * aby + (p.z - a.z) * abz) / l2)) or 0
+	return d2(p, { x = a.x + abx * t, y = a.y + aby * t, z = a.z + abz * t }) <= radio * radio
+end
+
 -- Cofre volador por delante de pos.
 function E.nuevoCofre(pos, cfg)
 	cfg = cfg or E.CFG

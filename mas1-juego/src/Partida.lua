@@ -41,7 +41,7 @@ function P.lanzar(s, pos, potencia, bonus)
 	s.vPermitida = nil
 	s.planeoT, s.yPlaneo = nil, nil
 	s.gracia = P.TOL.gracia
-	s.arosHechos = {}
+	s.arosHechos, s.orbesHechos = {}, {}
 	s.cofre = s.E and s.E.nuevoCofre(pos) or nil
 	s.cofresSalidos = s.cofre and 1 or 0
 	return true
@@ -128,6 +128,16 @@ function P.tick(s, dt, pos, mundo)
 		s.hist[#s.hist + 1] = { t = s.t, dz = u.z - pos.z, perm = s.pendiente }
 		s.pendiente = 0
 		while s.hist[1] and s.hist[1].t <= s.t - T.ventana do table.remove(s.hist, 1) end
+		if s.E and mundo and mundo.orbes then -- orbes «+1»: con el tramo validado, cada uno una vez por vuelo
+			for i, orbe in ipairs(mundo.orbes) do
+				if not s.orbesHechos[i] and math.abs(orbe.pos.z - pos.z) < 60 and s.E.tocaOrbe(u, pos, orbe, s.E.CFG.orbe.radio) then
+					s.orbesHechos[i] = true
+					s.v.orbes = (s.v.orbes or 0) + 1
+					r.orbes = r.orbes or {}
+					r.orbes[#r.orbes + 1] = i
+				end
+			end
+		end
 		if s.E and mundo and mundo.aros then -- aros: con el tramo validado, cada uno una vez por vuelo
 			for i, aro in ipairs(mundo.aros) do
 				if not s.arosHechos[i] and s.E.cruzaAro(u, pos, aro) then

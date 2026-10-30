@@ -5,7 +5,7 @@
 <Properties>
 <string name="Name">Workspace</string>
 </Properties>
-<Item class="Part" referent="RBXJ000001E">
+<Item class="Part" referent="RBXJ000001F">
 <Properties>
 <bool name="Anchored">true</bool>
 <token name="TopSurface">0</token>
@@ -18,7 +18,7 @@
 <token name="shape">1</token>
 </Properties>
 </Item>
-<Item class="Part" referent="RBXJ000001F">
+<Item class="Part" referent="RBXJ0000020">
 <Properties>
 <bool name="Anchored">true</bool>
 <token name="TopSurface">0</token>
@@ -62733,6 +62733,47 @@ function E.colocarEnemigos(aros, aleatorio, cfg)
 	return lista
 end
 
+-- Orbes «+1» (Maikol, 30/10: el vuelo «aburre»): trazos de 7 orbes por el carril, en eslalon, en subida o en diagonal, para que
+-- haya que moverse todo el rato. Cada uno da +1 de potencia. Cliente y servidor los generan iguales con la misma semilla (E.azar).
+E.CFG.orbe = { radio = 3.5, porZona = 6, porTrazo = 7, paso = 9, semilla = 3017 }
+
+function E.azar(semilla) -- generador congruencial propio: mismo resultado en el cliente, en el servidor y en las pruebas
+	local x = semilla % 2147483647
+	return function()
+		x = (x * 48271) % 2147483647
+		return x / 2147483647
+	end
+end
+
+function E.colocarOrbes(cfg)
+	cfg = cfg or E.CFG
+	local o, azar, lista = cfg.orbe, E.azar(cfg.orbe.semilla), {}
+	for _, z in ipairs(cfg.zonas) do
+		local tramo = (z.hasta - z.desde) / o.porZona
+		for g = 1, o.porZona do
+			local z0, forma, x0 = z.desde + (g - 0.5) * tramo - o.paso * 3, g % 3, (azar() - 0.5) * 28
+			for k = 0, o.porTrazo - 1 do
+				local t = k / (o.porTrazo - 1)
+				local x, y
+				if forma == 0 then x, y = x0 + math.sin(t * math.pi * 2) * 10, 18 -- eslalon
+				elseif forma == 1 then x, y = x0, 10 + t * 16 -- subida
+				else x, y = x0 - 12 + t * 24, 24 - t * 10 end -- diagonal
+				lista[#lista + 1] = { pos = { x = math.max(-26, math.min(26, x)), y = y, z = -(z0 + k * o.paso) } }
+			end
+		end
+	end
+	return lista
+end
+
+-- ¿El tramo a -> b pasa a menos de radio del orbe?
+function E.tocaOrbe(a, b, orbe, radio)
+	local p = orbe.pos
+	local abx, aby, abz = b.x - a.x, b.y - a.y, b.z - a.z
+	local l2 = abx * abx + aby * aby + abz * abz
+	local t = l2 > 0 and math.max(0, math.min(1, ((p.x - a.x) * abx + (p.y - a.y) * aby + (p.z - a.z) * abz) / l2)) or 0
+	return d2(p, { x = a.x + abx * t, y = a.y + aby * t, z = a.z + abz * t }) <= radio * radio
+end
+
 -- Cofre volador por delante de pos.
 function E.nuevoCofre(pos, cfg)
 	cfg = cfg or E.CFG
@@ -63072,7 +63113,7 @@ function P.lanzar(s, pos, potencia, bonus)
 	s.vPermitida = nil
 	s.planeoT, s.yPlaneo = nil, nil
 	s.gracia = P.TOL.gracia
-	s.arosHechos = {}
+	s.arosHechos, s.orbesHechos = {}, {}
 	s.cofre = s.E and s.E.nuevoCofre(pos) or nil
 	s.cofresSalidos = s.cofre and 1 or 0
 	return true
@@ -63159,6 +63200,16 @@ function P.tick(s, dt, pos, mundo)
 		s.hist[#s.hist + 1] = { t = s.t, dz = u.z - pos.z, perm = s.pendiente }
 		s.pendiente = 0
 		while s.hist[1] and s.hist[1].t <= s.t - T.ventana do table.remove(s.hist, 1) end
+		if s.E and mundo and mundo.orbes then -- orbes «+1»: con el tramo validado, cada uno una vez por vuelo
+			for i, orbe in ipairs(mundo.orbes) do
+				if not s.orbesHechos[i] and math.abs(orbe.pos.z - pos.z) < 60 and s.E.tocaOrbe(u, pos, orbe, s.E.CFG.orbe.radio) then
+					s.orbesHechos[i] = true
+					s.v.orbes = (s.v.orbes or 0) + 1
+					r.orbes = r.orbes or {}
+					r.orbes[#r.orbes + 1] = i
+				end
+			end
+		end
 		if s.E and mundo and mundo.aros then -- aros: con el tramo validado, cada uno una vez por vuelo
 			for i, aro in ipairs(mundo.aros) do
 				if not s.arosHechos[i] and s.E.cruzaAro(u, pos, aro) then
@@ -63362,7 +63413,7 @@ function V.aterrizar(v, posZona)
 	local base = v.distancia + v.bote
 	local dinero = math.floor(base * mult * (v.bonus.dinero or 1))
 	local exp = math.floor((v.distancia / 10 + v.aros * 2 + v.golpes) * (v.bonus.exp or 1))
-	return { distancia = v.distancia, aros = v.aros, golpes = v.golpes, cofres = v.cofres or 0, multiplicador = mult, dinero = dinero, exp = exp,
+	return { distancia = v.distancia, aros = v.aros, golpes = v.golpes, cofres = v.cofres or 0, orbes = v.orbes or 0, multiplicador = mult, dinero = dinero, exp = exp,
 		tiempo = v.tiempo }
 end
 
@@ -63568,6 +63619,7 @@ local G = require(script.Parent:WaitForChild("Guardado"))
 local Red = require(Mas1:WaitForChild("Red"))
 local accion, efecto, resultado = Red.evento("MAS1_Accion"), Red.evento("MAS1_Efecto"), Red.evento("MAS1_Resultado")
 local avisoEv, inventarioEv, huevoEv = Red.evento("MAS1_Aviso"), Red.evento("MAS1_Inventario"), Red.evento("MAS1_Huevo")
+local orbeEv = Red.evento("MAS1_Orbe") -- orbes «+1» cogidos (indices de Encuentros.colocarOrbes): el cliente los esconde
 local PRODUCTO_FENIX = nil -- id del producto de Robux del fenix: SIN CONFIGURAR (no se ha creado ningun producto ni precio)
 
 local INICIALES = { Potencia = 0, Dinero = 0, Exp = 0, Rebirths = 0, Cofres = 0, Lanzamientos = 0, Puntos = 0, Distancia = 0,
@@ -63608,7 +63660,7 @@ end
 local entidades = Instance.new("Folder")
 entidades.Name = "MAS1_Entidades"
 entidades.Parent = workspace
-local mundo = { aros = {}, enemigos = {} }
+local mundo = { aros = {}, enemigos = {}, orbes = E.colocarOrbes() }
 
 for _, m in ipairs(workspace:GetDescendants()) do
 	local c = m:IsA("Model") and m.Name == "Aro" and m:FindFirstChild("Centro")
@@ -63883,6 +63935,7 @@ local function lanzar(plr, j)
 	plr:SetAttribute("Puntos", 0)
 	plr:SetAttribute("Distancia", 0)
 	plr:SetAttribute("Aros", 0)
+	plr:SetAttribute("Orbes", 0)
 	plr:SetAttribute("ArosTotal", #mundo.aros)
 	plr:SetAttribute("Planeando", false)
 	plr:SetAttribute("Boost", false)
@@ -63910,6 +63963,9 @@ accion.OnServerEvent:Connect(function(plr, nombre, valor, extra)
 	local fx, i = P.intencion(j.s, nombre, valor, mundo)
 	if i then
 		golpeado(i)
+		j.combo = ((j.comboHasta or 0) > os.clock() and j.combo or 0) + 1 -- los golpes tambien suman al combo
+		j.comboHasta = os.clock() + 1.5
+		plr:SetAttribute("Combo", j.combo)
 	elseif fx == "golpe" then -- golpe al aire: solo el efecto
 		local hrp = raiz(plr)
 		if hrp then efecto:FireAllClients("golpe", hrp.Position + Vector3.new(0, 0, -5)) end
@@ -63949,6 +64005,20 @@ RunService.Heartbeat:Connect(function(dt)
 			for _, i in ipairs(r.aros) do efecto:FireClient(plr, "aro", v3(mundo.aros[i].centro)) end
 			plr:SetAttribute("Aros", j.s.v.aros)
 		end
+		local sumaCombo = (r.aros and #r.aros or 0) + (r.orbes and #r.orbes or 0) + (r.cofreAtrapado and 1 or 0)
+		if r.orbes then -- cada orbe, +1 de potencia al momento
+			j.potencia += #r.orbes
+			plr:SetAttribute("Potencia", math.floor(j.potencia))
+			plr:SetAttribute("Orbes", j.s.v.orbes or 0)
+			orbeEv:FireClient(plr, r.orbes)
+		end
+		if sumaCombo > 0 then -- combo: aros, orbes y cofres seguidos (el HUD de Linux 2.0 lo pinta)
+			j.combo = ((j.comboHasta or 0) > os.clock() and j.combo or 0) + sumaCombo
+			j.comboHasta = os.clock() + 1.5
+			plr:SetAttribute("Combo", j.combo)
+		elseif (j.comboHasta or 0) < os.clock() and (plr:GetAttribute("Combo") or 0) > 0 then
+			plr:SetAttribute("Combo", 0)
+		end
 		if r.cofreAtrapado then
 			efecto:FireClient(plr, "aro", v3(r.cofreAtrapado))
 			plr:SetAttribute("Cofres", (plr:GetAttribute("Cofres") or 0) + 1)
@@ -63987,15 +64057,15 @@ end)
 </Item>
 </Item>
 </Item>
-<Item class="StarterPlayer" referent="RBXJ000001D">
+<Item class="StarterPlayer" referent="RBXJ000001E">
 <Properties>
 <string name="Name">StarterPlayer</string>
 </Properties>
-<Item class="StarterPlayerScripts" referent="RBXJ000001C">
+<Item class="StarterPlayerScripts" referent="RBXJ000001D">
 <Properties>
 <string name="Name">StarterPlayerScripts</string>
 </Properties>
-<Item class="Folder" referent="RBXJ000001B">
+<Item class="Folder" referent="RBXJ000001C">
 <Properties>
 <string name="Name">Mas1Cliente</string>
 </Properties>
@@ -64257,8 +64327,11 @@ local bPat = T.boton(gui, { Size = UDim2.fromOffset(110, 110), AnchorPoint = Vec
 local bTur = T.boton(gui, { Size = UDim2.fromOffset(100, 100), AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -300, 1, -34), Text = "TURBO" }, C.menta, function() lanzar("turbo") end); bTur.TextColor3 = C.tinta
 if not UIS.TouchEnabled then
 	for _, b in ipairs({ bPuno, bPat, bTur }) do b.Active = false end
+	local focoDesde = 0 -- el clic que da el foco a la ventana no es un golpe
+	UIS.WindowFocused:Connect(function() focoDesde = os.clock() end)
 	UIS.InputBegan:Connect(function(i, gp)
-		if gp then return end
+		if gp or plr:GetAttribute("EnVuelo") ~= true then return end -- solo se golpea volando
+		if i.UserInputType == Enum.UserInputType.MouseButton1 and os.clock() - focoDesde < 0.4 then return end
 		if i.UserInputType == Enum.UserInputType.MouseButton1 then lanzar("puno") elseif i.KeyCode == Enum.KeyCode.E then lanzar("patada") elseif i.KeyCode == Enum.KeyCode.W then lanzar("turbo") end
 	end)
 end
@@ -64471,6 +64544,60 @@ end)
 </Item>
 <Item class="LocalScript" referent="RBXJ0000016">
 <Properties>
+<string name="Name">Orbes</string>
+<ProtectedString name="Source"><![CDATA[-- Orbes «+1» de «+1 de lanzamiento por segundo» vistos en el cliente: los mismos que genera el servidor (Encuentros.colocarOrbes,
+-- con semilla fija), como bolas Neon doradas que giran y flotan. Al cogerlos (MAS1_Orbe, indices que manda el servidor) encogen
+-- y desaparecen; en cada lanzamiento vuelven todos. Cada uno da +1 de potencia (lo suma el servidor). SIN PROBAR EN STUDIO.
+local Players, RS, RunService = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService")
+local plr = Players.LocalPlayer
+local Mas1 = RS:WaitForChild("Mas1")
+local E = require(Mas1:WaitForChild("Encuentros"))
+local Red = require(Mas1:WaitForChild("Red"))
+local orbeEv = Red.evento("MAS1_Orbe")
+
+local carpeta = Instance.new("Folder")
+carpeta.Name = "MAS1_Orbes"
+carpeta.Parent = workspace
+local orbes = {}
+for i, o in ipairs(E.colocarOrbes()) do
+	local p = Instance.new("Part")
+	p.Shape, p.Size, p.Material = Enum.PartType.Ball, Vector3.new(1.8, 1.8, 1.8), Enum.Material.Neon
+	p.Color = Color3.fromRGB(255, 214, 64)
+	p.Anchored, p.CanCollide, p.CanQuery, p.CanTouch, p.CastShadow = true, false, false, false, false
+	p.Position = Vector3.new(o.pos.x, o.pos.y, o.pos.z)
+	p.Parent = carpeta
+	orbes[i] = { p = p, base = p.Position, fase = i * 0.7, vivo = true, escala = 1 }
+end
+
+orbeEv.OnClientEvent:Connect(function(indices)
+	for _, i in ipairs(indices) do
+		if orbes[i] then orbes[i].vivo = false end
+	end
+end)
+
+plr:GetAttributeChangedSignal("EnVuelo"):Connect(function()
+	if plr:GetAttribute("EnVuelo") == true then -- cada vuelo, todos otra vez
+		for _, o in ipairs(orbes) do o.vivo = true end
+	end
+end)
+
+RunService.RenderStepped:Connect(function(dt)
+	local cam, t = workspace.CurrentCamera, os.clock()
+	local cz = cam and cam.CFrame.Position.Z or 0
+	for _, o in ipairs(orbes) do
+		if math.abs(o.base.Z - cz) < 260 then -- solo los cercanos: el resto no se ve
+			o.escala += ((o.vivo and 1 or 0) - o.escala) * (1 - math.exp(-14 * dt))
+			o.p.Transparency = o.escala < 0.05 and 1 or 0
+			o.p.Size = Vector3.one * 1.8 * math.max(0.05, o.escala) * (1 + 0.12 * math.sin(t * 6 + o.fase))
+			o.p.Position = o.base + Vector3.new(0, math.sin(t * 2 + o.fase) * 0.4, 0)
+		end
+	end
+end)
+]]></ProtectedString>
+</Properties>
+</Item>
+<Item class="LocalScript" referent="RBXJ0000017">
+<Properties>
 <string name="Name">Rebirth</string>
 <ProtectedString name="Source"><![CDATA[-- Rebirth y avisos de «+1 de lanzamiento por segundo»: boton REBIRTH (solo en tierra) con un panel de confirmacion que muestra
 -- potencia, coste y rebirths; y los avisos de texto del servidor (MAS1_Aviso). El servidor decide: aqui solo se manda "rebirth".
@@ -64550,7 +64677,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000017">
+<Item class="LocalScript" referent="RBXJ0000018">
 <Properties>
 <string name="Name">Resultados</string>
 <ProtectedString name="Source"><![CDATA[-- Pantalla de resultados del vuelo de «+1 de lanzamiento por segundo»: aparece al aterrizar (MAS1_Resultado), cuenta hacia arriba
@@ -64622,7 +64749,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000018">
+<Item class="ModuleScript" referent="RBXJ0000019">
 <Properties>
 <string name="Name">Tema</string>
 <ProtectedString name="Source"><![CDATA[-- Tema de interfaz de «+1 de lanzamiento por segundo»: paneles gruesos con contorno oscuro y sombra dura, colores vivos, tipografia redondeada.
@@ -64693,7 +64820,7 @@ return T
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000019">
+<Item class="LocalScript" referent="RBXJ000001A">
 <Properties>
 <string name="Name">VueloControl</string>
 <ProtectedString name="Source"><![CDATA[-- Control del vuelo en el cliente de «+1 de lanzamiento por segundo». El cliente mueve su propio personaje (asi responde al instante)
@@ -64868,7 +64995,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ000001A">
+<Item class="LocalScript" referent="RBXJ000001B">
 <Properties>
 <string name="Name">Zonas</string>
 <ProtectedString name="Source"><![CDATA[-- Cielo y niebla por zona en el cliente de «+1 de lanzamiento por segundo»: al cruzar el arco de cada zona cambian la hora y la

@@ -22,6 +22,7 @@ local G = require(script.Parent:WaitForChild("Guardado"))
 local Red = require(Mas1:WaitForChild("Red"))
 local accion, efecto, resultado = Red.evento("MAS1_Accion"), Red.evento("MAS1_Efecto"), Red.evento("MAS1_Resultado")
 local avisoEv, inventarioEv, huevoEv = Red.evento("MAS1_Aviso"), Red.evento("MAS1_Inventario"), Red.evento("MAS1_Huevo")
+local orbeEv = Red.evento("MAS1_Orbe") -- orbes «+1» cogidos (indices de Encuentros.colocarOrbes): el cliente los esconde
 local PRODUCTO_FENIX = nil -- id del producto de Robux del fenix: SIN CONFIGURAR (no se ha creado ningun producto ni precio)
 
 local INICIALES = { Potencia = 0, Dinero = 0, Exp = 0, Rebirths = 0, Cofres = 0, Lanzamientos = 0, Puntos = 0, Distancia = 0,
@@ -62,7 +63,7 @@ end
 local entidades = Instance.new("Folder")
 entidades.Name = "MAS1_Entidades"
 entidades.Parent = workspace
-local mundo = { aros = {}, enemigos = {} }
+local mundo = { aros = {}, enemigos = {}, orbes = E.colocarOrbes() }
 
 for _, m in ipairs(workspace:GetDescendants()) do
 	local c = m:IsA("Model") and m.Name == "Aro" and m:FindFirstChild("Centro")
@@ -337,6 +338,7 @@ local function lanzar(plr, j)
 	plr:SetAttribute("Puntos", 0)
 	plr:SetAttribute("Distancia", 0)
 	plr:SetAttribute("Aros", 0)
+	plr:SetAttribute("Orbes", 0)
 	plr:SetAttribute("ArosTotal", #mundo.aros)
 	plr:SetAttribute("Planeando", false)
 	plr:SetAttribute("Boost", false)
@@ -364,6 +366,9 @@ accion.OnServerEvent:Connect(function(plr, nombre, valor, extra)
 	local fx, i = P.intencion(j.s, nombre, valor, mundo)
 	if i then
 		golpeado(i)
+		j.combo = ((j.comboHasta or 0) > os.clock() and j.combo or 0) + 1 -- los golpes tambien suman al combo
+		j.comboHasta = os.clock() + 1.5
+		plr:SetAttribute("Combo", j.combo)
 	elseif fx == "golpe" then -- golpe al aire: solo el efecto
 		local hrp = raiz(plr)
 		if hrp then efecto:FireAllClients("golpe", hrp.Position + Vector3.new(0, 0, -5)) end
@@ -402,6 +407,20 @@ RunService.Heartbeat:Connect(function(dt)
 		if r.aros then
 			for _, i in ipairs(r.aros) do efecto:FireClient(plr, "aro", v3(mundo.aros[i].centro)) end
 			plr:SetAttribute("Aros", j.s.v.aros)
+		end
+		local sumaCombo = (r.aros and #r.aros or 0) + (r.orbes and #r.orbes or 0) + (r.cofreAtrapado and 1 or 0)
+		if r.orbes then -- cada orbe, +1 de potencia al momento
+			j.potencia += #r.orbes
+			plr:SetAttribute("Potencia", math.floor(j.potencia))
+			plr:SetAttribute("Orbes", j.s.v.orbes or 0)
+			orbeEv:FireClient(plr, r.orbes)
+		end
+		if sumaCombo > 0 then -- combo: aros, orbes y cofres seguidos (el HUD de Linux 2.0 lo pinta)
+			j.combo = ((j.comboHasta or 0) > os.clock() and j.combo or 0) + sumaCombo
+			j.comboHasta = os.clock() + 1.5
+			plr:SetAttribute("Combo", j.combo)
+		elseif (j.comboHasta or 0) < os.clock() and (plr:GetAttribute("Combo") or 0) > 0 then
+			plr:SetAttribute("Combo", 0)
 		end
 		if r.cofreAtrapado then
 			efecto:FireClient(plr, "aro", v3(r.cofreAtrapado))

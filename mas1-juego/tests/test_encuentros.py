@@ -109,4 +109,23 @@ assert res.dinero == math.floor(esperado * res.multiplicador), (res.dinero, espe
 print('vuelo con encuentros: 1 aro, 1 golpe, %d cofres, %.0f studs, %d de dinero' % (atrapados, res.distancia, res.dinero))
 s, res, _, _, atrapados, _ = vuelo_con_mundo(boost=False)
 assert atrapados == 0 and res.cofres == 0
+# orbes «+1»: iguales en cada llamada (misma semilla), dentro del carril y a altura de vuelo; se cogen pasando cerca
+o1, o2 = E.colocarOrbes(), E.colocarOrbes()
+po = [(o.pos.x, o.pos.y, o.pos.z) for o in o1.values()]
+assert po == [(o.pos.x, o.pos.y, o.pos.z) for o in o2.values()] and len(po) == 5 * EC.orbe.porZona * EC.orbe.porTrazo
+assert all(abs(x) <= 26 and 10 <= y <= 26 for x, y, z in po)
+orb = T({'pos': vec(0, 20, -300)})
+assert E.tocaOrbe(vec(2, 21, -295), vec(2, 21, -305), orb, 3.5) and not E.tocaOrbe(vec(6, 20, -295), vec(6, 20, -305), orb, 3.5)
+s2 = P.nueva(V, E); P.lanzar(s2, vec(0, 4, -182), 0, None)
+mundo = T({'orbes': o1}); pos, m, cogidos = [0.0, 4.0, -182.0], Man.nuevo(), 0
+for _ in range(60 * 30):
+    Man.paso(m, 1 / 60, T({}), T({'planeando': s2.v.planeando, 'boost': False, 'impulso': 1}), pos[0], pos[1], VC)
+    pos = [pos[0] + m.vx / 60, max(3.0, pos[1] + m.vy / 60), pos[2] - m.vf / 60]
+    r = P.tick(s2, 1 / 60, vec(*pos), mundo)
+    if r.orbes:
+        cogidos += len(list(r.orbes.values()))
+    if r.aterrizaje:
+        break
+assert cogidos > 0 and r.aterrizaje.orbes == cogidos, (cogidos,)
+print('orbes: %d en el mapa; un vuelo recto sin tocar nada coge %d' % (len(po), cogidos))
 print('ok')
