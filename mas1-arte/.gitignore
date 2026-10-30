@@ -1,2 +1,3 @@
 *.fbm/
 __pycache__/
+*.blend1
