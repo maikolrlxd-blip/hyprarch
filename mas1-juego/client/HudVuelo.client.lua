@@ -44,6 +44,11 @@ local pMul = T.panel(gui, { Size = UDim2.fromOffset(200, 96), AnchorPoint = Vect
 T.texto(pMul, { Text = "ZONA", TextSize = 17, TextColor3 = C.tinta, TextStrokeTransparency = 1, Size = UDim2.new(1, 0, 0, 20), Position = UDim2.fromOffset(0, 6) })
 local tMul = T.texto(pMul, { Text = "x1", TextSize = 58, TextColor3 = C.tinta, TextStrokeTransparency = 1, Size = UDim2.new(1, 0, 0, 64), Position = UDim2.fromOffset(0, 24) }); tMul:SetAttribute("base", 58)
 
+-- Combo (a la derecha del centro): xN con rebote mientras haya racha de aros, orbes, cofres y golpes
+local pCombo = T.panel(gui, { Size = UDim2.fromOffset(170, 96), AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 230, 0, 120), Rotation = 4, Visible = false }, C.rosa)
+T.texto(pCombo, { Text = "COMBO", TextSize = 17, Size = UDim2.new(1, 0, 0, 20), Position = UDim2.fromOffset(0, 6) })
+local tCombo = T.texto(pCombo, { Text = "x0", TextSize = 56, Size = UDim2.new(1, 0, 0, 64), Position = UDim2.fromOffset(0, 24) }); tCombo:SetAttribute("base", 56)
+
 -- Mascota (abajo a la izquierda)
 local pMas = T.panel(gui, { Size = UDim2.fromOffset(280, 92), AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 24, 1, -34) }, C.crema)
 T.texto(pMas, { Text = "MASCOTA", TextSize = 16, TextColor3 = C.tinta, TextStrokeTransparency = 1, Size = UDim2.new(1, -24, 0, 18), Position = UDim2.fromOffset(14, 6), TextXAlignment = Enum.TextXAlignment.Left })
@@ -51,7 +56,7 @@ local tMas = T.texto(pMas, { Text = "—", TextSize = 28, TextColor3 = C.tinta, 
 local chip = T.panel(pMas, { Size = UDim2.fromOffset(150, 28), Position = UDim2.fromOffset(14, 56) }, C.menta); chip.UIStroke.Thickness = 3
 local tChip = T.texto(chip, { Text = "x1 ganancias", TextSize = 18, TextColor3 = C.tinta, TextStrokeTransparency = 1, Size = UDim2.fromScale(1, 1) })
 
--- Botones (movil y escritorio; en escritorio: clic = puño, E = patada, W = turbo; son PROPUESTAS)
+-- Botones (movil y escritorio; en escritorio: clic = puño, E = patada; W es boost mantenido; son PROPUESTAS)
 local function lanzar(nombre) if accion then accion:FireServer(nombre) end end
 local bPuno = T.boton(gui, { Size = UDim2.fromOffset(130, 130), AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -150, 1, -60), Text = "PUÑO" }, C.rosa, function() lanzar("puno") end)
 local bPat = T.boton(gui, { Size = UDim2.fromOffset(110, 110), AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -34, 1, -130), Text = "PATADA" }, C.sol, function() lanzar("patada") end); bPat.TextColor3 = C.tinta
@@ -63,7 +68,7 @@ if not UIS.TouchEnabled then
 	UIS.InputBegan:Connect(function(i, gp)
 		if gp or plr:GetAttribute("EnVuelo") ~= true then return end -- solo se golpea volando
 		if i.UserInputType == Enum.UserInputType.MouseButton1 and os.clock() - focoDesde < 0.4 then return end
-		if i.UserInputType == Enum.UserInputType.MouseButton1 then lanzar("puno") elseif i.KeyCode == Enum.KeyCode.E then lanzar("patada") elseif i.KeyCode == Enum.KeyCode.W then lanzar("turbo") end
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then lanzar("puno") elseif i.KeyCode == Enum.KeyCode.E then lanzar("patada") end
 	end)
 end
 
@@ -79,8 +84,13 @@ local function refrescar()
 	end
 	local m = plr:GetAttribute("ZonaMult") or 1; tMul.Text = "x" .. m
 	if ultimo.m and ultimo.m ~= m then pop(tMul) end; ultimo.m = m
+	local combo = plr:GetAttribute("Combo") or 0
+	pCombo.Visible = combo >= 2 and plr:GetAttribute("EnVuelo") == true
+	tCombo.Text = "x" .. combo
+	tCombo.TextColor3 = combo >= 20 and C.sol or (combo >= 10 and C.cielo or C.crema)
+	if ultimo.combo and ultimo.combo ~= combo and combo > 0 then pop(tCombo) end; ultimo.combo = combo
 	tAro.Text = (plr:GetAttribute("Aros") or 0) .. " / " .. (plr:GetAttribute("ArosTotal") or 0)
 	tMas.Text = plr:GetAttribute("Mascota") or "—"; tChip.Text = "x" .. tostring(plr:GetAttribute("MascotaBonus") or 1) .. " ganancias"
 end
-for _, a in ipairs({ "Energia", "Potencia", "Puntos", "Distancia", "ZonaMult", "Aros", "ArosTotal", "Mascota", "MascotaBonus" }) do plr:GetAttributeChangedSignal(a):Connect(refrescar) end
+for _, a in ipairs({ "Energia", "Potencia", "Puntos", "Distancia", "ZonaMult", "Aros", "ArosTotal", "Mascota", "MascotaBonus", "Combo", "EnVuelo" }) do plr:GetAttributeChangedSignal(a):Connect(refrescar) end
 refrescar()
