@@ -17,7 +17,7 @@
     }
   },
   "textura": "texturas/HuevoAladoRaro_paleta_1024.png (1024, un material, una malla)",
-  "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y global_scale=0.01",
+  "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y bake_space_transform=True global_scale=0.01",
   "sin_probar_en_roblox": true,
   "pieza": "Huevo volador con alas RARO v02 (da mascotas; idea de Maikol del 29/10; v02 con forma, tamaño y alas por rareza)",
   "rareza": "RARO",

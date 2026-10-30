@@ -191,7 +191,7 @@ def exportar_pet(out, nombre, ob, rig, acts, clips, pose0, datos, sin_bucle=('Bl
     A.save_blend(os.path.join(out, nombre + '.blend'))
     base = {'clips_30fps': {k: {'duracion_s': v, 'frames': int(round(v * 30)), 'bucle': k not in sin_bucle} for k, v in clips.items()},
             'textura': 'texturas/%s_paleta_1024.png (1024, un material, una malla)' % nombre,
-            'ejes': 'Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=%s axis_up=Y global_scale=0.01' % FBX_FORWARD,
+            'ejes': 'Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=%s axis_up=Y bake_space_transform=True global_scale=0.01' % FBX_FORWARD,
             'sin_probar_en_roblox': True}
     base.update(datos)
     A.write_json(os.path.join(out, 'datos.json'), base)

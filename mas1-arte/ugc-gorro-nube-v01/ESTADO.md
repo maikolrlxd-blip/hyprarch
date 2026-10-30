@@ -28,7 +28,8 @@ Encargo de Maikol (30/10): «Solo para probar, crea un accesorio nuevo, lo que m
 - **Fallo encontrado y arreglado: el FBX entraba con la cara mirando a la nuca.**
   - Con `axis_forward='Z'`, el 3D Importer pone el +Y de Blender en el +Z de Roblox, y los personajes miran a −Z.
   - El script ahora gira el FBX 180° antes de exportar. El `.blend` no cambia.
-  - **Ojo:** lo mismo puede pasar con las mascotas y las alas del juego, que se exportan igual.
+  - Comprobado después: en una malla **sin huesos** el `axis_forward` no cambia nada, ni con `bake_space_transform`. Solo funciona girar la malla.
+  - Las piezas **con huesos** tenían otro problema (esqueleto girado 90°) y otra regla. Está todo en `pruebas-studio/2026-10-30-ejes/LEEME.md`.
 - **La escala es correcta.** Lo que mide 1,6 en Blender entra como 1,6 studs.
 - **Puesto en un avatar R15** con `Humanoid:AddAccessory`: queda asentado en la cabeza y la cara mira al frente (`GorroNubecita-studio.jpg`).
 - **Validación de UGC como Hat:**

@@ -20,7 +20,7 @@ OUT = os.path.abspath(os.path.join(HERE, '..', 'alas-avanzadas-v02'))
 PREV = os.path.join(OUT, 'previews')
 for d in ('', 'texturas', 'clips', 'previews'):
     os.makedirs(os.path.join(OUT, d), exist_ok=True)
-FBX_FORWARD = 'Z'      # el importador 3D de Studio gira 180 grados los FBX exportados con -Z delante (comprobado con el mapa y las armas de Luto)
+FBX_FORWARD = 'Z'      # con bake_space_transform=True (rig): frente +Y de Blender -> -Z de Roblox; probado en Studio el 30/10 (ver mas1_lib)
 SCL = 0.88             # escala final del conjunto: envergadura ~10 studs
 
 A.clean_scene()
@@ -554,7 +554,7 @@ if RENDER:
 def fbx(path, objs, anim):
     A.select_only(objs)
     kw = dict(filepath=path, use_selection=True, object_types={'MESH', 'ARMATURE', 'EMPTY'}, global_scale=0.01,
-              apply_scale_options='FBX_SCALE_ALL', apply_unit_scale=True, bake_space_transform=False, axis_forward=FBX_FORWARD,
+              apply_scale_options='FBX_SCALE_ALL', apply_unit_scale=True, bake_space_transform=True, axis_forward=FBX_FORWARD,
               axis_up='Y', path_mode='COPY', embed_textures=True, mesh_smooth_type='FACE', use_mesh_modifiers=False,
               add_leaf_bones=False, primary_bone_axis='Y', secondary_bone_axis='X', armature_nodetype='NULL', bake_anim=anim)
     if anim:
@@ -591,6 +591,6 @@ A.write_json(os.path.join(OUT, 'datos.json'), {
     'pieza': 'Alas avanzadas v0.2 (oscuras con turquesa y pinchos)', 'triangulos': TRIS, 'limites_studs': BOUNDS,
     'huesos': [b[0] for b in bones], 'clips_30fps': {k: {'duracion_s': v, 'frames': int(round(v * 30)), 'bucle': k != 'Deploy'} for k, v in CLIPS.items()},
     'textura': 'texturas/AlasAvanzadas_paleta_1024.png (1024, un material, una malla)', 'escala_final': SCL,
-    'ejes': 'Blender +Y delante, +Z arriba, +X derecha; origen = BodyBackAttachment; FBX axis_forward=%s axis_up=Y global_scale=0.01' % FBX_FORWARD,
+    'ejes': 'Blender +Y delante, +Z arriba, +X derecha; origen = BodyBackAttachment; FBX axis_forward=%s axis_up=Y bake_space_transform=True global_scale=0.01' % FBX_FORWARD,
     'paleta': PAL, 'sin_probar_en_roblox': True})
 A.log('listo')

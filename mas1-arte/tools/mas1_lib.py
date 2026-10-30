@@ -12,6 +12,11 @@ import bmesh
 import numpy as np
 from mathutils import Vector, Euler, Matrix
 
+# Ejes FBX -> Studio (3D Importer), probado el 30/10 con águila, alas v02 y gorro UGC (mas1-arte/pruebas-studio/2026-10-30-ejes/):
+# - CON huesos: hace falta bake_space_transform=True; sin él el esqueleto entra girado 90° (cabeceo) y la malla sale tumbada.
+#   Con él y axis_forward 'Z', el frente +Y de Blender queda en -Z de Roblox (el frente de los personajes) y los clips van bien.
+# - SIN huesos: el eje no cambia nada (con o sin bake): el +Y de Blender acaba en +Z de Roblox (la nuca). Para que mire al frente,
+#   girar la malla 180° antes de exportar (como build_ugc_gorro_nube.py).
 FBX_FORWARD = 'Z'
 
 
@@ -166,7 +171,8 @@ def fbx(path, objs, anim, todos_huesos=True):
     se superponga al vuelo sin fijar el resto del esqueleto en la pose neutra."""
     A.select_only(objs)
     kw = dict(filepath=path, use_selection=True, object_types={'MESH', 'ARMATURE', 'EMPTY'}, global_scale=0.01,
-              apply_scale_options='FBX_SCALE_ALL', apply_unit_scale=True, bake_space_transform=False, axis_forward=FBX_FORWARD,
+              apply_scale_options='FBX_SCALE_ALL', apply_unit_scale=True, axis_forward=FBX_FORWARD,
+              bake_space_transform=any(o.type == 'ARMATURE' for o in objs),   # con huesos, sí (ver arriba)
               axis_up='Y', path_mode='COPY', embed_textures=True, mesh_smooth_type='FACE', use_mesh_modifiers=False,
               add_leaf_bones=False, primary_bone_axis='Y', secondary_bone_axis='X', armature_nodetype='NULL', bake_anim=anim)
     if anim:
