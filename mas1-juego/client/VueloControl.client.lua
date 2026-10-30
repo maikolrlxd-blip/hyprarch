@@ -100,7 +100,7 @@ RunService:BindToRenderStep("Mas1Vuelo", Enum.RenderPriority.Camera.Value + 1, f
 	local info = { planeando = plr:GetAttribute("Planeando") == true, boost = plr:GetAttribute("Boost") == true,
 		impulso = plr:GetAttribute("Impulso") or 1 }
 	local p = vuelo.hrp.Position
-	local m = Manejo.paso(vuelo.m, dt, e, info, p.X, p.Y, C)
+	local m = Manejo.paso(vuelo.m, dt, e, info, p.X, p.Y, C, p.Z)
 	vuelo.lv.VectorVelocity = Vector3.new(m.vx, m.vy, -m.vf)
 	-- tumbado hacia delante (como un superheroe), mirando hacia donde va y alabeado en los giros
 	local dir = Vector3.new(m.vx * 0.3, m.vy * 0.3, -math.max(m.vf, 1)).Unit

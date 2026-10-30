@@ -34,6 +34,7 @@ V.CFG = {
 	caidaPlaneo = 4.5, -- studs/s de bajada al planear
 	anchoLibre = 30, -- |x| maximo: el carril del mapa mide 66
 	suelo = 0, -- techo del carril del mapa (y de la Pradera)
+	finMapa = 1560, -- studs hacia -Z: el carril acaba en 1612; aqui el vuelo deja de avanzar y se aterriza en el ultimo tramo
 	lanzamiento = { duracion = 1.2, velocidad = 85, subida = 30 }, -- disparo del cañon: rapido y hacia arriba
 	-- multiplicador segun la posicion hacia -Z (studs desde el origen de la Pradera), como las marcas del suelo de mapa-v01:
 	-- Pradera x1, prado de la Pradera x2 (desde y=37), Mar de Nubes x3 (172), Tormenta x4 (532), Cielo alto x5 (892), Espacio x6 (1252)

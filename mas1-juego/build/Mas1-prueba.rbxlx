@@ -62899,8 +62899,8 @@ local function hacia(actual, objetivo, rapidez, dt) -- acercamiento exponencial:
 end
 
 -- s: estado de M.nuevo; entrada = { lateral = -1..1, subir, bajar }; info = { planeando, boost (el que confirma el servidor), impulso };
--- x, y: posicion actual de la raiz del personaje. Devuelve s con vx, vy, vf (studs/s), alabeo y cabeceo (radianes).
-function M.paso(s, dt, entrada, info, x, y, cfg)
+-- x, y, z: posicion actual de la raiz del personaje (z opcional). Devuelve s con vx, vy, vf (studs/s), alabeo y cabeceo (radianes).
+function M.paso(s, dt, entrada, info, x, y, cfg, z)
 	entrada, info = entrada or {}, info or {}
 	local imp = info.impulso or 1
 	local L = cfg.lanzamiento
@@ -62915,6 +62915,9 @@ function M.paso(s, dt, entrada, info, x, y, cfg)
 	else
 		vfObj = (info.boost and cfg.velocidadBoost or cfg.velocidadBase) * imp
 		vyObj = (entrada.subir and cfg.velocidadSubir or 0) - (entrada.bajar and cfg.velocidadBajar or 0)
+	end
+	if z and cfg.finMapa and -z >= cfg.finMapa then -- final del mapa: deja de avanzar y baja al ultimo tramo del carril
+		vfObj, vyObj = 0, -cfg.caidaPlaneo * 3
 	end
 	local vxObj = math.max(-1, math.min(1, entrada.lateral or 0)) * cfg.velocidadLateral
 	local borde = cfg.anchoLibre - 6 -- muro suave: empuja hacia dentro cuanto mas se pasa (con A/D a tope se queda a ~2 del limite)
@@ -63169,6 +63172,7 @@ function P.tick(s, dt, pos, mundo)
 		s.ultima = { x = pos.x, y = pos.y, z = pos.z }
 		s.avance = math.max(s.avance, s.z0 - pos.z)
 	end
+	if c.finMapa and -s.ultima.z >= c.finMapa then s.v.energia = 0 end -- final del mapa: se planea y se aterriza en el ultimo tramo
 	V.paso(s.v, dt, { boost = P.boostActivo(s) })
 	s.v.distancia = s.avance -- cuenta lo avanzado de verdad, no lo que dice la velocidad
 	if s.cofre then -- cofre volador: huye del jugador; al atraparlo, puntos y (si quedan) otro por delante
@@ -63274,6 +63278,7 @@ V.CFG = {
 	caidaPlaneo = 4.5, -- studs/s de bajada al planear
 	anchoLibre = 30, -- |x| maximo: el carril del mapa mide 66
 	suelo = 0, -- techo del carril del mapa (y de la Pradera)
+	finMapa = 1560, -- studs hacia -Z: el carril acaba en 1612; aqui el vuelo deja de avanzar y se aterriza en el ultimo tramo
 	lanzamiento = { duracion = 1.2, velocidad = 85, subida = 30 }, -- disparo del cañon: rapido y hacia arriba
 	-- multiplicador segun la posicion hacia -Z (studs desde el origen de la Pradera), como las marcas del suelo de mapa-v01:
 	-- Pradera x1, prado de la Pradera x2 (desde y=37), Mar de Nubes x3 (172), Tormenta x4 (532), Cielo alto x5 (892), Espacio x6 (1252)
@@ -64793,7 +64798,7 @@ RunService:BindToRenderStep("Mas1Vuelo", Enum.RenderPriority.Camera.Value + 1, f
 	local info = { planeando = plr:GetAttribute("Planeando") == true, boost = plr:GetAttribute("Boost") == true,
 		impulso = plr:GetAttribute("Impulso") or 1 }
 	local p = vuelo.hrp.Position
-	local m = Manejo.paso(vuelo.m, dt, e, info, p.X, p.Y, C)
+	local m = Manejo.paso(vuelo.m, dt, e, info, p.X, p.Y, C, p.Z)
 	vuelo.lv.VectorVelocity = Vector3.new(m.vx, m.vy, -m.vf)
 	-- tumbado hacia delante (como un superheroe), mirando hacia donde va y alabeado en los giros
 	local dir = Vector3.new(m.vx * 0.3, m.vy * 0.3, -math.max(m.vf, 1)).Unit

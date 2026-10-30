@@ -16,7 +16,7 @@ def vec(x, y, z):
     return T({'x': x, 'y': y, 'z': z})
 
 
-def volar(potencia=0, mandos=None, trampa=None, dt=1 / 60, lag_cada=5, z0=-182.0):
+def volar(potencia=0, mandos=None, trampa=None, dt=1 / 60, lag_cada=5, z0=-182.0, con_z=False):
     """Vuela de principio a fin. mandos(t) -> dict de entrada; trampa(t, pos) -> pos nueva o None. Devuelve (sesion, resultado, info)."""
     s = P.nueva(V)
     pos = [0.0, 4.0, z0]
@@ -28,7 +28,7 @@ def volar(potencia=0, mandos=None, trampa=None, dt=1 / 60, lag_cada=5, z0=-182.0
         if 'boost' in ent:
             P.intencion(s, 'boost', ent['boost'])
         info = T({'planeando': s.v.planeando, 'boost': P.boostActivo(s), 'impulso': 1})
-        Man.paso(m, dt, T(ent), info, pos[0], pos[1], C)
+        Man.paso(m, dt, T(ent), info, pos[0], pos[1], C, pos[2] if con_z else None)
         pos[0] += m.vx * dt
         pos[1] = max(3.0, pos[1] + m.vy * dt)  # de pie en el carril la raiz queda a 3 studs
         pos[2] -= m.vf * dt
@@ -115,4 +115,8 @@ assert s.v.planeando and P.intencion(s, 'ataque', None) is None
 s = P.nueva(V)
 assert P.intencion(s, 'boost', True) is None and P.tick(s, 0.1, vec(0, 3, 0)) is None
 assert P.lanzar(s, vec(0, 4, 0), 0, None) and not P.lanzar(s, vec(0, 4, 0), 0, None)
+# 8) final del mapa: lanzandose cerca del final con mucha potencia, aterriza en el ultimo tramo del carril (no cae al vacio)
+s, r, i = volar(potencia=900, z0=-1400.0, con_z=True)
+assert r is not None and -i['pos'][2] <= 1612 and i['pos'][1] <= 4.5, i
+print('final del mapa: aterriza a %.0f studs (el carril acaba en 1612)' % -i['pos'][2])
 print('ok')

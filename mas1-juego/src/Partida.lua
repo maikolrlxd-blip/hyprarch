@@ -141,6 +141,7 @@ function P.tick(s, dt, pos, mundo)
 		s.ultima = { x = pos.x, y = pos.y, z = pos.z }
 		s.avance = math.max(s.avance, s.z0 - pos.z)
 	end
+	if c.finMapa and -s.ultima.z >= c.finMapa then s.v.energia = 0 end -- final del mapa: se planea y se aterriza en el ultimo tramo
 	V.paso(s.v, dt, { boost = P.boostActivo(s) })
 	s.v.distancia = s.avance -- cuenta lo avanzado de verdad, no lo que dice la velocidad
 	if s.cofre then -- cofre volador: huye del jugador; al atraparlo, puntos y (si quedan) otro por delante

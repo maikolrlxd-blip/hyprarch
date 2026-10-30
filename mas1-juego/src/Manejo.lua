@@ -16,8 +16,8 @@ local function hacia(actual, objetivo, rapidez, dt) -- acercamiento exponencial:
 end
 
 -- s: estado de M.nuevo; entrada = { lateral = -1..1, subir, bajar }; info = { planeando, boost (el que confirma el servidor), impulso };
--- x, y: posicion actual de la raiz del personaje. Devuelve s con vx, vy, vf (studs/s), alabeo y cabeceo (radianes).
-function M.paso(s, dt, entrada, info, x, y, cfg)
+-- x, y, z: posicion actual de la raiz del personaje (z opcional). Devuelve s con vx, vy, vf (studs/s), alabeo y cabeceo (radianes).
+function M.paso(s, dt, entrada, info, x, y, cfg, z)
 	entrada, info = entrada or {}, info or {}
 	local imp = info.impulso or 1
 	local L = cfg.lanzamiento
@@ -32,6 +32,9 @@ function M.paso(s, dt, entrada, info, x, y, cfg)
 	else
 		vfObj = (info.boost and cfg.velocidadBoost or cfg.velocidadBase) * imp
 		vyObj = (entrada.subir and cfg.velocidadSubir or 0) - (entrada.bajar and cfg.velocidadBajar or 0)
+	end
+	if z and cfg.finMapa and -z >= cfg.finMapa then -- final del mapa: deja de avanzar y baja al ultimo tramo del carril
+		vfObj, vyObj = 0, -cfg.caidaPlaneo * 3
 	end
 	local vxObj = math.max(-1, math.min(1, entrada.lateral or 0)) * cfg.velocidadLateral
 	local borde = cfg.anchoLibre - 6 -- muro suave: empuja hacia dentro cuanto mas se pasa (con A/D a tope se queda a ~2 del limite)
