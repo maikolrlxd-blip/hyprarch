@@ -6,8 +6,8 @@
 local V = {}
 
 V.CFG = {
-	energiaBase = 20, -- energia con potencia 0
-	energiaPorPotencia = 0.5, -- + por cada punto de potencia
+	energiaBase = 12, -- segundos de vuelo con potencia 0: el primer vuelo ya llega al Mar de Nubes
+	energiaPorRaiz = 1.6, -- + por la raiz de la potencia: con +1 potencia/s una curva lineal agotaba el mapa en minutos
 	consumoVuelo = 1.0, -- energia/s siempre
 	consumoBoost = 2.5, -- extra/s con W
 	costeAtaque = 3, -- por golpe
@@ -17,13 +17,25 @@ V.CFG = {
 	puntosAro = 5, -- sumados al "bote" del vuelo
 	puntosEnemigo = 8,
 	potenciaPorSegundo = 1,
-	-- multiplicador de la zona segun la distancia (studs, hacia -Z). Provisional.
-	zonas = { { 0, 1 }, { 532, 2 }, { 892, 3 }, { 1252, 4 }, { 1612, 5 }, { 1972, 6 } },
+	-- Manejo (src/Manejo.lua en el cliente) y limites que valida el servidor (src/Partida.lua). Faciles a proposito: avanzar es
+	-- automatico, no se puede salir del carril ni tocar el suelo mientras quede energia, y al planear se aterriza solo.
+	velocidadLateral = 22, -- A/D
+	velocidadSubir = 16, -- Espacio / salto
+	velocidadBajar = 20, -- S / joystick abajo
+	alturaMin = 6, -- altura minima de la raiz del personaje mientras queda energia
+	alturaMax = 48,
+	caidaPlaneo = 4.5, -- studs/s de bajada al planear
+	anchoLibre = 30, -- |x| maximo: el carril del mapa mide 66
+	suelo = 0, -- techo del carril del mapa (y de la Pradera)
+	lanzamiento = { duracion = 1.2, velocidad = 85, subida = 30 }, -- disparo del cañon: rapido y hacia arriba
+	-- multiplicador segun la posicion hacia -Z (studs desde el origen de la Pradera), como las marcas del suelo de mapa-v01:
+	-- Pradera x1, prado de la Pradera x2 (desde y=37), Mar de Nubes x3 (172), Tormenta x4 (532), Cielo alto x5 (892), Espacio x6 (1252)
+	zonas = { { 0, 1 }, { 37, 2 }, { 172, 3 }, { 532, 4 }, { 892, 5 }, { 1252, 6 } },
 }
 
 function V.energiaMax(potencia, cfg)
 	cfg = cfg or V.CFG
-	return cfg.energiaBase + cfg.energiaPorPotencia * potencia
+	return cfg.energiaBase + cfg.energiaPorRaiz * math.sqrt(math.max(0, potencia))
 end
 
 function V.multiplicadorZona(distancia, cfg)
@@ -85,9 +97,10 @@ function V.cruzarAro(v)
 end
 
 -- Aterrizaje: puntos = (distancia + bote) * multiplicador de zona * bonus dinero. Devuelve resultado.
-function V.aterrizar(v)
+-- posZona: posicion hacia -Z donde aterriza (el servidor la pasa); sin ella, la zona sale de la distancia recorrida.
+function V.aterrizar(v, posZona)
 	v.terminado = true
-	local mult = V.multiplicadorZona(v.distancia, v.cfg)
+	local mult = V.multiplicadorZona(posZona or v.distancia, v.cfg)
 	local base = v.distancia + v.bote
 	local dinero = math.floor(base * mult * (v.bonus.dinero or 1))
 	local exp = math.floor((v.distancia / 10 + v.aros * 2 + v.golpes) * (v.bonus.exp or 1))

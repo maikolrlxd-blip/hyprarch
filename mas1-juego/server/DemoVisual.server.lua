@@ -1,8 +1,8 @@
 -- SOLO PARA VER LA CAPA VISUAL antes de que exista el juego: si workspace tiene el atributo MAS1_Demo = true, simula un vuelo (energia que baja,
 -- puntos y distancia que suben, aros, multiplicadores) y dispara efectos de ejemplo. No es logica de juego. SIN PROBAR EN STUDIO.
 local Players, RS = game:GetService("Players"), game:GetService("ReplicatedStorage")
-local Efecto = Instance.new("RemoteEvent"); Efecto.Name = "MAS1_Efecto"; Efecto.Parent = RS
-local Accion = Instance.new("RemoteEvent"); Accion.Name = "MAS1_Accion"; Accion.Parent = RS
+local Red = require(RS:WaitForChild("Mas1"):WaitForChild("Red")) -- los mismos eventos que el juego (server/Partida.server.lua), sin duplicarlos
+local Efecto, Accion = Red.evento("MAS1_Efecto"), Red.evento("MAS1_Accion")
 while workspace:GetAttribute("MAS1_Demo") ~= true do workspace:GetAttributeChangedSignal("MAS1_Demo"):Wait() end -- sirve activarlo antes o durante el Play
 
 local function raiz(plr) local c = plr.Character; return c and c:FindFirstChild("HumanoidRootPart") end

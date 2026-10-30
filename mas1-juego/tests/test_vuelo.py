@@ -9,7 +9,7 @@ v=V.nuevo(0)
 t=0
 while not v.planeando and t<1000:
     V.paso(v,0.1,None); t+=0.1
-assert v.planeando and abs(t-20)<0.3, t
+assert v.planeando and abs(t-12)<0.3, t
 # boost gasta mas y va mas rapido
 a=V.nuevo(100); b=V.nuevo(100)
 va=V.paso(a,1,None); vb=V.paso(b,1,l.table_from({'boost':True}))
@@ -20,7 +20,7 @@ assert v.planeando and not V.atacar(v)
 # ataque consume
 v=V.nuevo(100); e=v.energia; assert V.atacar(v) and v.energia==e-3
 # multiplicador de zona
-assert V.multiplicadorZona(0)==1 and V.multiplicadorZona(600)==2 and V.multiplicadorZona(5000)==6
+assert V.multiplicadorZona(0)==1 and V.multiplicadorZona(600)==4 and V.multiplicadorZona(5000)==6
 # aterrizaje con bonus de mascota
 m=M.multiplicadores(l.table_from(['grifo']))
 v=V.nuevo(50,m)
