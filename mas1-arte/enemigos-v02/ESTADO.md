@@ -7,6 +7,7 @@ Los seis enemigos en voxeles de 0,2 como una sola familia, como pidió Maikol tr
 - **Sin escala ni desvanecido**: en Roblox un hueso no se escala. El golpe (`Hit`) mueve piezas; encoger, desvanecer o soltar partículas al derrotarlos lo tiene que hacer el juego.
 - **Sin caja de colisión ni zona de golpe**: las define el juego (medidas en la tabla).
 - **Mezcla dentro de la familia**: la cola de fuego del meteorito y el cordel del globo y de la cometa no son voxel (lenguas en flecha como las plumas de llama del fénix y cordeles finos); el resto sí.
+- **Nubarrón rehecho el 30/10 por la tarde** (segunda crítica del director: «nube y nubarrón demasiado parecidos»): ahora tiene torre y yunque ancho y plano arriba, como un cumulonimbo. Se distingue de la nube por la silueta, no solo por el color; su mascota cambia igual.
 - **Arreglos de esta versión**: la cola de la cometa salía como letras «H» (ahora tres cuadritos de papel); las luces del ovni y los ojos del ovni y del meteorito quedaban a 0,01 de un plano de voxel (riesgo de parpadeo en Roblox) y se movieron.
 - **Las zonas siguen sin decidir del todo**: Maikol no rechazó la propuesta (Pradera → Mar de Nubes → Tormenta → Cielo alto → Espacio), pero no está cerrada.
 
@@ -15,7 +16,7 @@ Los seis enemigos en voxeles de 0,2 como una sola familia, como pidió Maikol tr
 |---|---|---|---|---|
 | Globo gruñón (Pradera) | `globo/` | 664 | 1,80 × 3,63 × 1,93 (con el cordel) | `Root, Body, String, Brow, Lid_R/L` |
 | Nube gruñona (Mar de Nubes) | `nube-grunona/` | 1.250 | 4,20 × 2,20 × 2,36 | `Root, Body, Puff_R/L, Brow, Lid_R/L` |
-| Nubarrón de tormenta (Tormenta) | `nubarron/` | 1.274 | 4,20 × 3,36 × 2,36 (con el rayo) | los de la nube + `Bolt` |
+| Nubarrón de tormenta (Tormenta) | `nubarron/` | 1.460 | 4,20 × 3,76 × 2,36 (con el rayo) | los de la nube + `Bolt` |
 | Cometa enfadada (Cielo alto) | `cometa/` | 428 | 2,20 × 4,40 × 0,46 (con la cola) | `Root, Body, Tail_1/2/3, Brow, Lid_R/L` |
 | Ovni (Espacio) | `ovni/` | 1.488 | 4,24 × 2,40 × 4,46 | `Root, Body, Rim, Alien, Antenna, Brow, Lid_R/L` |
 | Meteorito (Espacio) | `meteorito/` | 938 | 2,20 × 2,96 × 3,23 (con la cola) | `Root, Body, Tail, Brow, Lid_R/L` |

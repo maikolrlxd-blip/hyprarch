@@ -14,7 +14,7 @@ Maikol, 30/10: los enemigos también se consiguen como mascotas, y las mascotas 
 |---|---|---|---|---|---|---|
 | Nube | `nube/` | poco común | 0,62 | 1.250 | 2,60 × 1,36 × 1,45 | `Body, Puff_R/L, Lid_R/L` |
 | Globo | `globo/` | poco común | 0,75 | 664 | 1,35 × 2,72 × 1,45 | `Body, String, Lid_R/L` |
-| Nubarrón | `nubarron/` | raro | 0,70 | 1.274 | 2,94 × 2,35 × 1,63 | los de la nube + `Bolt` |
+| Nubarrón | `nubarron/` | raro | 0,70 | 1.460 | 2,94 × 2,63 × 1,63 (con el yunque de tormenta, 30/10 tarde) | los de la nube + `Bolt` |
 | Ovni | `ovni/` | raro | 0,70 | 1.488 | 2,97 × 1,68 × 3,12 | `Body, Rim, Alien, Antenna, Lid_R/L` |
 | Meteorito | `meteorito/` | épico | 0,95 | 938 | 2,09 × 2,81 × 3,07 | `Body, Tail, Lid_R/L` |
 | Cometa | `cometa/` | épico | 0,80 | 428 | 1,76 × 3,52 × 0,36 | `Body, Tail_1/2/3, Lid_R/L` |

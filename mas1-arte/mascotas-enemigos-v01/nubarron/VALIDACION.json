@@ -3,7 +3,7 @@
     "MascotaNubarron_Rig.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 1274,
+      "triangulos": 1460,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -27,19 +27,19 @@
         "Lid_L",
         "Bolt"
       ],
-      "vertices": 665,
+      "vertices": 758,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.0294,
         0.0163,
-        0.0235
+        0.0263
       ]
     },
     "MascotaNubarron_Fly.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 1274,
+      "triangulos": 1460,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -63,13 +63,13 @@
         "Lid_L",
         "Bolt"
       ],
-      "vertices": 665,
+      "vertices": 758,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.0294,
         0.0163,
-        0.0235
+        0.0263
       ],
       "acciones": [
         {
@@ -92,7 +92,7 @@
     "MascotaNubarron_Glide.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 1274,
+      "triangulos": 1460,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -116,13 +116,13 @@
         "Lid_L",
         "Bolt"
       ],
-      "vertices": 665,
+      "vertices": 758,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.0294,
         0.0163,
-        0.0235
+        0.0263
       ],
       "acciones": [
         {
@@ -145,7 +145,7 @@
     "MascotaNubarron_Celebrate.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 1274,
+      "triangulos": 1460,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -169,13 +169,13 @@
         "Lid_L",
         "Bolt"
       ],
-      "vertices": 665,
+      "vertices": 758,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.0294,
         0.0163,
-        0.0235
+        0.0263
       ],
       "acciones": [
         {
@@ -188,17 +188,17 @@
           "mov_max_rad": 2.0,
           "diferencia_primer_ultimo": 0.0,
           "envergadura_studs": [
-            1.71,
+            1.78,
             2.97
           ],
-          "razon_plegada_extendida": 0.576
+          "razon_plegada_extendida": 0.6
         }
       ]
     },
     "MascotaNubarron_Blink.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 1274,
+      "triangulos": 1460,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -222,13 +222,13 @@
         "Lid_L",
         "Bolt"
       ],
-      "vertices": 665,
+      "vertices": 758,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.0294,
         0.0163,
-        0.0235
+        0.0263
       ],
       "acciones": [
         {
@@ -252,7 +252,7 @@
       "mallas": [
         [
           "MascotaNubarron",
-          1274
+          1460
         ]
       ],
       "armaduras": 1,

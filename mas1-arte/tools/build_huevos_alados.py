@@ -20,7 +20,7 @@ from mas1_pet import _ciclo
 
 FASE = os.environ.get('HUEVO_FASE', 'full')
 SOLO = os.environ.get('HUEVO_SOLO')
-BASE_OUT = os.path.abspath(os.path.join(HERE, '..', 'huevos-alados-v02'))
+BASE_OUT = os.path.abspath(os.path.join(HERE, '..', 'huevos-alados-v03'))
 HUESOS_HUEVO = ('Root', 'Body', 'Cap', 'Wing_R', 'Tip_R', 'Wing_L', 'Tip_L')
 
 # alas: k = escala; coberteras (elevación, largo, posición en el brazo), secundarias (igual) y primarias (elevación, largo); extra =
@@ -30,29 +30,29 @@ ALAS_5 = dict(prim=((12, 0.98), (0, 1.12), (-12, 1.16), (-24, 1.06), (-36, 0.92)
 ALAS_6 = dict(prim=((16, 0.95), (4, 1.10), (-8, 1.18), (-20, 1.16), (-32, 1.04), (-44, 0.90)),
               sec=((-44, 0.88, 0.34), (-56, 0.76, 0.22), (-68, 0.62, 0.10)), cob=((-4, 0.62, 0.04), (-20, 0.56, 0.12), (-36, 0.48, 0.20)))
 VARIANTES = [
-    dict(clave='comun', nombre='HuevoAladoComun', titulo='COMUN', patron='manchas', adorno=None, tam=(0.80, 1.02, 0.10),
-         alas=dict(k=0.72, prim=((8, 0.95), (-10, 1.05), (-28, 0.92)), sec=((-48, 0.72, 0.22),), cob=((-8, 0.55, 0.06),), extra=None),
+    dict(clave='comun', nombre='HuevoAladoComun', titulo='COMUN', patron='manchas', adorno=None, tam=(0.70, 0.90, 0.08),
+         alas=dict(k=0.60, prim=((8, 0.95), (-10, 1.05), (-28, 0.92)), sec=((-48, 0.72, 0.22),), cob=((-8, 0.55, 0.06),), extra=None),
          pal={'cascara': '#f4ead2', 'patron': '#b8885a', 'interior': '#fff3b0', 'ala_base': '#efe2c4', 'ala_medio': '#dcbf8c',
               'ala_punta': '#a8703c', 'oro': '#ffc42e'}),
-    dict(clave='poco-comun', nombre='HuevoAladoPocoComun', titulo='POCO COMUN', patron='zigzag', adorno=None, tam=(0.88, 1.14, 0.14),
-         alas=dict(k=0.82, prim=((12, 0.95), (-2, 1.08), (-16, 1.08), (-30, 0.94)), sec=((-44, 0.80, 0.28), (-58, 0.66, 0.12)),
+    dict(clave='poco-comun', nombre='HuevoAladoPocoComun', titulo='POCO COMUN', patron='zigzag', adorno='tupe', tam=(0.86, 1.12, 0.12),
+         alas=dict(k=0.85, prim=((12, 0.95), (-2, 1.08), (-16, 1.08), (-30, 0.94)), sec=((-44, 0.80, 0.28), (-58, 0.66, 0.12)),
                    cob=((-6, 0.58, 0.05), (-26, 0.50, 0.14)), extra=None),
          pal={'cascara': '#c4eca8', 'patron': '#3f9e4c', 'interior': '#f3ffb8', 'ala_base': '#f0fae6', 'ala_medio': '#bfeaa3',
               'ala_punta': '#3f9e4c', 'oro': '#ffc42e'}),
-    dict(clave='raro', nombre='HuevoAladoRaro', titulo='RARO', patron='rayas', adorno='gema', tam=(0.92, 1.36, 0.22),
-         alas=dict(k=0.95, extra=None, **ALAS_5),
+    dict(clave='raro', nombre='HuevoAladoRaro', titulo='RARO', patron='rayas', adorno='gema', tam=(0.90, 1.40, 0.24),
+         alas=dict(k=1.05, extra=None, **ALAS_5),
          pal={'cascara': '#7cc6ff', 'patron': '#ffffff', 'interior': '#d8f4ff', 'ala_base': '#ffffff', 'ala_medio': '#cfe9ff',
               'ala_punta': '#2b6fc4', 'oro': '#5fe0ff'}),
-    dict(clave='epico', nombre='HuevoAladoEpico', titulo='EPICO', patron='espiral', adorno='pico', tam=(1.02, 1.36, 0.14),
-         alas=dict(k=1.04, extra=None, **ALAS_6),
+    dict(clave='epico', nombre='HuevoAladoEpico', titulo='EPICO', patron='espiral', adorno='cuernos', tam=(1.12, 1.30, 0.12),
+         alas=dict(k=1.15, extra=None, **ALAS_6),
          pal={'cascara': '#7a3fe0', 'patron': '#b98cff', 'interior': '#ead8ff', 'ala_base': '#efe6ff', 'ala_medio': '#b48cff',
               'ala_punta': '#6a2fd0', 'oro': '#5fe0ff'}),
-    dict(clave='legendario', nombre='HuevoAladoLegendario', titulo='LEGENDARIO', patron='rombos', adorno='joya', tam=(1.06, 1.44, 0.14),
-         alas=dict(k=1.10, extra='cresta', **ALAS_6),
+    dict(clave='legendario', nombre='HuevoAladoLegendario', titulo='LEGENDARIO', patron='rombos', adorno='joya', tam=(1.08, 1.48, 0.14),
+         alas=dict(k=1.35, extra='cresta', **ALAS_6),
          pal={'cascara': '#fff4d6', 'patron': '#f2b630', 'interior': '#fff1a8', 'ala_base': '#fff8e6', 'ala_medio': '#f6dc94',
               'ala_punta': '#f2a81c', 'oro': '#ffc42e'}),
-    dict(clave='mitico', nombre='HuevoAladoMitico', titulo='MITICO', patron='estrellas', adorno='corona', tam=(1.12, 1.50, 0.12),
-         alas=dict(k=1.16, extra='doble', **ALAS_6),
+    dict(clave='mitico', nombre='HuevoAladoMitico', titulo='MITICO', patron='estrellas', adorno='halo', tam=(1.20, 1.62, 0.12),
+         alas=dict(k=1.60, extra='doble', **ALAS_6),
          pal={'cascara': '#d6245e', 'patron': '#ffd24a', 'interior': '#ffe0ec', 'ala_base': '#fff0f5', 'ala_medio': '#ff8fb6',
               'ala_punta': '#ffd24a', 'oro': '#fff3a0'}),
 ]
@@ -273,16 +273,28 @@ def construir_huevo(var):
                 n += 1
 
     # ---------------------------------------------------------------- adornos por rareza
-    if var['adorno'] in ('gema', 'pico', 'corona'):
+    if var['adorno'] in ('gema', 'pico', 'corona', 'cuernos', 'halo'):
         z_e = CZ - 0.09 * H_HUEVO
-        rombo(MBS['Body'], (0, r_de((z_e - CZ) / H_HUEVO) * 0.97, z_e), 0.46 if var['adorno'] == 'corona' else 0.34, 0.14, 'oro', 'Y')
+        rombo(MBS['Body'], (0, r_de((z_e - CZ) / H_HUEVO) * 0.97, z_e), 0.46 if var['adorno'] in ('corona', 'halo') else 0.34, 0.14, 'oro', 'Y')
     if var['adorno'] == 'joya':                                     # joya dorada en relieve encima del rombo del frente
         rombo(MBS['Body'], (0, R_HUEVO * 0.975, CZ), 0.30, 0.14, 'oro', 'Y')
-    if var['adorno'] in ('corona', 'pico'):                         # corona de tres plumas (mítico) o un cristal solo (épico) en lo alto
-        plumas = ((-0.17, -26, 0.62), (0.0, 0.0, 0.80), (0.17, 26, 0.62)) if var['adorno'] == 'corona' else ((0.0, 0.0, 0.70),)
-        for j, (x_, abre, L_) in enumerate(plumas):
-            Mc = tr((x_, 0.0, CZ + H_HUEVO - 0.14)) @ ry(-90 + abre) @ rx(90)
-            pluma(MBS['Cap'], Mc, (0, 0), 0, L_, 0.26, 0.12, (j - 1) * 0.05, [(0.5, 'ala_medio'), (1.0, 'oro')], afilar=0.9, punta=0.6)
+    PLUMAS_ARRIBA = {   # (x, apertura, largo, ancho, colores): corona y halo (mítico), un cristal (pico), copete (poco común), cuernos (épico)
+        'corona': ((-0.17, -26, 0.62, 0.26), (0.0, 0.0, 0.80, 0.26), (0.17, 26, 0.62, 0.26)),
+        'halo': ((-0.17, -26, 0.62, 0.26), (0.0, 0.0, 0.80, 0.26), (0.17, 26, 0.62, 0.26)),
+        'pico': ((0.0, 0.0, 0.70, 0.26),),
+        'tupe': ((-0.10, -32, 0.36, 0.20), (0.0, 0.0, 0.46, 0.22), (0.10, 32, 0.36, 0.20)),
+        'cuernos': ((-0.42, -58, 0.78, 0.24), (0.42, 58, 0.78, 0.24)),
+    }
+    if var['adorno'] in PLUMAS_ARRIBA:
+        colores = [(0.5, 'ala_base'), (1.0, 'ala_punta')] if var['adorno'] == 'tupe' else [(0.5, 'ala_medio'), (1.0, 'oro')]
+        for j, (x_, abre, L_, w_) in enumerate(PLUMAS_ARRIBA[var['adorno']]):
+            z_ = CZ + H_HUEVO - 0.14 - (0.22 if var['adorno'] == 'cuernos' else 0.0)   # los cuernos salen de los lados de la tapa
+            Mc = tr((x_, 0.0, z_)) @ ry(-90 + abre) @ rx(90)
+            pluma(MBS['Cap'], Mc, (0, 0), 0, L_, w_, 0.12, (j - 1) * 0.05, colores, afilar=0.9, punta=0.6)
+    if var['adorno'] == 'halo':   # halo dorado: un aro que atraviesa la pluma central de la corona (asi no flota suelto)
+        zh = CZ + H_HUEVO - 0.14 + 0.62
+        perfil = [(0.46 + 0.075 * math.cos(2 * math.pi * q / 8), 0.075 * math.sin(2 * math.pi * q / 8)) for q in range(9)]
+        MBS['Cap'].lathe((0, 0, zh), (0, 0, zh + 1), perfil, 24, 'oro', close0=False, close1=False)
 
     # ---------------------------------------------------------------- rig y malla única
     z_tapa = CZ + DZ_GRIETA * H_HUEVO

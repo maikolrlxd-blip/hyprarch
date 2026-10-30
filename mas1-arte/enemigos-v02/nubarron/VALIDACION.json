@@ -3,7 +3,7 @@
     "NubarronTormenta_Rig.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 1274,
+      "triangulos": 1460,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -27,19 +27,19 @@
         "Lid_L",
         "Bolt"
       ],
-      "vertices": 665,
+      "vertices": 758,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.042,
         0.0236,
-        0.0336
+        0.0376
       ]
     },
     "NubarronTormenta_Idle.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 1274,
+      "triangulos": 1460,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -63,13 +63,13 @@
         "Lid_L",
         "Bolt"
       ],
-      "vertices": 665,
+      "vertices": 758,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.042,
         0.0236,
-        0.0336
+        0.0376
       ],
       "acciones": [
         {
@@ -92,7 +92,7 @@
     "NubarronTormenta_Hit.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 1274,
+      "triangulos": 1460,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -116,13 +116,13 @@
         "Lid_L",
         "Bolt"
       ],
-      "vertices": 665,
+      "vertices": 758,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.042,
         0.0236,
-        0.0336
+        0.0376
       ],
       "acciones": [
         {
@@ -145,7 +145,7 @@
     "NubarronTormenta_Defeat.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 1274,
+      "triangulos": 1460,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -169,13 +169,13 @@
         "Lid_L",
         "Bolt"
       ],
-      "vertices": 665,
+      "vertices": 758,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.042,
         0.0236,
-        0.0336
+        0.0376
       ],
       "acciones": [
         {
@@ -188,17 +188,17 @@
           "mov_max_rad": 1.957,
           "diferencia_primer_ultimo": 1.3,
           "envergadura_studs": [
-            2.53,
-            4.51
+            2.78,
+            4.52
           ],
-          "razon_plegada_extendida": 0.562
+          "razon_plegada_extendida": 0.615
         }
       ]
     },
     "NubarronTormenta_Blink.fbx": {
       "mallas": 1,
       "armaduras": 1,
-      "triangulos": 1274,
+      "triangulos": 1460,
       "materiales": 1,
       "uv": [
         "UVMap"
@@ -222,13 +222,13 @@
         "Lid_L",
         "Bolt"
       ],
-      "vertices": 665,
+      "vertices": 758,
       "vertices_sin_peso": 0,
       "vertices_con_varios_huesos": 0,
       "caja_importada": [
         0.042,
         0.0236,
-        0.0336
+        0.0376
       ],
       "acciones": [
         {
@@ -241,8 +241,8 @@
           "mov_max_rad": 0.21,
           "diferencia_primer_ultimo": 0.0,
           "envergadura_studs": [
-            3.44,
-            3.44
+            3.92,
+            3.92
           ],
           "razon_plegada_extendida": 1.0
         }
@@ -252,7 +252,7 @@
       "mallas": [
         [
           "NubarronTormenta",
-          1274
+          1460
         ]
       ],
       "armaduras": 1,

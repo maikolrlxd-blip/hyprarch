@@ -21,7 +21,7 @@ BASE_OUT = os.path.abspath(os.path.join(HERE, '..', 'enemigos-v02'))
 VARIANTES = [
     dict(clave='nube-grunona', nombre='NubeGrunona', titulo='NUBE GRUNONA', rayo=False,
          pal={'nube': '#f7f9ff', 'parpado': '#f7f9ff', 'nube_base': '#cfd0f5', 'pupila': '#2a2440', 'ojo': '#ffffff', 'ceja': '#4a4560', 'boca': '#2a2440'}),
-    dict(clave='nubarron', nombre='NubarronTormenta', titulo='NUBARRON DE TORMENTA', rayo=True,
+    dict(clave='nubarron', nombre='NubarronTormenta', titulo='NUBARRON DE TORMENTA', rayo=True, yunque=True,
          pal={'nube': '#7484a8', 'parpado': '#7484a8', 'nube_base': '#48526f', 'pupila': '#ffe14d', 'ojo': '#fffbe0', 'ceja': '#1d2235', 'boca': '#1d2235',
               'rayo': '#ffd23f', 'rayo_claro': '#fff6b0'}),
 ]
@@ -66,6 +66,9 @@ def construir_nube(var):
     V.elipsoide((0.60, -0.10, 2.95), (0.55, 0.60, 0.50), 'Body', piel)
     V.elipsoide((1.30, 0.00, 1.95), (0.75, 0.78, 0.68), 'Puff_R', piel, cortar=plano)
     V.elipsoide((-1.30, 0.05, 1.90), (0.72, 0.76, 0.66), 'Puff_L', piel, cortar=plano)
+    if var.get('yunque'):   # nubarron: torre y yunque ancho y plano arriba (cumulonimbo), para que no se lea como la nube blanca
+        V.elipsoide((0, -0.20, 3.10), (0.85, 0.85, 0.62), 'Body', piel)   # hasta delante: sin ranura entre los bultos de arriba
+        V.elipsoide((0, -0.35, 3.62), (1.95, 1.05, 0.36), 'Body', piel)
     V.borrar_caja((0, 1.0, 2.25), (1.4, 0.2, 0.9))                 # cara plana (frente en y = 0,9)
     V.construir(MBS)
     dy = cara_nube(MBS)

@@ -1,0 +1,211 @@
+{
+  "archivos": {
+    "HuevoAladoPocoComun_Rig.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1000,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "HuevoAladoPocoComun_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Cap",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L"
+      ],
+      "vertices": 542,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0387,
+        0.0171,
+        0.0256
+      ]
+    },
+    "HuevoAladoPocoComun_Fly.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1000,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "HuevoAladoPocoComun_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Cap",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L"
+      ],
+      "vertices": 542,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0387,
+        0.0171,
+        0.0256
+      ],
+      "acciones": [
+        {
+          "nombre": "HuevoAladoPocoComun_Rig|Scene",
+          "frames": [
+            1,
+            19
+          ],
+          "curvas_de_rotacion": 55,
+          "mov_max_rad": 0.605,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            2.73,
+            3.78
+          ],
+          "razon_plegada_extendida": 0.723
+        }
+      ]
+    },
+    "HuevoAladoPocoComun_Glide.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1000,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "HuevoAladoPocoComun_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Cap",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L"
+      ],
+      "vertices": 542,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0387,
+        0.0171,
+        0.0256
+      ],
+      "acciones": [
+        {
+          "nombre": "HuevoAladoPocoComun_Rig|Scene",
+          "frames": [
+            1,
+            61
+          ],
+          "curvas_de_rotacion": 55,
+          "mov_max_rad": 0.16,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            3.63,
+            3.73
+          ],
+          "razon_plegada_extendida": 0.973
+        }
+      ]
+    },
+    "HuevoAladoPocoComun_Hatch.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1000,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "HuevoAladoPocoComun_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Cap",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L"
+      ],
+      "vertices": 542,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0387,
+        0.0171,
+        0.0256
+      ],
+      "acciones": [
+        {
+          "nombre": "HuevoAladoPocoComun_Rig|Scene",
+          "frames": [
+            1,
+            46
+          ],
+          "curvas_de_rotacion": 55,
+          "mov_max_rad": 0.524,
+          "diferencia_primer_ultimo": 0.4242,
+          "envergadura_studs": [
+            3.0,
+            3.77
+          ],
+          "razon_plegada_extendida": 0.795
+        }
+      ]
+    },
+    "HuevoAladoPocoComun.glb": {
+      "mallas": [
+        [
+          "HuevoAladoPocoComun",
+          1000
+        ]
+      ],
+      "armaduras": 1,
+      "acciones": [
+        "Fly",
+        "Glide",
+        "Hatch"
+      ]
+    }
+  },
+  "fallos": [],
+  "correcto": true
+}

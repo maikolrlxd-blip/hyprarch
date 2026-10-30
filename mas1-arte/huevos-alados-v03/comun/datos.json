@@ -1,0 +1,61 @@
+{
+  "clips_30fps": {
+    "Fly": {
+      "duracion_s": 0.6,
+      "frames": 18,
+      "bucle": true
+    },
+    "Glide": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Hatch": {
+      "duracion_s": 1.5,
+      "frames": 45,
+      "bucle": false
+    }
+  },
+  "textura": "texturas/HuevoAladoComun_paleta_1024.png (1024, un material, una malla)",
+  "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y global_scale=0.01",
+  "sin_probar_en_roblox": true,
+  "pieza": "Huevo volador con alas COMUN v02 (da mascotas; idea de Maikol del 29/10; v02 con forma, tamaño y alas por rareza)",
+  "rareza": "COMUN",
+  "triangulos": 1040,
+  "limites_studs": {
+    "envergadura": 2.81,
+    "alto": 1.8,
+    "largo": 1.49,
+    "z_min": 0.1
+  },
+  "huesos": [
+    "Root",
+    "Body",
+    "Cap",
+    "Wing_R",
+    "Tip_R",
+    "Wing_L",
+    "Tip_L"
+  ],
+  "paleta": {
+    "cascara": "#f4ead2",
+    "patron": "#b8885a",
+    "interior": "#fff3b0",
+    "ala_base": "#efe2c4",
+    "ala_medio": "#dcbf8c",
+    "ala_punta": "#a8703c",
+    "oro": "#ffc42e"
+  },
+  "patron": "manchas",
+  "adorno": null,
+  "escala_alas": 0.6,
+  "primarias": 3,
+  "extra_alas": null,
+  "cascara_radio_mediaaltura_punta": [
+    0.7,
+    0.9,
+    0.08
+  ],
+  "piezas_sueltas": [],
+  "caras_coplanares_solapadas": 0
+}
