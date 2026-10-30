@@ -17,3 +17,18 @@
 ## Enemigos
 - Bien: caras malhumoradas muy legibles; nubarrón con rayo; ovni claro.
 - Mal: **estilos mezclados** (nubes voxel, ovni liso, meteorito low-poly facetado). Meteorito debería ir en voxel como las nubes. Sin cuerpo visible de ataque (solo cara).
+
+# Segunda ronda (30/10 noche): mapa v01, huevos v02, enemigos v02, mascotas-enemigo
+## Mapa v01
+- Bien: cada zona tiene identidad (blanco/azul, oscuro con rayos, lila con cintas, negro con planetas); arcos con cartel legible y marca xN en el suelo; aros visibles.
+- Mal: **zona Tormenta casi ilegible**: suelo gris sobre fondo gris, poco contraste con la ruta; Espacio con baldosas oscuras sobre fondo oscuro, el camino se pierde; Mar de Nubes muy blanco (quema al ojo). Carril y laterales de Tormenta/Espacio necesitan borde claro o luz. Transiciones entre zonas bruscas (cambio de cielo de golpe). La cámara de vuelo irá a 40+ studs/s: todo lo fino (flechas del suelo, texto xN) no se verá.
+- Hacer: bordes de carril brillantes (Neon) en zonas oscuras, aros más grandes, mezclar cielo/niebla al cruzar.
+## Huevos v02
+- Bien: ya se distinguen (tamaño, patrón, alas, color: crema, verde, azul, morado, dorado, rojo-rosa).
+- Mal: **formas aún muy parecidas** (todos huevo ovalado con alas pequeñas); común y poco común casi mismo tamaño en cámara; la diferencia principal es color. Un mítico debería leerse de lejos con silueta propia (cresta, halo, alas enormes).
+## Enemigos v02
+- Bien: familia voxel coherente, caras legibles, cometa y globo muy buenos.
+- Mal: **nube y nubarrón demasiado parecidos entre sí** y poco amenazantes; cometa e ovni de tamaños desiguales; ninguno tiene silueta de ataque.
+## Mascotas-enemigo
+- Bien: las caras amables funcionan (sonrisa, rubor) y se leen mejor que los enemigos.
+- Mal: Marcianito y Cometa apenas cambian respecto al enemigo (solo la cara): se sentirán "el mismo bicho". Ojos entornados al celebrar bien.
