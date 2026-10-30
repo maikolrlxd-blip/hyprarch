@@ -1,0 +1,64 @@
+{
+  "pieza": "Mapa v01: zonas después de la Pradera del Despegue (solo lo visual)",
+  "sin_probar_en_roblox": true,
+  "zonas": [
+    {
+      "clave": "mar-de-nubes",
+      "nombre": "MAR DE NUBES",
+      "marca_provisional": "x3",
+      "y_inicio": 172.0,
+      "y_fin": 532.0
+    },
+    {
+      "clave": "tormenta",
+      "nombre": "TORMENTA",
+      "marca_provisional": "x4",
+      "y_inicio": 532.0,
+      "y_fin": 892.0
+    },
+    {
+      "clave": "cielo-alto",
+      "nombre": "CIELO ALTO",
+      "marca_provisional": "x5",
+      "y_inicio": 892.0,
+      "y_fin": 1252.0
+    },
+    {
+      "clave": "espacio",
+      "nombre": "ESPACIO",
+      "marca_provisional": "x6",
+      "y_inicio": 1252.0,
+      "y_fin": 1612.0
+    }
+  ],
+  "carril_ancho_studs": 66.0,
+  "zona_largo_studs": 360.0,
+  "triangulos": {
+    "mar-de-nubes_Suelo": 8856,
+    "mar-de-nubes_LadoIzq": 8560,
+    "mar-de-nubes_LadoDer": 8648,
+    "mar-de-nubes_Arco": 2408,
+    "mar-de-nubes_Marcas": 468,
+    "mar-de-nubes_Aros": 1680,
+    "tormenta_Suelo": 8504,
+    "tormenta_LadoIzq": 9620,
+    "tormenta_LadoDer": 8520,
+    "tormenta_Arco": 1832,
+    "tormenta_Marcas": 456,
+    "tormenta_Aros": 1680,
+    "cielo-alto_Suelo": 8284,
+    "cielo-alto_LadoIzq": 1080,
+    "cielo-alto_LadoDer": 1080,
+    "cielo-alto_Arco": 1856,
+    "cielo-alto_Marcas": 492,
+    "cielo-alto_Aros": 1680,
+    "espacio_Suelo": 1780,
+    "espacio_LadoIzq": 1760,
+    "espacio_LadoDer": 1760,
+    "espacio_Arco": 1628,
+    "espacio_Marcas": 480,
+    "espacio_Aros": 1680
+  },
+  "textura": "texturas/Mapa_paleta_256.png (un material para todas las piezas)",
+  "ejes": "Blender +Y = sentido del vuelo, +Z arriba; FBX global_scale=0.01, axis_forward=Z, axis_up=Y"
+}
