@@ -4,7 +4,7 @@
 local M = {}
 
 M.STATS = { "impulso", "resistencia", "dinero", "exp" }
-M.RAREZAS = { "comun", "poco_comun", "raro", "legendario", "mitico", "robux" }
+M.RAREZAS = { "comun", "poco_comun", "raro", "epico", "legendario", "mitico", "robux" }
 
 -- id, modelo, rareza, bonus (en porcentaje). Los enemigos usan su version amable como mascota.
 M.LISTA = {
@@ -14,19 +14,20 @@ M.LISTA = {
 	{ id = "globo", nombre = "Globo gruñon", rareza = "poco_comun", bonus = { exp = 20 } },
 	{ id = "nubarron", nombre = "Nubarron de tormenta", rareza = "raro", bonus = { impulso = 30, resistencia = 30 } },
 	{ id = "ovni", nombre = "Ovni", rareza = "raro", bonus = { dinero = 30, exp = 30 } },
-	{ id = "aguila", nombre = "Aguila legendaria", rareza = "legendario", bonus = { impulso = 45, resistencia = 45, dinero = 45 } },
-	{ id = "meteorito", nombre = "Meteorito furioso", rareza = "legendario", bonus = { impulso = 45, dinero = 45, exp = 45 } },
-	{ id = "cometa", nombre = "Cometa enfadada", rareza = "legendario", bonus = { resistencia = 45, dinero = 45, exp = 45 } },
-	{ id = "grifo", nombre = "Grifo mitico", rareza = "mitico", bonus = { impulso = 60, resistencia = 60, dinero = 60, exp = 60 } },
-	{ id = "fenix", nombre = "Fenix de fuego", rareza = "robux", bonus = { impulso = 80, resistencia = 80, dinero = 80, exp = 80 }, fuego = true },
+	{ id = "meteorito", nombre = "Meteorito furioso", rareza = "epico", bonus = { impulso = 40, dinero = 40, exp = 40 } },
+	{ id = "cometa", nombre = "Cometa enfadada", rareza = "epico", bonus = { resistencia = 40, dinero = 40, exp = 40 } },
+	{ id = "aguila", nombre = "Aguila legendaria", rareza = "legendario", bonus = { impulso = 55, resistencia = 55, dinero = 55 } },
+	{ id = "grifo", nombre = "Grifo mitico", rareza = "mitico", bonus = { impulso = 70, resistencia = 70, dinero = 70, exp = 70 } },
+	{ id = "fenix", nombre = "Fenix de fuego", rareza = "robux", bonus = { impulso = 90, resistencia = 90, dinero = 90, exp = 90 }, fuego = true },
 }
 
 -- Pesos de cada huevo (rareza del huevo -> rareza de la mascota). El fenix NO sale de huevos.
 M.HUEVOS = {
 	comun = { comun = 80, poco_comun = 20 },
 	poco_comun = { comun = 30, poco_comun = 55, raro = 15 },
-	raro = { poco_comun = 40, raro = 50, legendario = 10 },
-	legendario = { raro = 45, legendario = 50, mitico = 5 },
+	raro = { poco_comun = 30, raro = 55, epico = 15 },
+	epico = { raro = 40, epico = 50, legendario = 10 },
+	legendario = { epico = 45, legendario = 50, mitico = 5 },
 	mitico = { legendario = 60, mitico = 40 },
 }
 

@@ -14,9 +14,9 @@ for r,t in M.HUEVOS.items():
 rng=random.Random(1).random
 vistos={}
 for _ in range(20000):
-    for hr in ['comun','poco_comun','raro','legendario','mitico']:
+    for hr in ['comun','poco_comun','raro','epico','legendario','mitico']:
         p=M.abrirHuevo(hr,rng); assert p.id!='fenix'; vistos[p.id]=1
 assert len(vistos)==10
 m=M.multiplicadores(l.table_from(['grifo','gorrion']))
-assert abs(m.dinero-1.7)<1e-9 and abs(m.impulso-1.6)<1e-9
+assert abs(m.dinero-1.8)<1e-9 and abs(m.impulso-1.7)<1e-9
 print('ok')
