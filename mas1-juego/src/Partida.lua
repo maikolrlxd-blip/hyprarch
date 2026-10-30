@@ -20,8 +20,9 @@ P.TOL = {
 	extraMedia = 10, -- studs
 }
 
-function P.nueva(V)
-	return { V = V, estado = "tierra", violaciones = 0 }
+-- V = src/Vuelo.lua; E = src/Encuentros.lua (aros, enemigos y cofres; sin E el vuelo va sin encuentros).
+function P.nueva(V, E)
+	return { V = V, E = E, estado = "tierra", violaciones = 0 }
 end
 
 function P.enVuelo(s)
@@ -40,6 +41,9 @@ function P.lanzar(s, pos, potencia, bonus)
 	s.vPermitida = nil
 	s.planeoT, s.yPlaneo = nil, nil
 	s.gracia = P.TOL.gracia
+	s.arosHechos = {}
+	s.cofre = s.E and s.E.nuevoCofre(pos) or nil
+	s.cofresSalidos = s.cofre and 1 or 0
 	return true
 end
 
@@ -51,15 +55,22 @@ function P.boostActivo(s)
 	return s.estado == "vuelo" and not s.v.planeando and (s.boost or s.t < s.turboHasta)
 end
 
--- Intenciones del cliente. Devuelve el nombre de un efecto si hay que mostrarlo ("golpe").
-function P.intencion(s, nombre, valor)
+-- Intenciones del cliente. Devuelve el nombre de un efecto si hay que mostrarlo ("golpe") y, si el golpe alcanza a un enemigo de
+-- mundo.enemigos, su indice (queda con vivo = false: su reaparicion la lleva quien guarda el mundo).
+function P.intencion(s, nombre, valor, mundo)
 	if s.estado ~= "vuelo" then return nil end
 	if nombre == "boost" then
 		s.boost = valor == true
 	elseif nombre == "turbo" then -- boton TURBO del HUD (un toque): 1,2 s de boost
 		s.turboHasta = s.t + 1.2
 	elseif nombre == "ataque" or nombre == "puno" or nombre == "patada" then
-		if s.V.atacar(s.v) then return "golpe" end
+		if not s.V.atacar(s.v) then return nil end
+		local i = s.E and mundo and mundo.enemigos and s.E.enemigoAlAlcance(s.ultima, mundo.enemigos)
+		if i then
+			mundo.enemigos[i].vivo = false
+			s.V.golpearEnemigo(s.v)
+		end
+		return "golpe", i
 	end
 	return nil
 end
@@ -80,9 +91,10 @@ function P.limites(s, dt)
 	return z, x, y
 end
 
--- Un tick del servidor con la posicion actual del personaje. Devuelve:
--- { corregir = pos buena o nil, aterrizaje = resultado o nil, energia (0-1), planeando, distancia, mult, puntos, boost }
-function P.tick(s, dt, pos)
+-- Un tick del servidor con la posicion actual del personaje; mundo = { aros = {{centro, radio}}, enemigos = ... } (opcional). Devuelve:
+-- { corregir = pos buena o nil, aterrizaje = resultado o nil, energia (0-1), planeando, distancia, mult, puntos, boost,
+--   aros = indices de aros cruzados en este tick o nil, cofre = posicion del cofre o nil, cofreAtrapado = posicion o nil }
+function P.tick(s, dt, pos, mundo)
 	if s.estado ~= "vuelo" then return nil end
 	local V, c, T = s.V, s.v.cfg, P.TOL
 	s.t = s.t + dt
@@ -115,11 +127,34 @@ function P.tick(s, dt, pos)
 		s.hist[#s.hist + 1] = { t = s.t, dz = u.z - pos.z, perm = s.pendiente }
 		s.pendiente = 0
 		while s.hist[1] and s.hist[1].t <= s.t - T.ventana do table.remove(s.hist, 1) end
+		if s.E and mundo and mundo.aros then -- aros: con el tramo validado, cada uno una vez por vuelo
+			for i, aro in ipairs(mundo.aros) do
+				if not s.arosHechos[i] and s.E.cruzaAro(u, pos, aro) then
+					s.arosHechos[i] = true
+					s.V.cruzarAro(s.v)
+					r.aros = r.aros or {}
+					r.aros[#r.aros + 1] = i
+				end
+			end
+		end
 		s.ultima = { x = pos.x, y = pos.y, z = pos.z }
 		s.avance = math.max(s.avance, s.z0 - pos.z)
 	end
 	V.paso(s.v, dt, { boost = P.boostActivo(s) })
 	s.v.distancia = s.avance -- cuenta lo avanzado de verdad, no lo que dice la velocidad
+	if s.cofre then -- cofre volador: huye del jugador; al atraparlo, puntos y (si quedan) otro por delante
+		if s.E.pasoCofre(s.cofre, dt, s.ultima) then
+			s.V.atraparCofre(s.v)
+			r.cofreAtrapado = { x = s.cofre.pos.x, y = s.cofre.pos.y, z = s.cofre.pos.z }
+			if s.cofresSalidos < s.E.CFG.cofresPorVuelo then
+				s.cofre = s.E.nuevoCofre(s.ultima)
+				s.cofresSalidos = s.cofresSalidos + 1
+			else
+				s.cofre = nil
+			end
+		end
+		r.cofre = s.cofre and s.cofre.pos
+	end
 	local y = s.ultima.y
 	if s.v.planeando then
 		if not s.planeoT then s.planeoT, s.yPlaneo = 0, y end

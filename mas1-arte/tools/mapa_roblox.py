@@ -119,9 +119,10 @@ def texto_suelo_tramos(mb, s, xc, y0, px, alto, mat):
 
 def flecha_sin_solape(mb, y, mat):
     """Como bm.flecha, pero los dos brazos del «^» con alturas distintas (0,24 y 0,30): sin caras coplanares solapadas en la punta."""
+    E = bm.FLECHA
     for s, alto, z0 in ((1, 0.24, 0.0), (-1, 0.30, 0.02)):
-        bm.cubo_girado(mb, (s * 1.6, y, z0 + alto / 2), (5.2, 1.6, alto), mat, rot=(0, 0, -s * 45))
-    mb.box((0, y - 3.4, 0.10), (1.6, 5.0, 0.20), mat)
+        bm.cubo_girado(mb, (s * 1.6 * E, y, z0 + alto / 2), (5.2 * E, 1.6 * E, alto), mat, rot=(0, 0, -s * 45))
+    mb.box((0, y - 3.4 * E, 0.10), (1.6 * E, 5.0 * E, 0.20), mat)
 
 
 bm.nube, bm.torre, bm.texto_cartel, bm.texto_suelo = nube_marcada, torre_marcada, texto_cartel_tramos, texto_suelo_tramos
@@ -131,16 +132,8 @@ bm.flecha = flecha_sin_solape
 rnd = random.Random(30)
 ZG = []
 for i, Z in enumerate(bm.ZONAS):
-    y0 = bm.Y_INICIO + i * bm.LARGO
     P = {k: Grabadora(k) for k in bm.PIEZAS}
-    Z['crea'](P, y0, rnd)
-    poste, adorno, cartel, letra = Z['arco']
-    bm.arco(P['Arco'], y0 + 2, Z['nombre'], poste, adorno, cartel, letra)
-    bm.texto_suelo(P['Marcas'], Z['marca'], 0, y0 + 26, 2.2, 0.24, Z['flecha'])
-    for j in range(5):
-        bm.flecha(P['Marcas'], y0 + 70 + j * 60, Z['flecha'])
-    for j, (dy, z) in enumerate(((80, 14), (170, 20), (260, 26))):
-        bm.aro(P['Aros'], (rnd.uniform(-12, 12), y0 + dy, z), 6.0, 0.6, Z['aro'])
+    bm.construir_zona(P, i, Z, rnd)
     ZG.append((Z, P))
 
 
@@ -302,11 +295,18 @@ def convertir(prims, grupo):
             N = 16 if rm < 12 else 36
             L = 2 * (rm + ancho / 2) * math.tan(math.pi / N)
             rot0 = math.pi / p['segs'] if p['rot'] is None else p['rot']
+            corona = []
             for k in range(N):
                 a = rot0 + 2 * math.pi * k / N
                 er, et = u * math.cos(a) + w * math.sin(a), -u * math.sin(a) + w * math.cos(a)
                 R_b = Matrix((et, er, -d)).transposed()
-                caja_b(lista, p['p0'] + axis * tm + er * rm, R_b, (L, ancho, grosor * (1.06 if k % 2 else 1.0)), mat, nombre)
+                caja_b(corona, p['p0'] + axis * tm + er * rm, R_b, (L, ancho, grosor * (1.06 if k % 2 else 1.0)), mat, nombre)
+            if grupo == 'Aros':      # cada aro, un Model «Aro» con una pieza invisible «Centro»: el juego lee ahi centro y radio
+                centro = dict(corona[0], pos=a_rbx(p['p0'] + axis * tm), R=Matrix.Identity(3), size=Vector((1, 1, 1)),
+                              transp=1.0, colision=False, sombra=False, nombre='Centro', material='SmoothPlastic', color='#ffffff')
+                lista.append(dict(modelo='Aro', hijos=corona + [centro], radio=rm))
+            else:
+                lista += corona
         elif t == 'roca':
             c, r = p['c'], p['r']
             if p['jitter'] == 0 and p['squash'] == (1, 1, 1):          # planeta
@@ -323,10 +323,19 @@ def convertir(prims, grupo):
     return lista
 
 
-modelo = []                                               # [(zona, [(grupo, [piezas])])]
+def piezas_de(l):
+    """Las piezas de una lista que puede llevar modelos (los aros): las de dentro de cada modelo cuentan."""
+    for e in l:
+        if 'modelo' in e:
+            yield from e['hijos']
+        else:
+            yield e
+
+
+modelo = []                                               # [(zona, [(grupo, [piezas o modelos])])]
 for Z, P in ZG:
     modelo.append((Z, [(k, convertir(P[k].prims, k)) for k in bm.PIEZAS]))
-todas = [q for _, gs in modelo for _, l in gs for q in l]
+todas = [q for _, gs in modelo for _, l in gs for q in piezas_de(l)]
 for q in todas:
     R = q['R']
     assert max(abs(v) for fila in (R.transposed() @ R - Matrix.Identity(3)) for v in fila) < 1e-4 and abs(R.determinant() - 1) < 1e-4, q
@@ -376,10 +385,16 @@ def item(clase, props, hijos=()):
     return ['<Item class="%s" referent="%s">' % (clase, ref()), '<Properties>'] + props + ['</Properties>'] + [l for h in hijos for l in h] + ['</Item>']
 
 
+def item_entrada(e):
+    if 'modelo' in e:
+        return item('Model', ['<string name="Name">%s</string>' % e['modelo']], [item(q['clase'], props_parte(q)) for q in e['hijos']])
+    return item(e['clase'], props_parte(e))
+
+
 def item_modelo():
     zonas = []
     for Z, gs in modelo:
-        carpetas = [item('Folder', ['<string name="Name">%s</string>' % k], [item(q['clase'], props_parte(q)) for q in l]) for k, l in gs]
+        carpetas = [item('Folder', ['<string name="Name">%s</string>' % k], [item_entrada(e) for e in l]) for k, l in gs]
         zonas.append(item('Model', ['<string name="Name">%s</string>' % ZONA_RBX[Z['clave']]], carpetas))
     return item('Model', ['<string name="Name">Mapa_v01</string>'], zonas)
 
@@ -429,7 +444,9 @@ cuenta = {}
 for Z, gs in modelo:
     c = cuenta.setdefault(Z['clave'], {})
     for k, l in gs:
-        c[k] = len(l)
+        c[k] = len(list(piezas_de(l)))
+aros = sum(1 for _, gs in modelo for _, l in gs for e in l if 'modelo' in e)
+assert aros == 3 * len(modelo), aros
 por_tipo = {}
 for q in todas:
     k = q['clase'] + ('/' + q['forma'] if q['forma'] else '') + ' ' + q['material']

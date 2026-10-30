@@ -14,8 +14,10 @@ Programación de «+1 de lanzamiento por segundo» (Maikol, 30/10: «todo seguid
 - **Cifras provisionales.** Están en `src/Vuelo.lua` y se ajustan jugando:
   - con potencia 0, unos 12 s de energía, un vuelo de unos 670 studs y aterrizaje en la Tormenta (x4);
   - la energía crece con la raíz de la potencia.
-- **Sin guardado** (hito 5): el dinero y la exp se pierden al salir.
-- **Sin aros ni enemigos** (hito 2) y **sin mascotas equipadas** (hito 4).
+- **Sin guardado** (hito 5): el dinero, la exp y los cofres se pierden al salir.
+- **Sin mascotas equipadas** (hito 4) **y sin potencia que suba** (hito 3, lo siguiente): de momento todos los vuelos son con potencia 0.
+- **Enemigos y cofres hechos con piezas, PROVISIONALES.** Las mallas voxel de `mas1-arte/enemigos-v02` hay que importarlas en Studio. Los enemigos no hacen daño: solo se golpean.
+- **Cielo por zona**: solo cambian la hora y la `Atmosphere`. El Espacio de noche usa las estrellas por defecto de Roblox.
 - **El botón LANZAR y el cartel de resultado son provisionales**: la interfaz buena la hace Linux 2.0.
 - **`server/DemoVisual.server.lua`** sigue en el proyecto: no hay que activar `MAS1_Demo` con el juego de verdad, porque pisa los atributos.
 
@@ -33,7 +35,13 @@ Programación de «+1 de lanzamiento por segundo» (Maikol, 30/10: «todo seguid
      - el personaje se inclina en los giros;
      - la cámara se aleja con la velocidad;
      - el campo de visión se abre con el boost.
-2. Aros y enemigos del mapa, cofres voladores que huyen.
+2. **Aros, enemigos y cofres — hecho, sin probar en Studio.**
+   - **Aros**: los del mapa cuentan una vez por vuelo, con margen por fuera del borde, y valen 25 puntos.
+   - **Enemigos**: 22 repartidos por zona con los tipos de `enemigos-v02`, separados y lejos de los aros. Se golpean con el ataque a 12 studs (30 puntos) y vuelven a los 15 s.
+   - **Cofres voladores**: salen por delante y huyen más rápido que el vuelo normal. Con boost se pillan en unos 4 s (250 puntos) y salen 2 por vuelo.
+   - **Cielo y niebla por zona**.
+   - **Mapa**: aros más grandes, bordes del carril en Neon y flechas y xN más grandes (crítica del director).
+   - **Ajustes**: el boost gasta +1,5/s (antes +2,5/s), para que perseguir un cofre compense.
 3. Entrenamiento (+1 potencia/s), zonas AFK, rebirth y alas que escalan con el rebirth.
 4. Mascotas: abrir huevos, inventario, equipar 3 y bonus aplicados al vuelo; el fénix solo con Robux, sin productos configurados.
 5. Guardado con DataStore y antitrampas básicas.
@@ -44,4 +52,4 @@ Programación de «+1 de lanzamiento por segundo» (Maikol, 30/10: «todo seguid
 2. Dale a Play. Sales al principio del Mar de Nubes.
 3. Pulsa F o el botón ¡LANZAR!. Para vuelos más largos, sube el atributo `Potencia` del jugador en la vista del servidor.
 4. Regenerar la place: `python tools/construir_place.py`.
-5. Pruebas: `python tests/test_partida.py` (y las otras dos), desde `mas1-juego`.
+5. Pruebas, desde `mas1-juego`: `python tests/test_partida.py`, `test_encuentros.py`, `test_vuelo.py` y `test_mascotas.py`.

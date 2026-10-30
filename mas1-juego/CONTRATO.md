@@ -34,7 +34,8 @@ Los escribe el servidor; la interfaz solo los lee.
 | `Exp` | entero | **nuevo**: total del jugador | hito 1 (sin guardar hasta el hito 5) |
 | `Potencia` | número | potencia del jugador | hito 3 (ahora 0; en Studio se puede cambiar a mano en la vista del servidor) |
 | `Rebirths` | entero | — | hito 3 |
-| `Aros`, `ArosTotal` | entero | aros del vuelo / del mapa | hito 2 (ahora 0) |
+| `Aros`, `ArosTotal` | entero | aros cruzados en este vuelo / aros del mapa | hito 2 |
+| `Cofres` | entero | **nuevo**: cofres voladores atrapados en total (para las alas avanzadas del hito 6) | hito 2 (sin guardar hasta el hito 5) |
 | `Mascota`, `MascotaBonus` | texto, número | — | hito 4 (ahora «—» y 1) |
 | `Alas` | texto | id de las alas equipadas | hito 6 |
 
@@ -45,14 +46,24 @@ Están en ReplicatedStorage y los crea `src/Red.lua`.
   - `"lanzar"`: solo en el suelo y fuera de un vuelo.
   - `"boost", bool`: mantener pulsado (W o joystick arriba). El servidor lo confirma en el atributo `Boost`.
   - `"turbo"`: un toque (botón TURBO del HUD) que da 1,2 s de boost.
-  - `"ataque"`, `"puno"` o `"patada"`: gasta `Vuelo.CFG.costeAtaque` de energía y no se puede planeando. Los enemigos llegan en el hito 2.
+  - `"ataque"`, `"puno"` o `"patada"`: gasta `Vuelo.CFG.costeAtaque` de energía y no se puede planeando. Golpea al enemigo vivo más cercano a 12 studs (`Encuentros.CFG.alcance`); vuelve a los 15 s.
   - Pendientes: `"equipar", tipo, id`; `"abrirHuevo", rareza`; `"rebirth"`; `"comprarAla", id`.
 - **`MAS1_Efecto`** (servidor → clientes), con nombres de `src/Efectos.lua`:
   - `"lanzamiento", pos`;
-  - `"golpe", pos`;
+  - `"golpe", pos`: un golpe, a un enemigo o al aire;
+  - `"aro", pos`: solo al jugador, cuando cruza un aro o atrapa un cofre;
   - `"estela", nil, raíz, bool`: el rastro del boost, que se enciende y se apaga.
-- **`MAS1_Resultado`** (servidor → cliente), al aterrizar: `{ distancia, aros, golpes, multiplicador, dinero, exp, tiempo }`.
+- **`MAS1_Resultado`** (servidor → cliente), al aterrizar: `{ distancia, aros, golpes, cofres, multiplicador, dinero, exp, tiempo }`.
 - Pendientes: `MAS1_Huevo` (`{ rareza, mascotaId }`) y `MAS1_Inventario` (`{ mascotas = {id = cantidad}, equipadas = {ids}, alas = {ids} }`).
+
+## Mundo (hito 2)
+- **Aros**: son los Models `Aro` del mapa, cada uno con una pieza invisible `Centro`. El radio es la distancia media de sus bloques al centro. Cada aro cuenta una vez por vuelo, con 1,5 studs de margen por fuera.
+- **Enemigos y cofres**: son anclas invisibles en `Workspace.MAS1_Entidades`. Las dibuja `client/Entidades.client.lua` con piezas (provisionales hasta importar las mallas de `mas1-arte/enemigos-v02`).
+  - Enemigo: atributos `Tipo` (globo, nube, nubarron, cometa, ovni o meteorito) y `Vivo`.
+  - Cofre: atributos `Tipo = "cofre"` y `Dueno = UserId`. Cada jugador solo ve el suyo.
+  - Los enemigos se reparten por zona (`Encuentros.CFG.zonas`): separados 40 studs y lejos de los aros.
+  - El cofre sale 140 studs por delante y huye a 52 studs/s. Hacen falta el boost (70) y unos 4 s para pillarlo, y salen 2 por vuelo como mucho.
+- **Cielo por zona**: `client/Zonas.client.lua` cambia en cada cliente la hora y la `Atmosphere` según la zona.
 
 ## Quién mueve al personaje
 El **cliente** (`client/VueloControl.client.lua`) mueve su personaje con `src/Manejo.lua`, para que responda al instante. El **servidor** (`src/Partida.lua`) lleva todo lo que cuenta y valida cada paso:
@@ -68,5 +79,6 @@ Si algo no cuadra, devuelve al personaje a la última posición buena. La distan
 - `src/Vuelo.lua`: reglas y cifras provisionales.
 - `src/Manejo.lua`: cómo se vuela.
 - `src/Partida.lua`: sesión y validación.
+- `src/Encuentros.lua`: aros, golpes, reparto de enemigos y cofres.
 
 La interfaz no calcula bonus: se los pide al servidor.

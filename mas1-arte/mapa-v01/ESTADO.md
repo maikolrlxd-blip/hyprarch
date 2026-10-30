@@ -25,7 +25,7 @@ Hay dos versiones con la misma distribución:
   - las rocas son dos bloques girados, y los planetas, una bola con una banda;
   - los aros son 16 bloques y los anillos de los planetas, 36;
   - los cristales y las auroras llevan colores más saturados, porque en Neon el pastel sale casi blanco.
-- **Rendimiento sin medir**: 3.092 piezas, más de 1.000 de ellas bolas.
+- **Rendimiento sin medir**: 3.112 piezas, más de 1.000 de ellas bolas.
 - **Mejorable en el kit**: las torres de nubes parecen pilas de bloques redondeados, y los asteroides y planetas son low-poly sencillos.
 - **La Pradera no es mía.** Los renders la cargan del archivo de Codex (sin tocarlo) solo para ver el empalme. No va en los exportes ni en la place de prueba: se monta con su FBX.
 
@@ -43,14 +43,14 @@ Hay dos versiones con la misma distribución:
   - ninguna pasa de 10.000 triángulos (la mayor tiene 9.620); en total, unos 85.000;
   - una sola textura de paleta para todo: `texturas/Mapa_paleta_256.png`.
 - **Versión en piezas de Roblox** (`roblox/`):
-  - `Mapa-v01.rbxmx`: el modelo `Mapa_v01`, con un Model por zona (`MarDeNubes`, `Tormenta`, `CieloAlto`, `Espacio`) y dentro las carpetas de las piezas de arriba. Son 3.092 Part y WedgePart, todas ancladas.
+  - `Mapa-v01.rbxmx`: el modelo `Mapa_v01`, con un Model por zona (`MarDeNubes`, `Tormenta`, `CieloAlto`, `Espacio`) y dentro las carpetas de las piezas de arriba. Son 3.112 Part y WedgePart (con los 8 bordes Neon y los 12 centros de aro), todas ancladas.
   - `Mapa-v01-prueba.rbxlx`: la place de prueba, con el modelo, un SpawnLocation al principio del carril y una Atmosphere.
   - `Mapa-v01-roblox-hoja.jpg` y `previews/`: renders de Blender de las piezas leídas del `.rbxmx`, no de Roblox.
   - `datos.json`: piezas por zona y por tipo.
 - **Comprobaciones de la versión en piezas**:
   - cada cuña coincide con su triángulo (error máximo de 0,00001 studs);
   - todos los giros son de verdad (sin escala ni espejo), y todas las piezas miden entre 0,02 y 2.048 studs;
-  - el XML leído de vuelta da las mismas 3.092 piezas;
+  - el XML leído de vuelta da las mismas 3.112 piezas;
   - **0 pares de caras planas solapadas en el mismo plano**, es decir, sin parpadeo. Para llegar a 0 se cambió esto:
     - las bases de las nubes acababan todas a la misma altura;
     - los dos brazos de cada flecha y los bloques de los cráteres se solapaban;
@@ -59,6 +59,11 @@ Hay dos versiones con la misma distribución:
     - los dos discos de cada nube tenían la misma altura.
   - Las bolas y los lados de los cilindros no se comprueban: en Roblox son curvos.
 - **Arreglo del 30/10 también en el kit**: los cráteres del Espacio pisaban la marca x6 y una flecha. Ahora van entre las flechas (y regenerado; lo demás no cambia).
+- **Segunda ronda del 30/10** (crítica del director: a 40 studs/s el carril se perdía en la Tormenta y el Espacio), en el kit y en la versión en piezas:
+  - bordes del carril del color de los aros de cada zona (Neon en Roblox);
+  - aros más grandes: radio 8 (antes 6);
+  - flechas 1,75 veces más grandes y marcas xN de 3,6 studs por píxel (antes 2,2).
+  - En la versión en piezas, cada aro es un Model `Aro` con una pieza invisible `Centro`, que el juego (`mas1-juego`) lee para contar los aros cruzados. Son 3.112 piezas y siguen sin caras planas coplanares solapadas.
 
 ## Cómo abrirlo en Studio
 Son archivos locales: abrirlos o insertarlos no sube nada a Roblox.

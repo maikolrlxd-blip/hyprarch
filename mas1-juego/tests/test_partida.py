@@ -101,7 +101,7 @@ print('trampa de quedarse en el aire: aterrizaje forzado a los %.1f s' % i['t'])
 # 6) ataque: gasta energia y no se puede planeando; turbo da 1,2 s de boost
 s = P.nueva(V); P.lanzar(s, vec(0, 4, 0), 0, None)
 e = s.v.energia
-assert P.intencion(s, 'puno', None) == 'golpe' and abs(s.v.energia - (e - C.costeAtaque)) < 1e-9
+assert P.intencion(s, 'puno', None)[0] == 'golpe' and abs(s.v.energia - (e - C.costeAtaque)) < 1e-9  # devuelve (efecto, enemigo)
 P.intencion(s, 'turbo', None)
 assert P.boostActivo(s)
 for _ in range(80):

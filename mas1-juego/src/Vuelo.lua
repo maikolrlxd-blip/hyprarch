@@ -9,13 +9,14 @@ V.CFG = {
 	energiaBase = 12, -- segundos de vuelo con potencia 0: el primer vuelo ya llega al Mar de Nubes
 	energiaPorRaiz = 1.6, -- + por la raiz de la potencia: con +1 potencia/s una curva lineal agotaba el mapa en minutos
 	consumoVuelo = 1.0, -- energia/s siempre
-	consumoBoost = 2.5, -- extra/s con W
+	consumoBoost = 1.5, -- extra/s con W (era 2,5: con potencia 0 el boost vaciaba la energia en 3 s y pillar un cofre no compensaba)
 	costeAtaque = 3, -- por golpe
 	velocidadBase = 40, -- studs/s
 	velocidadBoost = 70,
 	velocidadPlaneo = 30,
-	puntosAro = 5, -- sumados al "bote" del vuelo
-	puntosEnemigo = 8,
+	puntosAro = 25, -- sumados al "bote" del vuelo (que se multiplica por la zona al aterrizar): que merezca la pena buscarlos
+	puntosEnemigo = 30,
+	puntosCofre = 250, -- mas que la distancia que se pierde por el boost para pillarlo
 	potenciaPorSegundo = 1,
 	-- Manejo (src/Manejo.lua en el cliente) y limites que valida el servidor (src/Partida.lua). Faciles a proposito: avanzar es
 	-- automatico, no se puede salir del carril ni tocar el suelo mientras quede energia, y al planear se aterriza solo.
@@ -96,6 +97,12 @@ function V.cruzarAro(v)
 	v.bote = v.bote + v.cfg.puntosAro
 end
 
+function V.atraparCofre(v)
+	if v.terminado then return end
+	v.cofres = (v.cofres or 0) + 1
+	v.bote = v.bote + v.cfg.puntosCofre
+end
+
 -- Aterrizaje: puntos = (distancia + bote) * multiplicador de zona * bonus dinero. Devuelve resultado.
 -- posZona: posicion hacia -Z donde aterriza (el servidor la pasa); sin ella, la zona sale de la distancia recorrida.
 function V.aterrizar(v, posZona)
@@ -104,7 +111,8 @@ function V.aterrizar(v, posZona)
 	local base = v.distancia + v.bote
 	local dinero = math.floor(base * mult * (v.bonus.dinero or 1))
 	local exp = math.floor((v.distancia / 10 + v.aros * 2 + v.golpes) * (v.bonus.exp or 1))
-	return { distancia = v.distancia, aros = v.aros, golpes = v.golpes, multiplicador = mult, dinero = dinero, exp = exp, tiempo = v.tiempo }
+	return { distancia = v.distancia, aros = v.aros, golpes = v.golpes, cofres = v.cofres or 0, multiplicador = mult, dinero = dinero, exp = exp,
+		tiempo = v.tiempo }
 end
 
 -- Entrenamiento en tierra (+1 potencia por segundo); rebirths aumentan principalmente la velocidad de entrenamiento.

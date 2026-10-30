@@ -70,11 +70,15 @@ def texto_suelo(mb, s, xc, y0, px, alto, mat):
                     mb.box((x0 + (i * 6 + col + 0.5) * px, y0 + (6 - fila + 0.5) * px, alto / 2), (px * 0.98, px * 0.98, alto), mat)
 
 
+FLECHA = 1.75   # escala de las flechas del suelo (crítica del director, 30/10: las finas no se ven a 40 studs/s)
+
+
 def flecha(mb, y, mat):
     """Flecha plana en el suelo que apunta hacia +Y (como las de la Pradera)."""
+    E = FLECHA
     for s in (1, -1):
-        cubo_girado(mb, (s * 1.6, y, 0.12), (5.2, 1.6, 0.24), mat, rot=(0, 0, -s * 45))     # punta en +Y: «^» y el palo detrás
-    mb.box((0, y - 3.4, 0.10), (1.6, 5.0, 0.20), mat)
+        cubo_girado(mb, (s * 1.6 * E, y, 0.12), (5.2 * E, 1.6 * E, 0.24), mat, rot=(0, 0, -s * 45))   # punta en +Y: «^» y el palo detrás
+    mb.box((0, y - 3.4 * E, 0.10), (1.6 * E, 5.0 * E, 0.20), mat)
 
 
 def nube(mb, c, w, d, h, rnd, arriba, abajo):
@@ -229,6 +233,23 @@ ZONAS = [
          arco=('metal_osc', 'luz', 'metal', 'letra'), aro='aro_oro', flecha='estrella'),
 ]
 PIEZAS = ('Suelo', 'LadoIzq', 'LadoDer', 'Arco', 'Marcas', 'Aros')   # los lados por separado: menos de 10.000 triángulos por malla
+MARCA_PX = 3.6                 # letras del xN del suelo (eran de 2,2: no se leían en vuelo)
+ARO_R, ARO_GROSOR = 8.0, 0.8   # eran 6 y 0,6 (crítica del director del 30/10: aros más grandes)
+
+
+def construir_zona(P, i, Z, rnd):
+    """Todo lo de la zona i en sus piezas P (A.MB o la grabadora de mapa_roblox.py): las mismas llamadas a rnd en el mismo orden."""
+    y0 = Y_INICIO + i * LARGO
+    Z['crea'](P, y0, rnd)
+    for s in (1, -1):       # borde del carril del color de los aros (Neon en Roblox): el carril se distingue a toda velocidad
+        P['Suelo'].box((s * (ANCHO / 2 - 0.5), y0 + LARGO / 2, 0.15), (1.0, LARGO, 0.3), Z['aro'])
+    poste, adorno, cartel, letra = Z['arco']
+    arco(P['Arco'], y0 + 2, Z['nombre'], poste, adorno, cartel, letra)
+    texto_suelo(P['Marcas'], Z['marca'], 0, y0 + 26, MARCA_PX, 0.24, Z['flecha'])   # del color de las flechas: el blanco no se ve en las nubes
+    for j in range(5):
+        flecha(P['Marcas'], y0 + 70 + j * 60, Z['flecha'])
+    for j, (dy, z) in enumerate(((80, 14), (170, 20), (260, 26))):
+        aro(P['Aros'], (rnd.uniform(-12, 12), y0 + dy, z), ARO_R, ARO_GROSOR, Z['aro'])
 
 
 def imagen_paleta(ruta):
@@ -269,16 +290,8 @@ if __name__ == '__main__':
     rnd = random.Random(30)
     objetos, resumen = {}, []
     for i, Z in enumerate(ZONAS):
-        y0 = Y_INICIO + i * LARGO
         P = {k: A.MB('%s_%s' % (Z['clave'], k)) for k in PIEZAS}
-        Z['crea'](P, y0, rnd)
-        poste, adorno, cartel, letra = Z['arco']
-        arco(P['Arco'], y0 + 2, Z['nombre'], poste, adorno, cartel, letra)
-        texto_suelo(P['Marcas'], Z['marca'], 0, y0 + 26, 2.2, 0.24, Z['flecha'])         # del color de las flechas: el blanco no se ve en las nubes
-        for j in range(5):
-            flecha(P['Marcas'], y0 + 70 + j * 60, Z['flecha'])
-        for j, (dy, z) in enumerate(((80, 14), (170, 20), (260, 26))):
-            aro(P['Aros'], (rnd.uniform(-12, 12), y0 + dy, z), 6.0, 0.6, Z['aro'])
+        construir_zona(P, i, Z, rnd)
         for k in PIEZAS:
             ob = P[k].finish(CM)
             ob.name = 'Mapa_%s_%s' % (Z['clave'].replace('-', '_'), k)

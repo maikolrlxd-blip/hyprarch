@@ -24,46 +24,46 @@
       -1612.0
     ]
   },
-  "piezas_total": 3092,
+  "piezas_total": 3112,
   "piezas_por_zona": {
     "mar-de-nubes": {
-      "Suelo": 270,
+      "Suelo": 272,
       "LadoIzq": 231,
       "LadoDer": 235,
       "Arco": 119,
       "Marcas": 31,
-      "Aros": 48
+      "Aros": 51
     },
     "tormenta": {
-      "Suelo": 262,
+      "Suelo": 264,
       "LadoIzq": 288,
       "LadoDer": 261,
       "Arco": 95,
       "Marcas": 34,
-      "Aros": 48
+      "Aros": 51
     },
     "cielo-alto": {
-      "Suelo": 257,
+      "Suelo": 259,
       "LadoIzq": 90,
       "LadoDer": 90,
       "Arco": 85,
       "Marcas": 32,
-      "Aros": 48
+      "Aros": 51
     },
     "espacio": {
-      "Suelo": 159,
+      "Suelo": 161,
       "LadoIzq": 130,
       "LadoDer": 130,
       "Arco": 68,
       "Marcas": 33,
-      "Aros": 48
+      "Aros": 51
     }
   },
   "piezas_por_tipo": {
-    "Part/Block SmoothPlastic": 763,
+    "Part/Block SmoothPlastic": 775,
     "Part/Cylinder SmoothPlastic": 314,
     "Part/Ball SmoothPlastic": 1267,
-    "Part/Block Neon": 688,
+    "Part/Block Neon": 696,
     "WedgePart Neon": 60
   },
   "chocan": "solo las baldosas del carril (CanCollide); todo lo demás es decorado sin colisión",
