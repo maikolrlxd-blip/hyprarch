@@ -31,3 +31,13 @@ Regenerar: `python3 tools/build_aros.py` (necesita `bpy`, numpy y Pillow).
 ## Capa visual en Luau (mas1-juego/) — SIN PROBAR EN STUDIO
 - Tema.lua, HudVuelo.client.lua, Efectos.client.lua, Efectos.lua, DemoVisual.server.lua (demo con `workspace:SetAttribute("MAS1_Demo", true)`).
 - Solo comprobada la sintaxis con lupa. Falta: Rojo + capturas 1920x1080 y móvil.
+
+## 29/10 — Aviso del Coordinador
+- Alas avanzadas v0.2 rehechas por él en estilo Codex (2.788 tris, ~10 studs, rig Root+Wing/Mid/Tip, clips Deploy/Flap/Glide); en textura y exportación. Mis alas v0.1 quedan reemplazadas.
+- Studio: Maikol denegó el control del equipo a la versión nueva. Bloqueado: refrescar Luto-jugable.rbxl, probar mas1-juego, tarea de Antigravity.
+- CORRECCIÓN del Coordinador: el giro de 180° de Luto fue porque esas mallas miraban a +Y y salieron con '-Z'. Modelos que miran a -Y salen con '-Z' (Codex); los que miran a +Y, con 'Z'. Mis aros son simétricos; las alas v0.1 quedan reemplazadas. Sin comprobar con rig en Studio.
+- Sin push de lo del Coordinador/Codex hasta OK de Maikol.
+
+## 29/10 — Relevo de Codex
+- Mascotas: nueva referencia «Roba un huevo / Steal an Egg» (aún no aplicada por Codex). Alas iniciales-v02, robóticas-v02 y comunes-v03 con extender/recoger (Blender, sin Roblox).
+- mas1-juego existe en el repo; Codex no lo auditó ni lo probó.
