@@ -50,3 +50,7 @@ Regenerar: `python3 tools/build_aros.py` (necesita `bpy`, numpy y Pillow).
 ## 30/10 — Decisión de Maikol: los enemigos también se consiguen como mascotas
 - Falta definir cómo se obtienen, rareza y bonus. Como mascota necesitan clips Fly/Glide/Celebrate (+Blink) y expresión amable.
 - Propuesta: cubrir con ellos las 2 poco comunes + 2 raras que faltan (hoy 5/9 mascotas).
+
+## 31/10 — Eje FBX comprobado en Studio (aviso del Coordinador)
+- Los FBX de mascotas y alas (frente +Y en Blender, axis_forward='Z') entran mirando hacia ATRÁS en Roblox: el importador pone el frente en +Z, que es la nuca del personaje (los personajes miran a -Z). Al montarlos, girarlos 180° o reexportarlos girados.
+- Ojo: los de Codex salen con '-Z' y frente -Y; hay que comprobarlos uno a uno con rig/accesorio. Regla: probar CADA tipo de asset en Studio antes de dar el eje por bueno.
