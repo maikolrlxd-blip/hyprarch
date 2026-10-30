@@ -15,7 +15,9 @@ Programación de «+1 de lanzamiento por segundo» (Maikol, 30/10: «todo seguid
   - con potencia 0, unos 12 s de energía, un vuelo de unos 670 studs y aterrizaje en la Tormenta (x4);
   - la energía crece con la raíz de la potencia.
 - **Sin guardado** (hito 5): el dinero, la exp y los cofres se pierden al salir.
-- **Sin mascotas equipadas** (hito 4). **Las alas aún no se consiguen ni se equipan** (hito 6): su bonus ya se aplica si el atributo `Alas` tiene un id.
+- **Las alas de requisito aún no se desbloquean solas** (hito 6). Las avanzadas ya se pueden comprar y equipar.
+- **Las mascotas equipadas no te siguen por el mapa**: solo dan su bonus. Hace falta importar sus mallas en Studio, o hacer unas de piezas como los enemigos.
+- **Fénix sin producto de Robux**: el código está, pero el id del producto está vacío.
 - **Multiplicadores grandes sin medir**: con alas avanzadas, rebirths y mascotas fuertes, el impulso puede multiplicar mucho la velocidad. Hay que ver en Studio si sigue siendo divertido o hay que suavizarlo.
 - **Enemigos y cofres hechos con piezas, PROVISIONALES.** Las mallas voxel de `mas1-arte/enemigos-v02` hay que importarlas en Studio. Los enemigos no hacen daño: solo se golpean.
 - **Cielo por zona**: solo cambian la hora y la `Atmosphere`. El Espacio de noche usa las estrellas por defecto de Roblox.
@@ -53,7 +55,11 @@ Programación de «+1 de lanzamiento por segundo» (Maikol, 30/10: «todo seguid
      - Suben un 25 % por rebirth y se multiplican con las mascotas.
    - Contadores nuevos: `Lanzamientos` y `Cofres`, para desbloquear alas en el hito 6.
    - Pruebas en `tests/test_progreso.py`.
-4. Mascotas: abrir huevos, inventario, equipar 3 y bonus aplicados al vuelo; el fénix solo con Robux, sin productos configurados.
+4. **Mascotas, huevos e inventario — hecho, sin probar en Studio.** Va con `src/Inventario.lua` y `tests/test_inventario.py`.
+   - **Huevos**: se pagan con dinero (`Mascotas.PRECIO_HUEVO`: de 500 el común a 250.000 el mítico, provisional) y dan una mascota según los pesos de Linux 2.0.
+   - **Mascotas**: se equipan hasta 3, y una se puede repetir si tienes varias. Sus bonus se multiplican con las alas en cada vuelo.
+   - **Interfaz**: el servidor manda `MAS1_Inventario` y `MAS1_Huevo` con las formas acordadas, y `MAS1_Aviso` cuando algo falla.
+   - **Fénix**: solo con Robux, sin producto configurado.
 5. Guardado con DataStore y antitrampas básicas.
 6. Alas: iniciales, robóticas y avanzadas.
 

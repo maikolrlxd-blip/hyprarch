@@ -5,7 +5,7 @@
 <Properties>
 <string name="Name">Workspace</string>
 </Properties>
-<Item class="Part" referent="RBXJ000001A">
+<Item class="Part" referent="RBXJ000001B">
 <Properties>
 <bool name="Anchored">true</bool>
 <token name="TopSurface">0</token>
@@ -18,7 +18,7 @@
 <token name="shape">1</token>
 </Properties>
 </Item>
-<Item class="Part" referent="RBXJ000001B">
+<Item class="Part" referent="RBXJ000001C">
 <Properties>
 <bool name="Anchored">true</bool>
 <token name="TopSurface">0</token>
@@ -62454,11 +62454,11 @@
 </Properties>
 </Item>
 </Item>
-<Item class="ReplicatedStorage" referent="RBXJ000000A">
+<Item class="ReplicatedStorage" referent="RBXJ000000B">
 <Properties>
 <string name="Name">ReplicatedStorage</string>
 </Properties>
-<Item class="Folder" referent="RBXJ0000009">
+<Item class="Folder" referent="RBXJ000000A">
 <Properties>
 <string name="Name">Mas1</string>
 </Properties>
@@ -62674,6 +62674,122 @@ return E
 </Item>
 <Item class="ModuleScript" referent="RBXJ0000004">
 <Properties>
+<string name="Name">Inventario</string>
+<ProtectedString name="Source"><![CDATA[-- Inventario de un jugador de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa): mascotas por cantidad, hasta 3 equipadas
+-- (se puede repetir una si tienes varias), huevos que se pagan con dinero, alas compradas o desbloqueadas y la equipada. Lo usa el
+-- servidor (server/Partida.server.lua) y se manda a la interfaz con la forma acordada con Linux 2.0 (MAS1_Inventario). El fenix solo
+-- se da con Robux (I.darFenix, sin producto configurado todavia). Cada funcion que cambia algo devuelve ok y, si no, el motivo
+-- (texto para MAS1_Aviso).
+local I = {}
+
+function I.nuevo()
+	return { mascotas = {}, equipadas = {}, alas = {}, alaEquipada = nil }
+end
+
+local function cuantas(lista, id)
+	local n = 0
+	for _, x in ipairs(lista) do
+		if x == id then n = n + 1 end
+	end
+	return n
+end
+
+-- Abre un huevo pagando con dinero. Devuelve ok, dinero que queda, mascota (de Mascotas.LISTA), nueva (primera vez) o false, motivo.
+function I.abrirHuevo(M, inv, dinero, rareza, rng)
+	local precio = M.PRECIO_HUEVO[rareza]
+	if not precio then return false, "Ese huevo no existe" end
+	if dinero < precio then return false, string.format("Te falta dinero: el huevo cuesta %d", precio) end
+	local p = M.abrirHuevo(rareza, rng)
+	if not p then return false, "Ese huevo no existe" end
+	local nueva = (inv.mascotas[p.id] or 0) == 0
+	inv.mascotas[p.id] = (inv.mascotas[p.id] or 0) + 1
+	return true, dinero - precio, p, nueva
+end
+
+function I.darFenix(inv) -- compra con Robux (MarketplaceService.ProcessReceipt): hito 4 sin producto configurado
+	inv.mascotas.fenix = (inv.mascotas.fenix or 0) + 1
+end
+
+function I.equipar(M, inv, id)
+	if not M.get(id) then return false, "Esa mascota no existe" end
+	if #inv.equipadas >= M.MAX_EQUIPADAS then return false, string.format("Ya llevas %d mascotas", M.MAX_EQUIPADAS) end
+	if cuantas(inv.equipadas, id) >= (inv.mascotas[id] or 0) then return false, "No tienes otra de esas" end
+	inv.equipadas[#inv.equipadas + 1] = id
+	return true
+end
+
+function I.desequipar(inv, id)
+	for i, x in ipairs(inv.equipadas) do
+		if x == id then
+			table.remove(inv.equipadas, i)
+			return true
+		end
+	end
+	return false, "No llevas esa mascota"
+end
+
+-- La mascota que se ve en el HUD: la de mas rareza de las equipadas (nil si no hay).
+function I.principal(M, inv)
+	local orden = {}
+	for i, r in ipairs(M.RAREZAS) do orden[r] = i end
+	local mejor
+	for _, id in ipairs(inv.equipadas) do
+		local p = M.get(id)
+		if p and (not mejor or orden[p.rareza] > orden[mejor.rareza]) then mejor = p end
+	end
+	return mejor
+end
+
+-- Alas: comprarlas con dinero, conseguirlas al cumplir el requisito (Alas.desbloqueada) y equiparlas.
+function I.tieneAla(inv, id)
+	for _, x in ipairs(inv.alas) do
+		if x == id then return true end
+	end
+	return false
+end
+
+function I.darAla(inv, id)
+	if I.tieneAla(inv, id) then return false end
+	inv.alas[#inv.alas + 1] = id
+	return true
+end
+
+function I.comprarAla(Alas, inv, dinero, id)
+	local a = Alas.get(id)
+	if not a then return false, "Esas alas no existen" end
+	if I.tieneAla(inv, id) then return false, "Ya tienes esas alas" end
+	if not a.precio or a.precio <= 0 then return false, "Esas alas no se compran: " .. a.requisito end
+	if dinero < a.precio then return false, string.format("Te falta dinero: cuestan %d", a.precio) end
+	I.darAla(inv, id)
+	return true, dinero - a.precio
+end
+
+function I.equiparAla(inv, id)
+	if not I.tieneAla(inv, id) then return false, "No tienes esas alas" end
+	inv.alaEquipada = id
+	return true
+end
+
+function I.desequiparAla(inv)
+	inv.alaEquipada = nil
+	return true
+end
+
+-- Copia para la interfaz (MAS1_Inventario) y para guardar: solo datos, sin referencias compartidas.
+function I.copia(inv)
+	local m, e, a = {}, {}, {}
+	for k, v in pairs(inv.mascotas) do m[k] = v end
+	for i, v in ipairs(inv.equipadas) do e[i] = v end
+	for i, v in ipairs(inv.alas) do a[i] = v end
+	return { mascotas = m, equipadas = e, alas = a, alaEquipada = inv.alaEquipada }
+end
+
+return I
+]]></ProtectedString>
+</Properties>
+</Item>
+<Item class="ModuleScript" referent="RBXJ0000005">
+<Properties>
 <string name="Name">Manejo</string>
 <ProtectedString name="Source"><![CDATA[-- Manejo del vuelo de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa): a que velocidad volar en cada fotograma segun los
 -- mandos. Lo usa el cliente (client/VueloControl.client.lua) para mover su personaje; el servidor valida con los mismos limites de
@@ -62732,7 +62848,7 @@ return M
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000005">
+<Item class="ModuleScript" referent="RBXJ0000006">
 <Properties>
 <string name="Name">Mascotas</string>
 <ProtectedString name="Source"><![CDATA[-- Mascotas de «+1 de lanzamiento por segundo»: datos y calculo de bonus (Lua puro, sin API de Roblox).
@@ -62767,6 +62883,10 @@ M.HUEVOS = {
 	legendario = { epico = 45, legendario = 50, mitico = 5 },
 	mitico = { legendario = 60, mitico = 40 },
 }
+
+-- Precio de cada huevo en dinero (hito 4, PROVISIONAL): un primer vuelo da unos 2.600 y uno largo, 10.000 o mas.
+M.PRECIO_HUEVO = { comun = 500, poco_comun = 2000, raro = 8000, epico = 25000, legendario = 80000, mitico = 250000 }
+M.MAX_EQUIPADAS = 3
 
 local porId = {}
 for _, p in ipairs(M.LISTA) do porId[p.id] = p end
@@ -62813,7 +62933,7 @@ return M
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000006">
+<Item class="ModuleScript" referent="RBXJ0000007">
 <Properties>
 <string name="Name">Partida</string>
 <ProtectedString name="Source"><![CDATA[-- Sesion de vuelo de un jugador en el servidor de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa; el adaptador de
@@ -62999,7 +63119,7 @@ return P
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000007">
+<Item class="ModuleScript" referent="RBXJ0000008">
 <Properties>
 <string name="Name">Red</string>
 <ProtectedString name="Source"><![CDATA[-- RemoteEvents de «+1 de lanzamiento por segundo» en ReplicatedStorage (adaptador de Roblox, no es Lua puro): en el servidor se
@@ -63024,7 +63144,7 @@ return R
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000008">
+<Item class="ModuleScript" referent="RBXJ0000009">
 <Properties>
 <string name="Name">Vuelo</string>
 <ProtectedString name="Source"><![CDATA[-- Logica pura del vuelo de «+1 de lanzamiento por segundo» (sin API de Roblox, probada con lupa).
@@ -63184,15 +63304,15 @@ return V
 </Item>
 </Item>
 </Item>
-<Item class="ServerScriptService" referent="RBXJ000000E">
+<Item class="ServerScriptService" referent="RBXJ000000F">
 <Properties>
 <string name="Name">ServerScriptService</string>
 </Properties>
-<Item class="Folder" referent="RBXJ000000D">
+<Item class="Folder" referent="RBXJ000000E">
 <Properties>
 <string name="Name">Mas1Servidor</string>
 </Properties>
-<Item class="Script" referent="RBXJ000000B">
+<Item class="Script" referent="RBXJ000000C">
 <Properties>
 <string name="Name">DemoVisual</string>
 <ProtectedString name="Source"><![CDATA[-- SOLO PARA VER LA CAPA VISUAL antes de que exista el juego: si workspace tiene el atributo MAS1_Demo = true, simula un vuelo (energia que baja,
@@ -63229,7 +63349,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="Script" referent="RBXJ000000C">
+<Item class="Script" referent="RBXJ000000D">
 <Properties>
 <string name="Name">Partida</string>
 <ProtectedString name="Source"><![CDATA[-- Partida de «+1 de lanzamiento por segundo» en el servidor: adaptador de Roblox de src/Partida.lua y src/Encuentros.lua (Lua puro,
@@ -63239,8 +63359,9 @@ end)
 -- aterrizar se pagan el dinero y la exp y se manda MAS1_Resultado. Los enemigos y los cofres son anclas invisibles en
 -- Workspace.MAS1_Entidades (atributos Tipo, Vivo y Dueno); los dibuja el cliente (client/Entidades.client.lua).
 -- En tierra se entrena (+1 potencia/s, mas en las zonas MAS1_AFK y MAS1_Entreno del mapa) y se puede hacer rebirth; el bonus del
--- vuelo combina las mascotas equipadas y las alas (src/Alas.lua, que escalan con los rebirths).
--- Atributos y eventos en CONTRATO.md. Todavia sin guardado (hito 5) ni mascotas equipadas (hito 4). SIN PROBAR EN STUDIO.
+-- vuelo combina las mascotas equipadas y las alas (src/Alas.lua, que escalan con los rebirths). El inventario (src/Inventario.lua:
+-- huevos, mascotas equipadas, alas) va a la interfaz por MAS1_Inventario y MAS1_Huevo, y los fallos por MAS1_Aviso.
+-- Atributos y eventos en CONTRATO.md. Todavia sin guardado (hito 5). SIN PROBAR EN STUDIO.
 local Players, RS, RunService = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService")
 local Mas1 = RS:WaitForChild("Mas1")
 local V = require(Mas1:WaitForChild("Vuelo"))
@@ -63248,9 +63369,11 @@ local P = require(Mas1:WaitForChild("Partida"))
 local E = require(Mas1:WaitForChild("Encuentros"))
 local M = require(Mas1:WaitForChild("Mascotas"))
 local Alas = require(Mas1:WaitForChild("Alas"))
+local I = require(Mas1:WaitForChild("Inventario"))
 local Red = require(Mas1:WaitForChild("Red"))
 local accion, efecto, resultado = Red.evento("MAS1_Accion"), Red.evento("MAS1_Efecto"), Red.evento("MAS1_Resultado")
-local avisoEv = Red.evento("MAS1_Aviso")
+local avisoEv, inventarioEv, huevoEv = Red.evento("MAS1_Aviso"), Red.evento("MAS1_Inventario"), Red.evento("MAS1_Huevo")
+local PRODUCTO_FENIX = nil -- id del producto de Robux del fenix: SIN CONFIGURAR (no se ha creado ningun producto ni precio)
 
 local INICIALES = { Potencia = 0, Dinero = 0, Exp = 0, Rebirths = 0, Cofres = 0, Lanzamientos = 0, Puntos = 0, Distancia = 0,
 	ZonaMult = 1, Aros = 0, ArosTotal = 0, Energia = 1, EnergiaMax = 0, Impulso = 1, EnVuelo = false, Planeando = false, Boost = false,
@@ -63260,6 +63383,15 @@ local jugadores = {} -- [plr] = { s = sesion de Partida, msgs, desde, hud, cofre
 
 local function aviso(plr, texto)
 	avisoEv:FireClient(plr, texto)
+end
+
+-- inventario: a la interfaz con la forma acordada, y la mascota principal y su bonus de dinero al HUD
+local function mandarInventario(plr, j)
+	inventarioEv:FireClient(plr, I.copia(j.inv))
+	local p = I.principal(M, j.inv)
+	plr:SetAttribute("Mascota", p and p.nombre or "—")
+	plr:SetAttribute("MascotaBonus", math.floor(M.multiplicadores(j.inv.equipadas).dinero * 100 + 0.5) / 100)
+	plr:SetAttribute("Alas", j.inv.alaEquipada or "")
 end
 
 local function tabla(v)
@@ -63348,11 +63480,14 @@ local function alEntrar(plr)
 		if plr:GetAttribute(k) == nil then plr:SetAttribute(k, v) end
 	end
 	plr:SetAttribute("ArosTotal", #mundo.aros)
-	jugadores[plr] = { s = P.nueva(V, E), msgs = 0, desde = 0, hud = 0, potencia = plr:GetAttribute("Potencia") or 0, entreno = 0 }
+	local j = { s = P.nueva(V, E), msgs = 0, desde = 0, hud = 0, potencia = plr:GetAttribute("Potencia") or 0, entreno = 0, inv = I.nuevo() }
+	jugadores[plr] = j
 	plr:GetAttributeChangedSignal("Potencia"):Connect(function() -- cambiada a mano (en Studio, para probar): se adopta
-		local j, v = jugadores[plr], plr:GetAttribute("Potencia")
-		if j and type(v) == "number" and math.abs(v - math.floor(j.potencia)) >= 1 then j.potencia = v end
+		local v = plr:GetAttribute("Potencia")
+		if type(v) == "number" and math.abs(v - math.floor(j.potencia)) >= 1 then j.potencia = v end
 	end)
+	mandarInventario(plr, j)
+	plr.CharacterAdded:Connect(function() mandarInventario(plr, j) end) -- para cuando los scripts del cliente ya escuchan
 end
 Players.PlayerAdded:Connect(alEntrar)
 for _, plr in ipairs(Players:GetPlayers()) do alEntrar(plr) end
@@ -63370,8 +63505,53 @@ Players.PlayerRemoving:Connect(function(plr)
 	jugadores[plr] = nil
 end)
 
-local function bonusDe(plr) -- mascotas equipadas (hito 4) por las alas equipadas, que escalan con los rebirths
-	return Alas.combinar(M.multiplicadores({}), Alas.bonus(plr:GetAttribute("Alas"), plr:GetAttribute("Rebirths") or 0))
+local function bonusDe(plr, j) -- mascotas equipadas por las alas equipadas, que escalan con los rebirths
+	return Alas.combinar(M.multiplicadores(j.inv.equipadas), Alas.bonus(j.inv.alaEquipada, plr:GetAttribute("Rebirths") or 0))
+end
+
+local azarHuevos = Random.new()
+
+-- intenciones del inventario (en tierra): abrir huevos, equipar y desequipar mascotas y alas, comprar alas
+local function inventario(plr, j, nombre, a, b)
+	if P.enVuelo(j.s) then
+		aviso(plr, "Eso se hace en tierra")
+		return
+	end
+	local ok, x, p, nueva
+	if nombre == "abrirHuevo" and type(a) == "string" then
+		ok, x, p, nueva = I.abrirHuevo(M, j.inv, plr:GetAttribute("Dinero") or 0, a, function() return azarHuevos:NextNumber() end)
+		if ok then
+			plr:SetAttribute("Dinero", x)
+			huevoEv:FireClient(plr, { rareza = a, mascotaId = p.id, nueva = nueva })
+		end
+	elseif nombre == "equipar" and a == "mascota" and type(b) == "string" then
+		ok, x = I.equipar(M, j.inv, b)
+	elseif nombre == "desequipar" and a == "mascota" and type(b) == "string" then
+		ok, x = I.desequipar(j.inv, b)
+	elseif nombre == "equipar" and a == "ala" and type(b) == "string" then
+		ok, x = I.equiparAla(j.inv, b)
+	elseif nombre == "desequipar" and a == "ala" then
+		ok, x = I.desequiparAla(j.inv)
+	elseif nombre == "comprarAla" and type(a) == "string" then
+		ok, x = I.comprarAla(Alas, j.inv, plr:GetAttribute("Dinero") or 0, a)
+		if ok then plr:SetAttribute("Dinero", x) end
+	elseif nombre == "inventario" then
+		ok = true
+	else
+		return
+	end
+	if ok then mandarInventario(plr, j) elseif type(x) == "string" then aviso(plr, x) end
+end
+
+if PRODUCTO_FENIX then -- fenix solo con Robux: al cobrar el producto se da la mascota (hito 5 lo guardara)
+	game:GetService("MarketplaceService").ProcessReceipt = function(recibo)
+		local plr = Players:GetPlayerByUserId(recibo.PlayerId)
+		local j = plr and jugadores[plr]
+		if not j or recibo.ProductId ~= PRODUCTO_FENIX then return Enum.ProductPurchaseDecision.NotProcessedYet end
+		I.darFenix(j.inv)
+		mandarInventario(plr, j)
+		return Enum.ProductPurchaseDecision.PurchaseGranted
+	end
 end
 
 local function rebirth(plr, j)
@@ -63408,7 +63588,7 @@ local function lanzar(plr, j)
 	local pos = base + Vector3.new(0, 4, 0)
 	hrp.CFrame = CFrame.lookAt(pos, pos + Vector3.new(0, 0, -1))
 	hrp.AssemblyLinearVelocity = Vector3.zero
-	local b = bonusDe(plr)
+	local b = bonusDe(plr, j)
 	P.lanzar(j.s, tabla(pos), j.potencia, b)
 	plr:SetAttribute("Lanzamientos", (plr:GetAttribute("Lanzamientos") or 0) + 1)
 	plr:SetAttribute("Entreno", 0)
@@ -63427,7 +63607,7 @@ local function lanzar(plr, j)
 	efecto:FireAllClients("lanzamiento", pos)
 end
 
-accion.OnServerEvent:Connect(function(plr, nombre, valor)
+accion.OnServerEvent:Connect(function(plr, nombre, valor, extra)
 	local j = jugadores[plr]
 	if not j or type(nombre) ~= "string" then return end
 	local ahora = os.clock()
@@ -63439,6 +63619,9 @@ accion.OnServerEvent:Connect(function(plr, nombre, valor)
 		return
 	elseif nombre == "rebirth" then
 		rebirth(plr, j)
+		return
+	elseif nombre == "abrirHuevo" or nombre == "equipar" or nombre == "desequipar" or nombre == "comprarAla" or nombre == "inventario" then
+		inventario(plr, j, nombre, valor, extra)
 		return
 	end
 	local fx, i = P.intencion(j.s, nombre, valor, mundo)
@@ -63517,19 +63700,19 @@ end)
 </Item>
 </Item>
 </Item>
-<Item class="StarterPlayer" referent="RBXJ0000019">
+<Item class="StarterPlayer" referent="RBXJ000001A">
 <Properties>
 <string name="Name">StarterPlayer</string>
 </Properties>
-<Item class="StarterPlayerScripts" referent="RBXJ0000018">
+<Item class="StarterPlayerScripts" referent="RBXJ0000019">
 <Properties>
 <string name="Name">StarterPlayerScripts</string>
 </Properties>
-<Item class="Folder" referent="RBXJ0000017">
+<Item class="Folder" referent="RBXJ0000018">
 <Properties>
 <string name="Name">Mas1Cliente</string>
 </Properties>
-<Item class="LocalScript" referent="RBXJ000000F">
+<Item class="LocalScript" referent="RBXJ0000010">
 <Properties>
 <string name="Name">Efectos</string>
 <ProtectedString name="Source"><![CDATA[-- Dibuja los efectos de src/Efectos.lua con ParticleEmitter. El servidor (o el juego) dispara RemoteEvent MAS1_Efecto:
@@ -63571,7 +63754,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000010">
+<Item class="LocalScript" referent="RBXJ0000011">
 <Properties>
 <string name="Name">Entidades</string>
 <ProtectedString name="Source"><![CDATA[-- Enemigos y cofres de «+1 de lanzamiento por segundo» vistos en el cliente. El servidor solo pone anclas invisibles en
@@ -63724,7 +63907,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000011">
+<Item class="LocalScript" referent="RBXJ0000012">
 <Properties>
 <string name="Name">HudVuelo</string>
 <ProtectedString name="Source"><![CDATA[-- HUD de vuelo de «+1 de lanzamiento por segundo». Lee atributos del jugador local (los pone el juego o DemoVisual.server.lua):
@@ -63813,7 +63996,7 @@ refrescar()
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000012">
+<Item class="LocalScript" referent="RBXJ0000013">
 <Properties>
 <string name="Name">Inventario</string>
 <ProtectedString name="Source"><![CDATA[-- Inventario de «+1 de lanzamiento por segundo»: pestañas MASCOTAS (equipar hasta 3), HUEVOS (abrir con dinero) y ALAS (comprar y
@@ -63999,7 +64182,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000013">
+<Item class="LocalScript" referent="RBXJ0000014">
 <Properties>
 <string name="Name">Resultados</string>
 <ProtectedString name="Source"><![CDATA[-- Pantalla de resultados del vuelo de «+1 de lanzamiento por segundo»: aparece al aterrizar (MAS1_Resultado), cuenta hacia arriba
@@ -64055,7 +64238,7 @@ resultado.OnClientEvent:Connect(function(r)
 	m.Text = "x" .. (r.multiplicador or 1)
 	contar(di, r.dinero or 0, 1.2, function(n) return "+" .. n end)
 	contar(ex, r.exp or 0, 1.2, function(n) return "+" .. n end)
-	T.texto(p, { Text = string.format("%d aros  ·  %d golpes", r.aros or 0, r.golpes or 0), TextSize = 22, TextColor3 = T.col.crema, Size = UDim2.new(1, 0, 0, 30), Position = UDim2.fromOffset(0, 346) })
+	T.texto(p, { Text = string.format("%d aros  ·  %d golpes  ·  %d cofres", r.aros or 0, r.golpes or 0, r.cofres or 0), TextSize = 22, TextColor3 = T.col.crema, Size = UDim2.new(1, 0, 0, 30), Position = UDim2.fromOffset(0, 346) })
 	T.boton(raiz, { Size = UDim2.fromOffset(280, 70), AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 1, -62), Text = "¡OTRA VEZ!" }, T.col.sol, function()
 		cerrar()
 		accion:FireServer("lanzar")
@@ -64071,7 +64254,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000014">
+<Item class="ModuleScript" referent="RBXJ0000015">
 <Properties>
 <string name="Name">Tema</string>
 <ProtectedString name="Source"><![CDATA[-- Tema de interfaz de «+1 de lanzamiento por segundo»: paneles gruesos con contorno oscuro y sombra dura, colores vivos, tipografia redondeada.
@@ -64142,7 +64325,7 @@ return T
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000015">
+<Item class="LocalScript" referent="RBXJ0000016">
 <Properties>
 <string name="Name">VueloControl</string>
 <ProtectedString name="Source"><![CDATA[-- Control del vuelo en el cliente de «+1 de lanzamiento por segundo». El cliente mueve su propio personaje (asi responde al instante)
@@ -64284,7 +64467,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000016">
+<Item class="LocalScript" referent="RBXJ0000017">
 <Properties>
 <string name="Name">Zonas</string>
 <ProtectedString name="Source"><![CDATA[-- Cielo y niebla por zona en el cliente de «+1 de lanzamiento por segundo»: al cruzar el arco de cada zona cambian la hora y la

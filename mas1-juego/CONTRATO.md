@@ -39,7 +39,7 @@ Los escribe el servidor; la interfaz solo los lee.
 | `Lanzamientos` | entero | **nuevo**: lanzamientos en total (las alas iniciales salen en el 3.º, hito 6) | hito 3 |
 | `Aros`, `ArosTotal` | entero | aros cruzados en este vuelo / aros del mapa | hito 2 |
 | `Cofres` | entero | **nuevo**: cofres voladores atrapados en total (para las alas avanzadas del hito 6) | hito 2 (sin guardar hasta el hito 5) |
-| `Mascota`, `MascotaBonus` | texto, número | — | hito 4 (ahora «—» y 1) |
+| `Mascota`, `MascotaBonus` | texto, número | la mascota equipada de más rareza y el multiplicador de dinero de las equipadas | hito 4 |
 | `Alas` | texto | id de las alas equipadas (`""` = ninguna). El servidor ya aplica su bonus (`Alas.bonus`, que sube con los rebirths); equiparlas y desbloquearlas llega en el hito 6 | hito 3 / 6 |
 
 ## RemoteEvents
@@ -59,9 +59,14 @@ Están en ReplicatedStorage y los crea `src/Red.lua`.
   - `"estela", nil, raíz, bool`: el rastro del boost, que se enciende y se apaga.
 - **`MAS1_Resultado`** (servidor → cliente), al aterrizar: `{ distancia, aros, golpes, cofres, multiplicador, dinero, exp, tiempo }`.
 - **`MAS1_Aviso`** (servidor → cliente): `texto` para mostrar, como «Te falta potencia para el rebirth: 320 / 500».
-- Pendientes (hito 4, formas acordadas con Linux 2.0):
-  - `MAS1_Huevo`: `{ rareza, mascotaId, nueva }`;
-  - `MAS1_Inventario`: `{ mascotas = {id = cantidad}, equipadas = {ids, máx. 3}, alas = {ids}, alaEquipada = id | nil }`, al entrar y en cada cambio.
+- **`MAS1_Huevo`** (servidor → cliente, hito 4): `{ rareza, mascotaId, nueva }`.
+  - `rareza` es la del huevo y `nueva` indica si es la primera vez que la consigue.
+  - El nombre y la rareza de la mascota salen de `Mascotas.get(mascotaId)`.
+- **`MAS1_Inventario`** (servidor → cliente, hito 4): `{ mascotas = {id = cantidad}, equipadas = {ids}, alas = {ids}, alaEquipada = id | nil }`. Llega al entrar, al aparecer el personaje y en cada cambio. Con él se ponen al día los atributos:
+  - `Mascota`: la de más rareza de las equipadas;
+  - `MascotaBonus`: el multiplicador de dinero;
+  - `Alas`.
+- El fénix solo se consigue con Robux: `Inventario.darFenix` desde `ProcessReceipt`. El id del producto (`PRODUCTO_FENIX` en el servidor) **no está configurado**: no se ha creado ningún producto ni precio.
 
 ## Entrenamiento y rebirth (hito 3)
 - Zonas del mapa (irán en la Pradera; en la place de prueba son dos placas junto al spawn):
@@ -99,5 +104,6 @@ Si algo no cuadra, devuelve al personaje a la última posición buena. La distan
 - `src/Partida.lua`: sesión y validación.
 - `src/Encuentros.lua`: aros, golpes, reparto de enemigos y cofres.
 - `src/Alas.lua`: alas, requisitos y bonus.
+- `src/Inventario.lua`: huevos, mascotas equipadas y alas de un jugador.
 
 La interfaz no calcula bonus: se los pide al servidor.

@@ -31,6 +31,10 @@ M.HUEVOS = {
 	mitico = { legendario = 60, mitico = 40 },
 }
 
+-- Precio de cada huevo en dinero (hito 4, PROVISIONAL): un primer vuelo da unos 2.600 y uno largo, 10.000 o mas.
+M.PRECIO_HUEVO = { comun = 500, poco_comun = 2000, raro = 8000, epico = 25000, legendario = 80000, mitico = 250000 }
+M.MAX_EQUIPADAS = 3
+
 local porId = {}
 for _, p in ipairs(M.LISTA) do porId[p.id] = p end
 function M.get(id) return porId[id] end

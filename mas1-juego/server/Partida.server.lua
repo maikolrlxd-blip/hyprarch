@@ -5,8 +5,9 @@
 -- aterrizar se pagan el dinero y la exp y se manda MAS1_Resultado. Los enemigos y los cofres son anclas invisibles en
 -- Workspace.MAS1_Entidades (atributos Tipo, Vivo y Dueno); los dibuja el cliente (client/Entidades.client.lua).
 -- En tierra se entrena (+1 potencia/s, mas en las zonas MAS1_AFK y MAS1_Entreno del mapa) y se puede hacer rebirth; el bonus del
--- vuelo combina las mascotas equipadas y las alas (src/Alas.lua, que escalan con los rebirths).
--- Atributos y eventos en CONTRATO.md. Todavia sin guardado (hito 5) ni mascotas equipadas (hito 4). SIN PROBAR EN STUDIO.
+-- vuelo combina las mascotas equipadas y las alas (src/Alas.lua, que escalan con los rebirths). El inventario (src/Inventario.lua:
+-- huevos, mascotas equipadas, alas) va a la interfaz por MAS1_Inventario y MAS1_Huevo, y los fallos por MAS1_Aviso.
+-- Atributos y eventos en CONTRATO.md. Todavia sin guardado (hito 5). SIN PROBAR EN STUDIO.
 local Players, RS, RunService = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService")
 local Mas1 = RS:WaitForChild("Mas1")
 local V = require(Mas1:WaitForChild("Vuelo"))
@@ -14,9 +15,11 @@ local P = require(Mas1:WaitForChild("Partida"))
 local E = require(Mas1:WaitForChild("Encuentros"))
 local M = require(Mas1:WaitForChild("Mascotas"))
 local Alas = require(Mas1:WaitForChild("Alas"))
+local I = require(Mas1:WaitForChild("Inventario"))
 local Red = require(Mas1:WaitForChild("Red"))
 local accion, efecto, resultado = Red.evento("MAS1_Accion"), Red.evento("MAS1_Efecto"), Red.evento("MAS1_Resultado")
-local avisoEv = Red.evento("MAS1_Aviso")
+local avisoEv, inventarioEv, huevoEv = Red.evento("MAS1_Aviso"), Red.evento("MAS1_Inventario"), Red.evento("MAS1_Huevo")
+local PRODUCTO_FENIX = nil -- id del producto de Robux del fenix: SIN CONFIGURAR (no se ha creado ningun producto ni precio)
 
 local INICIALES = { Potencia = 0, Dinero = 0, Exp = 0, Rebirths = 0, Cofres = 0, Lanzamientos = 0, Puntos = 0, Distancia = 0,
 	ZonaMult = 1, Aros = 0, ArosTotal = 0, Energia = 1, EnergiaMax = 0, Impulso = 1, EnVuelo = false, Planeando = false, Boost = false,
@@ -26,6 +29,15 @@ local jugadores = {} -- [plr] = { s = sesion de Partida, msgs, desde, hud, cofre
 
 local function aviso(plr, texto)
 	avisoEv:FireClient(plr, texto)
+end
+
+-- inventario: a la interfaz con la forma acordada, y la mascota principal y su bonus de dinero al HUD
+local function mandarInventario(plr, j)
+	inventarioEv:FireClient(plr, I.copia(j.inv))
+	local p = I.principal(M, j.inv)
+	plr:SetAttribute("Mascota", p and p.nombre or "—")
+	plr:SetAttribute("MascotaBonus", math.floor(M.multiplicadores(j.inv.equipadas).dinero * 100 + 0.5) / 100)
+	plr:SetAttribute("Alas", j.inv.alaEquipada or "")
 end
 
 local function tabla(v)
@@ -114,11 +126,14 @@ local function alEntrar(plr)
 		if plr:GetAttribute(k) == nil then plr:SetAttribute(k, v) end
 	end
 	plr:SetAttribute("ArosTotal", #mundo.aros)
-	jugadores[plr] = { s = P.nueva(V, E), msgs = 0, desde = 0, hud = 0, potencia = plr:GetAttribute("Potencia") or 0, entreno = 0 }
+	local j = { s = P.nueva(V, E), msgs = 0, desde = 0, hud = 0, potencia = plr:GetAttribute("Potencia") or 0, entreno = 0, inv = I.nuevo() }
+	jugadores[plr] = j
 	plr:GetAttributeChangedSignal("Potencia"):Connect(function() -- cambiada a mano (en Studio, para probar): se adopta
-		local j, v = jugadores[plr], plr:GetAttribute("Potencia")
-		if j and type(v) == "number" and math.abs(v - math.floor(j.potencia)) >= 1 then j.potencia = v end
+		local v = plr:GetAttribute("Potencia")
+		if type(v) == "number" and math.abs(v - math.floor(j.potencia)) >= 1 then j.potencia = v end
 	end)
+	mandarInventario(plr, j)
+	plr.CharacterAdded:Connect(function() mandarInventario(plr, j) end) -- para cuando los scripts del cliente ya escuchan
 end
 Players.PlayerAdded:Connect(alEntrar)
 for _, plr in ipairs(Players:GetPlayers()) do alEntrar(plr) end
@@ -136,8 +151,53 @@ Players.PlayerRemoving:Connect(function(plr)
 	jugadores[plr] = nil
 end)
 
-local function bonusDe(plr) -- mascotas equipadas (hito 4) por las alas equipadas, que escalan con los rebirths
-	return Alas.combinar(M.multiplicadores({}), Alas.bonus(plr:GetAttribute("Alas"), plr:GetAttribute("Rebirths") or 0))
+local function bonusDe(plr, j) -- mascotas equipadas por las alas equipadas, que escalan con los rebirths
+	return Alas.combinar(M.multiplicadores(j.inv.equipadas), Alas.bonus(j.inv.alaEquipada, plr:GetAttribute("Rebirths") or 0))
+end
+
+local azarHuevos = Random.new()
+
+-- intenciones del inventario (en tierra): abrir huevos, equipar y desequipar mascotas y alas, comprar alas
+local function inventario(plr, j, nombre, a, b)
+	if P.enVuelo(j.s) then
+		aviso(plr, "Eso se hace en tierra")
+		return
+	end
+	local ok, x, p, nueva
+	if nombre == "abrirHuevo" and type(a) == "string" then
+		ok, x, p, nueva = I.abrirHuevo(M, j.inv, plr:GetAttribute("Dinero") or 0, a, function() return azarHuevos:NextNumber() end)
+		if ok then
+			plr:SetAttribute("Dinero", x)
+			huevoEv:FireClient(plr, { rareza = a, mascotaId = p.id, nueva = nueva })
+		end
+	elseif nombre == "equipar" and a == "mascota" and type(b) == "string" then
+		ok, x = I.equipar(M, j.inv, b)
+	elseif nombre == "desequipar" and a == "mascota" and type(b) == "string" then
+		ok, x = I.desequipar(j.inv, b)
+	elseif nombre == "equipar" and a == "ala" and type(b) == "string" then
+		ok, x = I.equiparAla(j.inv, b)
+	elseif nombre == "desequipar" and a == "ala" then
+		ok, x = I.desequiparAla(j.inv)
+	elseif nombre == "comprarAla" and type(a) == "string" then
+		ok, x = I.comprarAla(Alas, j.inv, plr:GetAttribute("Dinero") or 0, a)
+		if ok then plr:SetAttribute("Dinero", x) end
+	elseif nombre == "inventario" then
+		ok = true
+	else
+		return
+	end
+	if ok then mandarInventario(plr, j) elseif type(x) == "string" then aviso(plr, x) end
+end
+
+if PRODUCTO_FENIX then -- fenix solo con Robux: al cobrar el producto se da la mascota (hito 5 lo guardara)
+	game:GetService("MarketplaceService").ProcessReceipt = function(recibo)
+		local plr = Players:GetPlayerByUserId(recibo.PlayerId)
+		local j = plr and jugadores[plr]
+		if not j or recibo.ProductId ~= PRODUCTO_FENIX then return Enum.ProductPurchaseDecision.NotProcessedYet end
+		I.darFenix(j.inv)
+		mandarInventario(plr, j)
+		return Enum.ProductPurchaseDecision.PurchaseGranted
+	end
 end
 
 local function rebirth(plr, j)
@@ -174,7 +234,7 @@ local function lanzar(plr, j)
 	local pos = base + Vector3.new(0, 4, 0)
 	hrp.CFrame = CFrame.lookAt(pos, pos + Vector3.new(0, 0, -1))
 	hrp.AssemblyLinearVelocity = Vector3.zero
-	local b = bonusDe(plr)
+	local b = bonusDe(plr, j)
 	P.lanzar(j.s, tabla(pos), j.potencia, b)
 	plr:SetAttribute("Lanzamientos", (plr:GetAttribute("Lanzamientos") or 0) + 1)
 	plr:SetAttribute("Entreno", 0)
@@ -193,7 +253,7 @@ local function lanzar(plr, j)
 	efecto:FireAllClients("lanzamiento", pos)
 end
 
-accion.OnServerEvent:Connect(function(plr, nombre, valor)
+accion.OnServerEvent:Connect(function(plr, nombre, valor, extra)
 	local j = jugadores[plr]
 	if not j or type(nombre) ~= "string" then return end
 	local ahora = os.clock()
@@ -205,6 +265,9 @@ accion.OnServerEvent:Connect(function(plr, nombre, valor)
 		return
 	elseif nombre == "rebirth" then
 		rebirth(plr, j)
+		return
+	elseif nombre == "abrirHuevo" or nombre == "equipar" or nombre == "desequipar" or nombre == "comprarAla" or nombre == "inventario" then
+		inventario(plr, j, nombre, valor, extra)
 		return
 	end
 	local fx, i = P.intencion(j.s, nombre, valor, mundo)
