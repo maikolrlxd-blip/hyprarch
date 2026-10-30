@@ -20,6 +20,13 @@ FASE = os.environ.get('MASCOTA_FASE', 'full')
 SOLO = os.environ.get('MASCOTA_SOLO')
 BASE_OUT = os.path.abspath(os.path.join(HERE, '..', 'mascotas-enemigos-v01'))
 CARA_MASCOTA = {'pupila': '#1d1626', 'ojo': '#ffffff', 'boca': '#3a1a2a', 'mejilla': '#ff9fb5'}
+# paleta propia de mascota (segunda critica del director: Marcianito y Cometa «se sentiran el mismo bicho» que su enemigo)
+PAL_MASCOTA = {
+    'ovni': {'banda': '#ff7ac8', 'metal': '#f6f2ff', 'metal_osc': '#b9a8e8', 'luz': '#7dffb0', 'emisor': '#ffd1f0', 'alien': '#a6ec7a',
+             'parpado': '#a6ec7a'},
+    'cometa': {'vela_a': '#7fd8ff', 'vela_b': '#ff9ad1', 'parpado': '#ff9ad1', 'vela_borde': '#ffffff', 'vela_tras': '#5bb8e8',
+               'cuerda': '#fff4fb'},
+}
 
 bn.cara_nube = lambda MBS: cara_amable(MBS, bn.OJO[0], bn.OJO[2], frente_de(MBS['Body']), tam=bn.OJO_TAM)[0]
 be.cara = cara_amable
@@ -66,7 +73,7 @@ for mid, mod, clave, nombre, k, rareza in MASCOTAS:
         continue
     var = dict(next(v for v in mod.VARIANTES if v['clave'] == clave))
     var['nombre'] = nombre
-    var['pal'] = dict(var['pal'], **CARA_MASCOTA)
+    var['pal'] = dict(var['pal'], **PAL_MASCOTA.get(mid, {}), **CARA_MASCOTA)
     OUT = os.path.join(BASE_OUT, mid)
     PREV = os.path.join(OUT, 'previews')
     for d in ('', 'texturas', 'clips', 'previews'):

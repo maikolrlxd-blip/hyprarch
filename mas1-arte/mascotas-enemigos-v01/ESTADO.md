@@ -19,6 +19,10 @@ Maikol, 30/10: los enemigos también se consiguen como mascotas, y las mascotas 
 | Meteorito | `meteorito/` | épico | 0,95 | 938 | 2,09 × 2,81 × 3,07 | `Body, Tail, Lid_R/L` |
 | Cometa | `cometa/` | épico | 0,80 | 428 | 1,76 × 3,52 × 0,36 | `Body, Tail_1/2/3, Lid_R/L` |
 
+- **Paleta propia de mascota** (30/10 por la tarde, segunda crítica del director: «Marcianito y Cometa se sentirán el mismo bicho» que su enemigo):
+  - Marcianito (ovni): platillo rosa con luces menta, en lugar de morado y amarillo;
+  - Cometa Colita: celeste y rosa, en lugar de amarillo y rojo;
+  - el Nubarrón lleva el yunque de tormenta de su enemigo.
 - **Cara amable** en las seis: sin cejas, con sonrisa, mejillas rosas y los mismos ojos pequeños con brillo que las mascotas de Codex y Antigravity. Los párpados son una región propia sin oclusión, como en los enemigos.
 - **Comprobaciones**: `comprobar_malla.py` da 0 piezas sueltas y 0 caras coplanares solapadas en las seis (las caras que quedaban cerca de un plano de voxel se apartaron para que no parpadeen al escalar). `validar_asset.py` da correcto en las seis (reimporta el FBX del rig, el de cada clip y el GLB).
 
