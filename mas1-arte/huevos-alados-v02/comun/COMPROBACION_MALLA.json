@@ -1,0 +1,9 @@
+{
+ "blend": "huevos-alados-v02/comun/HuevoAladoComun.blend",
+ "malla": "HuevoAladoComun",
+ "triangulos": 1040,
+ "islas": 36,
+ "piezas_sueltas": [],
+ "pares_coplanares_solapados": 0,
+ "ejemplos": []
+}

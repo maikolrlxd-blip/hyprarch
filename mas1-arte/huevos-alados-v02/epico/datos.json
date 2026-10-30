@@ -1,0 +1,61 @@
+{
+  "clips_30fps": {
+    "Fly": {
+      "duracion_s": 0.6,
+      "frames": 18,
+      "bucle": true
+    },
+    "Glide": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Hatch": {
+      "duracion_s": 1.5,
+      "frames": 45,
+      "bucle": false
+    }
+  },
+  "textura": "texturas/HuevoAladoEpico_paleta_1024.png (1024, un material, una malla)",
+  "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y global_scale=0.01",
+  "sin_probar_en_roblox": true,
+  "pieza": "Huevo volador con alas EPICO v02 (da mascotas; idea de Maikol del 29/10; v02 con forma, tamaño y alas por rareza)",
+  "rareza": "EPICO",
+  "triangulos": 1204,
+  "limites_studs": {
+    "envergadura": 4.87,
+    "alto": 3.28,
+    "largo": 2.09,
+    "z_min": 0.1
+  },
+  "huesos": [
+    "Root",
+    "Body",
+    "Cap",
+    "Wing_R",
+    "Tip_R",
+    "Wing_L",
+    "Tip_L"
+  ],
+  "paleta": {
+    "cascara": "#7a3fe0",
+    "patron": "#b98cff",
+    "interior": "#ead8ff",
+    "ala_base": "#efe6ff",
+    "ala_medio": "#b48cff",
+    "ala_punta": "#6a2fd0",
+    "oro": "#5fe0ff"
+  },
+  "patron": "espiral",
+  "adorno": "pico",
+  "escala_alas": 1.04,
+  "primarias": 6,
+  "extra_alas": null,
+  "cascara_radio_mediaaltura_punta": [
+    1.02,
+    1.36,
+    0.14
+  ],
+  "piezas_sueltas": [],
+  "caras_coplanares_solapadas": 0
+}

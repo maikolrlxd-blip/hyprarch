@@ -1,0 +1,61 @@
+{
+  "clips_30fps": {
+    "Fly": {
+      "duracion_s": 0.6,
+      "frames": 18,
+      "bucle": true
+    },
+    "Glide": {
+      "duracion_s": 2.0,
+      "frames": 60,
+      "bucle": true
+    },
+    "Hatch": {
+      "duracion_s": 1.5,
+      "frames": 45,
+      "bucle": false
+    }
+  },
+  "textura": "texturas/HuevoAladoLegendario_paleta_1024.png (1024, un material, una malla)",
+  "ejes": "Blender +Y delante, +Z arriba, +X derecha; FBX axis_forward=Z axis_up=Y global_scale=0.01",
+  "sin_probar_en_roblox": true,
+  "pieza": "Huevo volador con alas LEGENDARIO v02 (da mascotas; idea de Maikol del 29/10; v02 con forma, tamaño y alas por rareza)",
+  "rareza": "LEGENDARIO",
+  "triangulos": 1308,
+  "limites_studs": {
+    "envergadura": 5.13,
+    "alto": 2.94,
+    "largo": 2.16,
+    "z_min": 0.1
+  },
+  "huesos": [
+    "Root",
+    "Body",
+    "Cap",
+    "Wing_R",
+    "Tip_R",
+    "Wing_L",
+    "Tip_L"
+  ],
+  "paleta": {
+    "cascara": "#fff4d6",
+    "patron": "#f2b630",
+    "interior": "#fff1a8",
+    "ala_base": "#fff8e6",
+    "ala_medio": "#f6dc94",
+    "ala_punta": "#f2a81c",
+    "oro": "#ffc42e"
+  },
+  "patron": "rombos",
+  "adorno": "joya",
+  "escala_alas": 1.1,
+  "primarias": 6,
+  "extra_alas": "cresta",
+  "cascara_radio_mediaaltura_punta": [
+    1.06,
+    1.44,
+    0.14
+  ],
+  "piezas_sueltas": [],
+  "caras_coplanares_solapadas": 0
+}

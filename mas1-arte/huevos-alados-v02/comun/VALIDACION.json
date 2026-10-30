@@ -1,0 +1,211 @@
+{
+  "archivos": {
+    "HuevoAladoComun_Rig.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1040,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "HuevoAladoComun_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Cap",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L"
+      ],
+      "vertices": 592,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0334,
+        0.0169,
+        0.0204
+      ]
+    },
+    "HuevoAladoComun_Fly.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1040,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "HuevoAladoComun_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Cap",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L"
+      ],
+      "vertices": 592,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0334,
+        0.0169,
+        0.0204
+      ],
+      "acciones": [
+        {
+          "nombre": "HuevoAladoComun_Rig|Scene",
+          "frames": [
+            1,
+            19
+          ],
+          "curvas_de_rotacion": 55,
+          "mov_max_rad": 0.605,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            2.4,
+            3.26
+          ],
+          "razon_plegada_extendida": 0.737
+        }
+      ]
+    },
+    "HuevoAladoComun_Glide.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1040,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "HuevoAladoComun_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Cap",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L"
+      ],
+      "vertices": 592,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0334,
+        0.0169,
+        0.0204
+      ],
+      "acciones": [
+        {
+          "nombre": "HuevoAladoComun_Rig|Scene",
+          "frames": [
+            1,
+            61
+          ],
+          "curvas_de_rotacion": 55,
+          "mov_max_rad": 0.16,
+          "diferencia_primer_ultimo": 0.0,
+          "envergadura_studs": [
+            3.12,
+            3.19
+          ],
+          "razon_plegada_extendida": 0.976
+        }
+      ]
+    },
+    "HuevoAladoComun_Hatch.fbx": {
+      "mallas": 1,
+      "armaduras": 1,
+      "triangulos": 1040,
+      "materiales": 1,
+      "uv": [
+        "UVMap"
+      ],
+      "texturas": [
+        [
+          "HuevoAladoComun_paleta_1024.png",
+          [
+            1024,
+            1024
+          ]
+        ]
+      ],
+      "huesos": [
+        "Root",
+        "Body",
+        "Cap",
+        "Wing_R",
+        "Tip_R",
+        "Wing_L",
+        "Tip_L"
+      ],
+      "vertices": 592,
+      "vertices_sin_peso": 0,
+      "vertices_con_varios_huesos": 0,
+      "caja_importada": [
+        0.0334,
+        0.0169,
+        0.0204
+      ],
+      "acciones": [
+        {
+          "nombre": "HuevoAladoComun_Rig|Scene",
+          "frames": [
+            1,
+            46
+          ],
+          "curvas_de_rotacion": 55,
+          "mov_max_rad": 0.478,
+          "diferencia_primer_ultimo": 0.3864,
+          "envergadura_studs": [
+            2.52,
+            3.24
+          ],
+          "razon_plegada_extendida": 0.779
+        }
+      ]
+    },
+    "HuevoAladoComun.glb": {
+      "mallas": [
+        [
+          "HuevoAladoComun",
+          1040
+        ]
+      ],
+      "armaduras": 1,
+      "acciones": [
+        "Fly",
+        "Glide",
+        "Hatch"
+      ]
+    }
+  },
+  "fallos": [],
+  "correcto": true
+}

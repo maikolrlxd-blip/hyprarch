@@ -1,0 +1,9 @@
+{
+ "blend": "huevos-alados-v02/epico/HuevoAladoEpico.blend",
+ "malla": "HuevoAladoEpico",
+ "triangulos": 1204,
+ "islas": 28,
+ "piezas_sueltas": [],
+ "pares_coplanares_solapados": 0,
+ "ejemplos": []
+}
