@@ -5,7 +5,7 @@
 <Properties>
 <string name="Name">Workspace</string>
 </Properties>
-<Item class="Part" referent="RBXJ000001B">
+<Item class="Part" referent="RBXJ000001E">
 <Properties>
 <bool name="Anchored">true</bool>
 <token name="TopSurface">0</token>
@@ -18,7 +18,7 @@
 <token name="shape">1</token>
 </Properties>
 </Item>
-<Item class="Part" referent="RBXJ000001C">
+<Item class="Part" referent="RBXJ000001F">
 <Properties>
 <bool name="Anchored">true</bool>
 <token name="TopSurface">0</token>
@@ -62454,11 +62454,11 @@
 </Properties>
 </Item>
 </Item>
-<Item class="ReplicatedStorage" referent="RBXJ000000B">
+<Item class="ReplicatedStorage" referent="RBXJ000000C">
 <Properties>
 <string name="Name">ReplicatedStorage</string>
 </Properties>
-<Item class="Folder" referent="RBXJ000000A">
+<Item class="Folder" referent="RBXJ000000B">
 <Properties>
 <string name="Name">Mas1</string>
 </Properties>
@@ -62522,6 +62522,96 @@ return A
 </Item>
 <Item class="ModuleScript" referent="RBXJ0000002">
 <Properties>
+<string name="Name">Datos</string>
+<ProtectedString name="Source"><![CDATA[-- Datos guardados de un jugador de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa; el DataStore lo lleva
+-- server/Guardado.lua). Tres cosas: los datos por defecto y la limpieza de lo que se carga (tipos, negativos, mascotas que no
+-- existen, mas de 3 equipadas...), el bloqueo de sesion (un servidor «toma» los datos del jugador; otro no los pisa salvo que el
+-- bloqueo caduque, porque el primero se cayo) y la racha de dias seguidos (alas roboticas). Lo guardado en el DataStore es
+-- { dato = {...}, bloqueo = { sesion, t } }.
+local D = {}
+
+D.VERSION = 1
+
+function D.nuevo()
+	return { version = D.VERSION, potencia = 0, dinero = 0, exp = 0, rebirths = 0, cofres = 0, lanzamientos = 0,
+		diasSeguidos = 0, ultimoDia = -1, inventario = { mascotas = {}, equipadas = {}, alas = {}, alaEquipada = nil } }
+end
+
+local function numero(x, minimo)
+	if type(x) ~= "number" or x ~= x or x == math.huge or x == -math.huge then return minimo end -- nil, texto, NaN, infinito
+	return math.max(minimo, x)
+end
+
+-- Limpia unos datos cargados: lo que falte o venga mal se queda por defecto. M = Mascotas, A = Alas.
+function D.limpiar(d, M, A)
+	local n = D.nuevo()
+	if type(d) ~= "table" then return n end
+	for _, k in ipairs({ "potencia", "dinero", "exp", "rebirths", "cofres", "lanzamientos", "diasSeguidos" }) do
+		n[k] = numero(d[k], 0)
+	end
+	for _, k in ipairs({ "rebirths", "cofres", "lanzamientos", "diasSeguidos" }) do n[k] = math.floor(n[k]) end
+	n.ultimoDia = math.floor(numero(d.ultimoDia, -1))
+	local inv = type(d.inventario) == "table" and d.inventario or {}
+	if type(inv.mascotas) == "table" then
+		for id, c in pairs(inv.mascotas) do
+			if type(id) == "string" and M.get(id) and type(c) == "number" and c >= 1 then n.inventario.mascotas[id] = math.floor(c) end
+		end
+	end
+	local usadas = {}
+	if type(inv.equipadas) == "table" then
+		for _, id in ipairs(inv.equipadas) do
+			if #n.inventario.equipadas < M.MAX_EQUIPADAS and (usadas[id] or 0) < (n.inventario.mascotas[id] or 0) then
+				usadas[id] = (usadas[id] or 0) + 1
+				n.inventario.equipadas[#n.inventario.equipadas + 1] = id
+			end
+		end
+	end
+	local tiene = {}
+	if type(inv.alas) == "table" then
+		for _, id in ipairs(inv.alas) do
+			if type(id) == "string" and A.get(id) and not tiene[id] then
+				tiene[id] = true
+				n.inventario.alas[#n.inventario.alas + 1] = id
+			end
+		end
+	end
+	if tiene[inv.alaEquipada] then n.inventario.alaEquipada = inv.alaEquipada end
+	return n
+end
+
+-- Bloqueo de sesion, dentro del UpdateAsync al cargar: devuelve true y lo que hay que guardar (con el bloqueo de esta sesion), o
+-- false si otra sesion lo tiene y su bloqueo no ha caducado (no se escribe nada).
+function D.tomar(guardado, sesion, ahora, caduca)
+	if type(guardado) ~= "table" or type(guardado.dato) ~= "table" then
+		return true, { dato = D.nuevo(), bloqueo = { sesion = sesion, t = ahora } } -- jugador nuevo
+	end
+	local b = guardado.bloqueo
+	if type(b) == "table" and b.sesion ~= sesion and type(b.t) == "number" and ahora - b.t < caduca then return false end
+	return true, { dato = guardado.dato, bloqueo = { sesion = sesion, t = ahora } }
+end
+
+-- Al guardar: solo si el bloqueo sigue siendo de esta sesion (o no hay); soltar = al salir el jugador. Devuelve false si otra sesion
+-- se lo quedo (este servidor ya no debe escribir).
+function D.escribir(guardado, sesion, dato, ahora, soltar)
+	local b = type(guardado) == "table" and guardado.bloqueo
+	if type(b) == "table" and b.sesion ~= sesion then return false end
+	return true, { dato = dato, bloqueo = (not soltar) and { sesion = sesion, t = ahora } or nil }
+end
+
+-- Racha de dias: hoy = dias desde 1970 (os.time() // 86400). Devuelve true si es un dia nuevo.
+function D.registrarDia(d, hoy)
+	if d.ultimoDia == hoy then return false end
+	d.diasSeguidos = (d.ultimoDia == hoy - 1) and d.diasSeguidos + 1 or 1
+	d.ultimoDia = hoy
+	return true
+end
+
+return D
+]]></ProtectedString>
+</Properties>
+</Item>
+<Item class="ModuleScript" referent="RBXJ0000003">
+<Properties>
 <string name="Name">Efectos</string>
 <ProtectedString name="Source"><![CDATA[-- Efectos visuales de «+1 de lanzamiento por segundo»: especificaciones de ParticleEmitter (datos puros, sin API de Roblox) para
 -- lanzamiento, estela de vuelo, aleteo, recoger aro, golpe, rebirth y fuego del fenix. Valores PROVISIONALES: se ajustan viendolos.
@@ -62550,7 +62640,7 @@ return E
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000003">
+<Item class="ModuleScript" referent="RBXJ0000004">
 <Properties>
 <string name="Name">Encuentros</string>
 <ProtectedString name="Source"><![CDATA[-- Encuentros del vuelo de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa): aros que se cruzan, enemigos que se golpean y
@@ -62672,7 +62762,7 @@ return E
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000004">
+<Item class="ModuleScript" referent="RBXJ0000005">
 <Properties>
 <string name="Name">Inventario</string>
 <ProtectedString name="Source"><![CDATA[-- Inventario de un jugador de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa): mascotas por cantidad, hasta 3 equipadas
@@ -62788,7 +62878,7 @@ return I
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000005">
+<Item class="ModuleScript" referent="RBXJ0000006">
 <Properties>
 <string name="Name">Manejo</string>
 <ProtectedString name="Source"><![CDATA[-- Manejo del vuelo de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa): a que velocidad volar en cada fotograma segun los
@@ -62848,7 +62938,7 @@ return M
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000006">
+<Item class="ModuleScript" referent="RBXJ0000007">
 <Properties>
 <string name="Name">Mascotas</string>
 <ProtectedString name="Source"><![CDATA[-- Mascotas de «+1 de lanzamiento por segundo»: datos y calculo de bonus (Lua puro, sin API de Roblox).
@@ -62933,7 +63023,7 @@ return M
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000007">
+<Item class="ModuleScript" referent="RBXJ0000008">
 <Properties>
 <string name="Name">Partida</string>
 <ProtectedString name="Source"><![CDATA[-- Sesion de vuelo de un jugador en el servidor de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa; el adaptador de
@@ -63119,7 +63209,7 @@ return P
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000008">
+<Item class="ModuleScript" referent="RBXJ0000009">
 <Properties>
 <string name="Name">Red</string>
 <ProtectedString name="Source"><![CDATA[-- RemoteEvents de «+1 de lanzamiento por segundo» en ReplicatedStorage (adaptador de Roblox, no es Lua puro): en el servidor se
@@ -63144,7 +63234,7 @@ return R
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000009">
+<Item class="ModuleScript" referent="RBXJ000000A">
 <Properties>
 <string name="Name">Vuelo</string>
 <ProtectedString name="Source"><![CDATA[-- Logica pura del vuelo de «+1 de lanzamiento por segundo» (sin API de Roblox, probada con lupa).
@@ -63304,15 +63394,15 @@ return V
 </Item>
 </Item>
 </Item>
-<Item class="ServerScriptService" referent="RBXJ000000F">
+<Item class="ServerScriptService" referent="RBXJ0000011">
 <Properties>
 <string name="Name">ServerScriptService</string>
 </Properties>
-<Item class="Folder" referent="RBXJ000000E">
+<Item class="Folder" referent="RBXJ0000010">
 <Properties>
 <string name="Name">Mas1Servidor</string>
 </Properties>
-<Item class="Script" referent="RBXJ000000C">
+<Item class="Script" referent="RBXJ000000D">
 <Properties>
 <string name="Name">DemoVisual</string>
 <ProtectedString name="Source"><![CDATA[-- SOLO PARA VER LA CAPA VISUAL antes de que exista el juego: si workspace tiene el atributo MAS1_Demo = true, simula un vuelo (energia que baja,
@@ -63349,7 +63439,90 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="Script" referent="RBXJ000000D">
+<Item class="ModuleScript" referent="RBXJ000000E">
+<Properties>
+<string name="Name">Guardado</string>
+<ProtectedString name="Source"><![CDATA[-- Guardado de «+1 de lanzamiento por segundo» con DataStore: adaptador de Roblox de src/Datos.lua (Lua puro, probado con lupa).
+-- Carga tomando el bloqueo de sesion (si otro servidor tiene los datos del jugador, espera a que los suelte o a que su bloqueo
+-- caduque), guarda con reintentos y espera creciente, y nunca pisa datos de otra sesion. Si no hay acceso al DataStore (place sin
+-- publicar, o Studio sin «Enable Studio Access to API Services») se juega SIN GUARDAR y se avisa en el Output.
+-- Lo usa server/Partida.server.lua (autoguardado cada G.AUTOGUARDADO s, al salir y al cerrar el servidor). SIN PROBAR EN STUDIO.
+local DataStoreService, HttpService, RS = game:GetService("DataStoreService"), game:GetService("HttpService"), game:GetService("ReplicatedStorage")
+local Mas1 = RS:WaitForChild("Mas1")
+local D = require(Mas1:WaitForChild("Datos"))
+local M = require(Mas1:WaitForChild("Mascotas"))
+local Alas = require(Mas1:WaitForChild("Alas"))
+
+local G = {}
+G.CADUCA = 180 -- s sin refrescar para dar por abandonado un bloqueo (el otro servidor se cayo)
+G.AUTOGUARDADO = 60
+local SESION = game.JobId ~= "" and game.JobId or ("studio-" .. HttpService:GenerateGUID(false))
+
+local tienda
+do
+	local ok, t = pcall(function() return DataStoreService:GetDataStore("MAS1_Datos_v1") end)
+	if ok and pcall(function() t:GetAsync("prueba_de_acceso") end) then tienda = t end -- sin publicar, las llamadas fallan
+	if not tienda then
+		warn("[MAS1 guardado] Sin acceso al DataStore: se juega SIN GUARDAR (place sin publicar o sin acceso a las API en Studio)")
+	end
+end
+G.activo = tienda ~= nil
+
+local function reintentar(f)
+	local espera = 1
+	for intento = 1, 5 do
+		local ok, r = pcall(f)
+		if ok then return true, r end
+		warn(string.format("[MAS1 guardado] intento %d fallido: %s", intento, tostring(r)))
+		if intento < 5 then
+			task.wait(espera)
+			espera *= 2
+		end
+	end
+	return false
+end
+
+-- Carga los datos de plr, limpios, tomando el bloqueo. Devuelve los datos, o nil y el motivo ("bloqueado", "error" o "se fue").
+function G.cargar(plr)
+	if not tienda then return D.limpiar(nil, M, Alas) end
+	local clave = "j_" .. plr.UserId
+	for _ = 1, 8 do -- si acaba de cambiar de servidor, el otro aun puede tener el bloqueo: se espera a que lo suelte
+		local bloqueado = false
+		local ok, guardado = reintentar(function()
+			return tienda:UpdateAsync(clave, function(viejo)
+				local tomado, nuevo = D.tomar(viejo, SESION, os.time(), G.CADUCA)
+				bloqueado = not tomado
+				return nuevo -- nil: no se escribe nada
+			end)
+		end)
+		if not ok then return nil, "error" end
+		if not bloqueado then return D.limpiar(guardado and guardado.dato, M, Alas) end
+		if not plr.Parent then return nil, "se fue" end
+		task.wait(6)
+	end
+	return nil, "bloqueado"
+end
+
+-- Guarda dato (soltar = al salir). Devuelve dos cosas: si el DataStore respondio y si se escribio (false = otra sesion tiene el
+-- bloqueo: este servidor ya no debe seguir con el jugador).
+function G.guardar(plr, dato, soltar)
+	if not tienda then return true, true end
+	local escrito = false
+	local ok = reintentar(function()
+		return tienda:UpdateAsync("j_" .. plr.UserId, function(viejo)
+			local puede, nuevo = D.escribir(viejo, SESION, dato, os.time(), soltar)
+			escrito = puede
+			return nuevo
+		end)
+	end)
+	return ok, escrito
+end
+
+return G
+]]></ProtectedString>
+</Properties>
+</Item>
+<Item class="Script" referent="RBXJ000000F">
 <Properties>
 <string name="Name">Partida</string>
 <ProtectedString name="Source"><![CDATA[-- Partida de «+1 de lanzamiento por segundo» en el servidor: adaptador de Roblox de src/Partida.lua y src/Encuentros.lua (Lua puro,
@@ -63361,7 +63534,8 @@ end)
 -- En tierra se entrena (+1 potencia/s, mas en las zonas MAS1_AFK y MAS1_Entreno del mapa) y se puede hacer rebirth; el bonus del
 -- vuelo combina las mascotas equipadas y las alas (src/Alas.lua, que escalan con los rebirths). El inventario (src/Inventario.lua:
 -- huevos, mascotas equipadas, alas) va a la interfaz por MAS1_Inventario y MAS1_Huevo, y los fallos por MAS1_Aviso.
--- Atributos y eventos en CONTRATO.md. Todavia sin guardado (hito 5). SIN PROBAR EN STUDIO.
+-- Los datos se cargan y guardan con server/Guardado.lua (DataStore con bloqueo de sesion); hasta que cargan, el jugador no actua.
+-- Las alas se desbloquean solas al cumplir su requisito (Alas.desbloqueada). Atributos y eventos en CONTRATO.md. SIN PROBAR EN STUDIO.
 local Players, RS, RunService = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService")
 local Mas1 = RS:WaitForChild("Mas1")
 local V = require(Mas1:WaitForChild("Vuelo"))
@@ -63370,6 +63544,8 @@ local E = require(Mas1:WaitForChild("Encuentros"))
 local M = require(Mas1:WaitForChild("Mascotas"))
 local Alas = require(Mas1:WaitForChild("Alas"))
 local I = require(Mas1:WaitForChild("Inventario"))
+local D = require(Mas1:WaitForChild("Datos"))
+local G = require(script.Parent:WaitForChild("Guardado"))
 local Red = require(Mas1:WaitForChild("Red"))
 local accion, efecto, resultado = Red.evento("MAS1_Accion"), Red.evento("MAS1_Efecto"), Red.evento("MAS1_Resultado")
 local avisoEv, inventarioEv, huevoEv = Red.evento("MAS1_Aviso"), Red.evento("MAS1_Inventario"), Red.evento("MAS1_Huevo")
@@ -63474,23 +63650,108 @@ local function golpeado(i)
 	end)
 end
 
--- ---------------------------------------------------------------- jugadores
+-- ---------------------------------------------------------------- jugadores: datos, alas que se desbloquean y guardado
+local function revisarAlas(plr, j) -- hito 6: iniciales en el 3.er lanzamiento, roboticas con 3 dias seguidos, avanzadas con 10 cofres
+	local progreso = { lanzamientos = plr:GetAttribute("Lanzamientos") or 0, diasSeguidos = j.dias.diasSeguidos,
+		cofres = plr:GetAttribute("Cofres") or 0 }
+	local nuevas = false
+	for _, a in ipairs(Alas.LISTA) do
+		if not I.tieneAla(j.inv, a.id) and Alas.desbloqueada(a.id, progreso) then
+			I.darAla(j.inv, a.id)
+			if not j.inv.alaEquipada then I.equiparAla(j.inv, a.id) end -- las primeras se ponen solas
+			aviso(plr, "¡Nuevas alas: " .. a.nombre .. "!")
+			nuevas = true
+		end
+	end
+	if nuevas then mandarInventario(plr, j) end
+end
+
+local function aplicar(plr, j, d)
+	j.potencia = d.potencia
+	j.inv = d.inventario
+	j.dias = { diasSeguidos = d.diasSeguidos, ultimoDia = d.ultimoDia }
+	plr:SetAttribute("Potencia", math.floor(d.potencia))
+	plr:SetAttribute("Dinero", d.dinero)
+	plr:SetAttribute("Exp", d.exp)
+	plr:SetAttribute("Rebirths", d.rebirths)
+	plr:SetAttribute("CosteRebirth", V.costeRebirth(d.rebirths))
+	plr:SetAttribute("Cofres", d.cofres)
+	plr:SetAttribute("Lanzamientos", d.lanzamientos)
+	plr:SetAttribute("DiasSeguidos", d.diasSeguidos)
+	mandarInventario(plr, j)
+	revisarAlas(plr, j)
+end
+
+local function datosDe(plr, j)
+	return { version = D.VERSION, potencia = j.potencia, dinero = plr:GetAttribute("Dinero") or 0, exp = plr:GetAttribute("Exp") or 0,
+		rebirths = plr:GetAttribute("Rebirths") or 0, cofres = plr:GetAttribute("Cofres") or 0,
+		lanzamientos = plr:GetAttribute("Lanzamientos") or 0, diasSeguidos = j.dias.diasSeguidos, ultimoDia = j.dias.ultimoDia,
+		inventario = I.copia(j.inv) }
+end
+
 local function alEntrar(plr)
 	for k, v in pairs(INICIALES) do
 		if plr:GetAttribute(k) == nil then plr:SetAttribute(k, v) end
 	end
 	plr:SetAttribute("ArosTotal", #mundo.aros)
-	local j = { s = P.nueva(V, E), msgs = 0, desde = 0, hud = 0, potencia = plr:GetAttribute("Potencia") or 0, entreno = 0, inv = I.nuevo() }
+	local j = { s = P.nueva(V, E), msgs = 0, desde = 0, hud = 0, potencia = 0, entreno = 0, inv = I.nuevo(), cargado = false,
+		dias = { diasSeguidos = 0, ultimoDia = -1 } }
 	jugadores[plr] = j
 	plr:GetAttributeChangedSignal("Potencia"):Connect(function() -- cambiada a mano (en Studio, para probar): se adopta
 		local v = plr:GetAttribute("Potencia")
-		if type(v) == "number" and math.abs(v - math.floor(j.potencia)) >= 1 then j.potencia = v end
+		if j.cargado and type(v) == "number" and math.abs(v - math.floor(j.potencia)) >= 1 then j.potencia = v end
 	end)
-	mandarInventario(plr, j)
 	plr.CharacterAdded:Connect(function() mandarInventario(plr, j) end) -- para cuando los scripts del cliente ya escuchan
+	task.spawn(function()
+		local d, motivo = G.cargar(plr)
+		if not plr.Parent or jugadores[plr] ~= j then return end
+		if not d then -- mejor no jugar que jugar con datos vacios y pisar los buenos al guardar
+			plr:Kick(motivo == "bloqueado" and "Tus datos siguen abiertos en otro servidor. Vuelve a entrar en un momento."
+				or "No se pudieron cargar tus datos. Vuelve a entrar en un momento.")
+			return
+		end
+		D.registrarDia(d, math.floor(os.time() / 86400))
+		aplicar(plr, j, d)
+		j.cargado = true
+	end)
 end
 Players.PlayerAdded:Connect(alEntrar)
 for _, plr in ipairs(Players:GetPlayers()) do alEntrar(plr) end
+
+local enCurso = 0 -- guardados en marcha: al cerrar el servidor se espera a todos, tambien a los de jugadores que ya salieron
+
+local function guardar(plr, j, soltar)
+	if not j.cargado then return end
+	enCurso += 1
+	local ok, escrito = G.guardar(plr, datosDe(plr, j), soltar)
+	enCurso -= 1
+	if ok and not escrito and not soltar then -- otra sesion se quedo sus datos: este servidor ya no puede seguir con el
+		j.cargado = false
+		plr:Kick("Tus datos se abrieron en otro servidor.")
+	end
+end
+
+local function despedir(plr, j) -- guardar y soltar el bloqueo una sola vez (al salir o al cerrar el servidor)
+	if j.saliendo then return end
+	j.saliendo = true
+	guardar(plr, j, true)
+end
+
+task.spawn(function() -- autoguardado
+	while true do
+		task.wait(G.AUTOGUARDADO)
+		for plr, j in pairs(jugadores) do
+			if not j.saliendo then task.spawn(guardar, plr, j, false) end
+		end
+	end
+end)
+
+game:BindToClose(function() -- al cerrar el servidor: guardar y soltar a todos (Roblox espera hasta 30 s)
+	for plr, j in pairs(jugadores) do task.spawn(despedir, plr, j) end
+	task.wait() -- que arranquen
+	local t0 = os.clock()
+	while enCurso > 0 and os.clock() - t0 < 25 do task.wait(0.2) end
+end)
 
 local function quitarCofre(j)
 	if j.cofre then
@@ -63501,8 +63762,10 @@ end
 
 Players.PlayerRemoving:Connect(function(plr)
 	local j = jugadores[plr]
-	if j then quitarCofre(j) end
+	if not j then return end
+	quitarCofre(j)
 	jugadores[plr] = nil
+	despedir(plr, j) -- guarda y suelta el bloqueo
 end)
 
 local function bonusDe(plr, j) -- mascotas equipadas por las alas equipadas, que escalan con los rebirths
@@ -63592,6 +63855,7 @@ local function lanzar(plr, j)
 	P.lanzar(j.s, tabla(pos), j.potencia, b)
 	plr:SetAttribute("Lanzamientos", (plr:GetAttribute("Lanzamientos") or 0) + 1)
 	plr:SetAttribute("Entreno", 0)
+	revisarAlas(plr, j)
 	quitarCofre(j)
 	if j.s.cofre then j.cofre = ancla("Cofre", v3(j.s.cofre.pos), { Tipo = "cofre", Dueno = plr.UserId }) end
 	plr:SetAttribute("Impulso", b.impulso)
@@ -63609,7 +63873,7 @@ end
 
 accion.OnServerEvent:Connect(function(plr, nombre, valor, extra)
 	local j = jugadores[plr]
-	if not j or type(nombre) ~= "string" then return end
+	if not j or not j.cargado or type(nombre) ~= "string" then return end -- hasta que cargan sus datos, nada
 	local ahora = os.clock()
 	if ahora - j.desde > 1 then j.desde, j.msgs = ahora, 0 end
 	j.msgs += 1
@@ -63636,6 +63900,7 @@ end)
 RunService.Heartbeat:Connect(function(dt)
 	for plr, j in pairs(jugadores) do
 		if not P.enVuelo(j.s) then -- en tierra: entrenar (+1/s, mas en las zonas AFK y de entrenamiento y con los rebirths)
+			if not j.cargado then continue end
 			j.entreno += dt
 			if j.entreno >= 0.25 then
 				local hrp, hum = raiz(plr)
@@ -63667,6 +63932,7 @@ RunService.Heartbeat:Connect(function(dt)
 			efecto:FireClient(plr, "aro", v3(r.cofreAtrapado))
 			plr:SetAttribute("Cofres", (plr:GetAttribute("Cofres") or 0) + 1)
 			quitarCofre(j)
+			revisarAlas(plr, j)
 		end
 		if r.cofre then
 			if not j.cofre then j.cofre = ancla("Cofre", v3(r.cofre), { Tipo = "cofre", Dueno = plr.UserId }) end
@@ -63700,19 +63966,19 @@ end)
 </Item>
 </Item>
 </Item>
-<Item class="StarterPlayer" referent="RBXJ000001A">
+<Item class="StarterPlayer" referent="RBXJ000001D">
 <Properties>
 <string name="Name">StarterPlayer</string>
 </Properties>
-<Item class="StarterPlayerScripts" referent="RBXJ0000019">
+<Item class="StarterPlayerScripts" referent="RBXJ000001C">
 <Properties>
 <string name="Name">StarterPlayerScripts</string>
 </Properties>
-<Item class="Folder" referent="RBXJ0000018">
+<Item class="Folder" referent="RBXJ000001B">
 <Properties>
 <string name="Name">Mas1Cliente</string>
 </Properties>
-<Item class="LocalScript" referent="RBXJ0000010">
+<Item class="LocalScript" referent="RBXJ0000012">
 <Properties>
 <string name="Name">Efectos</string>
 <ProtectedString name="Source"><![CDATA[-- Dibuja los efectos de src/Efectos.lua con ParticleEmitter. El servidor (o el juego) dispara RemoteEvent MAS1_Efecto:
@@ -63754,7 +64020,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000011">
+<Item class="LocalScript" referent="RBXJ0000013">
 <Properties>
 <string name="Name">Entidades</string>
 <ProtectedString name="Source"><![CDATA[-- Enemigos y cofres de «+1 de lanzamiento por segundo» vistos en el cliente. El servidor solo pone anclas invisibles en
@@ -63907,7 +64173,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000012">
+<Item class="LocalScript" referent="RBXJ0000014">
 <Properties>
 <string name="Name">HudVuelo</string>
 <ProtectedString name="Source"><![CDATA[-- HUD de vuelo de «+1 de lanzamiento por segundo». Lee atributos del jugador local (los pone el juego o DemoVisual.server.lua):
@@ -63996,7 +64262,7 @@ refrescar()
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000013">
+<Item class="LocalScript" referent="RBXJ0000015">
 <Properties>
 <string name="Name">Inventario</string>
 <ProtectedString name="Source"><![CDATA[-- Inventario de «+1 de lanzamiento por segundo»: pestañas MASCOTAS (equipar hasta 3), HUEVOS (abrir con dinero) y ALAS (comprar y
@@ -64182,7 +64448,88 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000014">
+<Item class="LocalScript" referent="RBXJ0000016">
+<Properties>
+<string name="Name">Rebirth</string>
+<ProtectedString name="Source"><![CDATA[-- Rebirth y avisos de «+1 de lanzamiento por segundo»: boton REBIRTH (solo en tierra) con un panel de confirmacion que muestra
+-- potencia, coste y rebirths; y los avisos de texto del servidor (MAS1_Aviso). El servidor decide: aqui solo se manda "rebirth".
+-- Reinicia SOLO la potencia; conserva alas, mascotas, puntos y desbloqueos. Lee atributos Potencia, CosteRebirth, Rebirths, Entreno.
+-- SIN PROBAR EN STUDIO.
+local Players, RS, TweenService = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("TweenService")
+local plr = Players.LocalPlayer
+local Mas1 = RS:WaitForChild("Mas1")
+local Red = require(Mas1:WaitForChild("Red"))
+local T = require(script.Parent:WaitForChild("Tema"))
+local C, n = T.col, T.n
+local accion, aviso = Red.evento("MAS1_Accion"), Red.evento("MAS1_Aviso")
+
+local gui = n("ScreenGui", { Name = "Mas1Rebirth", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 15 }, plr:WaitForChild("PlayerGui"))
+T.escala(gui)
+
+local function fmt(x)
+	local s = tostring(math.floor((x or 0) + 0.5))
+	local out = s:reverse():gsub("(%d%d%d)", "%1."):reverse()
+	return (out:gsub("^%.", ""))
+end
+
+-- avisos de texto (arriba, bajo la energia)
+local toastActual
+aviso.OnClientEvent:Connect(function(texto)
+	if toastActual then toastActual:Destroy() end
+	local p = T.panel(gui, { Size = UDim2.fromOffset(520, 64), AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, -90) }, C.rosa)
+	toastActual = p
+	T.texto(p, { Text = tostring(texto), TextSize = 26, TextWrapped = true, Size = UDim2.new(1, -24, 1, 0), Position = UDim2.fromOffset(12, 0) })
+	TweenService:Create(p, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Position = UDim2.new(0.5, 0, 0, 120) }):Play()
+	task.delay(3, function()
+		if toastActual == p then
+			TweenService:Create(p, TweenInfo.new(0.25), { Position = UDim2.new(0.5, 0, 0, -90) }):Play()
+			task.delay(0.3, function() if p.Parent then p:Destroy() end if toastActual == p then toastActual = nil end end)
+		end
+	end)
+end)
+
+-- panel de rebirth
+local panel
+local function cerrar() if panel then panel:Destroy(); panel = nil end end
+
+local function abrir()
+	if plr:GetAttribute("EnVuelo") == true then return end
+	if panel then cerrar() return end
+	local pot, coste, rb = plr:GetAttribute("Potencia") or 0, plr:GetAttribute("CosteRebirth") or 500, plr:GetAttribute("Rebirths") or 0
+	local alcanza = pot >= coste
+	panel = T.panel(gui, { Size = UDim2.fromOffset(560, 420), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5) }, C.violeta)
+	T.texto(panel, { Text = "REBIRTH", TextSize = 52, TextColor3 = C.sol, Size = UDim2.new(1, 0, 0, 64), Position = UDim2.fromOffset(0, 12) })
+	T.texto(panel, { Text = string.format("Rebirths: %d", rb), TextSize = 26, Size = UDim2.new(1, 0, 0, 30), Position = UDim2.fromOffset(0, 78) })
+	local barra = T.barra(panel, { Size = UDim2.new(1, -60, 0, 44), Position = UDim2.fromOffset(30, 124) })
+	barra.set(math.min(pot / coste, 1), alcanza and C.menta or C.sol)
+	T.texto(panel, { Text = string.format("Potencia %s / %s", fmt(pot), fmt(coste)), TextSize = 28, Size = UDim2.new(1, 0, 0, 34), Position = UDim2.fromOffset(0, 176) })
+	T.texto(panel, { Text = "Reinicia SOLO tu potencia. Conservas alas, mascotas y puntos. Entrenas más rápido y tus alas crecen.",
+		TextSize = 20, TextWrapped = true, Size = UDim2.new(1, -60, 0, 80), Position = UDim2.fromOffset(30, 220) })
+	local ok = T.boton(panel, { Size = UDim2.fromOffset(250, 66), AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.3, 0, 1, -24), Text = alcanza and "¡REBIRTH!" or "FALTA POTENCIA" },
+		alcanza and C.menta or Color3.fromRGB(110, 100, 130), function()
+			if alcanza then accion:FireServer("rebirth"); cerrar() end
+		end)
+	T.boton(panel, { Size = UDim2.fromOffset(200, 66), AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.76, 0, 1, -24), Text = "CERRAR" }, C.rosa, cerrar)
+end
+
+local btn = T.boton(gui, { Size = UDim2.fromOffset(170, 64), AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 210, 1, -20), Text = "REBIRTH" }, C.rosa, abrir)
+local function ver()
+	local vuela = plr:GetAttribute("EnVuelo") == true
+	btn.Visible = not vuela
+	if vuela then cerrar() end
+end
+plr:GetAttributeChangedSignal("EnVuelo"):Connect(ver)
+ver()
+-- si el rebirth se hace, el panel se cierra solo; al subir el contador se anima el boton
+plr:GetAttributeChangedSignal("Rebirths"):Connect(function()
+	cerrar()
+	btn.Size = UDim2.fromOffset(210, 80)
+	TweenService:Create(btn, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Size = UDim2.fromOffset(170, 64) }):Play()
+end)
+]]></ProtectedString>
+</Properties>
+</Item>
+<Item class="LocalScript" referent="RBXJ0000017">
 <Properties>
 <string name="Name">Resultados</string>
 <ProtectedString name="Source"><![CDATA[-- Pantalla de resultados del vuelo de «+1 de lanzamiento por segundo»: aparece al aterrizar (MAS1_Resultado), cuenta hacia arriba
@@ -64254,7 +64601,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000015">
+<Item class="ModuleScript" referent="RBXJ0000018">
 <Properties>
 <string name="Name">Tema</string>
 <ProtectedString name="Source"><![CDATA[-- Tema de interfaz de «+1 de lanzamiento por segundo»: paneles gruesos con contorno oscuro y sombra dura, colores vivos, tipografia redondeada.
@@ -64325,7 +64672,7 @@ return T
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000016">
+<Item class="LocalScript" referent="RBXJ0000019">
 <Properties>
 <string name="Name">VueloControl</string>
 <ProtectedString name="Source"><![CDATA[-- Control del vuelo en el cliente de «+1 de lanzamiento por segundo». El cliente mueve su propio personaje (asi responde al instante)
@@ -64467,7 +64814,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000017">
+<Item class="LocalScript" referent="RBXJ000001A">
 <Properties>
 <string name="Name">Zonas</string>
 <ProtectedString name="Source"><![CDATA[-- Cielo y niebla por zona en el cliente de «+1 de lanzamiento por segundo»: al cruzar el arco de cada zona cambian la hora y la

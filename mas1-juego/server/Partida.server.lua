@@ -7,7 +7,8 @@
 -- En tierra se entrena (+1 potencia/s, mas en las zonas MAS1_AFK y MAS1_Entreno del mapa) y se puede hacer rebirth; el bonus del
 -- vuelo combina las mascotas equipadas y las alas (src/Alas.lua, que escalan con los rebirths). El inventario (src/Inventario.lua:
 -- huevos, mascotas equipadas, alas) va a la interfaz por MAS1_Inventario y MAS1_Huevo, y los fallos por MAS1_Aviso.
--- Atributos y eventos en CONTRATO.md. Todavia sin guardado (hito 5). SIN PROBAR EN STUDIO.
+-- Los datos se cargan y guardan con server/Guardado.lua (DataStore con bloqueo de sesion); hasta que cargan, el jugador no actua.
+-- Las alas se desbloquean solas al cumplir su requisito (Alas.desbloqueada). Atributos y eventos en CONTRATO.md. SIN PROBAR EN STUDIO.
 local Players, RS, RunService = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService")
 local Mas1 = RS:WaitForChild("Mas1")
 local V = require(Mas1:WaitForChild("Vuelo"))
@@ -16,6 +17,8 @@ local E = require(Mas1:WaitForChild("Encuentros"))
 local M = require(Mas1:WaitForChild("Mascotas"))
 local Alas = require(Mas1:WaitForChild("Alas"))
 local I = require(Mas1:WaitForChild("Inventario"))
+local D = require(Mas1:WaitForChild("Datos"))
+local G = require(script.Parent:WaitForChild("Guardado"))
 local Red = require(Mas1:WaitForChild("Red"))
 local accion, efecto, resultado = Red.evento("MAS1_Accion"), Red.evento("MAS1_Efecto"), Red.evento("MAS1_Resultado")
 local avisoEv, inventarioEv, huevoEv = Red.evento("MAS1_Aviso"), Red.evento("MAS1_Inventario"), Red.evento("MAS1_Huevo")
@@ -120,23 +123,108 @@ local function golpeado(i)
 	end)
 end
 
--- ---------------------------------------------------------------- jugadores
+-- ---------------------------------------------------------------- jugadores: datos, alas que se desbloquean y guardado
+local function revisarAlas(plr, j) -- hito 6: iniciales en el 3.er lanzamiento, roboticas con 3 dias seguidos, avanzadas con 10 cofres
+	local progreso = { lanzamientos = plr:GetAttribute("Lanzamientos") or 0, diasSeguidos = j.dias.diasSeguidos,
+		cofres = plr:GetAttribute("Cofres") or 0 }
+	local nuevas = false
+	for _, a in ipairs(Alas.LISTA) do
+		if not I.tieneAla(j.inv, a.id) and Alas.desbloqueada(a.id, progreso) then
+			I.darAla(j.inv, a.id)
+			if not j.inv.alaEquipada then I.equiparAla(j.inv, a.id) end -- las primeras se ponen solas
+			aviso(plr, "¡Nuevas alas: " .. a.nombre .. "!")
+			nuevas = true
+		end
+	end
+	if nuevas then mandarInventario(plr, j) end
+end
+
+local function aplicar(plr, j, d)
+	j.potencia = d.potencia
+	j.inv = d.inventario
+	j.dias = { diasSeguidos = d.diasSeguidos, ultimoDia = d.ultimoDia }
+	plr:SetAttribute("Potencia", math.floor(d.potencia))
+	plr:SetAttribute("Dinero", d.dinero)
+	plr:SetAttribute("Exp", d.exp)
+	plr:SetAttribute("Rebirths", d.rebirths)
+	plr:SetAttribute("CosteRebirth", V.costeRebirth(d.rebirths))
+	plr:SetAttribute("Cofres", d.cofres)
+	plr:SetAttribute("Lanzamientos", d.lanzamientos)
+	plr:SetAttribute("DiasSeguidos", d.diasSeguidos)
+	mandarInventario(plr, j)
+	revisarAlas(plr, j)
+end
+
+local function datosDe(plr, j)
+	return { version = D.VERSION, potencia = j.potencia, dinero = plr:GetAttribute("Dinero") or 0, exp = plr:GetAttribute("Exp") or 0,
+		rebirths = plr:GetAttribute("Rebirths") or 0, cofres = plr:GetAttribute("Cofres") or 0,
+		lanzamientos = plr:GetAttribute("Lanzamientos") or 0, diasSeguidos = j.dias.diasSeguidos, ultimoDia = j.dias.ultimoDia,
+		inventario = I.copia(j.inv) }
+end
+
 local function alEntrar(plr)
 	for k, v in pairs(INICIALES) do
 		if plr:GetAttribute(k) == nil then plr:SetAttribute(k, v) end
 	end
 	plr:SetAttribute("ArosTotal", #mundo.aros)
-	local j = { s = P.nueva(V, E), msgs = 0, desde = 0, hud = 0, potencia = plr:GetAttribute("Potencia") or 0, entreno = 0, inv = I.nuevo() }
+	local j = { s = P.nueva(V, E), msgs = 0, desde = 0, hud = 0, potencia = 0, entreno = 0, inv = I.nuevo(), cargado = false,
+		dias = { diasSeguidos = 0, ultimoDia = -1 } }
 	jugadores[plr] = j
 	plr:GetAttributeChangedSignal("Potencia"):Connect(function() -- cambiada a mano (en Studio, para probar): se adopta
 		local v = plr:GetAttribute("Potencia")
-		if type(v) == "number" and math.abs(v - math.floor(j.potencia)) >= 1 then j.potencia = v end
+		if j.cargado and type(v) == "number" and math.abs(v - math.floor(j.potencia)) >= 1 then j.potencia = v end
 	end)
-	mandarInventario(plr, j)
 	plr.CharacterAdded:Connect(function() mandarInventario(plr, j) end) -- para cuando los scripts del cliente ya escuchan
+	task.spawn(function()
+		local d, motivo = G.cargar(plr)
+		if not plr.Parent or jugadores[plr] ~= j then return end
+		if not d then -- mejor no jugar que jugar con datos vacios y pisar los buenos al guardar
+			plr:Kick(motivo == "bloqueado" and "Tus datos siguen abiertos en otro servidor. Vuelve a entrar en un momento."
+				or "No se pudieron cargar tus datos. Vuelve a entrar en un momento.")
+			return
+		end
+		D.registrarDia(d, math.floor(os.time() / 86400))
+		aplicar(plr, j, d)
+		j.cargado = true
+	end)
 end
 Players.PlayerAdded:Connect(alEntrar)
 for _, plr in ipairs(Players:GetPlayers()) do alEntrar(plr) end
+
+local enCurso = 0 -- guardados en marcha: al cerrar el servidor se espera a todos, tambien a los de jugadores que ya salieron
+
+local function guardar(plr, j, soltar)
+	if not j.cargado then return end
+	enCurso += 1
+	local ok, escrito = G.guardar(plr, datosDe(plr, j), soltar)
+	enCurso -= 1
+	if ok and not escrito and not soltar then -- otra sesion se quedo sus datos: este servidor ya no puede seguir con el
+		j.cargado = false
+		plr:Kick("Tus datos se abrieron en otro servidor.")
+	end
+end
+
+local function despedir(plr, j) -- guardar y soltar el bloqueo una sola vez (al salir o al cerrar el servidor)
+	if j.saliendo then return end
+	j.saliendo = true
+	guardar(plr, j, true)
+end
+
+task.spawn(function() -- autoguardado
+	while true do
+		task.wait(G.AUTOGUARDADO)
+		for plr, j in pairs(jugadores) do
+			if not j.saliendo then task.spawn(guardar, plr, j, false) end
+		end
+	end
+end)
+
+game:BindToClose(function() -- al cerrar el servidor: guardar y soltar a todos (Roblox espera hasta 30 s)
+	for plr, j in pairs(jugadores) do task.spawn(despedir, plr, j) end
+	task.wait() -- que arranquen
+	local t0 = os.clock()
+	while enCurso > 0 and os.clock() - t0 < 25 do task.wait(0.2) end
+end)
 
 local function quitarCofre(j)
 	if j.cofre then
@@ -147,8 +235,10 @@ end
 
 Players.PlayerRemoving:Connect(function(plr)
 	local j = jugadores[plr]
-	if j then quitarCofre(j) end
+	if not j then return end
+	quitarCofre(j)
 	jugadores[plr] = nil
+	despedir(plr, j) -- guarda y suelta el bloqueo
 end)
 
 local function bonusDe(plr, j) -- mascotas equipadas por las alas equipadas, que escalan con los rebirths
@@ -238,6 +328,7 @@ local function lanzar(plr, j)
 	P.lanzar(j.s, tabla(pos), j.potencia, b)
 	plr:SetAttribute("Lanzamientos", (plr:GetAttribute("Lanzamientos") or 0) + 1)
 	plr:SetAttribute("Entreno", 0)
+	revisarAlas(plr, j)
 	quitarCofre(j)
 	if j.s.cofre then j.cofre = ancla("Cofre", v3(j.s.cofre.pos), { Tipo = "cofre", Dueno = plr.UserId }) end
 	plr:SetAttribute("Impulso", b.impulso)
@@ -255,7 +346,7 @@ end
 
 accion.OnServerEvent:Connect(function(plr, nombre, valor, extra)
 	local j = jugadores[plr]
-	if not j or type(nombre) ~= "string" then return end
+	if not j or not j.cargado or type(nombre) ~= "string" then return end -- hasta que cargan sus datos, nada
 	local ahora = os.clock()
 	if ahora - j.desde > 1 then j.desde, j.msgs = ahora, 0 end
 	j.msgs += 1
@@ -282,6 +373,7 @@ end)
 RunService.Heartbeat:Connect(function(dt)
 	for plr, j in pairs(jugadores) do
 		if not P.enVuelo(j.s) then -- en tierra: entrenar (+1/s, mas en las zonas AFK y de entrenamiento y con los rebirths)
+			if not j.cargado then continue end
 			j.entreno += dt
 			if j.entreno >= 0.25 then
 				local hrp, hum = raiz(plr)
@@ -313,6 +405,7 @@ RunService.Heartbeat:Connect(function(dt)
 			efecto:FireClient(plr, "aro", v3(r.cofreAtrapado))
 			plr:SetAttribute("Cofres", (plr:GetAttribute("Cofres") or 0) + 1)
 			quitarCofre(j)
+			revisarAlas(plr, j)
 		end
 		if r.cofre then
 			if not j.cofre then j.cofre = ancla("Cofre", v3(r.cofre), { Tipo = "cofre", Dueno = plr.UserId }) end

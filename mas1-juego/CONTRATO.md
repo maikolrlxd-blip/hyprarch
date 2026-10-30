@@ -36,7 +36,8 @@ Los escribe el servidor; la interfaz solo los lee.
 | `Entreno` | número | **nuevo**: potencia por segundo ahora mismo (0 volando). La interfaz puede pintar «AFK x1,5» o «ENTRENANDO x2» | hito 3 |
 | `Rebirths` | entero | rebirths hechos | hito 3 |
 | `CosteRebirth` | entero | **nuevo**: potencia que pide el siguiente rebirth (500, 1.000, 2.000…) | hito 3 |
-| `Lanzamientos` | entero | **nuevo**: lanzamientos en total (las alas iniciales salen en el 3.º, hito 6) | hito 3 |
+| `Lanzamientos` | entero | **nuevo**: lanzamientos en total (las alas iniciales salen en el 3.º) | hito 3 |
+| `DiasSeguidos` | entero | **nuevo**: racha de días seguidos jugando (las alas robóticas salen con 3) | hito 5 |
 | `Aros`, `ArosTotal` | entero | aros cruzados en este vuelo / aros del mapa | hito 2 |
 | `Cofres` | entero | **nuevo**: cofres voladores atrapados en total (para las alas avanzadas del hito 6) | hito 2 (sin guardar hasta el hito 5) |
 | `Mascota`, `MascotaBonus` | texto, número | la mascota equipada de más rareza y el multiplicador de dinero de las equipadas | hito 4 |
@@ -67,6 +68,19 @@ Están en ReplicatedStorage y los crea `src/Red.lua`.
   - `MascotaBonus`: el multiplicador de dinero;
   - `Alas`.
 - El fénix solo se consigue con Robux: `Inventario.darFenix` desde `ProcessReceipt`. El id del producto (`PRODUCTO_FENIX` en el servidor) **no está configurado**: no se ha creado ningún producto ni precio.
+
+## Guardado y alas (hitos 5 y 6)
+- **Qué se guarda**: `Potencia`, `Dinero`, `Exp`, `Rebirths`, `Cofres`, `Lanzamientos`, la racha de días y el inventario (mascotas, equipadas, alas y la equipada).
+  - Va en el DataStore `MAS1_Datos_v1`, con la clave `j_<UserId>` (`server/Guardado.lua` + `src/Datos.lua`).
+  - Se guarda cada 60 s, al salir y al cerrar el servidor.
+  - Un servidor toma los datos con un bloqueo de sesión y otro no los pisa hasta que se sueltan o caducan (3 min).
+  - Si no se pueden cargar, se expulsa al jugador con un mensaje, mejor que jugar con datos vacíos y pisar los buenos.
+- **Mientras carga**, el servidor ignora las intenciones y no entrena.
+- **En Studio sin publicar** (o sin acceso a las API) se juega sin guardar; lo avisa el Output.
+- **Alas**: se desbloquean solas al cumplir el requisito. Las primeras se equipan solas, y llega un `MAS1_Aviso` «¡Nuevas alas: …!».
+  - iniciales: en el 3.er lanzamiento;
+  - robóticas: con 3 días seguidos;
+  - avanzadas: con 10 cofres, o comprándolas por 25.000.
 
 ## Entrenamiento y rebirth (hito 3)
 - Zonas del mapa (irán en la Pradera; en la place de prueba son dos placas junto al spawn):

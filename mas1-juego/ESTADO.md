@@ -14,7 +14,8 @@ Programación de «+1 de lanzamiento por segundo» (Maikol, 30/10: «todo seguid
 - **Cifras provisionales.** Están en `src/Vuelo.lua` y se ajustan jugando:
   - con potencia 0, unos 12 s de energía, un vuelo de unos 670 studs y aterrizaje en la Tormenta (x4);
   - la energía crece con la raíz de la potencia.
-- **Sin guardado** (hito 5): el dinero, la exp y los cofres se pierden al salir.
+- **El guardado no se ha probado contra un DataStore de verdad.** La lógica del bloqueo está probada con lupa, pero las llamadas a Roblox no; en Studio sin publicar se juega sin guardar.
+- **Las alas no se ven puestas en el personaje**: solo dan su bonus. Hace falta importar sus mallas en Studio.
 - **Las alas de requisito aún no se desbloquean solas** (hito 6). Las avanzadas ya se pueden comprar y equipar.
 - **Las mascotas equipadas no te siguen por el mapa**: solo dan su bonus. Hace falta importar sus mallas en Studio, o hacer unas de piezas como los enemigos.
 - **Fénix sin producto de Robux**: el código está, pero el id del producto está vacío.
@@ -60,8 +61,22 @@ Programación de «+1 de lanzamiento por segundo» (Maikol, 30/10: «todo seguid
    - **Mascotas**: se equipan hasta 3, y una se puede repetir si tienes varias. Sus bonus se multiplican con las alas en cada vuelo.
    - **Interfaz**: el servidor manda `MAS1_Inventario` y `MAS1_Huevo` con las formas acordadas, y `MAS1_Aviso` cuando algo falla.
    - **Fénix**: solo con Robux, sin producto configurado.
-5. Guardado con DataStore y antitrampas básicas.
-6. Alas: iniciales, robóticas y avanzadas.
+5. **Guardado con DataStore y antitrampas — hecho, sin probar en Studio.** Va con `server/Guardado.lua`, `src/Datos.lua` y `tests/test_datos.py`.
+   - Bloqueo de sesión: no se pisan los datos de otro servidor salvo que su bloqueo caduque.
+   - Reintentos con espera creciente.
+   - Autoguardado cada 60 s, al salir y al cerrar el servidor (espera a todos los guardados en curso).
+   - Limpieza de lo que se carga.
+   - Si no se puede cargar, se expulsa al jugador antes que perder datos.
+   - Antitrampas: el cliente solo manda intenciones y el servidor lo valida todo:
+     - el movimiento, con presupuestos, la media de 4 s y los límites;
+     - los estados (en tierra / volando) y los tipos de los argumentos;
+     - un máximo de 30 mensajes por segundo;
+     - el dinero y los huevos, solo en el servidor.
+6. **Alas — hecho, sin probar en Studio.**
+   - iniciales: en el 3.er lanzamiento;
+   - robóticas: con 3 días seguidos (racha guardada);
+   - avanzadas: con 10 cofres, o comprándolas por 25.000.
+   - Se desbloquean solas, avisan y las primeras se equipan solas. Su bonus ya cuenta en el vuelo y sube con los rebirths.
 
 ## Cómo probarlo
 1. Abre `build/Mas1-prueba.rbxlx` en Studio con `File → Open from File`. Es local: no sube nada. Lleva el mapa v01 en piezas y todos los scripts, colocados como los pondría Rojo.
