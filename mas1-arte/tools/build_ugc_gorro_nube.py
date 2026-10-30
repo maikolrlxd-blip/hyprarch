@@ -5,20 +5,23 @@
 # su textura. Requisitos Roblox (Hat, cuerpo Classic): caja 3 × 4 × 3, una malla cerrada, ≤ 4.000 triángulos, material Plastic.
 # Tamaño (Maikol: «piensa en qué tan bien se ve el tamaño»): la v1 medía 2,8 de ancho = 2,3 cabezas, un paraguas que tapaba la
 # foto de perfil. Se compara 1,6 / 2,0 / 2,4 / 2,8 sobre un avatar R15 de bloques (cabeza 1,2, torso 2 × 2 × 1, brazos y
-# piernas 1 × 2 × 1) y se exporta GORRO_ANCHO (2,0 = el ancho del torso). NO se ha subido ni publicado nada.
+# piernas 1 × 2 × 1) y se exporta GORRO_ANCHO: 1,6, el que eligió Maikol («el de 1,6 es el que mejor se ve»; así cabe también en
+# las cajas de los cuerpos Rthro: Normal 1,87 y Slender 1,78). NO se ha subido ni publicado nada.
 # blender -b --factory-startup --python-exit-code 1 -P build_ugc_gorro_nube.py   ->   mas1-arte/ugc-gorro-nube-v01/
 import sys, os, shutil, json, math
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from mas1_lib import *
 import bmesh
+import numpy as np
 
 ARTE = os.path.abspath(os.path.join(HERE, '..'))
 OUT = os.path.join(ARTE, 'ugc-gorro-nube-v01')
 os.makedirs(OUT, exist_ok=True)
-ANCHO = float(os.environ.get('GORRO_ANCHO', '2.0'))
+ANCHO = float(os.environ.get('GORRO_ANCHO', '1.6'))
 COMPARAR = (1.6, 2.0, 2.4, 2.8)
-HUNDIR = 0.1                                  # se hunde un poco en la cabeza (que es redondeada): sin rendija entre nube y cabeza
+ACLARAR = float(os.environ.get('GORRO_ACLARAR', '0.4'))   # cuánto se acercan a blanco los tonos de nube de la textura
+HUNDIR = 0.1                                 # se hunde un poco en la cabeza (que es redondeada): sin rendija entre nube y cabeza
 CABEZA_TOP = 5.2                              # piernas 2 + torso 2 + cabeza 1,2
 A.clean_scene()
 CM, CC, CV = A.collection('UGC'), A.collection('Camaras'), A.collection('Avatar')
@@ -150,7 +153,29 @@ if img:
     tex_px = list(img.size)
     tex = os.path.join(OUT, 'GorroNubecita_textura_%d.png' % tex_px[0])
     shutil.copyfile(origen, tex)
+    if ACLARAR > 0:
+        # Studio (30/10): con la luz de Roblox la nube salía gris-lavanda, porque su sombra se suma a la pintada en la textura.
+        # Se aclaran los blancos y lavandas de ESTA copia (la mascota del juego no se toca). La cara (oscura) y las mejillas
+        # (rosa: más rojo que azul) se quedan igual.
+        im2 = bpy.data.images.load(tex)
+        px = np.array(im2.pixels[:]).reshape(-1, 4)
+        r, g, b = px[:, 0], px[:, 1], px[:, 2]
+        nube = (b >= r) & (b >= g) & (0.2126 * r + 0.7152 * g + 0.0722 * b > 0.35)
+        px[nube, :3] += (1 - px[nube, :3]) * ACLARAR
+        im2.pixels[:] = px.ravel()
+        im2.filepath_raw, im2.file_format = tex, 'PNG'
+        im2.save()
+        for s in ob.material_slots:                # el FBX incrusta la imagen del material: que sea la aclarada
+            if s.material and s.material.node_tree:
+                for n in s.material.node_tree.nodes:
+                    if n.type == 'TEX_IMAGE' and n.image:
+                        n.image = im2
+# Probado en Studio (30/10): con axis_forward Z el 3D Importer deja el +Y de Blender (la cara) hacia +Z de Roblox, que es la NUCA del
+# avatar (los personajes miran a -Z). El FBX sale girado 180° en vertical para que la cara mire al frente; el .blend no se toca.
+GIRO = Matrix.Rotation(math.pi, 4, 'Z')
+ob.data.transform(GIRO)
 fbx(os.path.join(OUT, 'GorroNubecita.fbx'), [ob], False)
+ob.data.transform(GIRO.inverted())
 A.save_blend(os.path.join(OUT, 'GorroNubecita.blend'))
 if os.path.exists(os.path.join(OUT, 'GorroNubecita.blend1')):
     os.remove(os.path.join(OUT, 'GorroNubecita.blend1'))
@@ -293,6 +318,6 @@ A.write_json(os.path.join(OUT, 'datos.json'), {
     'accesorio': 'Gorro Nubecita (Hat, rigido)', 'ancho_elegido': ANCHO, 'comparados': list(COMPARAR), 'triangulos': tris,
     'tamano_studs_x_y_z_blender': tam, 'limites_hat_classic': [3, 4, 3], 'aristas_abiertas_o_no_manifold': abiertas, 'contactos_separados': separadas, 'islas': islas,
     'attachment': 'HatAttachment en la base, centrada; se hunde %.2f en la cabeza' % HUNDIR,
-    'textura': os.path.basename(tex) if tex else None, 'textura_px': tex_px,
-    'fbx': 'GorroNubecita.fbx (global_scale 0.01, axis_forward Z: la cara mira al frente del avatar)', 'subido_a_roblox': False})
+    'textura': os.path.basename(tex) if tex else None, 'textura_px': tex_px, 'textura_aclarada': ACLARAR,
+    'fbx': 'GorroNubecita.fbx (global_scale 0.01, axis_forward Z, girado 180 grados: en Studio la cara mira a -Z, el frente del avatar)', 'subido_a_roblox': False})
 A.log('listo', 'ancho', ANCHO, 'tris', tris, 'tam', tam, 'abiertas', abiertas, 'separadas', separadas, 'islas', islas, 'textura', tex_px)

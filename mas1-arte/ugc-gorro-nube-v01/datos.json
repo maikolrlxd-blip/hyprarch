@@ -1,6 +1,6 @@
 {
   "accesorio": "Gorro Nubecita (Hat, rigido)",
-  "ancho_elegido": 2.0,
+  "ancho_elegido": 1.6,
   "comparados": [
     1.6,
     2.0,
@@ -9,9 +9,9 @@
   ],
   "triangulos": 1250,
   "tamano_studs_x_y_z_blender": [
-    2.0,
-    1.112,
-    1.048
+    1.6,
+    0.89,
+    0.838
   ],
   "limites_hat_classic": [
     3,
@@ -27,6 +27,7 @@
     1024,
     1024
   ],
-  "fbx": "GorroNubecita.fbx (global_scale 0.01, axis_forward Z: la cara mira al frente del avatar)",
+  "textura_aclarada": 0.4,
+  "fbx": "GorroNubecita.fbx (global_scale 0.01, axis_forward Z, girado 180 grados: en Studio la cara mira a -Z, el frente del avatar)",
   "subido_a_roblox": false
 }
