@@ -71,7 +71,7 @@ assert texto.rstrip().endswith('</roblox>')
 # zonas de entrenamiento de prueba (en el juego de verdad iran en la Pradera): dentro del Workspace, tras sus propiedades
 ws = texto.index('<Item class="Workspace"')
 fin = texto.index('</Properties>', ws) + len('</Properties>')
-placas = placa('MAS1_AFK', -20, -192, '#5fc8ff') + placa('MAS1_Entreno', 20, -192, '#ff9d00')
+placas = []  # las zonas de entreno ahora las crea server/Lobby.server.lua
 texto = texto[:fin] + '\n' + '\n'.join(placas) + texto[fin:]
 texto = texto.rstrip()[:-len('</roblox>')] + '\n'.join(servicios) + '\n</roblox>\n'
 os.makedirs(os.path.dirname(SALIDA), exist_ok=True)

@@ -101,11 +101,13 @@ end
 
 -- zonas de entrenamiento del mapa: partes llamadas MAS1_AFK (x1,5 aunque no te muevas) y MAS1_Entreno (x2 corriendo)
 local zonasEntreno = {}
-for _, p in ipairs(workspace:GetDescendants()) do
+local function registrarZona(p)
 	if p:IsA("BasePart") and (p.Name == "MAS1_AFK" or p.Name == "MAS1_Entreno") then
 		zonasEntreno[#zonasEntreno + 1] = { parte = p, tipo = p.Name == "MAS1_AFK" and "afk" or "entreno" }
 	end
 end
+for _, p in ipairs(workspace:GetDescendants()) do registrarZona(p) end
+workspace.DescendantAdded:Connect(registrarZona) -- el lobby (server/Lobby.server.lua) las crea al arrancar, quiza despues
 
 local function zonaDe(pos)
 	for _, z in ipairs(zonasEntreno) do

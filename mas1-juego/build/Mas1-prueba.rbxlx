@@ -5,32 +5,7 @@
 <Properties>
 <string name="Name">Workspace</string>
 </Properties>
-<Item class="Part" referent="RBXJ000001F">
-<Properties>
-<bool name="Anchored">true</bool>
-<token name="TopSurface">0</token>
-<token name="BottomSurface">0</token>
-<CoordinateFrame name="CFrame"><X>-20</X><Y>0.2</Y><Z>-192</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Color3uint8 name="Color3uint8">4284467455</Color3uint8>
-<token name="Material">288</token>
-<string name="Name">MAS1_AFK</string>
-<Vector3 name="size"><X>14</X><Y>0.4</Y><Z>14</Z></Vector3>
-<token name="shape">1</token>
-</Properties>
-</Item>
-<Item class="Part" referent="RBXJ0000020">
-<Properties>
-<bool name="Anchored">true</bool>
-<token name="TopSurface">0</token>
-<token name="BottomSurface">0</token>
-<CoordinateFrame name="CFrame"><X>20</X><Y>0.2</Y><Z>-192</Z><R00>1</R00><R01>0</R01><R02>0</R02><R10>0</R10><R11>1</R11><R12>0</R12><R20>0</R20><R21>0</R21><R22>1</R22></CoordinateFrame>
-<Color3uint8 name="Color3uint8">4294941952</Color3uint8>
-<token name="Material">288</token>
-<string name="Name">MAS1_Entreno</string>
-<Vector3 name="size"><X>14</X><Y>0.4</Y><Z>14</Z></Vector3>
-<token name="shape">1</token>
-</Properties>
-</Item>
+
 <Item class="Model" referent="RBX000018A2">
 <Properties>
 <string name="Name">Mapa_v01</string>
@@ -63451,11 +63426,11 @@ return V
 </Item>
 </Item>
 </Item>
-<Item class="ServerScriptService" referent="RBXJ0000011">
+<Item class="ServerScriptService" referent="RBXJ0000012">
 <Properties>
 <string name="Name">ServerScriptService</string>
 </Properties>
-<Item class="Folder" referent="RBXJ0000010">
+<Item class="Folder" referent="RBXJ0000011">
 <Properties>
 <string name="Name">Mas1Servidor</string>
 </Properties>
@@ -63594,6 +63569,103 @@ return G
 </Item>
 <Item class="Script" referent="RBXJ000000F">
 <Properties>
+<string name="Name">Lobby</string>
+<ProtectedString name="Source"><![CDATA[-- Lobby de «+1 de lanzamiento por segundo» (PROVISIONAL, hecho con piezas hasta importar la Pradera de Codex): plaza de salida, el
+-- CAÑON con su plataforma de lanzamiento (MAS1_Canon, que lee Partida.server.lua), zonas de entrenamiento (MAS1_AFK y MAS1_Entreno),
+-- el punto de aparicion y carteles. Todo en Workspace.MAS1_Lobby. El vuelo sale hacia -Z; el lobby ocupa Z de +24 a -172, sobre
+-- la misma altura del carril (techo en Y = 0). SIN PROBAR EN STUDIO.
+local Lighting = game:GetService("Lighting")
+local viejo = workspace:FindFirstChild("MAS1_Lobby")
+if viejo then viejo:Destroy() end
+local lobby = Instance.new("Folder")
+lobby.Name = "MAS1_Lobby"
+
+local function rgb(r, g, b) return Color3.fromRGB(r, g, b) end
+local CRE, TIN, SOL, CIE, MEN, ROS, VIO = rgb(255, 247, 224), rgb(28, 21, 48), rgb(255, 210, 63), rgb(78, 200, 255), rgb(61, 220, 151), rgb(255, 93, 143), rgb(124, 92, 255)
+
+local function parte(nombre, tam, cf, color, material, opciones)
+	local p = Instance.new("Part")
+	p.Name, p.Size, p.CFrame, p.Color = nombre, tam, cf, color
+	p.Material = material or Enum.Material.SmoothPlastic
+	p.Anchored, p.TopSurface, p.BottomSurface = true, Enum.SurfaceType.Smooth, Enum.SurfaceType.Smooth
+	for k, v in pairs(opciones or {}) do p[k] = v end
+	p.Parent = lobby
+	return p
+end
+
+local function cartel(texto, pos, ancho, color)
+	local p = parte("Cartel", Vector3.new(ancho, 0.4, 0.4), CFrame.new(pos), color or SOL, nil, { Transparency = 1, CanCollide = false, CanQuery = false })
+	local g = Instance.new("BillboardGui")
+	g.Size, g.AlwaysOnTop, g.MaxDistance = UDim2.fromOffset(ancho * 14, 70), false, 160
+	g.Parent = p
+	local t = Instance.new("TextLabel")
+	t.Size, t.BackgroundTransparency, t.Text = UDim2.fromScale(1, 1), 1, texto
+	t.Font, t.TextScaled, t.TextColor3 = Enum.Font.FredokaOne, true, color or SOL
+	t.TextStrokeColor3, t.TextStrokeTransparency = TIN, 0
+	t.Parent = g
+end
+
+-- suelo de toda la plaza (justo por debajo del techo del carril para no pelear con el mapa donde ya haya suelo)
+parte("Suelo", Vector3.new(70, 2, 196), CFrame.new(0, -1.05, -74), rgb(120, 205, 110), Enum.Material.Grass)
+for _, x in ipairs({ -33, 33 }) do
+	parte("Borde", Vector3.new(2, 1.2, 196), CFrame.new(x, 0.1, -74), CRE, nil, { CanCollide = true })
+end
+-- franjas guia hacia el cañon y el carril
+for z = 0, -170, -20 do
+	parte("Franja", Vector3.new(3, 0.1, 8), CFrame.new(0, 0.02, z), CRE, nil, { CanCollide = false, CanQuery = false })
+end
+
+-- CAÑON: base, tubo inclinado hacia -Z y boca dorada, con la plataforma MAS1_Canon delante (de donde sale el jugador)
+local cz = -22
+parte("CanonBase", Vector3.new(14, 3, 14), CFrame.new(0, 1.5, cz), rgb(150, 70, 60))
+parte("CanonRueda", Vector3.new(3, 8, 8), CFrame.new(-7.5, 4, cz) * CFrame.Angles(0, 0, 0), TIN, nil, { Shape = Enum.PartType.Cylinder })
+parte("CanonRueda", Vector3.new(3, 8, 8), CFrame.new(7.5, 4, cz), TIN, nil, { Shape = Enum.PartType.Cylinder })
+local tubo = parte("CanonTubo", Vector3.new(7, 7, 18), CFrame.new(0, 7, cz) * CFrame.Angles(math.rad(28), 0, 0), ROS)
+parte("CanonAro", Vector3.new(8.5, 8.5, 2.2), tubo.CFrame * CFrame.new(0, 0, -9), SOL)
+parte("CanonAro", Vector3.new(8.5, 8.5, 2.2), tubo.CFrame * CFrame.new(0, 0, 5), SOL)
+parte("CanonBoca", Vector3.new(5, 5, 0.6), tubo.CFrame * CFrame.new(0, 0, -9.6), TIN)
+local plat = parte("MAS1_Canon", Vector3.new(10, 1, 10), CFrame.new(0, 0.5, cz - 16), CIE, Enum.Material.Neon)
+cartel("¡CAÑÓN!", Vector3.new(0, 15, cz), 20, SOL)
+
+-- el aviso del cañon: se acerca el jugador y pulsa E / toca (el cliente manda "lanzar")
+local pp = Instance.new("ProximityPrompt")
+pp.ActionText, pp.ObjectText, pp.HoldDuration, pp.MaxActivationDistance, pp.RequiresLineOfSight = "LANZARSE", "Cañón", 0, 14, false
+pp.Parent = plat
+
+-- arco de entrada y cartel del juego
+for _, x in ipairs({ -14, 14 }) do parte("ArcoPilar", Vector3.new(3, 22, 3), CFrame.new(x, 11, 14), VIO) end
+parte("ArcoDintel", Vector3.new(34, 4, 3), CFrame.new(0, 22, 14), VIO)
+cartel("+1 DE LANZAMIENTO", Vector3.new(0, 28, 14), 34, SOL)
+
+-- zonas de entrenamiento (las lee Partida.server.lua por el nombre)
+local afk = parte("MAS1_AFK", Vector3.new(16, 0.4, 16), CFrame.new(-20, 0.2, -62), CIE, Enum.Material.Neon, { CanCollide = false })
+local entreno = parte("MAS1_Entreno", Vector3.new(16, 0.4, 16), CFrame.new(20, 0.2, -62), rgb(255, 157, 0), Enum.Material.Neon, { CanCollide = false })
+cartel("ZONA AFK  x1,5", Vector3.new(-20, 6, -62), 16, CIE)
+cartel("ENTRENA CORRIENDO  x2", Vector3.new(20, 6, -62), 20, rgb(255, 157, 0))
+
+-- puestos: huevos (B) y rebirth, solo decorativos; el menu lo abre el boton o la tecla
+for _, d in ipairs({ { "HUEVOS Y MASCOTAS (B)", -20, MEN }, { "REBIRTH", 20, ROS } }) do
+	parte("Puesto", Vector3.new(10, 5, 6), CFrame.new(d[2], 2.5, -100), d[3])
+	parte("PuestoTecho", Vector3.new(12, 1, 8), CFrame.new(d[2], 7, -100), TIN)
+	cartel(d[1], Vector3.new(d[2], 10, -100), 22, d[3])
+end
+
+-- punto de aparicion en la plaza, mirando al cañon; se apaga el de la place de prueba (estaba en el Mar de Nubes)
+for _, s in ipairs(workspace:GetDescendants()) do
+	if s:IsA("SpawnLocation") and s.Parent ~= lobby then s.Enabled = false end
+end
+local sp = Instance.new("SpawnLocation")
+sp.Size, sp.CFrame, sp.Anchored, sp.Duration, sp.Neutral = Vector3.new(10, 1, 10), CFrame.new(0, 0.5, 6), true, 0, true
+sp.Transparency, sp.Color, sp.Material = 0.4, MEN, Enum.Material.Neon
+sp.Parent = lobby
+
+lobby.Parent = workspace
+Lighting.Brightness = math.max(Lighting.Brightness, 2)
+]]></ProtectedString>
+</Properties>
+</Item>
+<Item class="Script" referent="RBXJ0000010">
+<Properties>
 <string name="Name">Partida</string>
 <ProtectedString name="Source"><![CDATA[-- Partida de «+1 de lanzamiento por segundo» en el servidor: adaptador de Roblox de src/Partida.lua y src/Encuentros.lua (Lua puro,
 -- probados con lupa). El cliente mueve su personaje y manda intenciones por MAS1_Accion. Aqui se lanza, se llevan la energia, el
@@ -63639,6 +63711,7 @@ local function mandarInventario(plr, j)
 	plr:SetAttribute("Mascota", p and p.nombre or "—")
 	plr:SetAttribute("MascotaBonus", math.floor(M.multiplicadores(j.inv.equipadas).dinero * 100 + 0.5) / 100)
 	plr:SetAttribute("Alas", j.inv.alaEquipada or "")
+	plr:SetAttribute("MascotasEq", table.concat(j.inv.equipadas, ",")) -- ids equipados («gorrion,aguila»): client/Seguidores.client.lua
 end
 
 local function tabla(v)
@@ -63697,11 +63770,13 @@ end
 
 -- zonas de entrenamiento del mapa: partes llamadas MAS1_AFK (x1,5 aunque no te muevas) y MAS1_Entreno (x2 corriendo)
 local zonasEntreno = {}
-for _, p in ipairs(workspace:GetDescendants()) do
+local function registrarZona(p)
 	if p:IsA("BasePart") and (p.Name == "MAS1_AFK" or p.Name == "MAS1_Entreno") then
 		zonasEntreno[#zonasEntreno + 1] = { parte = p, tipo = p.Name == "MAS1_AFK" and "afk" or "entreno" }
 	end
 end
+for _, p in ipairs(workspace:GetDescendants()) do registrarZona(p) end
+workspace.DescendantAdded:Connect(registrarZona) -- el lobby (server/Lobby.server.lua) las crea al arrancar, quiza despues
 
 local function zonaDe(pos)
 	for _, z in ipairs(zonasEntreno) do
@@ -64057,19 +64132,86 @@ end)
 </Item>
 </Item>
 </Item>
-<Item class="StarterPlayer" referent="RBXJ000001E">
+<Item class="StarterPlayer" referent="RBXJ0000022">
 <Properties>
 <string name="Name">StarterPlayer</string>
 </Properties>
-<Item class="StarterPlayerScripts" referent="RBXJ000001D">
+<Item class="StarterPlayerScripts" referent="RBXJ0000021">
 <Properties>
 <string name="Name">StarterPlayerScripts</string>
 </Properties>
-<Item class="Folder" referent="RBXJ000001C">
+<Item class="Folder" referent="RBXJ0000020">
 <Properties>
 <string name="Name">Mas1Cliente</string>
 </Properties>
-<Item class="LocalScript" referent="RBXJ0000012">
+<Item class="LocalScript" referent="RBXJ0000013">
+<Properties>
+<string name="Name">Ayuda</string>
+<ProtectedString name="Source"><![CDATA[-- Ayuda de mandos de «+1 de lanzamiento por segundo»: un jugador nuevo no sabe que A/D mueven ni que W da boost. Muestra una tira
+-- de mandos arriba (teclado o movil) durante los primeros vuelos de la sesion y un consejo en tierra antes del primer lanzamiento.
+-- Sin imagenes. SIN PROBAR EN STUDIO.
+local Players, UIS = game:GetService("Players"), game:GetService("UserInputService")
+local plr = Players.LocalPlayer
+local T = require(script.Parent:WaitForChild("Tema"))
+local C = T.col
+
+local gui = T.n("ScreenGui", { Name = "Mas1Ayuda", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 5 }, plr:WaitForChild("PlayerGui"))
+T.escala(gui)
+
+local movil = UIS.TouchEnabled and not UIS.KeyboardEnabled
+local MANDOS = movil
+	and { { "JOYSTICK", "mover y boost" }, { "SALTO", "subir" }, { "PUÑO / PATADA", "golpear" } }
+	or { { "A / D", "a los lados" }, { "W", "boost" }, { "ESPACIO / S", "subir / bajar" }, { "CLIC", "puño" }, { "E", "patada" } }
+
+-- tira de mandos durante el vuelo
+local ancho = #MANDOS * 170
+local tira = T.panel(gui, { Size = UDim2.fromOffset(ancho, 78), AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -110), Visible = false }, C.tinta)
+for i, m in ipairs(MANDOS) do
+	T.texto(tira, { Text = m[1], TextSize = 24, TextColor3 = C.sol, Size = UDim2.fromOffset(170, 30), Position = UDim2.fromOffset((i - 1) * 170, 8) })
+	T.texto(tira, { Text = m[2], TextSize = 18, Size = UDim2.fromOffset(170, 26), Position = UDim2.fromOffset((i - 1) * 170, 40) })
+end
+
+-- consejo en tierra
+local consejo = T.panel(gui, { Size = UDim2.fromOffset(560, 70), AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -130), Visible = false }, C.cielo)
+T.texto(consejo, { Text = movil and "Toca ¡LANZAR! para salir volando" or "Pulsa F o ¡LANZAR! para salir volando", TextSize = 26, TextColor3 = C.tinta, TextStrokeTransparency = 1, Size = UDim2.fromScale(1, 1) })
+
+local vuelos = 0
+local function refrescar()
+	local vuela = plr:GetAttribute("EnVuelo") == true
+	tira.Visible = vuela and vuelos <= 3
+	consejo.Visible = (not vuela) and vuelos == 0
+end
+plr:GetAttributeChangedSignal("EnVuelo"):Connect(function()
+	if plr:GetAttribute("EnVuelo") == true then
+		vuelos = vuelos + 1
+		refrescar()
+		local este = vuelos
+		task.delay(12, function() if vuelos == este then tira.Visible = false end end) -- se esconde solo a los 12 s
+	else
+		refrescar()
+	end
+end)
+refrescar()
+]]></ProtectedString>
+</Properties>
+</Item>
+<Item class="LocalScript" referent="RBXJ0000014">
+<Properties>
+<string name="Name">Canon</string>
+<ProtectedString name="Source"><![CDATA[-- Cañon del lobby: al activar el aviso del cañon (E, toque o mando) pide el lanzamiento al servidor. SIN PROBAR EN STUDIO.
+local PPS, Players, RS = game:GetService("ProximityPromptService"), game:GetService("Players"), game:GetService("ReplicatedStorage")
+local Red = require(RS:WaitForChild("Mas1"):WaitForChild("Red"))
+local accion = Red.evento("MAS1_Accion")
+local plr = Players.LocalPlayer
+PPS.PromptTriggered:Connect(function(prompt, jugador)
+	if jugador == plr and prompt.Parent and prompt.Parent.Name == "MAS1_Canon" and plr:GetAttribute("EnVuelo") ~= true then
+		accion:FireServer("lanzar")
+	end
+end)
+]]></ProtectedString>
+</Properties>
+</Item>
+<Item class="LocalScript" referent="RBXJ0000015">
 <Properties>
 <string name="Name">Efectos</string>
 <ProtectedString name="Source"><![CDATA[-- Dibuja los efectos de src/Efectos.lua con ParticleEmitter. El servidor (o el juego) dispara RemoteEvent MAS1_Efecto:
@@ -64111,7 +64253,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000013">
+<Item class="LocalScript" referent="RBXJ0000016">
 <Properties>
 <string name="Name">Entidades</string>
 <ProtectedString name="Source"><![CDATA[-- Enemigos y cofres de «+1 de lanzamiento por segundo» vistos en el cliente. El servidor solo pone anclas invisibles en
@@ -64264,7 +64406,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000014">
+<Item class="LocalScript" referent="RBXJ0000017">
 <Properties>
 <string name="Name">HudVuelo</string>
 <ProtectedString name="Source"><![CDATA[-- HUD de vuelo de «+1 de lanzamiento por segundo». Lee atributos del jugador local (los pone el juego o DemoVisual.server.lua):
@@ -64313,6 +64455,11 @@ local pMul = T.panel(gui, { Size = UDim2.fromOffset(200, 96), AnchorPoint = Vect
 T.texto(pMul, { Text = "ZONA", TextSize = 17, TextColor3 = C.tinta, TextStrokeTransparency = 1, Size = UDim2.new(1, 0, 0, 20), Position = UDim2.fromOffset(0, 6) })
 local tMul = T.texto(pMul, { Text = "x1", TextSize = 58, TextColor3 = C.tinta, TextStrokeTransparency = 1, Size = UDim2.new(1, 0, 0, 64), Position = UDim2.fromOffset(0, 24) }); tMul:SetAttribute("base", 58)
 
+-- Combo (a la derecha del centro): xN con rebote mientras haya racha de aros, orbes, cofres y golpes
+local pCombo = T.panel(gui, { Size = UDim2.fromOffset(170, 96), AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 230, 0, 120), Rotation = 4, Visible = false }, C.rosa)
+T.texto(pCombo, { Text = "COMBO", TextSize = 17, Size = UDim2.new(1, 0, 0, 20), Position = UDim2.fromOffset(0, 6) })
+local tCombo = T.texto(pCombo, { Text = "x0", TextSize = 56, Size = UDim2.new(1, 0, 0, 64), Position = UDim2.fromOffset(0, 24) }); tCombo:SetAttribute("base", 56)
+
 -- Mascota (abajo a la izquierda)
 local pMas = T.panel(gui, { Size = UDim2.fromOffset(280, 92), AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 24, 1, -34) }, C.crema)
 T.texto(pMas, { Text = "MASCOTA", TextSize = 16, TextColor3 = C.tinta, TextStrokeTransparency = 1, Size = UDim2.new(1, -24, 0, 18), Position = UDim2.fromOffset(14, 6), TextXAlignment = Enum.TextXAlignment.Left })
@@ -64320,7 +64467,7 @@ local tMas = T.texto(pMas, { Text = "—", TextSize = 28, TextColor3 = C.tinta, 
 local chip = T.panel(pMas, { Size = UDim2.fromOffset(150, 28), Position = UDim2.fromOffset(14, 56) }, C.menta); chip.UIStroke.Thickness = 3
 local tChip = T.texto(chip, { Text = "x1 ganancias", TextSize = 18, TextColor3 = C.tinta, TextStrokeTransparency = 1, Size = UDim2.fromScale(1, 1) })
 
--- Botones (movil y escritorio; en escritorio: clic = puño, E = patada, W = turbo; son PROPUESTAS)
+-- Botones (movil y escritorio; en escritorio: clic = puño, E = patada; W es boost mantenido; son PROPUESTAS)
 local function lanzar(nombre) if accion then accion:FireServer(nombre) end end
 local bPuno = T.boton(gui, { Size = UDim2.fromOffset(130, 130), AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -150, 1, -60), Text = "PUÑO" }, C.rosa, function() lanzar("puno") end)
 local bPat = T.boton(gui, { Size = UDim2.fromOffset(110, 110), AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -34, 1, -130), Text = "PATADA" }, C.sol, function() lanzar("patada") end); bPat.TextColor3 = C.tinta
@@ -64332,7 +64479,7 @@ if not UIS.TouchEnabled then
 	UIS.InputBegan:Connect(function(i, gp)
 		if gp or plr:GetAttribute("EnVuelo") ~= true then return end -- solo se golpea volando
 		if i.UserInputType == Enum.UserInputType.MouseButton1 and os.clock() - focoDesde < 0.4 then return end
-		if i.UserInputType == Enum.UserInputType.MouseButton1 then lanzar("puno") elseif i.KeyCode == Enum.KeyCode.E then lanzar("patada") elseif i.KeyCode == Enum.KeyCode.W then lanzar("turbo") end
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then lanzar("puno") elseif i.KeyCode == Enum.KeyCode.E then lanzar("patada") end
 	end)
 end
 
@@ -64348,15 +64495,20 @@ local function refrescar()
 	end
 	local m = plr:GetAttribute("ZonaMult") or 1; tMul.Text = "x" .. m
 	if ultimo.m and ultimo.m ~= m then pop(tMul) end; ultimo.m = m
+	local combo = plr:GetAttribute("Combo") or 0
+	pCombo.Visible = combo >= 2 and plr:GetAttribute("EnVuelo") == true
+	tCombo.Text = "x" .. combo
+	tCombo.TextColor3 = combo >= 20 and C.sol or (combo >= 10 and C.cielo or C.crema)
+	if ultimo.combo and ultimo.combo ~= combo and combo > 0 then pop(tCombo) end; ultimo.combo = combo
 	tAro.Text = (plr:GetAttribute("Aros") or 0) .. " / " .. (plr:GetAttribute("ArosTotal") or 0)
 	tMas.Text = plr:GetAttribute("Mascota") or "—"; tChip.Text = "x" .. tostring(plr:GetAttribute("MascotaBonus") or 1) .. " ganancias"
 end
-for _, a in ipairs({ "Energia", "Potencia", "Puntos", "Distancia", "ZonaMult", "Aros", "ArosTotal", "Mascota", "MascotaBonus" }) do plr:GetAttributeChangedSignal(a):Connect(refrescar) end
+for _, a in ipairs({ "Energia", "Potencia", "Puntos", "Distancia", "ZonaMult", "Aros", "ArosTotal", "Mascota", "MascotaBonus", "Combo", "EnVuelo" }) do plr:GetAttributeChangedSignal(a):Connect(refrescar) end
 refrescar()
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000015">
+<Item class="LocalScript" referent="RBXJ0000018">
 <Properties>
 <string name="Name">Inventario</string>
 <ProtectedString name="Source"><![CDATA[-- Inventario de «+1 de lanzamiento por segundo»: pestañas MASCOTAS (equipar hasta 3), HUEVOS (abrir con dinero) y ALAS (comprar y
@@ -64542,7 +64694,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000016">
+<Item class="LocalScript" referent="RBXJ0000019">
 <Properties>
 <string name="Name">Orbes</string>
 <ProtectedString name="Source"><![CDATA[-- Orbes «+1» de «+1 de lanzamiento por segundo» vistos en el cliente: los mismos que genera el servidor (Encuentros.colocarOrbes,
@@ -64596,7 +64748,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000017">
+<Item class="LocalScript" referent="RBXJ000001A">
 <Properties>
 <string name="Name">Rebirth</string>
 <ProtectedString name="Source"><![CDATA[-- Rebirth y avisos de «+1 de lanzamiento por segundo»: boton REBIRTH (solo en tierra) con un panel de confirmacion que muestra
@@ -64677,7 +64829,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000018">
+<Item class="LocalScript" referent="RBXJ000001B">
 <Properties>
 <string name="Name">Resultados</string>
 <ProtectedString name="Source"><![CDATA[-- Pantalla de resultados del vuelo de «+1 de lanzamiento por segundo»: aparece al aterrizar (MAS1_Resultado), cuenta hacia arriba
@@ -64733,7 +64885,7 @@ resultado.OnClientEvent:Connect(function(r)
 	m.Text = "x" .. (r.multiplicador or 1)
 	contar(di, r.dinero or 0, 1.2, function(n) return "+" .. n end)
 	contar(ex, r.exp or 0, 1.2, function(n) return "+" .. n end)
-	T.texto(p, { Text = string.format("%d aros  ·  %d golpes  ·  %d cofres", r.aros or 0, r.golpes or 0, r.cofres or 0), TextSize = 22, TextColor3 = T.col.crema, Size = UDim2.new(1, 0, 0, 30), Position = UDim2.fromOffset(0, 346) })
+	T.texto(p, { Text = string.format("%d aros · %d orbes · %d golpes · %d cofres", r.aros or 0, r.orbes or 0, r.golpes or 0, r.cofres or 0), TextSize = 22, TextColor3 = T.col.crema, Size = UDim2.new(1, 0, 0, 30), Position = UDim2.fromOffset(0, 346) })
 	T.boton(raiz, { Size = UDim2.fromOffset(280, 70), AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 1, -62), Text = "¡OTRA VEZ!" }, T.col.sol, function()
 		cerrar()
 		accion:FireServer("lanzar")
@@ -64749,7 +64901,149 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000019">
+<Item class="LocalScript" referent="RBXJ000001C">
+<Properties>
+<string name="Name">Seguidores</string>
+<ProtectedString name="Source"><![CDATA[-- Mascotas que te siguen y alas puestas de «+1 de lanzamiento por segundo» (todo en el cliente, para todos los jugadores).
+-- Lee los atributos del jugador: MascotasEq (ids separados por coma, hasta 3) y Alas (id equipado). Si existen las mallas importadas en
+-- ReplicatedStorage.MAS1_Modelos.Mascotas.<id> / .Alas.<id>, las usa; si no, dibuja piezas provisionales con el color de su rareza.
+-- Las mascotas flotan alrededor y detras, con balanceo; en vuelo se acercan y se agrupan. SIN PROBAR EN STUDIO.
+local Players, RS, RunService = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService")
+local Mas1 = RS:WaitForChild("Mas1")
+local M = require(Mas1:WaitForChild("Mascotas"))
+local COLOR = { comun = Color3.fromRGB(190, 190, 200), poco_comun = Color3.fromRGB(110, 210, 120), raro = Color3.fromRGB(80, 160, 255),
+	epico = Color3.fromRGB(170, 100, 255), legendario = Color3.fromRGB(255, 190, 40), mitico = Color3.fromRGB(255, 80, 140), robux = Color3.fromRGB(255, 120, 40) }
+local ALAS_COLOR = { iniciales = Color3.fromRGB(245, 235, 210), roboticas = Color3.fromRGB(235, 240, 250), avanzadas = Color3.fromRGB(32, 36, 70) }
+
+local function modelos(carpeta, id)
+	local m = RS:FindFirstChild("MAS1_Modelos")
+	local c = m and m:FindFirstChild(carpeta)
+	return c and c:FindFirstChild(id)
+end
+
+local estado = {} -- [plr] = { mascotas = {{id, modelo}}, alas = modelo, idAlas, clave }
+
+local function pieza(tam, color, forma)
+	local p = Instance.new("Part")
+	p.Size, p.Color, p.Material = tam, color, Enum.Material.SmoothPlastic
+	p.Anchored, p.CanCollide, p.CanTouch, p.CanQuery, p.Massless = true, false, false, false, true
+	if forma then p.Shape = forma end
+	return p
+end
+
+local function nuevaMascota(id)
+	local d = M.get(id)
+	local plantilla = modelos("Mascotas", id)
+	local m
+	if plantilla then
+		m = plantilla:Clone()
+	else -- provisional: bola con ojos y el color de la rareza
+		m = Instance.new("Model")
+		local cuerpo = pieza(Vector3.new(2.2, 2.2, 2.2), COLOR[d and d.rareza or "comun"], Enum.PartType.Ball)
+		cuerpo.Name = "Cuerpo"
+		cuerpo.Parent = m
+		for _, dx in ipairs({ -0.5, 0.5 }) do
+			local o = pieza(Vector3.new(0.35, 0.35, 0.2), Color3.fromRGB(28, 21, 48))
+			o.CFrame = CFrame.new(dx, 0.3, -1.05)
+			o.Parent = m
+			o:SetAttribute("rel", true)
+		end
+		m.PrimaryPart = cuerpo
+	end
+	for _, p in ipairs(m:GetDescendants()) do
+		if p:IsA("BasePart") then p.Anchored, p.CanCollide, p.CanTouch, p.CanQuery, p.Massless = true, false, false, false, true end
+	end
+	m.Name = "Mas1Mascota_" .. id
+	m.Parent = workspace
+	return m
+end
+
+local function nuevasAlas(id)
+	local plantilla = modelos("Alas", id)
+	local m
+	if plantilla then
+		m = plantilla:Clone()
+	else -- provisional: dos alas de cuña
+		m = Instance.new("Model")
+		local c = ALAS_COLOR[id] or Color3.fromRGB(240, 240, 240)
+		for i, lado in ipairs({ -1, 1 }) do
+			local a = pieza(Vector3.new(0.3, 4, 3), c)
+			a.Name = i == 1 and "AlaI" or "AlaD"
+			a.Parent = m
+		end
+		m.PrimaryPart = m:FindFirstChildWhichIsA("BasePart")
+	end
+	for _, p in ipairs(m:GetDescendants()) do
+		if p:IsA("BasePart") then p.Anchored, p.CanCollide, p.CanTouch, p.CanQuery, p.Massless = true, false, false, false, true end
+	end
+	m.Name = "Mas1Alas"
+	m.Parent = workspace
+	return m
+end
+
+local function limpiar(plr)
+	local e = estado[plr]
+	if not e then return end
+	for _, x in ipairs(e.mascotas) do x.modelo:Destroy() end
+	if e.alas then e.alas:Destroy() end
+	estado[plr] = nil
+end
+
+local function sincronizar(plr)
+	local clave = (plr:GetAttribute("MascotasEq") or "") .. "|" .. (plr:GetAttribute("Alas") or "")
+	local e = estado[plr]
+	if e and e.clave == clave then return end
+	limpiar(plr)
+	e = { mascotas = {}, clave = clave, idAlas = plr:GetAttribute("Alas") or "" }
+	for id in string.gmatch(plr:GetAttribute("MascotasEq") or "", "[^,]+") do
+		if #e.mascotas < M.MAX_EQUIPADAS and M.get(id) then e.mascotas[#e.mascotas + 1] = { id = id, modelo = nuevaMascota(id) } end
+	end
+	if e.idAlas ~= "" then e.alas = nuevasAlas(e.idAlas) end
+	estado[plr] = e
+end
+
+RunService.RenderStepped:Connect(function(dt)
+	local t = os.clock()
+	for _, plr in ipairs(Players:GetPlayers()) do
+		local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+		if not hrp then limpiar(plr) continue end
+		sincronizar(plr)
+		local e = estado[plr]
+		if not e then continue end
+		local vuela = plr:GetAttribute("EnVuelo") == true
+		local boost = plr:GetAttribute("Boost") == true
+		-- mascotas: arco detras y arriba; en vuelo, mas pegadas y alineadas con la direccion
+		local n = #e.mascotas
+		for i, x in ipairs(e.mascotas) do
+			local ang = (i - (n + 1) / 2) * 0.9
+			local radio = vuela and 5 or 6
+			local alto = 2.5 + math.sin(t * 2.2 + i * 1.7) * 0.5 + (vuela and 1 or 0)
+			local off = Vector3.new(math.sin(ang) * radio, alto, math.cos(ang) * radio * (vuela and 1.4 or 0.9))
+			local objetivo = hrp.CFrame * CFrame.new(off) * CFrame.Angles(0, math.rad(vuela and 0 or 180), 0)
+			local actual = x.modelo:GetPivot()
+			x.modelo:PivotTo(actual:Lerp(objetivo, 1 - math.exp(-(boost and 14 or 9) * dt)))
+		end
+		-- alas: pegadas a la espalda; aletean al volar
+		if e.alas then
+			local torso = plr.Character:FindFirstChild("UpperTorso") or plr.Character:FindFirstChild("Torso") or hrp
+			local abre = vuela and (0.35 + (boost and 0.35 or 0.15) * math.sin(t * (boost and 14 or 7))) or 0.15 + 0.03 * math.sin(t * 1.5)
+			local base = torso.CFrame * CFrame.new(0, 0.4, 0.7)
+			if e.alas.PrimaryPart and #e.alas:GetChildren() == 2 and not modelos("Alas", e.idAlas) then
+				local ai, ad = e.alas:FindFirstChild("AlaI"), e.alas:FindFirstChild("AlaD")
+				if ai then ai.CFrame = base * CFrame.new(-2, 0, 0) * CFrame.Angles(0, 0, -abre) end
+				if ad then ad.CFrame = base * CFrame.new(2, 0, 0) * CFrame.Angles(0, 0, abre) end
+			else
+				e.alas:PivotTo(base)
+			end
+		end
+	end
+end)
+
+Players.PlayerRemoving:Connect(limpiar)
+]]></ProtectedString>
+</Properties>
+</Item>
+<Item class="ModuleScript" referent="RBXJ000001D">
 <Properties>
 <string name="Name">Tema</string>
 <ProtectedString name="Source"><![CDATA[-- Tema de interfaz de «+1 de lanzamiento por segundo»: paneles gruesos con contorno oscuro y sombra dura, colores vivos, tipografia redondeada.
@@ -64820,7 +65114,7 @@ return T
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ000001A">
+<Item class="LocalScript" referent="RBXJ000001E">
 <Properties>
 <string name="Name">VueloControl</string>
 <ProtectedString name="Source"><![CDATA[-- Control del vuelo en el cliente de «+1 de lanzamiento por segundo». El cliente mueve su propio personaje (asi responde al instante)
@@ -64995,7 +65289,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ000001B">
+<Item class="LocalScript" referent="RBXJ000001F">
 <Properties>
 <string name="Name">Zonas</string>
 <ProtectedString name="Source"><![CDATA[-- Cielo y niebla por zona en el cliente de «+1 de lanzamiento por segundo»: al cruzar el arco de cada zona cambian la hora y la
