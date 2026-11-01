@@ -109,16 +109,37 @@ RunService.RenderStepped:Connect(function(dt)
 		if not e then continue end
 		local vuela = plr:GetAttribute("EnVuelo") == true
 		local boost = plr:GetAttribute("Boost") == true
-		-- mascotas: arco detras y arriba; en vuelo, mas pegadas y alineadas con la direccion
+		-- mascotas: cada una tiene su propia posicion relativa al jugador (en un marco que solo gira en horizontal, para no heredar la
+		-- postura tumbada del vuelo) que persigue su sitio con un muelle suave y un vaivén propio: asi no copian al jugador.
 		local n = #e.mascotas
+		local pos0 = hrp.Position
+		local mira = hrp.CFrame.LookVector
+		local marco = vuela and CFrame.new(pos0) or CFrame.lookAt(pos0, pos0 + Vector3.new(mira.X, 0, mira.Z).Unit)
 		for i, x in ipairs(e.mascotas) do
-			local ang = (i - (n + 1) / 2) * 0.9
-			local radio = vuela and 5 or 6
-			local alto = 2.5 + math.sin(t * 2.2 + i * 1.7) * 0.5 + (vuela and 1 or 0)
-			local off = Vector3.new(math.sin(ang) * radio, alto, math.cos(ang) * radio * (vuela and 1.4 or 0.9))
-			local objetivo = hrp.CFrame * CFrame.new(off) * CFrame.Angles(0, math.rad(vuela and 0 or 180), 0)
-			local actual = x.modelo:GetPivot()
-			x.modelo:PivotTo(actual:Lerp(objetivo, 1 - math.exp(-(boost and 14 or 9) * dt)))
+			local lado = (i - (n + 1) / 2) -- -1, 0, 1 con tres
+			local ph = i * 2.1
+			local objetivo
+			if vuela then -- a los lados y un poco por delante, para que se vean de perfil desde la camara
+				objetivo = Vector3.new(lado * 9 + (lado == 0 and 0 or 0), (lado == 0 and 5.5 or 1.5) + math.sin(t * 2.4 + ph) * 0.8, -5 + math.sin(t * 1.3 + ph) * 1.5)
+			else -- en tierra: delante del jugador, en arco, mirandole
+				objetivo = Vector3.new(lado * 5.5 + math.sin(t * 0.7 + ph) * 1.2, 3 + math.sin(t * 2 + ph) * 0.6, -6 + math.cos(t * 0.6 + ph) * 1.2)
+			end
+			x.rel = x.rel or objetivo
+			local k = vuela and (boost and 6 or 4) or 3
+			x.rel = x.rel:Lerp(objetivo, 1 - math.exp(-k * dt))
+			local mundo = marco:PointToWorldSpace(x.rel)
+			local dir
+			if vuela then -- de perfil hacia fuera y hacia delante
+				dir = Vector3.new(lado * 0.8, 0, -1).Unit
+				if lado == 0 then dir = Vector3.new(0.5, 0, -1).Unit end
+			else
+				dir = Vector3.new(pos0.X - mundo.X, 0, pos0.Z - mundo.Z)
+				dir = dir.Magnitude > 0.1 and dir.Unit or Vector3.new(0, 0, 1)
+			end
+			local velLado = (x.rel - objetivo).X
+			local cf = CFrame.lookAt(mundo, mundo + dir) * CFrame.Angles(0, 0, math.clamp(velLado * 0.08, -0.4, 0.4)) -- se inclina al desplazarse
+			x.modelo:PivotTo(x.ultimo and x.ultimo:Lerp(cf, 1 - math.exp(-12 * dt)) or cf)
+			x.ultimo = x.modelo:GetPivot()
 		end
 		-- alas: pegadas a la espalda; aletean al volar
 		if e.alas then
