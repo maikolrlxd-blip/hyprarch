@@ -2,7 +2,11 @@
   "name": "Mas1Lanzamiento",
   "tree": {
     "$className": "DataModel",
-    "ReplicatedStorage": { "$className": "ReplicatedStorage", "Mas1": { "$path": "src" } },
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Mas1": { "$path": "src" },
+      "MAS1_Modelos": { "$path": "assets/MAS1_Modelos.rbxmx" }
+    },
     "ServerScriptService": { "$className": "ServerScriptService", "Mas1Servidor": { "$path": "server" } },
     "StarterPlayer": {
       "$className": "StarterPlayer",

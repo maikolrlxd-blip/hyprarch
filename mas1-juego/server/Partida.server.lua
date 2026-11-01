@@ -464,7 +464,7 @@ RunService.Heartbeat:Connect(function(dt)
 			end
 			plr:SetAttribute("Misiones", Mis.codificar(j.misiones))
 			resultado:FireClient(plr, { distancia = math.floor(res.distancia), aros = res.aros, golpes = res.golpes, cofres = res.cofres,
-				multiplicador = res.multiplicador, dinero = res.dinero, exp = res.exp, tiempo = res.tiempo })
+				orbes = res.orbes, multiplicador = res.multiplicador, dinero = res.dinero, exp = res.exp, tiempo = res.tiempo })
 			-- de vuelta al lobby (prueba del 31/10: te quedabas al final del carril). Unos segundos para ver el aterrizaje; los
 			-- resultados siguen en pantalla y «¡OTRA VEZ!» lanza desde el cañon igual
 			local n = j.nVuelo

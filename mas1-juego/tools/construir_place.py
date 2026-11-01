@@ -1,10 +1,13 @@
 # Place de prueba de «+1 de lanzamiento por segundo» sin Rojo: la place del mapa v01 en piezas (mas1-arte/mapa-v01/roblox) con los
 # scripts del juego colocados como los pondria Rojo segun default.project.json (src -> ReplicatedStorage.Mas1, server ->
 # ServerScriptService.Mas1Servidor, client -> StarterPlayer.StarterPlayerScripts.Mas1Cliente; .server.lua = Script,
-# .client.lua = LocalScript, .lua = ModuleScript). Se abre en Studio con File > Open from File: es un archivo local, no sube nada.
+# .client.lua = LocalScript, .lua = ModuleScript; un "$path" a un .rbxmx mete ese modelo, como Rojo: assets/MAS1_Modelos.rbxmx son
+# las mallas de mascotas y alas que usa client/Seguidores.client.lua). Se abre en Studio con File > Open from File: es un archivo
+# local, no sube nada (las mallas del .rbxmx ya estan subidas a la cuenta de Maikol).
 # Uso (desde mas1-juego): python tools/construir_place.py   ->   build/Mas1-prueba.rbxlx
 import json
 import os
+import re
 import xml.etree.ElementTree as ET
 from xml.sax.saxutils import escape
 
@@ -46,7 +49,26 @@ def carpeta(ruta, nombre):
     return item('Folder', nombre, hijos)
 
 
+COMPARTIDAS = []  # bloques <SharedStrings> de los .rbxmx (datos de malla que las piezas citan por su md5)
+
+
+def modelo_rbxmx(ruta):
+    """El modelo de un .rbxmx guardado desde Studio, con los referentes renombrados (M + el suyo) para que no choquen con los del
+    mapa; sus SharedStrings se guardan aparte y van al final de la place."""
+    texto = open(ruta, encoding='utf-8').read()
+    m = re.search(r'<SharedStrings>(.*?)</SharedStrings>', texto, re.S)
+    if m:
+        COMPARTIDAS.append(m.group(1))
+        texto = texto[:m.start()] + texto[m.end():]
+    cuerpo = texto[texto.index('<Item '):texto.rindex('</roblox>')]
+    cuerpo = re.sub(r'referent="(RBX[0-9A-Fa-f]+)"', r'referent="M\1"', cuerpo)
+    cuerpo = re.sub(r'(<Ref name="[^"]*">)(RBX[0-9A-Fa-f]+)(</Ref>)', r'\1M\2\3', cuerpo)
+    return [cuerpo]
+
+
 def nodo(nombre, d):
+    if '$path' in d and d['$path'].endswith('.rbxmx'):
+        return modelo_rbxmx(os.path.join(JUEGO, d['$path']))
     if '$path' in d:
         return carpeta(os.path.join(JUEGO, d['$path']), nombre)
     return item(d['$className'], nombre, [nodo(k, v) for k, v in d.items() if not k.startswith('$')])
@@ -79,6 +101,11 @@ fin = texto.index('</Properties>', ws) + len('</Properties>')
 placas = []  # las zonas de entreno ahora las crea server/Lobby.server.lua
 texto = texto[:fin] + '\n' + '\n'.join(placas) + texto[fin:]
 texto = texto.rstrip()[:-len('</roblox>')] + '\n'.join(servicios) + '\n</roblox>\n'
+if COMPARTIDAS:  # los datos de malla de los .rbxmx, en el bloque SharedStrings de la place (uno solo, al final)
+    if '<SharedStrings>' in texto:
+        texto = texto.replace('</SharedStrings>', ''.join(COMPARTIDAS) + '</SharedStrings>', 1)
+    else:
+        texto = texto.replace('\n</roblox>\n', '\n<SharedStrings>' + ''.join(COMPARTIDAS) + '</SharedStrings>\n</roblox>\n')
 os.makedirs(os.path.dirname(SALIDA), exist_ok=True)
 with open(SALIDA, 'w', encoding='utf-8', newline='\n') as f:
     f.write(texto)
