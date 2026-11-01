@@ -42,6 +42,7 @@ local function mandarInventario(plr, j)
 	plr:SetAttribute("Mascota", p and p.nombre or "—")
 	plr:SetAttribute("MascotaBonus", math.floor(M.multiplicadores(j.inv.equipadas).dinero * 100 + 0.5) / 100)
 	plr:SetAttribute("Alas", j.inv.alaEquipada or "")
+	plr:SetAttribute("MascotasEq", table.concat(j.inv.equipadas, ",")) -- ids equipados («gorrion,aguila»): client/Seguidores.client.lua
 end
 
 local function tabla(v)
