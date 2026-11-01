@@ -18,6 +18,7 @@ local M = require(Mas1:WaitForChild("Mascotas"))
 local Alas = require(Mas1:WaitForChild("Alas"))
 local I = require(Mas1:WaitForChild("Inventario"))
 local D = require(Mas1:WaitForChild("Datos"))
+local Mis = require(Mas1:WaitForChild("Misiones"))
 local G = require(script.Parent:WaitForChild("Guardado"))
 local Red = require(Mas1:WaitForChild("Red"))
 local accion, efecto, resultado = Red.evento("MAS1_Accion"), Red.evento("MAS1_Efecto"), Red.evento("MAS1_Resultado")
@@ -172,9 +173,10 @@ local function alEntrar(plr)
 		if plr:GetAttribute(k) == nil then plr:SetAttribute(k, v) end
 	end
 	plr:SetAttribute("ArosTotal", #mundo.aros)
-	local j = { s = P.nueva(V, E), msgs = 0, desde = 0, hud = 0, potencia = 0, entreno = 0, inv = I.nuevo(), cargado = false,
+	local j = { s = P.nueva(V, E), msgs = 0, desde = 0, hud = 0, potencia = 0, entreno = 0, inv = I.nuevo(), cargado = false, misiones = Mis.nuevo(math.random),
 		dias = { diasSeguidos = 0, ultimoDia = -1 } }
 	jugadores[plr] = j
+	plr:SetAttribute("Misiones", Mis.codificar(j.misiones))
 	plr:GetAttributeChangedSignal("Potencia"):Connect(function() -- cambiada a mano (en Studio, para probar): se adopta
 		local v = plr:GetAttribute("Potencia")
 		if j.cargado and type(v) == "number" and math.abs(v - math.floor(j.potencia)) >= 1 then j.potencia = v end
@@ -455,6 +457,12 @@ RunService.Heartbeat:Connect(function(dt)
 			plr:SetAttribute("Dinero", (plr:GetAttribute("Dinero") or 0) + res.dinero)
 			plr:SetAttribute("Exp", (plr:GetAttribute("Exp") or 0) + res.exp)
 			cerrarVuelo(plr, j, hrp)
+			local premio, hechas = Mis.registrar(j.misiones, { distancia = res.distancia, aros = res.aros, golpes = res.golpes, cofres = res.cofres, orbes = res.orbes }, math.random)
+			if premio > 0 then
+				plr:SetAttribute("Dinero", (plr:GetAttribute("Dinero") or 0) + premio)
+				aviso(plr, string.format("¡Misión cumplida! +%d de dinero", premio))
+			end
+			plr:SetAttribute("Misiones", Mis.codificar(j.misiones))
 			resultado:FireClient(plr, { distancia = math.floor(res.distancia), aros = res.aros, golpes = res.golpes, cofres = res.cofres,
 				multiplicador = res.multiplicador, dinero = res.dinero, exp = res.exp, tiempo = res.tiempo })
 			-- de vuelta al lobby (prueba del 31/10: te quedabas al final del carril). Unos segundos para ver el aterrizaje; los
