@@ -15,6 +15,7 @@ local function modelos(carpeta, id)
 	return c and c:FindFirstChild(id)
 end
 
+local TAM_MAX = 5 -- studs: lado mayor maximo de una mascota puesta
 local estado = {} -- [plr] = { mascotas = {{id, modelo}}, alas = modelo, idAlas, clave }
 
 local function pieza(tam, color, forma)
@@ -31,6 +32,8 @@ local function nuevaMascota(id)
 	local m
 	if plantilla then
 		m = plantilla:Clone()
+		local mayor = math.max(m:GetExtentsSize().X, m:GetExtentsSize().Y, m:GetExtentsSize().Z)
+		if mayor > TAM_MAX then m:ScaleTo(m:GetScale() * TAM_MAX / mayor) end -- las altas (aguila, grifo) tapaban al jugador
 	else -- provisional: bola con ojos y el color de la rareza
 		m = Instance.new("Model")
 		local cuerpo = pieza(Vector3.new(2.2, 2.2, 2.2), COLOR[d and d.rareza or "comun"], Enum.PartType.Ball)
