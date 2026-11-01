@@ -20,7 +20,8 @@ assert v.planeando and not V.atacar(v)
 # ataque consume
 v=V.nuevo(100); e=v.energia; assert V.atacar(v) and v.energia==e-3
 # multiplicador de zona
-assert V.multiplicadorZona(0)==1 and V.multiplicadorZona(600)==4 and V.multiplicadorZona(5000)==6
+assert V.multiplicadorZona(0)==1 and V.multiplicadorZona(600)==2 and V.multiplicadorZona(1300)==3
+assert V.multiplicadorZona(2400)==4 and V.multiplicadorZona(4000)==5 and V.multiplicadorZona(6000)==6
 # aterrizaje con bonus de mascota
 m=M.multiplicadores(l.table_from(['grifo']))
 v=V.nuevo(50,m)

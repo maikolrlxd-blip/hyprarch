@@ -38,7 +38,7 @@ FUENTE = {
     'P': '####.|#...#|#...#|####.|#....|#....|#....', 'R': '####.|#...#|#...#|####.|#.#..|#..#.|#...#',
     'S': '.####|#....|#....|.###.|....#|....#|####.', 'T': '#####|..#..|..#..|..#..|..#..|..#..|..#..',
     'U': '#...#|#...#|#...#|#...#|#...#|#...#|.###.', 'x': '.....|.....|#...#|.#.#.|..#..|.#.#.|#...#',
-    '3': '####.|....#|....#|.###.|....#|....#|####.', '4': '#..#.|#..#.|#..#.|#####|...#.|...#.|...#.',
+    '2': '.###.|#...#|....#|...#.|..#..|.#...|#####', '3': '####.|....#|....#|.###.|....#|....#|####.', '4': '#..#.|#..#.|#..#.|#####|...#.|...#.|...#.',
     '5': '#####|#....|####.|....#|....#|#...#|.###.', '6': '.###.|#....|#....|####.|#...#|#...#|.###.',
 }
 
@@ -144,31 +144,48 @@ def lado(s):
     return 'LadoDer' if s > 0 else 'LadoIzq'                       # +X queda a la derecha del jugador
 
 
-def zona_nubes(P, y0, rnd):
-    suelo_baldosas(P['Suelo'], y0, ('nube', 'nube_b'))
+def zona_prado(P, y0, rnd, ligero=False):
+    """Pradera (x2) desde el lobby hasta el Mar de Nubes: césped flotante, islitas con árbol a los lados y nubes bajas."""
+    suelo_baldosas(P['Suelo'], y0, ('cesped', 'cesped2'))
+    paso = 2 if ligero else 1
     for s in (1, -1):
-        for j in range(18):                                            # nubes del borde del carril
-            nube(P['Suelo'], (s * (ANCHO / 2 + 5), y0 + 10 + j * 20, -1.5), rnd.uniform(10, 14), rnd.uniform(12, 18), rnd.uniform(4, 6), rnd,
+        for j in range(0, 18, paso):                                   # nubes del borde del carril
+            nube(P['Suelo'], (s * (ANCHO / 2 + 5), y0 + 10 + j * 20, -1.5), rnd.uniform(9, 13), rnd.uniform(12, 18), rnd.uniform(4, 6), rnd,
                  'nube', 'nube_sombra')
-        for j in range(12):                                            # mar de nubes más bajo, hacia fuera
+        for j in range(0, 12, paso):                                   # nubes bajas hacia fuera
             nube(P[lado(s)], (s * rnd.uniform(60, 150), y0 + j * 30 + rnd.uniform(0, 20), -9), rnd.uniform(26, 40), rnd.uniform(22, 34),
                  rnd.uniform(5, 8), rnd, 'nube', 'nube_lila')
-        for j in range(5):                                             # torres de cúmulos
+        for j in range(0, 4, paso):                                    # islitas con árbol
+            isla(P[lado(s)], (s * rnd.uniform(46, 70), y0 + 45 + j * 90, rnd.uniform(10, 30)), rnd)
+
+
+def zona_nubes(P, y0, rnd, ligero=False):
+    paso = 2 if ligero else 1
+    suelo_baldosas(P['Suelo'], y0, ('nube', 'nube_b'))
+    for s in (1, -1):
+        for j in range(0, 18, paso):                                   # nubes del borde del carril
+            nube(P['Suelo'], (s * (ANCHO / 2 + 5), y0 + 10 + j * 20, -1.5), rnd.uniform(10, 14), rnd.uniform(12, 18), rnd.uniform(4, 6), rnd,
+                 'nube', 'nube_sombra')
+        for j in range(0, 12, paso):                                   # mar de nubes más bajo, hacia fuera
+            nube(P[lado(s)], (s * rnd.uniform(60, 150), y0 + j * 30 + rnd.uniform(0, 20), -9), rnd.uniform(26, 40), rnd.uniform(22, 34),
+                 rnd.uniform(5, 8), rnd, 'nube', 'nube_lila')
+        for j in range(0, 5, paso):                                    # torres de cúmulos
             torre(P[lado(s)], (s * rnd.uniform(75, 125), y0 + 30 + j * 70, -6), rnd.uniform(40, 75), rnd, 'nube', 'nube_sombra')
-        for j in range(2):                                             # islitas flotantes
+        for j in range(0, 2, paso):                                    # islitas flotantes
             isla(P[lado(s)], (s * rnd.uniform(46, 58), y0 + 90 + j * 150, rnd.uniform(16, 26)), rnd)
 
 
-def zona_tormenta(P, y0, rnd):
+def zona_tormenta(P, y0, rnd, ligero=False):
+    paso = 2 if ligero else 1
     suelo_baldosas(P['Suelo'], y0, ('nube_osc', 'nube_osc_b'))
     for s in (1, -1):
-        for j in range(18):
+        for j in range(0, 18, paso):
             nube(P['Suelo'], (s * (ANCHO / 2 + 5), y0 + 10 + j * 20, -1.5), rnd.uniform(10, 14), rnd.uniform(12, 18), rnd.uniform(4, 7), rnd,
                  'nube_osc', 'nube_osc2')
-        for j in range(12):
+        for j in range(0, 12, paso):
             nube(P[lado(s)], (s * rnd.uniform(60, 150), y0 + j * 30 + rnd.uniform(0, 20), -9), rnd.uniform(26, 40), rnd.uniform(22, 34),
                  rnd.uniform(6, 10), rnd, 'nube_osc2', 'nube_osc3')
-        for j in range(5):                                             # nubarrones altos y oscuros
+        for j in range(0, 5, paso):                                    # nubarrones altos y oscuros
             x, y = s * rnd.uniform(70, 120), y0 + 30 + j * 70
             torre(P[lado(s)], (x, y, -6), rnd.uniform(60, 95), rnd, 'nube_osc', 'nube_osc3')
             if j % 2 == 0:                                             # rayo que cae del nubarrón al mar de nubes
@@ -176,19 +193,20 @@ def zona_tormenta(P, y0, rnd):
                 P[lado(s)].prism([(x - s * 14 + 2.2 * u, v) for u, v in rayo], y - 1.0, y + 1.0, 'rayo', plane='XZ', side_mat='rayo_claro')
 
 
-def zona_cielo(P, y0, rnd):
+def zona_cielo(P, y0, rnd, ligero=False):
+    paso = 2 if ligero else 1
     suelo_baldosas(P['Suelo'], y0, ('nube_rosa', 'nube_rosa_b'))
     for s in (1, -1):
-        for j in range(18):
+        for j in range(0, 18, paso):
             nube(P['Suelo'], (s * (ANCHO / 2 + 5), y0 + 10 + j * 20, -1.5), rnd.uniform(9, 12), rnd.uniform(10, 16), rnd.uniform(3, 5), rnd,
                  'nube_rosa', 'nube_rosa2')
-        for j in range(9):                                             # cristales clavados en el borde y flotando
+        for j in range(0, 9, paso):                                    # cristales clavados en el borde y flotando
             alto = rnd.uniform(8, 18)
             cubo_girado(P[lado(s)], (s * rnd.uniform(44, 70), y0 + 20 + j * 40, alto / 2 - 1), (3.2, 3.2, alto),
                         'cristal' if j % 2 == 0 else 'cristal_rosa', rot=(rnd.uniform(-12, 12), rnd.uniform(-12, 12), 45))
             cubo_girado(P[lado(s)], (s * rnd.uniform(60, 110), y0 + 40 + j * 38, rnd.uniform(25, 55)), (4, 4, 9),
                         'cristal_rosa' if j % 2 == 0 else 'cristal', rot=(rnd.uniform(-30, 30), rnd.uniform(-30, 30), 45))
-        for banda, (mat, zb) in enumerate((('aurora_a', 52), ('aurora_b', 64), ('aurora_c', 76))):   # auroras: cintas que ondulan
+        for banda, (mat, zb) in enumerate((('aurora_a', 52), ('aurora_b', 64), ('aurora_c', 76))[:1 if ligero else 3]):   # auroras
             prev = None
             for j in range(25):
                 y = y0 + j * 15
@@ -198,23 +216,25 @@ def zona_cielo(P, y0, rnd):
                 prev = p
 
 
-def zona_espacio(P, y0, rnd):
+def zona_espacio(P, y0, rnd, ligero=False):
+    paso = 2 if ligero else 1
     suelo_baldosas(P['Suelo'], y0, ('roca', 'roca_b'))
-    for j in range(5):                                                 # cráteres (borde de bloques) en el carril, entre las flechas
+    for j in range(0, 5, paso):                                        # cráteres (borde de bloques) en el carril, entre las flechas
         cx, cy, r = rnd.uniform(-22, 22), y0 + 100 + j * 60, rnd.uniform(4, 7)   # (antes pisaban la marca x6 y una flecha)
         for k in range(10):
             a = 2 * math.pi * k / 10
             cubo_girado(P['Suelo'], (cx + r * math.cos(a), cy + r * math.sin(a), 0.5), (3.0, 1.6, 1.0), 'crater', rot=(0, 0, math.degrees(a) + 90))
     for s in (1, -1):
-        for j in range(16):                                            # rocas del borde y asteroides flotando
+        for j in range(0, 16, paso):                                   # rocas del borde y asteroides flotando
             P['Suelo'].rock((s * (ANCHO / 2 + rnd.uniform(3, 9)), y0 + 10 + j * 22, rnd.uniform(-1, 1)), rnd.uniform(3, 6), 'roca_osc',
                             subdiv=1, seed=int(rnd.random() * 1e6), jitter=0.2)
             P[lado(s)].rock((s * rnd.uniform(50, 140), y0 + rnd.uniform(0, LARGO), rnd.uniform(10, 70)), rnd.uniform(2, 7),
                             'roca' if j % 2 else 'roca_osc', subdiv=1, seed=int(rnd.random() * 1e6), jitter=0.25)
-        for j in range(60):                                            # estrellas
+        for j in range(0, 60, paso):                                   # estrellas
             cubo_girado(P[lado(s)], (s * rnd.uniform(150, 210), y0 + rnd.uniform(-20, LARGO + 20), rnd.uniform(5, 160)), (1.2, 1.2, 1.2), 'estrella',
                         rot=(45, 45, 0))
-    for s, (c, r, a1, a2) in ((1, ((150, y0 + 120, 85), 34, 'planeta_a', 'planeta_a2')), (-1, ((-140, y0 + 260, 110), 26, 'planeta_b', 'planeta_b2'))):
+    planetas = () if ligero else ((1, ((150, y0 + 120, 85), 34, 'planeta_a', 'planeta_a2')), (-1, ((-140, y0 + 260, 110), 26, 'planeta_b', 'planeta_b2')))
+    for s, (c, r, a1, a2) in planetas:
         P[lado(s)].rock(c, r, a1, subdiv=3, seed=7 + s, jitter=0.0)    # planetas de bandas con anillo
         P[lado(s)].rock((c[0], c[1], c[2] + r * 0.3), r * 0.93, a2, subdiv=2, seed=11 + s, jitter=0.0, squash=(1.0, 1.0, 0.45))
         perfil = [(r * 1.35, -0.8), (r * 1.85, -0.8), (r * 1.85, 0.8), (r * 1.35, 0.8), (r * 1.35, -0.8)]
@@ -222,14 +242,19 @@ def zona_espacio(P, y0, rnd):
         P[lado(s)].lathe(Vector(c), Vector(c) + eje, perfil, 40, 'anillo', close0=False, close1=False)
 
 
+# Maikol (31/10): «hay que ajustar las zonas para que sean mucho más largas». Cada zona son `bloques` tramos de LARGO studs: el arco
+# y la marca xN al principio; suelo, borde, flechas, tres aros y decorado en cada bloque (los que siguen al primero, con la mitad de
+# decorado para no pasar de ~15.000 piezas). Los mismos límites están en mas1-juego/src/Vuelo.lua (V.CFG.zonas; lo comprueba un test).
 ZONAS = [
-    dict(clave='mar-de-nubes', nombre='MAR DE NUBES', marca='x3', crea=zona_nubes, cielo='#9fd3ff',
+    dict(clave='pradera', nombre='PRADERA', marca='x2', crea=zona_prado, cielo='#9fd3ff', bloques=3,
+         arco=('tronco', 'cesped', 'blanco', 'letra'), aro='aro_oro', flecha='blanco'),
+    dict(clave='mar-de-nubes', nombre='MAR DE NUBES', marca='x3', crea=zona_nubes, cielo='#9fd3ff', bloques=3,
          arco=('blanco', 'azul', 'blanco', 'letra'), aro='aro_azul', flecha='azul'),
-    dict(clave='tormenta', nombre='TORMENTA', marca='x4', crea=zona_tormenta, cielo='#3d4766',
+    dict(clave='tormenta', nombre='TORMENTA', marca='x4', crea=zona_tormenta, cielo='#3d4766', bloques=4,
          arco=('nube_osc3', 'rayo', 'nube_osc', 'rayo'), aro='rayo', flecha='rayo_claro'),
-    dict(clave='cielo-alto', nombre='CIELO ALTO', marca='x5', crea=zona_cielo, cielo='#b7a3f0',
+    dict(clave='cielo-alto', nombre='CIELO ALTO', marca='x5', crea=zona_cielo, cielo='#b7a3f0', bloques=6,
          arco=('metal', 'aurora_c', 'blanco', 'letra'), aro='aurora_c', flecha='aurora_b'),
-    dict(clave='espacio', nombre='ESPACIO', marca='x6', crea=zona_espacio, cielo='#0d1024',
+    dict(clave='espacio', nombre='ESPACIO', marca='x6', crea=zona_espacio, cielo='#0d1024', bloques=8,
          arco=('metal_osc', 'luz', 'metal', 'letra'), aro='aro_oro', flecha='estrella'),
 ]
 PIEZAS = ('Suelo', 'LadoIzq', 'LadoDer', 'Arco', 'Marcas', 'Aros')   # los lados por separado: menos de 10.000 triángulos por malla
@@ -237,19 +262,26 @@ MARCA_PX = 3.6                 # letras del xN del suelo (eran de 2,2: no se le�
 ARO_R, ARO_GROSOR = 8.0, 0.8   # eran 6 y 0,6 (crítica del director del 30/10: aros más grandes)
 
 
+def inicio_zona(i):
+    """Y donde empieza la zona i (la Pradera de Codex y el lobby ocupan hasta Y_INICIO)."""
+    return Y_INICIO + LARGO * sum(Z['bloques'] for Z in ZONAS[:i])
+
+
 def construir_zona(P, i, Z, rnd):
     """Todo lo de la zona i en sus piezas P (A.MB o la grabadora de mapa_roblox.py): las mismas llamadas a rnd en el mismo orden."""
-    y0 = Y_INICIO + i * LARGO
-    Z['crea'](P, y0, rnd)
-    for s in (1, -1):       # borde del carril del color de los aros (Neon en Roblox): el carril se distingue a toda velocidad
-        P['Suelo'].box((s * (ANCHO / 2 - 0.5), y0 + LARGO / 2, 0.15), (1.0, LARGO, 0.3), Z['aro'])
+    yz = inicio_zona(i)
+    for b in range(Z['bloques']):
+        y0 = yz + b * LARGO
+        Z['crea'](P, y0, rnd, ligero=b > 0)
+        for s in (1, -1):   # borde del carril del color de los aros (Neon en Roblox): el carril se distingue a toda velocidad
+            P['Suelo'].box((s * (ANCHO / 2 - 0.5), y0 + LARGO / 2, 0.15), (1.0, LARGO, 0.3), Z['aro'])
+        for j in range(5):
+            flecha(P['Marcas'], y0 + 70 + j * 60, Z['flecha'])
+        for j, (dy, z) in enumerate(((80, 14), (170, 20), (260, 26))):
+            aro(P['Aros'], (rnd.uniform(-12, 12), y0 + dy, z), ARO_R, ARO_GROSOR, Z['aro'])
     poste, adorno, cartel, letra = Z['arco']
-    arco(P['Arco'], y0 + 2, Z['nombre'], poste, adorno, cartel, letra)
-    texto_suelo(P['Marcas'], Z['marca'], 0, y0 + 26, MARCA_PX, 0.24, Z['flecha'])   # del color de las flechas: el blanco no se ve en las nubes
-    for j in range(5):
-        flecha(P['Marcas'], y0 + 70 + j * 60, Z['flecha'])
-    for j, (dy, z) in enumerate(((80, 14), (170, 20), (260, 26))):
-        aro(P['Aros'], (rnd.uniform(-12, 12), y0 + dy, z), ARO_R, ARO_GROSOR, Z['aro'])
+    arco(P['Arco'], yz + 2, Z['nombre'], poste, adorno, cartel, letra)
+    texto_suelo(P['Marcas'], Z['marca'], 0, yz + 26, MARCA_PX, 0.24, Z['flecha'])   # del color de las flechas: el blanco no se ve en las nubes
 
 
 def imagen_paleta(ruta):
@@ -340,7 +372,7 @@ if __name__ == '__main__':
 
     foto('Mapa-general', (-520, -140, 420), (0, 760, 0), 32, '#9fd3ff', 'MAPA COMPLETO: PRADERA (CODEX) - MAR DE NUBES - TORMENTA - CIELO ALTO - ESPACIO')
     for i, Z in enumerate(ZONAS):
-        y0 = Y_INICIO + i * LARGO
+        y0 = inicio_zona(i)
         foto('Zona-%s-entrada' % Z['clave'], (18, y0 - 75, 30), (0, y0 + 40, 24), 26, Z['cielo'], 'ENTRADA %s - ARCO Y CARTEL' % Z['nombre'])
         foto('Zona-%s-dentro' % Z['clave'], (0, y0 + 14, 16), (0, y0 + 200, 8), 24, Z['cielo'], 'DENTRO DE %s (MARCA %s)' % (Z['nombre'], Z['marca'].upper()))
         foto('Zona-%s-lado' % Z['clave'], (-170, y0 + 60, 70), (10, y0 + 200, 0), 30, Z['cielo'], '%s DESDE UN LADO' % Z['nombre'])
@@ -348,8 +380,8 @@ if __name__ == '__main__':
     a_jpg(os.path.join(OUT, '_hoja.png'), os.path.join(OUT, 'Mapa-v01-hoja.jpg'), 0.5)
     A.write_json(os.path.join(OUT, 'datos.json'), {
         'pieza': 'Mapa v01: zonas después de la Pradera del Despegue (solo lo visual)', 'sin_probar_en_roblox': True,
-        'zonas': [dict(clave=Z['clave'], nombre=Z['nombre'], marca_provisional=Z['marca'], y_inicio=Y_INICIO + i * LARGO,
-                       y_fin=Y_INICIO + (i + 1) * LARGO) for i, Z in enumerate(ZONAS)],
+        'zonas': [dict(clave=Z['clave'], nombre=Z['nombre'], marca_provisional=Z['marca'], y_inicio=inicio_zona(i),
+                       y_fin=inicio_zona(i + 1)) for i, Z in enumerate(ZONAS)],
         'carril_ancho_studs': ANCHO, 'zona_largo_studs': LARGO, 'triangulos': {'%s_%s' % (c, k): t for c, k, t in resumen},
         'textura': 'texturas/Mapa_paleta_256.png (un material para todas las piezas)',
         'ejes': 'Blender +Y = sentido del vuelo, +Z arriba; FBX global_scale=0.01, axis_forward=%s, axis_up=Y' % FBX_FORWARD})

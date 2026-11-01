@@ -3,16 +3,19 @@ Borrador de Claude nube (30/10), puesto al día por el Coordinador con el hito 1
 
 ## Coordenadas y zonas
 - **El vuelo va hacia −Z.** El origen es el de la Pradera de Codex (mapa-v01 empieza en Z = −172).
-- La zona sale de la posición hacia −Z (`Vuelo.CFG.zonas`, igual que las marcas del suelo del mapa):
+- La zona sale de la posición hacia −Z (`Vuelo.CFG.zonas`, igual que las marcas del suelo del mapa). **Zonas largas desde el 31/10** (Maikol: «mucho más largas»), en bloques de 360 studs del mapa; `tests/test_zonas.py` comprueba que coinciden Vuelo, Encuentros y el mapa:
 
-  | Desde (studs hacia −Z) | Zona | Multiplicador |
-  |---|---|---|
-  | 0 | Pradera | x1 |
-  | 37 | prado de la Pradera | x2 |
-  | 172 | Mar de Nubes | x3 |
-  | 532 | Tormenta | x4 |
-  | 892 | Cielo alto | x5 |
-  | 1.252 | Espacio | x6 |
+  | Desde (studs hacia −Z) | Zona | Multiplicador | Potencia para llegar (sin mascotas ni alas) |
+  |---|---|---|---|
+  | 0 | lobby | x1 | — |
+  | 37 | Pradera (lobby y 3 bloques de césped desde 172) | x2 | el primer vuelo se queda aquí |
+  | 1.252 | Mar de Nubes (3 bloques) | x3 | ~70 |
+  | 2.332 | Tormenta (4 bloques) | x4 | ~630 |
+  | 3.772 | Cielo alto (6 bloques) | x5 | ~2.300 |
+  | 5.932 | Espacio (8 bloques, el carril acaba en 8.812) | x6 | ~6.600 |
+
+- **Dinero por vuelo** = (studs + bote) × zona × `Vuelo.CFG.dineroPorStud` (0,12) × bonus de dinero: el primer vuelo da ~165 y el huevo común (500) sale a unos 3 vuelos.
+- **Vuelta al lobby**: 3 s después de aterrizar el servidor lleva al jugador al `SpawnLocation` de `MAS1_Lobby` (si no se ha vuelto a lanzar).
 
 - **Lanzamiento**: sale de una parte llamada `MAS1_Canon` en el Workspace (la del cañón de la Pradera, cuando esté). Si no la hay, sale desde donde está el jugador, que tiene que estar en el suelo.
 

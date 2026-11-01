@@ -184,7 +184,7 @@ function P.tick(s, dt, pos, mundo)
 	r.planeando = s.v.planeando
 	r.distancia = s.avance
 	r.mult = V.multiplicadorZona(posZona, c)
-	r.puntos = math.floor((s.avance + s.v.bote) * r.mult * (s.v.bonus.dinero or 1))
+	r.puntos = math.floor((s.avance + s.v.bote) * r.mult * (c.dineroPorStud or 1) * (s.v.bonus.dinero or 1)) -- lo que daria aterrizar ya
 	r.boost = P.boostActivo(s)
 	return r
 end

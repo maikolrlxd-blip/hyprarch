@@ -34,11 +34,17 @@ V.CFG = {
 	caidaPlaneo = 4.5, -- studs/s de bajada al planear
 	anchoLibre = 30, -- |x| maximo: el carril del mapa mide 66
 	suelo = 0, -- techo del carril del mapa (y de la Pradera)
-	finMapa = 1560, -- studs hacia -Z: el carril acaba en 1612; aqui el vuelo deja de avanzar y se aterriza en el ultimo tramo
+	finMapa = 8760, -- studs hacia -Z: el carril acaba en 8812; aqui el vuelo deja de avanzar y se aterriza en el ultimo tramo
 	lanzamiento = { duracion = 1.2, velocidad = 85, subida = 30 }, -- disparo del cañon: rapido y hacia arriba
-	-- multiplicador segun la posicion hacia -Z (studs desde el origen de la Pradera), como las marcas del suelo de mapa-v01:
-	-- Pradera x1, prado de la Pradera x2 (desde y=37), Mar de Nubes x3 (172), Tormenta x4 (532), Cielo alto x5 (892), Espacio x6 (1252)
-	zonas = { { 0, 1 }, { 37, 2 }, { 172, 3 }, { 532, 4 }, { 892, 5 }, { 1252, 6 } },
+	-- multiplicador segun la posicion hacia -Z (studs desde el origen de la Pradera), como las marcas del suelo de mapa-v01.
+	-- Maikol (31/10): «zonas mucho mas largas». El vuelo recorre unos 680 + 64·sqrt(potencia) studs, asi que el primer vuelo se
+	-- queda en la Pradera x2; el Mar de Nubes x3 pide ~70 de potencia, la Tormenta x4 ~630, el Cielo alto x5 ~2.300 y el Espacio x6
+	-- ~6.600 (antes el primer vuelo llegaba a x4, y con 40 al x6). Bloques de 360 studs del mapa (mas1-arte/tools/build_mapa.py):
+	-- Pradera 3, Mar de Nubes 3, Tormenta 4, Cielo alto 6, Espacio 8. Los mismos limites en Encuentros.CFG.zonas (lo comprueba un test).
+	zonas = { { 0, 1 }, { 37, 2 }, { 1252, 3 }, { 2332, 4 }, { 3772, 5 }, { 5932, 6 } },
+	-- dinero = (studs + bote) * zona * dineroPorStud: el primer vuelo da ~165 y el huevo comun (500) sale a unos 3 vuelos
+	-- (antes un vuelo daba ~9.000)
+	dineroPorStud = 0.12,
 }
 
 function V.energiaMax(potencia, cfg)
@@ -110,13 +116,13 @@ function V.atraparCofre(v)
 	v.bote = v.bote + v.cfg.puntosCofre
 end
 
--- Aterrizaje: puntos = (distancia + bote) * multiplicador de zona * bonus dinero. Devuelve resultado.
+-- Aterrizaje: dinero = (distancia + bote) * multiplicador de zona * dineroPorStud * bonus dinero. Devuelve resultado.
 -- posZona: posicion hacia -Z donde aterriza (el servidor la pasa); sin ella, la zona sale de la distancia recorrida.
 function V.aterrizar(v, posZona)
 	v.terminado = true
 	local mult = V.multiplicadorZona(posZona or v.distancia, v.cfg)
 	local base = v.distancia + v.bote
-	local dinero = math.floor(base * mult * (v.bonus.dinero or 1))
+	local dinero = math.floor(base * mult * (v.cfg.dineroPorStud or 1) * (v.bonus.dinero or 1))
 	local exp = math.floor((v.distancia / 10 + v.aros * 2 + v.golpes) * (v.bonus.exp or 1))
 	return { distancia = v.distancia, aros = v.aros, golpes = v.golpes, cofres = v.cofres or 0, orbes = v.orbes or 0, multiplicador = mult, dinero = dinero, exp = exp,
 		tiempo = v.tiempo }

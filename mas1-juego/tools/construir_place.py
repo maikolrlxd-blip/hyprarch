@@ -68,6 +68,11 @@ arbol = json.load(open(os.path.join(JUEGO, 'default.project.json'), encoding='ut
 servicios = [linea for k, v in arbol.items() if not k.startswith('$') for linea in nodo(k, v)]
 texto = open(MAPA, encoding='utf-8').read()
 assert texto.rstrip().endswith('</roblox>')
+# el SpawnLocation de la place del mapa (Z = -182, al principio del carril) sobra: el spawn es el del lobby (server/Lobby.server.lua)
+# y aquel se quedaba como una losa blanca en mitad de la Pradera (prueba del 31/10)
+sp = texto.find('<Item class="SpawnLocation"')
+if sp >= 0:
+    texto = texto[:sp] + texto[texto.index('</Item>', sp) + len('</Item>'):]
 # zonas de entrenamiento de prueba (en el juego de verdad iran en la Pradera): dentro del Workspace, tras sus propiedades
 ws = texto.index('<Item class="Workspace"')
 fin = texto.index('</Properties>', ws) + len('</Properties>')

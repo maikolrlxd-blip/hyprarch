@@ -35,9 +35,10 @@ en = T({1: T({'pos': vec(0, 20, -110), 'vivo': True}), 2: T({'pos': vec(3, 20, -
 assert E.enemigoAlAlcance(vec(0, 20, -100), en) == 2   # el 4 esta mas cerca pero no vive; el 3 queda 5 detras
 assert E.enemigoAlAlcance(vec(0, 20, -60), en) is None
 
-# reparto de enemigos con los aros del mapa (3 por zona como en mapa-v01): separados, lejos de los aros y dentro del carril
+# reparto de enemigos con los aros del mapa (3 por bloque de 360 studs como en mapa-v01, 24 bloques desde 172): separados, lejos de
+# los aros y dentro del carril
 rnd = random.Random(7)
-aros = [aro(rnd.uniform(-12, 12), z, -(172 + i * 360 + dy)) for i in range(4) for dy, z in ((80, 14), (170, 20), (260, 26))]
+aros = [aro(rnd.uniform(-12, 12), z, -(172 + i * 360 + dy)) for i in range(24) for dy, z in ((80, 14), (170, 20), (260, 26))]
 lista = E.colocarEnemigos(T(dict(enumerate(aros, 1))), random.Random(3).random)
 ps = [(e.pos.x, e.pos.y, e.pos.z) for e in lista.values()]
 total = sum(z.cantidad for z in EC.zonas.values())
@@ -105,14 +106,15 @@ assert aros_vistos == 1 and res.aros == 1, (aros_vistos, res.aros)
 assert golpe == 'golpe' and mundo.enemigos[1].vivo is False and res.golpes == 1
 assert atrapados >= 1 and res.cofres == atrapados and s.violaciones == 0, (atrapados, s.violaciones)
 esperado = res.distancia + VC.puntosAro + VC.puntosEnemigo + VC.puntosCofre * atrapados
-assert res.dinero == math.floor(esperado * res.multiplicador), (res.dinero, esperado, res.multiplicador)
+assert res.dinero == math.floor(esperado * res.multiplicador * VC.dineroPorStud), (res.dinero, esperado, res.multiplicador)
 print('vuelo con encuentros: 1 aro, 1 golpe, %d cofres, %.0f studs, %d de dinero' % (atrapados, res.distancia, res.dinero))
 s, res, _, _, atrapados, _ = vuelo_con_mundo(boost=False)
 assert atrapados == 0 and res.cofres == 0
 # orbes «+1»: iguales en cada llamada (misma semilla), dentro del carril y a altura de vuelo; se cogen pasando cerca
 o1, o2 = E.colocarOrbes(), E.colocarOrbes()
 po = [(o.pos.x, o.pos.y, o.pos.z) for o in o1.values()]
-assert po == [(o.pos.x, o.pos.y, o.pos.z) for o in o2.values()] and len(po) == 5 * EC.orbe.porZona * EC.orbe.porTrazo
+trazos = sum(max(1, math.floor((z.hasta - z.desde) / EC.orbe.cadaStuds + 0.5)) for z in EC.zonas.values())
+assert po == [(o.pos.x, o.pos.y, o.pos.z) for o in o2.values()] and len(po) == trazos * EC.orbe.porTrazo, (len(po), trazos)
 assert all(abs(x) <= 26 and 10 <= y <= 26 for x, y, z in po)
 orb = T({'pos': vec(0, 20, -300)})
 assert E.tocaOrbe(vec(2, 21, -295), vec(2, 21, -305), orb, 3.5) and not E.tocaOrbe(vec(6, 20, -295), vec(6, 20, -305), orb, 3.5)

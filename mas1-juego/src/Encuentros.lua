@@ -20,13 +20,14 @@ E.CFG = {
 	separacion = 40, -- entre enemigos
 	lejosDeAros = 18, -- de un aro (sumado a su radio)
 	-- enemigos por zona (studs hacia -Z), con los tipos de enemigos-v02: globo en la Pradera, nube en el Mar de Nubes,
-	-- nubarron en la Tormenta, cometa en el Cielo alto, ovni y meteorito en el Espacio
+	-- nubarron en la Tormenta, cometa en el Cielo alto, ovni y meteorito en el Espacio. Zonas largas (31/10): los mismos limites
+	-- que Vuelo.CFG.zonas y el mapa (lo comprueba un test), un enemigo cada ~150 studs
 	zonas = {
-		{ desde = 40, hasta = 172, tipos = { "globo" }, cantidad = 2 },
-		{ desde = 172, hasta = 532, tipos = { "nube", "globo" }, cantidad = 5 },
-		{ desde = 532, hasta = 892, tipos = { "nubarron", "nube" }, cantidad = 5 },
-		{ desde = 892, hasta = 1252, tipos = { "cometa" }, cantidad = 5 },
-		{ desde = 1252, hasta = 1612, tipos = { "ovni", "meteorito" }, cantidad = 5 },
+		{ desde = 40, hasta = 1252, tipos = { "globo" }, cantidad = 8 },
+		{ desde = 1252, hasta = 2332, tipos = { "nube", "globo" }, cantidad = 7 },
+		{ desde = 2332, hasta = 3772, tipos = { "nubarron", "nube" }, cantidad = 10 },
+		{ desde = 3772, hasta = 5932, tipos = { "cometa" }, cantidad = 14 },
+		{ desde = 5932, hasta = 8812, tipos = { "ovni", "meteorito" }, cantidad = 19 },
 	},
 }
 
@@ -90,7 +91,7 @@ end
 
 -- Orbes «+1» (Maikol, 30/10: el vuelo «aburre»): trazos de 7 orbes por el carril, en eslalon, en subida o en diagonal, para que
 -- haya que moverse todo el rato. Cada uno da +1 de potencia. Cliente y servidor los generan iguales con la misma semilla (E.azar).
-E.CFG.orbe = { radio = 3.5, porZona = 6, porTrazo = 7, paso = 9, semilla = 3017 }
+E.CFG.orbe = { radio = 3.5, cadaStuds = 180, porTrazo = 7, paso = 9, semilla = 3017 } -- un trazo cada 180 studs de zona
 
 function E.azar(semilla) -- generador congruencial propio: mismo resultado en el cliente, en el servidor y en las pruebas
 	local x = semilla % 2147483647
@@ -104,8 +105,9 @@ function E.colocarOrbes(cfg)
 	cfg = cfg or E.CFG
 	local o, azar, lista = cfg.orbe, E.azar(cfg.orbe.semilla), {}
 	for _, z in ipairs(cfg.zonas) do
-		local tramo = (z.hasta - z.desde) / o.porZona
-		for g = 1, o.porZona do
+		local trazos = math.max(1, math.floor((z.hasta - z.desde) / o.cadaStuds + 0.5))
+		local tramo = (z.hasta - z.desde) / trazos
+		for g = 1, trazos do
 			local z0, forma, x0 = z.desde + (g - 0.5) * tramo - o.paso * 3, g % 3, (azar() - 0.5) * 28
 			for k = 0, o.porTrazo - 1 do
 				local t = k / (o.porTrazo - 1)

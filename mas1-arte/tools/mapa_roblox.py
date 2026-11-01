@@ -26,7 +26,7 @@ TRANSP = {'aurora_a': 0.3, 'aurora_b': 0.3, 'aurora_c': 0.3, 'cristal': 0.1, 'cr
 NEON_COLOR = {'cristal': '#41d9ff', 'cristal_rosa': '#ff6ad5', 'aurora_a': '#22e3b2', 'aurora_b': '#4a8dff', 'aurora_c': '#b25cff'}   # en Neon el pastel sale casi blanco
 MATERIAL = {'SmoothPlastic': 272, 'Neon': 288}
 FORMA = {'Ball': 0, 'Block': 1, 'Cylinder': 2}
-ZONA_RBX = {'mar-de-nubes': 'MarDeNubes', 'tormenta': 'Tormenta', 'cielo-alto': 'CieloAlto', 'espacio': 'Espacio'}
+ZONA_RBX = {'pradera': 'Pradera', 'mar-de-nubes': 'MarDeNubes', 'tormenta': 'Tormenta', 'cielo-alto': 'CieloAlto', 'espacio': 'Espacio'}
 
 
 class Grabadora:
@@ -446,7 +446,7 @@ for Z, gs in modelo:
     for k, l in gs:
         c[k] = len(list(piezas_de(l)))
 aros = sum(1 for _, gs in modelo for _, l in gs for e in l if 'modelo' in e)
-assert aros == 3 * len(modelo), aros
+assert aros == 3 * sum(Z['bloques'] for Z, _ in modelo), aros
 por_tipo = {}
 for q in todas:
     k = q['clase'] + ('/' + q['forma'] if q['forma'] else '') + ' ' + q['material']
@@ -460,7 +460,7 @@ A.write_json(os.path.join(OUT, 'datos.json'), {
     'archivos': {'Mapa-v01.rbxmx': 'modelo Mapa_v01 para insertar en una place (zonas como Model, piezas por carpeta)',
                  'Mapa-v01-prueba.rbxlx': 'place de prueba: el modelo, un SpawnLocation al principio del carril y una Atmosphere'},
     'ejes': 'Blender (x, y, z) -> Roblox (x, z, -y): el vuelo va hacia -Z; origen = el de la Pradera de Codex; 1 unidad = 1 stud',
-    'zonas_z_roblox': {Z['clave']: [-(bm.Y_INICIO + i * bm.LARGO), -(bm.Y_INICIO + (i + 1) * bm.LARGO)] for i, (Z, _) in enumerate(modelo)},
+    'zonas_z_roblox': {Z['clave']: [-bm.inicio_zona(i), -bm.inicio_zona(i + 1)] for i, (Z, _) in enumerate(modelo)},
     'piezas_total': len(todas), 'piezas_por_zona': cuenta, 'piezas_por_tipo': por_tipo,
     'chocan': 'solo las baldosas del carril (CanCollide); todo lo demás es decorado sin colisión',
     'neon': sorted(NEON), 'transparencia': TRANSP})
@@ -592,7 +592,7 @@ def foto(nombre, loc, objetivo, lente, cielo, rotulo):
 
 foto('Roblox-general', (-520, -140, 420), (0, 760, 0), 32, '#9fd3ff', 'MAPA EN PIEZAS DE ROBLOX (LEIDO DEL RBXMX) - PRADERA DE CODEX DELANTE')
 for i, Z in enumerate(bm.ZONAS):
-    y0 = bm.Y_INICIO + i * bm.LARGO
+    y0 = bm.inicio_zona(i)
     foto('Roblox-%s-entrada' % Z['clave'], (18, y0 - 75, 30), (0, y0 + 40, 24), 26, Z['cielo'], 'ENTRADA %s' % Z['nombre'])
     foto('Roblox-%s-dentro' % Z['clave'], (0, y0 + 14, 16), (0, y0 + 200, 8), 24, Z['cielo'], 'DENTRO DE %s' % Z['nombre'])
 W.contact_sheet(fotos, 3, os.path.join(OUT, '_hoja.png'),

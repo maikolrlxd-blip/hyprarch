@@ -7,64 +7,76 @@
   },
   "ejes": "Blender (x, y, z) -> Roblox (x, z, -y): el vuelo va hacia -Z; origen = el de la Pradera de Codex; 1 unidad = 1 stud",
   "zonas_z_roblox": {
-    "mar-de-nubes": [
+    "pradera": [
       -172.0,
-      -532.0
-    ],
-    "tormenta": [
-      -532.0,
-      -892.0
-    ],
-    "cielo-alto": [
-      -892.0,
       -1252.0
     ],
-    "espacio": [
+    "mar-de-nubes": [
       -1252.0,
-      -1612.0
+      -2332.0
+    ],
+    "tormenta": [
+      -2332.0,
+      -3772.0
+    ],
+    "cielo-alto": [
+      -3772.0,
+      -5932.0
+    ],
+    "espacio": [
+      -5932.0,
+      -8812.0
     ]
   },
-  "piezas_total": 3112,
+  "piezas_total": 10289,
   "piezas_por_zona": {
+    "pradera": {
+      "Suelo": 582,
+      "LadoIzq": 215,
+      "LadoDer": 210,
+      "Arco": 83,
+      "Marcas": 62,
+      "Aros": 153
+    },
     "mar-de-nubes": {
-      "Suelo": 272,
-      "LadoIzq": 231,
-      "LadoDer": 235,
+      "Suelo": 567,
+      "LadoIzq": 442,
+      "LadoDer": 456,
       "Arco": 119,
-      "Marcas": 31,
-      "Aros": 51
+      "Marcas": 61,
+      "Aros": 153
     },
     "tormenta": {
-      "Suelo": 264,
-      "LadoIzq": 288,
-      "LadoDer": 261,
+      "Suelo": 731,
+      "LadoIzq": 777,
+      "LadoDer": 792,
       "Arco": 95,
-      "Marcas": 34,
-      "Aros": 51
+      "Marcas": 79,
+      "Aros": 204
     },
     "cielo-alto": {
-      "Suelo": 259,
-      "LadoIzq": 90,
-      "LadoDer": 90,
+      "Suelo": 1048,
+      "LadoIzq": 260,
+      "LadoDer": 260,
       "Arco": 85,
-      "Marcas": 32,
-      "Aros": 51
+      "Marcas": 107,
+      "Aros": 306
     },
     "espacio": {
-      "Suelo": 161,
-      "LadoIzq": 130,
-      "LadoDer": 130,
+      "Suelo": 924,
+      "LadoIzq": 452,
+      "LadoDer": 452,
       "Arco": 68,
-      "Marcas": 33,
-      "Aros": 51
+      "Marcas": 138,
+      "Aros": 408
     }
   },
   "piezas_por_tipo": {
-    "Part/Block SmoothPlastic": 775,
-    "Part/Cylinder SmoothPlastic": 314,
-    "Part/Ball SmoothPlastic": 1267,
-    "Part/Block Neon": 696,
-    "WedgePart Neon": 60
+    "Part/Block SmoothPlastic": 2728,
+    "Part/Cylinder SmoothPlastic": 1034,
+    "Part/Ball SmoothPlastic": 3606,
+    "Part/Block Neon": 2681,
+    "WedgePart Neon": 240
   },
   "chocan": "solo las baldosas del carril (CanCollide); todo lo demás es decorado sin colisión",
   "neon": [
@@ -86,6 +98,5 @@
     "aurora_c": 0.3,
     "cristal": 0.1,
     "cristal_rosa": 0.1
-  },
-  "caras_coplanares_solapadas": 0
+  }
 }

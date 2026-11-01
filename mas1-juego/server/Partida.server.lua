@@ -29,6 +29,7 @@ local INICIALES = { Potencia = 0, Dinero = 0, Exp = 0, Rebirths = 0, Cofres = 0,
 	ZonaMult = 1, Aros = 0, ArosTotal = 0, Energia = 1, EnergiaMax = 0, Impulso = 1, EnVuelo = false, Planeando = false, Boost = false,
 	Mascota = "—", MascotaBonus = 1, Alas = "", Entreno = 1, CosteRebirth = V.costeRebirth(0) }
 local MENSAJES_POR_SEGUNDO = 30
+local VOLVER_AL_LOBBY = 3 -- segundos tras aterrizar hasta volver al spawn del lobby (MAS1_Lobby)
 local jugadores = {} -- [plr] = { s = sesion de Partida, msgs, desde, hud, cofre = ancla del cofre, potencia, entreno }
 
 local function aviso(plr, texto)
@@ -330,6 +331,7 @@ local function lanzar(plr, j)
 	hrp.AssemblyLinearVelocity = Vector3.zero
 	local b = bonusDe(plr, j)
 	P.lanzar(j.s, tabla(pos), j.potencia, b)
+	j.nVuelo = (j.nVuelo or 0) + 1 -- para que la vuelta al lobby de un vuelo viejo no saque al jugador de uno nuevo
 	plr:SetAttribute("Lanzamientos", (plr:GetAttribute("Lanzamientos") or 0) + 1)
 	plr:SetAttribute("Entreno", 0)
 	revisarAlas(plr, j)
@@ -455,6 +457,19 @@ RunService.Heartbeat:Connect(function(dt)
 			cerrarVuelo(plr, j, hrp)
 			resultado:FireClient(plr, { distancia = math.floor(res.distancia), aros = res.aros, golpes = res.golpes, cofres = res.cofres,
 				multiplicador = res.multiplicador, dinero = res.dinero, exp = res.exp, tiempo = res.tiempo })
+			-- de vuelta al lobby (prueba del 31/10: te quedabas al final del carril). Unos segundos para ver el aterrizaje; los
+			-- resultados siguen en pantalla y «¡OTRA VEZ!» lanza desde el cañon igual
+			local n = j.nVuelo
+			task.delay(VOLVER_AL_LOBBY, function()
+				if jugadores[plr] ~= j or j.nVuelo ~= n or P.enVuelo(j.s) then return end
+				local raizAhora = raiz(plr)
+				local lobby = workspace:FindFirstChild("MAS1_Lobby")
+				local sp = lobby and lobby:FindFirstChildWhichIsA("SpawnLocation", true)
+				if raizAhora and sp then
+					raizAhora.AssemblyLinearVelocity = Vector3.zero
+					raizAhora.CFrame = sp.CFrame + Vector3.new(0, 4, 0)
+				end
+			end)
 		end
 	end
 end)

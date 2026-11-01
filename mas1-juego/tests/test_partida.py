@@ -58,7 +58,7 @@ def volar(potencia=0, mandos=None, trampa=None, dt=1 / 60, lag_cada=5, z0=-182.0
 assert abs(V.energiaMax(0) - 12) < 1e-9 and abs(V.energiaMax(100) - 28) < 1e-9 and V.energiaMax(400) > V.energiaMax(100)
 
 # zonas segun la posicion hacia -Z (como las marcas de mapa-v01)
-for d, m in ((10, 1), (50, 2), (200, 3), (600, 4), (900, 5), (1300, 6), (5000, 6)):
+for d, m in ((10, 1), (50, 2), (1000, 2), (1300, 3), (2400, 4), (4000, 5), (6000, 6), (9000, 6)):   # zonas largas (31/10)
     assert V.multiplicadorZona(d) == m, (d, m)
 
 # 1) vuelo normal sin mandos, con lag: ninguna correccion, aterriza solo y cobra en la zona donde cae
@@ -116,7 +116,7 @@ s = P.nueva(V)
 assert P.intencion(s, 'boost', True) is None and P.tick(s, 0.1, vec(0, 3, 0)) is None
 assert P.lanzar(s, vec(0, 4, 0), 0, None) and not P.lanzar(s, vec(0, 4, 0), 0, None)
 # 8) final del mapa: lanzandose cerca del final con mucha potencia, aterriza en el ultimo tramo del carril (no cae al vacio)
-s, r, i = volar(potencia=900, z0=-1400.0, con_z=True)
-assert r is not None and -i['pos'][2] <= 1612 and i['pos'][1] <= 4.5, i
-print('final del mapa: aterriza a %.0f studs (el carril acaba en 1612)' % -i['pos'][2])
+s, r, i = volar(potencia=900, z0=-8300.0, con_z=True)
+assert r is not None and -i['pos'][2] <= 8812 and i['pos'][1] <= 4.5, i
+print('final del mapa: aterriza a %.0f studs (el carril acaba en 8812)' % -i['pos'][2])
 print('ok')
