@@ -7,10 +7,10 @@
     2.4,
     2.8
   ],
-  "triangulos": 1250,
+  "triangulos": 1796,
   "tamano_studs_x_y_z_blender": [
     1.6,
-    0.89,
+    0.838,
     0.838
   ],
   "limites_hat_classic": [
@@ -18,14 +18,16 @@
     4,
     3
   ],
-  "aristas_abiertas_o_no_manifold": 0,
-  "contactos_separados": 2,
-  "islas": 14,
+  "malla": "piel de voxeles de una pieza (celda 0.0762, 1097 celdas, 0 rellenadas en contactos en diagonal)",
+  "aristas_no_manifold": 0,
+  "vertices_no_manifold": 0,
+  "caras_area_cero": 0,
+  "islas": 1,
   "attachment": "HatAttachment en la base, centrada; se hunde 0.10 en la cabeza",
-  "textura": "GorroNubecita_textura_1024.png",
+  "textura": "GorroNubecita_textura_2048.png",
   "textura_px": [
-    1024,
-    1024
+    2048,
+    2048
   ],
   "textura_aclarada": 0.4,
   "fbx": "GorroNubecita.fbx (global_scale 0.01, axis_forward Z, girado 180 grados: en Studio la cara mira a -Z, el frente del avatar)",

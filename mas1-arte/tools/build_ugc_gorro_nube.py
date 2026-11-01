@@ -52,12 +52,7 @@ mx = Vector([max(c[i] for c in co) for i in range(3)])
 k = ANCHO / (mx.x - mn.x)
 centro = Vector(((mn.x + mx.x) / 2, (mn.y + mx.y) / 2, mn.z))
 ob.data.transform(Matrix.Scale(k, 4) @ Matrix.Translation(-centro))   # base en z = 0, centrado: ahí la HatAttachment
-ob.name = ob.data.name = 'GorroNubecita'
-co = [v.co.copy() for v in ob.data.vertices]
-mn = Vector([min(c[i] for c in co) for i in range(3)])
-mx = Vector([max(c[i] for c in co) for i in range(3)])
-tam = [round(mx[i] - mn[i], 3) for i in range(3)]   # x ancho, y fondo, z alto (Blender)
-tris = A.tris([ob])
+ob.name = ob.data.name = 'GorroFuente'         # la malla de la mascota: de aquí sale la piel nueva y se hornea su textura
 
 
 def revisar(o):
@@ -80,70 +75,149 @@ def revisar(o):
     return abiertas, islas
 
 
-abiertas, islas = revisar(ob)
+def islas_de_caras(bm):
+    isla, n = {}, 0
+    for f in bm.faces:
+        if f in isla:
+            continue
+        pila = [f]
+        isla[f] = n
+        while pila:
+            for e in pila.pop().edges:
+                for h in e.link_faces:
+                    if h not in isla:
+                        isla[h] = n
+                        pila.append(h)
+        n += 1
+    return isla
 
 
-def separar_contactos(me):
-    """Aristas con 4 caras = dos vóxeles que se tocan solo por una arista (malla cerrada pero no-manifold). En un extremo de la
-    arista, las caras de uno de los dos sólidos pasan a un vértice nuevo: la arista queda en dos, cada una con sus 2 caras."""
+def piel_voxel(fuente):
+    """El validador de UGC de Studio (31/10) avisaba de malla no-manifold: la mascota son 14 piezas cerradas que se cortan (el
+    cuerpo, las dos nubecitas laterales y 11 cajitas de la cara). Aquí se mide qué celdas de la rejilla caen dentro del cuerpo o de
+    una nubecita (todas comparten rejilla) y se crea UNA piel con solo las caras entre celda llena y vacía. Los contactos en
+    diagonal (dos celdas que solo se tocan por una arista o un vértice) se rellenan con una celda. La cara (ojos, brillos,
+    mejillas, boca) no entra como geometría: se hornea en la textura desde la malla original."""
+    from mathutils.bvhtree import BVHTree
     bm = bmesh.new()
-    bm.from_mesh(me)
-    capas = list(bm.loops.layers.uv.values()) + list(bm.loops.layers.color.values()) + list(bm.loops.layers.float_color.values())
-    separadas = 0
-    for _ in range(20):
-        malas = [e for e in bm.edges if len(e.link_faces) == 4]
-        if not malas:
-            break
-        e, hecho = malas[0], False
-        for v in e.verts:
-            f0 = e.link_faces[0]
-            fan, pila = {f0}, [f0]             # caras del sólido de f0 alrededor de v (unidas por aristas buenas que tocan v)
-            while pila:
-                for ed in pila.pop().edges:
-                    if v in ed.verts and len(ed.link_faces) == 2:
-                        for g in ed.link_faces:
-                            if g not in fan:
-                                fan.add(g)
-                                pila.append(g)
-            if len(fan) == len(v.link_faces):  # los dos sólidos siguen unidos por otro lado: aquí no se puede
-                continue
-            nv = bm.verts.new(v.co)
-            for f in list(fan):
-                vs = [nv if l.vert is v else l.vert for l in f.loops]
-                datos = [[l[c] if not hasattr(l[c], 'uv') else l[c].uv.copy() for c in capas] for l in f.loops]
-                datos = [[x.copy() if hasattr(x, 'copy') else x for x in d] for d in datos]
-                g = bm.faces.new(vs, f)            # f de ejemplo: material y suavizado
-                for l, d in zip(g.loops, datos):
-                    for c, x in zip(capas, d):
-                        if hasattr(l[c], 'uv'):
-                            l[c].uv = x
-                        else:
-                            l[c] = x
-                bm.faces.remove(f)
-            separadas += 1
-            hecho = True
-            break
-        if not hecho:
-            break
-    for e in [e for e in bm.edges if not e.link_faces]:   # las aristas viejas del vértice movido quedan sueltas
-        bm.edges.remove(e)
-    for v in [v for v in bm.verts if not v.link_edges]:
-        bm.verts.remove(v)
-    bm.to_mesh(me)
-    me.update()
+    bm.from_mesh(fuente.data)
+    isla = islas_de_caras(bm)
+    cuenta = {}
+    for i in isla.values():
+        cuenta[i] = cuenta.get(i, 0) + 1
+    grandes = [i for i, c in cuenta.items() if c > 100]
+    largos = sorted(round(e.calc_length(), 5) for e in bm.edges if isla[e.link_faces[0]] in grandes and e.calc_length() > 1e-4)
+    celda = next(x for x in largos if largos.count(x) >= 10)
+    o = next(f for f in bm.faces if isla[f] in grandes).verts[0].co.copy()
+    d = Vector((1.0, 0.0137, 0.0071)).normalized()   # rayo un poco inclinado: no roza aristas ni esquinas
+
+    def idx(p):
+        return tuple(int(round((p[a] - o[a]) / celda)) for a in range(3))
+
+    llenas = set()
+    for i in grandes:
+        fs = [f for f in bm.faces if isla[f] == i]
+        vs = list({v for f in fs for v in f.verts})
+        ix = {v: n for n, v in enumerate(vs)}
+        arbol = BVHTree.FromPolygons([v.co.copy() for v in vs], [[ix[v] for v in f.verts] for f in fs])
+        i0 = idx([min(v.co[a] for v in vs) for a in range(3)])
+        i1 = idx([max(v.co[a] for v in vs) for a in range(3)])
+        for ci in range(i0[0], i1[0]):
+            for cj in range(i0[1], i1[1]):
+                for ck in range(i0[2], i1[2]):
+                    q, cortes = o + Vector(((ci + 0.5) * celda, (cj + 0.5) * celda, (ck + 0.5) * celda)), 0
+                    while True:
+                        hit = arbol.ray_cast(q, d)
+                        if hit[0] is None:
+                            break
+                        cortes += 1
+                        q = hit[0] + d * 1e-5
+                    if cortes % 2:
+                        llenas.add((ci, cj, ck))
     bm.free()
-    return separadas
+    E = ((1, 0, 0), (0, 1, 0), (0, 0, 1))
+
+    def mas(c, *ds):
+        return tuple(c[a] + sum(x[a] for x in ds) for a in range(3))
+
+    def por(v, s):
+        return tuple(x * s for x in v)
+
+    rellenas, cambio = 0, True
+    while cambio:
+        cambio = False
+        for c in list(llenas):
+            for a in range(3):
+                for b in range(a + 1, 3):
+                    for sa in (-1, 1):
+                        for sb in (-1, 1):
+                            da, db = por(E[a], sa), por(E[b], sb)
+                            if mas(c, da, db) in llenas and mas(c, da) not in llenas and mas(c, db) not in llenas:
+                                llenas.add(mas(c, da))
+                                rellenas, cambio = rellenas + 1, True
+            for sx in (-1, 1):
+                for sy in (-1, 1):
+                    for sz in (-1, 1):
+                        dx, dy, dz = por(E[0], sx), por(E[1], sy), por(E[2], sz)
+                        otras = (mas(c, dx), mas(c, dy), mas(c, dz), mas(c, dx, dy), mas(c, dx, dz), mas(c, dy, dz))
+                        if mas(c, dx, dy, dz) in llenas and not any(x in llenas for x in otras):
+                            llenas.add(mas(c, dx))
+                            rellenas, cambio = rellenas + 1, True
+    piel = bmesh.new()
+    vert = {}
+
+    def V(ijk):
+        if ijk not in vert:
+            vert[ijk] = piel.verts.new(o + Vector(ijk) * celda)
+        return vert[ijk]
+
+    for c in llenas:
+        for a in range(3):
+            b, cc = [x for x in range(3) if x != a]
+            for s in (-1, 1):
+                if mas(c, por(E[a], s)) in llenas:
+                    continue
+                p = list(c)
+                if s > 0:
+                    p[a] += 1
+                p1, p2, p3 = list(p), list(p), list(p)
+                p1[b] += 1
+                p2[b] += 1
+                p2[cc] += 1
+                p3[cc] += 1
+                piel.faces.new([V(tuple(p)), V(tuple(p1)), V(tuple(p2)), V(tuple(p3))])
+    bmesh.ops.recalc_face_normals(piel, faces=piel.faces[:])
+    me = bpy.data.meshes.new('GorroNubecita')
+    piel.to_mesh(me)
+    piel.free()
+    nuevo = bpy.data.objects.new('GorroNubecita', me)
+    CM.objects.link(nuevo)
+    return nuevo, celda, len(llenas), rellenas
 
 
-bm = bmesh.new()
-bm.from_mesh(ob.data)
-A.log('aristas raras', [(len(e.link_faces), tuple(round(c, 3) for c in (e.verts[0].co + e.verts[1].co) / 2)) for e in bm.edges
-                        if len(e.link_faces) != 2])
-bm.free()
-separadas = separar_contactos(ob.data) if abiertas else 0
+def no_manifold(o):
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    r = (sum(1 for e in bm.edges if not e.is_manifold), sum(1 for v in bm.verts if not v.is_manifold),
+         sum(1 for f in bm.faces if f.calc_area() < 1e-7))
+    bm.free()
+    return r
+
+
+fuente = ob
+ob, CELDA, CELDAS, RELLENAS = piel_voxel(fuente)
+co = [v.co.copy() for v in ob.data.vertices]
+mn = Vector([min(c[i] for c in co) for i in range(3)])
+mx = Vector([max(c[i] for c in co) for i in range(3)])
+tam = [round(mx[i] - mn[i], 3) for i in range(3)]   # x ancho, y fondo, z alto (Blender)
+tris = 2 * len(ob.data.polygons)                    # todo quads planos: Roblox los parte en 2 triángulos sin degenerados
+ARISTAS_NM, VERTICES_NM, CARAS_0 = no_manifold(ob)
 abiertas, islas = revisar(ob)
+A.log('piel', 'celda', round(CELDA, 4), 'celdas', CELDAS, 'rellenas', RELLENAS, 'tris', tris, 'no-manifold', ARISTAS_NM, VERTICES_NM,
+      'area0', CARAS_0, 'islas', islas)
 assert tris <= 4000 and tam[0] <= 3 and tam[2] <= 4 and tam[1] <= 3, (tris, tam)
-img = next((n.image for s in ob.material_slots if s.material and s.material.node_tree for n in s.material.node_tree.nodes
+assert ARISTAS_NM == 0 and VERTICES_NM == 0 and CARAS_0 == 0 and islas == 1, (ARISTAS_NM, VERTICES_NM, CARAS_0, islas)
+img = next((n.image for s in fuente.material_slots if s.material and s.material.node_tree for n in s.material.node_tree.nodes
             if n.type == 'TEX_IMAGE' and n.image), None)
 tex, tex_px = None, None
 if img:
@@ -165,11 +239,72 @@ if img:
         im2.pixels[:] = px.ravel()
         im2.filepath_raw, im2.file_format = tex, 'PNG'
         im2.save()
-        for s in ob.material_slots:                # el FBX incrusta la imagen del material: que sea la aclarada
+        for s in fuente.material_slots:            # el horneado lee la imagen del material de la fuente: que sea la aclarada
             if s.material and s.material.node_tree:
                 for n in s.material.node_tree.nodes:
                     if n.type == 'TEX_IMAGE' and n.image:
                         n.image = im2
+
+
+def hornear(piel, fuente, lado=2048):
+    """Textura nueva de la piel (2048: el validador pedía más resolución que 1024): UV propias sin solapes, el color de la malla
+    original (cara incluida) horneado desde fuera hacia dentro, y una oclusión suave en los huecos entre vóxeles (el validador
+    avisaba de textura «poco compleja»: colores planos)."""
+    A.select_only([piel])
+    bpy.context.view_layer.objects.active = piel
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.uv.smart_project(angle_limit=math.radians(66), island_margin=0.004)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    sc = bpy.context.scene
+    sc.render.engine, sc.cycles.device, sc.cycles.samples = 'CYCLES', 'CPU', 4
+    color = bpy.data.images.new('GorroColor', lado, lado, alpha=False)
+    mat = bpy.data.materials.new('GorroNubecita')
+    mat.use_nodes = True
+    nt = mat.node_tree
+    bsdf = nt.nodes['Principled BSDF']
+    nodo = nt.nodes.new('ShaderNodeTexImage')
+    nodo.image = color
+    nt.links.new(nodo.outputs['Color'], bsdf.inputs['Base Color'])
+    bsdf.inputs['Roughness'].default_value = 0.6
+    nt.nodes.active = nodo
+    piel.data.materials.append(mat)
+    for o in bpy.context.view_layer.objects:
+        o.select_set(False)
+    fuente.select_set(True)
+    piel.select_set(True)
+    bpy.context.view_layer.objects.active = piel
+    # los brillos de los ojos sobresalen ~0,07 de la placa de la cara: el rayo tiene que salir de más fuera que ellos
+    bpy.ops.object.bake(type='DIFFUSE', pass_filter={'COLOR'}, use_selected_to_active=True, cage_extrusion=0.09,
+                        max_ray_distance=0.18, margin=8, use_clear=True)
+    bpy.data.objects.remove(fuente)            # sin la fuente: si no, tapa toda la oclusión
+    if not sc.world:
+        sc.world = bpy.data.worlds.new('Mundo')
+    sc.world.light_settings.distance = 0.12     # oclusión local: solo los huecos entre vóxeles
+    ao = bpy.data.images.new('GorroAO', lado, lado, alpha=False)
+    nodo.image = ao
+    sc.cycles.samples = 64
+    A.select_only([piel])
+    bpy.ops.object.bake(type='AO', margin=8, use_clear=True)
+    px = np.array(color.pixels[:]).reshape(-1, 4)
+    oc = np.array(ao.pixels[:]).reshape(-1, 4)
+    px[:, :3] *= 0.82 + 0.18 * oc[:, :1]
+    final = bpy.data.images.new('GorroNubecita_textura_%d' % lado, lado, lado, alpha=False)
+    final.pixels[:] = px.ravel()
+    ruta = os.path.join(OUT, 'GorroNubecita_textura_%d.png' % lado)
+    final.filepath_raw, final.file_format = ruta, 'PNG'
+    final.save()
+    nodo.image = final
+    for im in (color, ao):
+        bpy.data.images.remove(im)
+    return ruta
+
+
+tex1024 = tex
+tex = hornear(ob, fuente)
+tex_px = [2048, 2048]
+if tex1024 and os.path.exists(tex1024):
+    os.remove(tex1024)                         # la copia aclarada de 1024 solo era la fuente del horneado
 # Probado en Studio (30/10): con axis_forward Z el 3D Importer deja el +Y de Blender (la cara) hacia +Z de Roblox, que es la NUCA del
 # avatar (los personajes miran a -Z). El FBX sale girado 180° en vertical para que la cara mire al frente; el .blend no se toca.
 GIRO = Matrix.Rotation(math.pi, 4, 'Z')
@@ -316,8 +451,8 @@ if xe is not None:
              A.camera(CC, 'Catalogo', (xe + 0.6 * ANCHO, 1.65 * ANCHO, CABEZA_TOP + 0.75 * ANCHO), (xe, 0, CABEZA_TOP + 0.21 * ANCHO), lens=50))
 A.write_json(os.path.join(OUT, 'datos.json'), {
     'accesorio': 'Gorro Nubecita (Hat, rigido)', 'ancho_elegido': ANCHO, 'comparados': list(COMPARAR), 'triangulos': tris,
-    'tamano_studs_x_y_z_blender': tam, 'limites_hat_classic': [3, 4, 3], 'aristas_abiertas_o_no_manifold': abiertas, 'contactos_separados': separadas, 'islas': islas,
+    'tamano_studs_x_y_z_blender': tam, 'limites_hat_classic': [3, 4, 3], 'malla': 'piel de voxeles de una pieza (celda %.4f, %d celdas, %d rellenadas en contactos en diagonal)' % (CELDA, CELDAS, RELLENAS), 'aristas_no_manifold': ARISTAS_NM, 'vertices_no_manifold': VERTICES_NM, 'caras_area_cero': CARAS_0, 'islas': islas,
     'attachment': 'HatAttachment en la base, centrada; se hunde %.2f en la cabeza' % HUNDIR,
     'textura': os.path.basename(tex) if tex else None, 'textura_px': tex_px, 'textura_aclarada': ACLARAR,
     'fbx': 'GorroNubecita.fbx (global_scale 0.01, axis_forward Z, girado 180 grados: en Studio la cara mira a -Z, el frente del avatar)', 'subido_a_roblox': False})
-A.log('listo', 'ancho', ANCHO, 'tris', tris, 'tam', tam, 'abiertas', abiertas, 'separadas', separadas, 'islas', islas, 'textura', tex_px)
+A.log('listo', 'ancho', ANCHO, 'tris', tris, 'tam', tam, 'no-manifold', ARISTAS_NM, VERTICES_NM, 'islas', islas, 'textura', tex_px)

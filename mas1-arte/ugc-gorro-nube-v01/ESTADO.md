@@ -5,23 +5,25 @@ Encargo de Maikol (30/10): «Solo para probar, crea un accesorio nuevo, lo que m
 ## Lo que falta o puede fallar
 
 - **No está publicado ni a la venta.** Publicarlo lo hace Maikol desde su cuenta: se paga en Robux y pide verificaciones (ver abajo).
-- **El validador de UGC de Studio da 0 errores y 4 avisos.** Los avisos no bloquean la subida:
-  1. 0,10 % de triángulos degenerados (más o menos 1 triángulo).
-  2. Geometría no-manifold. La malla son 14 piezas de vóxel cerradas y algunas se tocan por una arista o un vértice. En Blender ya no queda ninguna arista con más de 2 caras, pero Roblox suelda los vértices que coinciden. Arreglo posible: rehacer la malla como una sola superficie.
-  3. Textura «poco compleja». Es normal en vóxel, que son colores planos.
-  4. Textura de 1024 «baja». Recomiendan más resolución; se podría pasar a 2048 sin suavizar.
+- **El validador de UGC de Studio da 0 errores y 2 avisos** (31/10, tras el arreglo que pidió Maikol). Los avisos no bloquean la subida:
+  1. Textura «poco compleja». Es el estilo vóxel de colores planos. Ya lleva una oclusión suave horneada; meterle ruido la afearía.
+  2. Textura «baja, de 1024». Se subió una de 2048, pero Roblox la deja en 1024 al subirla, así que con TextureID no se puede quitar.
+- **Arreglados el 31/10 los avisos de geometría** (triángulos degenerados y no-manifold):
+  - La malla era 14 piezas que se cortaban: cuerpo, nubecitas laterales y cajitas de la cara.
+  - Ahora es **una sola piel de vóxeles cerrada**: 1.796 triángulos, 0 aristas o vértices no-manifold y ningún triángulo de área cero.
+  - La cara (ojos con brillo, mejillas y boca) va **horneada en la textura**, que ahora tiene UV propias. Antes eran cajitas que sobresalían 0,05 studs; se nota muy poco.
 - **Solo se ha probado con el avatar R15 de bloques por defecto** (cabeza de 1,16). Roblox escala el gorro según la cabeza, así que 1,6 queda en 1,55 de ancho. Falta probarlo con cuerpos Rthro y cabezas dinámicas.
 - **La luz de cada juego cambia mucho cómo se ve.** En la place de prueba, sin el sol de frente, la nube salía gris, y un cubo blanco de referencia también. Por eso se aclaró la textura.
 
 ## Qué es
 
 - La **mascota nube amable del juego** (`mascotas-enemigos-v01/nube`), fija y sentada en la cabeza como un gorro.
-- **Mide 1,6 × 0,84 × 0,89 studs** (ancho × alto × fondo).
+- **Mide 1,6 × 0,84 × 0,84 studs** (ancho × alto × fondo; el fondo bajó de 0,89 al hornear la cara en la textura).
   - Es el tamaño que eligió Maikol de la comparativa `GorroNubecita-tamanos.jpg` (1,6 / 2,0 / 2,4 / 2,8).
   - Cabe en la caja Hat de todos los tipos de cuerpo: Classic 3 × 4 × 3, Normal 1,87 × 2,5 × 1,87 y Slender 1,78 × 2,5 × 1,78.
-- **Malla:** 1.250 triángulos (el límite es 4.000) y una sola malla.
+- **Malla:** 1.796 triángulos (el límite es 4.000), una sola piel cerrada.
 - **HatAttachment** centrada en la base. El gorro se hunde 0,1 studs en la cabeza para que no quede una rendija.
-- **Textura:** copia de la de la mascota, con los blancos y lavandas aclarados un 40 %. La cara y las mejillas no cambian.
+- **Textura (`GorroNubecita_textura_2048.png`):** el color de la mascota con los blancos y lavandas aclarados un 40 % (la cara no), horneado sobre la piel nueva y con una oclusión suave en los huecos.
 
 ## Probado en Studio (30/10)
 
@@ -42,7 +44,7 @@ Encargo de Maikol (30/10): «Solo para probar, crea un accesorio nuevo, lo que m
 |---|---|
 | `GorroNubecita-accesorio.rbxm` | **El accesorio listo para subir.** Es un Accessory «GorroNubecita» de tipo Hat. Su Handle es un MeshPart con la HatAttachment, material Plastic y `Massless = false`. Usa la malla y la textura ya subidas. |
 | `GorroNubecita.fbx` | Malla con la textura incrustada. Escala 0.01, `axis_forward` Z y girada 180°. |
-| `GorroNubecita_textura_1024.png` | Textura aclarada. |
+| `GorroNubecita_textura_2048.png` | Textura horneada (color aclarado, cara y oclusión suave). |
 | `GorroNubecita.blend` | Fuente, con la cara hacia +Y como el resto del arte. |
 | `GorroNubecita-tamanos.jpg` | Comparativa de tamaños; el elegido va en azul. |
 | `GorroNubecita-avatar.jpg` | Avatar de 3/4. |
@@ -60,10 +62,11 @@ Script: `tools/build_ugc_gorro_nube.py`.
 
 Son privados y no están publicados.
 
-- **Finales:**
-  - malla `rbxassetid://108856740245372`;
-  - textura aclarada `rbxassetid://131716664749821`.
+- **Finales (31/10, piel de una pieza):**
+  - malla `rbxassetid://105089157766338`;
+  - textura horneada `rbxassetid://91926435167786`.
 - **Pruebas descartadas:**
+  - malla de 14 piezas `rbxassetid://108856740245372` y su textura aclarada `rbxassetid://131716664749821`;
   - malla de 2,0 con la cara hacia atrás `rbxassetid://120611883318936`;
   - textura sin aclarar `rbxassetid://101145254390945`;
   - malla de 1,6 sin girar.
