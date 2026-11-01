@@ -1,0 +1,72 @@
+{
+ "lanzamiento": {
+  "archivo": "wav/lanzamiento.wav",
+  "segundos": 1.4,
+  "roblox_asset_id": null
+ },
+ "boost": {
+  "archivo": "wav/boost.wav",
+  "segundos": 0.6,
+  "roblox_asset_id": null
+ },
+ "aro": {
+  "archivo": "wav/aro.wav",
+  "segundos": 0.55,
+  "roblox_asset_id": null
+ },
+ "orbe": {
+  "archivo": "wav/orbe.wav",
+  "segundos": 0.2,
+  "roblox_asset_id": null
+ },
+ "golpe": {
+  "archivo": "wav/golpe.wav",
+  "segundos": 0.25,
+  "roblox_asset_id": null
+ },
+ "cofre": {
+  "archivo": "wav/cofre.wav",
+  "segundos": 0.9,
+  "roblox_asset_id": null
+ },
+ "aterrizaje": {
+  "archivo": "wav/aterrizaje.wav",
+  "segundos": 0.6,
+  "roblox_asset_id": null
+ },
+ "huevo_agita": {
+  "archivo": "wav/huevo_agita.wav",
+  "segundos": 0.7,
+  "roblox_asset_id": null
+ },
+ "huevo_abre": {
+  "archivo": "wav/huevo_abre.wav",
+  "segundos": 1.1,
+  "roblox_asset_id": null
+ },
+ "mitico": {
+  "archivo": "wav/mitico.wav",
+  "segundos": 1.8,
+  "roblox_asset_id": null
+ },
+ "rebirth": {
+  "archivo": "wav/rebirth.wav",
+  "segundos": 2.2,
+  "roblox_asset_id": null
+ },
+ "clic": {
+  "archivo": "wav/clic.wav",
+  "segundos": 0.1,
+  "roblox_asset_id": null
+ },
+ "error": {
+  "archivo": "wav/error.wav",
+  "segundos": 0.35,
+  "roblox_asset_id": null
+ },
+ "combo": {
+  "archivo": "wav/combo.wav",
+  "segundos": 0.25,
+  "roblox_asset_id": null
+ }
+}
