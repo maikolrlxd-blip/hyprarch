@@ -13,11 +13,15 @@ Lo escribe el Coordinador (Claude en el PC de Maikol) para seguir sin perder el 
 - **92664cf — atributo `MascotasEq`** en el servidor; `mas1-arte/tools/exportar_rig_roblox.py`.
 - **Regla de ejes FBX** (`mas1-arte/pruebas-studio/2026-10-30-ejes/LEEME.md`): con huesos, `bake_space_transform=True` + `axis_forward` `'Z'` (frente +Y) o `'-Z'` (frente −Y, Codex); sin huesos, girar la malla 180°.
 
+## Hecho después (01/11)
+- **d3bd1bf — MAS1_Modelos**: `assets/MAS1_Modelos.rbxmx` (11 mascotas y 3 alas, pivotes arreglados), metido en la place por `default.project.json` y `construir_place.py`, más `client/AnimaSeguidores.client.lua` (aleteo con Bone.Transform). Probado en Studio junto con las misiones del director.
+- Comprobación del mapa largo: 14 caras solapadas, todas en los anillos de los planetas del Espacio (lejos del carril).
+
 ## En marcha
 - Comprobación de caras solapadas del mapa largo (`MAPA_RBX_FASE=check blender ... mapa_roblox.py`). Si da caras solapadas, arreglarlas (hay parpadeo en Roblox).
 
 ## Lista pendiente, en orden (del director)
-1. **MAS1_Modelos**: Models en `ReplicatedStorage.MAS1_Modelos.Mascotas.<id>` y `.Alas.<id>`, con el frente hacia −Z y `PrimaryPart`. Los lee `client/Seguidores.client.lua`.
+1. ~~**MAS1_Modelos**~~ HECHO (d3bd1bf). Detalles para rehacerlo: Models en `ReplicatedStorage.MAS1_Modelos.Mascotas.<id>` y `.Alas.<id>`, con el frente hacia −Z y `PrimaryPart`. Los lee `client/Seguidores.client.lua`.
    - **Rigs:** `exportar_rig_roblox.py` con `BLEND=<.blend>` `SALIDA=<carpeta>/<id>.fbx`.
    - **ids y su `.blend`:**
      - Codex (solo lectura, `C:\Users\maiko\Documents\Codex\2026-10-21\c\outputs\mas-1-lanzamiento\art`):
