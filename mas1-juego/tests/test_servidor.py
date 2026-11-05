@@ -214,4 +214,110 @@ s.avanzar(60.0)
 assert len(s.g.KICKS) == 2 and 'No se pudieron cargar' in [k for k in s.g.KICKS.values()][1].mensaje, 'sin DataStore, fuera con un mensaje'
 assert sum('intento' in a and 'fallido' in a for a in s.avisos()) >= 5, 'se reintenta 5 veces y cada fallo queda en el Output'
 print('datos: irse cargando suelta el bloqueo, bloqueo ajeno respetado, hora rota ignorada, DataStore caido echa con mensaje')
+
+
+# ------------------------------------------------------------------ 8) golpear a un enemigo y atrapar el cofre (el piloto va hacia ellos)
+def anclas(s, nombre):
+    """Las anclas de MAS1_Entidades con ese nombre: [(x, y, z, vivo, ancla)]."""
+    lista = s.l.eval('''function(n)
+        local r = {}
+        for _, a in ipairs(workspace:FindFirstChild("MAS1_Entidades"):GetChildren()) do
+            if a._d.Name == n then r[#r + 1] = a end
+        end
+        return r
+    end''')(nombre)
+    return [(a.Position.X, a.Position.Y, a.Position.Z, a.GetAttribute(a, 'Vivo'), a) for a in lista.values()]
+
+
+def perseguir(s, p, objetivo, tope=40.0, boost=False, al_llegar=None, cerca=8.0):
+    """Vuela hacia objetivo() = (x, y, z) o None, con el Manejo real; al_llegar() se llama una vez al pasar a menos de «cerca» studs."""
+    Man = s.l.execute(open('src/Manejo.lua', encoding='utf-8').read())
+    V = s.l.execute(open('src/Vuelo.lua', encoding='utf-8').read())
+    T = s.l.table_from
+    if boost:
+        s.accion(p, 'boost', True)
+    r = s.H.raiz(p).Position
+    pos, m, t, dt, hecho = [r.X, r.Y, r.Z], Man.nuevo(), 0.0, 1 / 60, False
+    while s.attr(p, 'EnVuelo') and t < tope:
+        o = objetivo()
+        ent = {}
+        if o:
+            ent = {'lateral': max(-1.0, min(1.0, (o[0] - pos[0]) / 4.0)), 'subir': o[1] - pos[1] > 1.5, 'bajar': o[1] - pos[1] < -1.5}
+            d = ((o[0] - pos[0]) ** 2 + (o[1] - pos[1]) ** 2 + (o[2] - pos[2]) ** 2) ** 0.5
+            if not hecho and d < cerca and al_llegar:
+                al_llegar()
+                hecho = True
+        info = T({'planeando': bool(s.attr(p, 'Planeando')), 'boost': bool(s.attr(p, 'Boost')), 'impulso': s.attr(p, 'Impulso') or 1})
+        Man.paso(m, dt, T(ent), info, pos[0], pos[1], V.CFG, pos[2])
+        pos = [pos[0] + m.vx * dt, max(3.0, pos[1] + m.vy * dt), pos[2] - m.vf * dt]
+        s.H.mover(p, *pos)
+        s.H.latido(dt)
+        q = s.H.raiz(p).Position
+        pos = [q.X, q.Y, q.Z]
+        t += dt
+    return hecho
+
+
+s = R.Servidor()
+p = s.jugador('Gus', 1007)
+s.accion(p, 'lanzar')
+enemigo = min((a for a in anclas(s, 'Enemigo') if a[2] < -60), key=lambda a: -a[2])   # el primero por delante del cañon
+objetivo = (enemigo[0], max(10.0, min(28.0, enemigo[1])), enemigo[2] + 3)
+golpes0 = len(s.eventos('MAS1_Efecto'))
+combo = []
+
+
+def pegar():
+    s.accion(p, 'puno')
+    combo.append(s.attr(p, 'Combo'))     # el combo dura 1,5 s: se mira justo al golpear
+
+
+llego = perseguir(s, p, lambda: objetivo, tope=12.0, al_llegar=pegar, cerca=7.0)
+assert llego, ('no se llego al enemigo', objetivo)
+assert any(e[0] == 'golpe' for e in s.eventos('MAS1_Efecto')[golpes0:]), 'el golpe a un enemigo manda su efecto'
+assert enemigo[4].GetAttribute(enemigo[4], 'Vivo') is False, 'el enemigo golpeado desaparece'
+assert combo == [1], ('los golpes suman al combo', combo)
+assert s.attr(p, 'Combo') == 0, 'el combo se apaga solo a los 1,5 s'
+volar(s, p)
+res = s.eventos('MAS1_Resultado', p)[0][0]
+assert res['golpes'] == 1, res['golpes']
+s.avanzar(16.0)
+assert enemigo[4].GetAttribute(enemigo[4], 'Vivo') is True, 'el enemigo vuelve a los 15 s'
+print('enemigo: golpeado a %.0f studs, desaparece, suma al combo y vuelve a los 15 s' % -enemigo[2])
+
+s.avanzar(3.5)
+s.H.mover(p, 0.0, 3.0, 14.0)
+s.accion(p, 'lanzar')
+cofres0 = s.attr(p, 'Cofres') or 0
+cofre = [a for a in anclas(s, 'Cofre') if a[4].GetAttribute(a[4], 'Dueno') == 1007]
+assert len(cofre) == 1, 'al lanzarse sale el cofre del jugador'
+def pos_cofre():
+    c = [a for a in anclas(s, 'Cofre') if a[4].GetAttribute(a[4], 'Dueno') == 1007]
+    return (c[0][0], c[0][1], c[0][2]) if c else None
+perseguir(s, p, pos_cofre, tope=30.0, boost=True)
+assert (s.attr(p, 'Cofres') or 0) == cofres0 + 1 or (s.attr(p, 'Cofres') or 0) == cofres0 + 2, ('no se atrapo el cofre con boost', s.attr(p, 'Cofres'))
+volar(s, p)
+assert not [a for a in anclas(s, 'Cofre') if a[4].GetAttribute(a[4], 'Dueno') == 1007], 'al aterrizar el cofre desaparece'
+print('cofre: atrapado con boost (%d en total) y retirado al aterrizar' % s.attr(p, 'Cofres'))
+
+# ------------------------------------------------------------------ 9) las alas se desbloquean solas (3.er lanzamiento, racha de 3 dias, 60 cofres) y no se puede lanzar dos veces
+s = R.Servidor()
+p = s.jugador('Hana', 1008)
+for i in range(3):
+    s.avanzar(3.5)
+    s.H.mover(p, 0.0, 3.0, 14.0)
+    s.accion(p, 'lanzar')
+    if i == 0:
+        s.accion(p, 'lanzar')                       # lanzar en pleno vuelo no hace nada
+        assert s.attr(p, 'Lanzamientos') == 1, 'no se puede lanzar dos veces seguidas'
+    assert s.attr(p, 'Alas') == ('' if i < 2 else 'iniciales'), ('las alas iniciales salen en el 3.er lanzamiento', i, s.attr(p, 'Alas'))
+    volar(s, p)
+assert any('Nuevas alas' in a[0] for a in s.eventos('MAS1_Aviso', p)), 'aviso de alas nuevas'
+dia = 1700000000 // 86400
+s.g.ALMACEN['j_1009'] = s.l.table_from({'dato': s.l.table_from({'diasSeguidos': 2, 'ultimoDia': dia - 1, 'cofres': 60})})
+p = s.jugador('Ivan', 1009)
+tiene = [a for a in s.eventos('MAS1_Inventario', p)[-1][0]['alas'].values()]
+assert 'roboticas' in tiene and 'avanzadas' in tiene, ('racha de 3 dias y 60 cofres desbloquean robóticas y avanzadas', tiene)
+assert s.almacen('j_1009') is not None and s.attr(p, 'DiasSeguidos') == 3
+print('alas: iniciales en el 3.er lanzamiento, roboticas con 3 dias y avanzadas con 60 cofres')
 print('ok')
