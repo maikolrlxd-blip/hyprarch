@@ -249357,6 +249357,10 @@ function T.panel(padre, props, color)
 	local p = n("Frame", props, padre)
 	n("UICorner", { CornerRadius = UDim.new(0, 18) }, p); n("UIStroke", { Color = T.col.tinta, Thickness = 5, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }, p)
 	p.Destroying:Connect(function() sombra:Destroy() end)
+	-- la sombra es hermana del panel (no hija): sin esto, al ocultar el panel (Misiones en vuelo, el combo, los consejos) quedaba
+	-- su sombra como un recuadro oscuro vacio. Visto en Studio el 05/11.
+	sombra.Visible = p.Visible
+	p:GetPropertyChangedSignal("Visible"):Connect(function() sombra.Visible = p.Visible end)
 	return p, sombra
 end
 

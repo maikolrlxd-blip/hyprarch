@@ -61,24 +61,20 @@ Studio se actualizó solo a `version-fee454b8e2094ba9`. El permiso de pantalla p
 - **`test_servidor.py` — el servidor real, ejecutado.** `tests/roblox_falso.py` simula lo justo de Roblox (señales, RemoteEvent con registro, jugadores con personaje, reloj virtual con `task.*`, DataStore en memoria con latencia y fallos, `require`) y traduce el Luau de los scripts (`continue`, `+=`) con `a_lua()`. Ejecuta `Partida.server.lua` y `Guardado.lua` con el código real de `src/`: entrar y cargar con bloqueo, entrenar (+10 quieto, +15 AFK, +19 corriendo, +10 con dirección falsa), lanzarse, volar con el `Manejo` real, aterrizar y cobrar, volver al lobby, guardar al salir, huevos, alas, rebirth, golpear a un enemigo (combo y reaparición a los 15 s), atrapar el cofre con boost, desbloquear alas (3.er lanzamiento, racha de 3 días, 60 cofres), no poder lanzarse dos veces, teletransporte corregido, morir en vuelo, spam, irse mientras cargan los datos, bloqueo de otro servidor, hora rota y DataStore caído. Comprobado con tres mutantes (sin el arreglo de irse cargando, sin «correr de verdad» y sin el progreso entero de las misiones): los tres hacen fallar la prueba. **No prueba lo que depende del motor de Roblox** (nombres de propiedades, física, la interfaz).
 - **`test_cliente.py` — los scripts del cliente, ejecutados.** Mismo simulador (`Cliente`: jugador local, `src/` real y los modelos reales de `assets/*.rbxmx` con sus huesos y `Motor6D`, `Clone` que remapea `Part0/Part1/PrimaryPart`). Ejecuta `Seguidores`, `AnimaSeguidores`, `Entidades`, `Orbes` y `Canon`: mascotas (≤ 5 studs) y alas creadas; el soporte de las alas a (0, 0,4, 0,23) del torso (media profundidad); en tierra las puntas de las alas abiertas (|x| 2,0-2,2); el aleteo recoge (0,25) y extiende (2,49) y sube y baja; las puntas no se cruzan y es simétrico; los enemigos aparecen (el cofre ajeno no), encogen al golpearlos y vuelven; los 343 orbes se esconden al cogerlos y vuelven al lanzarse; el cañón de Codex retrocede 0,65 studs hacia atrás (+Z) y vuelve exacto con las 28 uniones encendidas. **No prueba cómo se ve** ni el motor.
 
-**Antes de cada commit:** `python tools/construir_place.py` y `for t in tests/test_*.py; do python $t; done` desde `mas1-juego` (17 pruebas). Commits con `git -c user.name=Maikol -c user.email=maikolrlxd@gmail.com`. Si `git push` rechaza por «fast-forward»: `git fetch`, `git merge origin/ccr-d4583e0a-ggl8kz`, reconstruir la place (el `.rbxlx` es generado), restaurar el `.lock` con `git checkout -- build/Mas1-prueba.rbxlx.lock` y subir.
+**Antes de cada commit:** `python tools/construir_place.py` y `for t in tests/test_*.py; do python $t; done` desde `mas1-juego` (18 pruebas). Commits con `git -c user.name=Maikol -c user.email=maikolrlxd@gmail.com`. Si `git push` rechaza por «fast-forward»: `git fetch`, `git merge origin/ccr-d4583e0a-ggl8kz`, reconstruir la place (el `.rbxlx` es generado), restaurar el `.lock` con `git checkout -- build/Mas1-prueba.rbxlx.lock` y subir.
 
-## En marcha / bloqueado por Studio (hace falta que Maikol acepte el aviso de pantalla para `version-fee454b8e2094ba9`)
-1. **Importar los 6 enemigos voxel.** Los FBX con la regla de ejes se sacan de los `.blend` con (desde `hyprarch`, en Git Bash; `SALIDA` en una carpeta nueva, por ejemplo `C:/Users/maiko/Documents/mas1-enemigos-fbx`, que no está en el repo):
-   ```bash
-   for par in globo:globo/GloboGrunon nube:nube-grunona/NubeGrunona nubarron:nubarron/NubarronTormenta cometa:cometa/CometaEnfadada ovni:ovni/OvniEnfadado meteorito:meteorito/MeteoritoFurioso; do
-     BLEND="$(cygpath -w "$PWD/mas1-arte/enemigos-v02/${par#*:}.blend")" SALIDA="C:/Users/maiko/Documents/mas1-enemigos-fbx/${par%%:*}.fbx" \
-       "/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" -b --factory-startup -P mas1-arte/tools/exportar_rig_roblox.py
-   done
-   ```
-   Cada modelo se tiene que llamar como el archivo (`globo`, `nube`, `nubarron`, `cometa`, `ovni`, `meteorito`).
-   - Importarlos uno a uno y pasarles `mas1-juego/tools/studio/preparar_enemigos.lua` en la barra de comandos: frente hacia −Z, pivote, anclados y carpeta `ReplicatedStorage.MAS1_Enemigos`.
-   - Ctrl+S → `python tools/extraer_rbxmx.py build/Mas1-prueba.rbxlx ReplicatedStorage/MAS1_Enemigos assets/MAS1_Enemigos.rbxmx`.
-   - Añadir `"MAS1_Enemigos": { "$path": "assets/MAS1_Enemigos.rbxmx" }` a `default.project.json`.
-   - Volver a pasar `clips_a_lua.py` (genera `ClipsEnemigos.lua`) y `construir_place.py`, y probar en vuelo.
-2. **Ver en vuelo** las alas iniciales y robóticas (ya verificadas con números: `clips_a_lua.py` reconstruye cada pose como lo hará el juego, con los valores redondeados que guarda, y la compara con la de Blender: error máximo 0,0009 studs en los 19 clips; solo falta verlas), el retroceso del cañón, las farolas, los banderines y los árboles.
-3. **2 clientes** (Prueba → Servidor local) y FPS.
-4. **Cofre con malla:** el «Cofre mensajero» de Codex (`equipo-inicial-v01/Cofre-mensajero-v01.blend`, clips `Courier_flight` y `Reward_open`). Tiene piezas rígidas, como el cañón: Motor6D y modo «motor».
+## Probado en Studio el 05/11 por la tarde (Maikol aceptó el aviso de pantalla; antes se pedía en turnos que no empezaba él)
+- **0d70f76 — los 6 enemigos con malla.** Importados uno a uno con el 3D Importer en una place mínima aparte (`C:/Users/maiko/Documents/mas1-enemigos-fbx/importar.rbxlx`, con los FBX), preparados con `tools/studio/preparar_enemigos.lua` (los 6 «cara hacia -Z: true»), extraídos a `assets/MAS1_Enemigos.rbxmx` (en `default.project.json`) y con sus clips en `src/ClipsEnemigos.lua` (Idle, Hit, Defeat, Blink; error máximo 0,0012 studs). En vuelo se ve el globo gruñón con su malla junto a la pista. Las mallas recién subidas tardan unos minutos en verse («Asset content representation is being generated» en el Output).
+- **Alas en vuelo:** iniciales (suben en V y se extienden en horizontal), robóticas y avanzadas, vistas con capturas. Soporte medio dentro de la espalda.
+- **Resultados, misiones y desbloqueo:** pantalla «¡ATERRIZAJE!» correcta; la misión «Vuela metros» marca 1202/2000 (entero); las alas iniciales se desbloquean solas en el 3.er lanzamiento con su aviso.
+- **Retroceso del cañón:** funciona, medido en Studio: la boca se mueve hasta 0,85 studs (0,65 hacia atrás) y vuelve exacta. Pero el cañón mide 11,4 × 20,4 studs: apenas se nota. **Pregunta para Maikol: ¿exagerarlo?** (escalar solo las traslaciones puede abrir huecos entre piezas: mejor un empujón del modelo entero).
+- **2 clientes:** Prueba → Iniciar sesión de prueba → Servidor y clientes (sale solo el servidor); los clientes se añaden con Prueba → Añadir clientes en la ventana del servidor, de uno en uno. Cada cliente ve las alas y mascotas del otro. Sin errores en el Output del servidor ni de los clientes.
+- **FPS:** un cliente en vuelo, 52 de media (peor fotograma 22 ms, 14.023 instancias); servidor + 2 clientes a la vez en el mismo PC, 58 en vuelo (peor 22 ms).
+- **Arreglado tras verlo:** `T.panel` (`client/Tema.lua`) crea la sombra como hermana del panel; al ocultar un panel quedaba un recuadro oscuro vacío (misiones en vuelo, contador de combo siempre, consejos). Ahora la sombra sigue la visibilidad del panel. Comprobado en Studio; guarda en `tests/test_tema.py`.
+- **Sin ver todavía:** la chispa del orbe y el polvo del aterrizaje (se ejecutan sin errores, pero no cayeron en ninguna captura) y el enemigo encogiendo al golpearlo.
+
+## Pendiente con Studio
+1. **Cofre con malla:** el «Cofre mensajero» de Codex (`equipo-inicial-v01/Cofre-mensajero-v01.blend`, clips `Courier_flight` y `Reward_open`). Tiene piezas rígidas, como el cañón: Motor6D y modo «motor».
 
 ## Lista pendiente, en orden (del director)
 1. ~~**MAS1_Modelos**~~ HECHO (d3bd1bf). Detalles para rehacerlo: Models en `ReplicatedStorage.MAS1_Modelos.Mascotas.<id>` y `.Alas.<id>`, con el frente hacia −Z y `PrimaryPart`. Los lee `client/Seguidores.client.lua`.
@@ -111,7 +107,7 @@ Studio se actualizó solo a `version-fee454b8e2094ba9`. El permiso de pantalla p
 4. **Sonidos:** 14 WAV en `mas1-sonidos/wav`. Se suben con el Gestor de recursos de Studio SOLO con el «sí» de Maikol, y los ids van en `src/Sonidos.lua`.
 5. **Icono v02** (crítica del director): avatar de espaldas o de 3/4 con alas abiertas enormes, «+1» de ~40 %, aro dorado detrás y cielo en degradado.
 
-## Trucos de Studio (exe `version-7062aec9dbe74b14`)
+## Trucos de Studio (exe `version-fee454b8e2094ba9`; mismas coordenadas que en la anterior)
 - **Abrir:** `Start-Process ...RobloxStudioBeta.exe -ArgumentList '"<ruta .rbxlx>"'`; después ShowWindow(3) + SetForegroundWindow.
 - **Al abrir:** aviso de iluminación (Continuar en (837, 482)) y aviso de Rojo (Dismiss en (1268, 567)).
 - **Barra de comandos:** clic en (600, 742), Ctrl+A, escribir y **Ctrl+Enter**. CurrentCamera o Destroy sacan «comando peligroso» → Continuar en (693, 467).
