@@ -94,6 +94,48 @@ for _, d in ipairs({ { "HUEVOS Y MASCOTAS (B)", -20, MEN }, { "REBIRTH", 20, ROS
 	cartel(d[1], Vector3.new(d[2], 11, -96.5), 18, d[3])
 end
 
+-- vida en la plaza (cola del director, 05/11: «farolas, banderines, arboles de bloques»). Todo decorativo y fuera del camino central
+-- (x = 0), del cañon (z -16 a -28), de la plataforma (z -33 a -43), de las zonas de entreno (|x| 12 a 28, z -54 a -70) y de los
+-- puestos (|x| 14 a 26, z -96 a -104): farolas en x = ±9, banderines colgando entre ellas por encima del camino y arboles en x = ±30.
+-- Solo chocan los postes y los troncos. SIN PROBAR EN STUDIO.
+local MADERA, HOJA, HOJA2, FAROL = rgb(122, 84, 52), rgb(76, 175, 80), rgb(56, 142, 60), rgb(255, 226, 160)
+local SIN_CHOQUE = { CanCollide = false, CanQuery = false }
+for _, z in ipairs({ 6, -10, -46, -62, -78, -94, -110, -126, -142, -158 }) do
+	for _, x in ipairs({ -9, 9 }) do
+		parte("FarolaBase", Vector3.new(1.4, 0.6, 1.4), CFrame.new(x, 0.3, z), TIN)
+		parte("FarolaPoste", Vector3.new(9, 0.5, 0.5), CFrame.new(x, 4.5, z) * CFrame.Angles(0, 0, math.rad(90)), TIN, nil,
+			{ Shape = Enum.PartType.Cylinder })
+		local farol = parte("Farol", Vector3.new(1.3, 1.6, 1.3), CFrame.new(x, 9.6, z), FAROL, Enum.Material.Neon, SIN_CHOQUE)
+		parte("FarolTecho", Vector3.new(1.8, 0.4, 1.8), CFrame.new(x, 10.6, z), TIN, nil, SIN_CHOQUE)
+		local luz = Instance.new("PointLight")
+		luz.Range, luz.Brightness, luz.Color, luz.Shadows = 16, 1.2, FAROL, false
+		luz.Parent = farol
+	end
+end
+local COLORES_BANDERIN = { SOL, ROS, CIE, MEN, VIO }
+for k, z in ipairs({ 6, -46, -78, -110, -142 }) do -- de farola a farola, con caida en el medio
+	local n, previo = 11, nil
+	for i = 0, n - 1 do
+		local u = i / (n - 1)
+		local punto = Vector3.new(-8.4 + 16.8 * u, 8.9 - 1.4 * (1 - (2 * u - 1) ^ 2), z)
+		if previo then
+			parte("Cuerda", Vector3.new(0.08, 0.08, (punto - previo).Magnitude), CFrame.lookAt((punto + previo) / 2, punto), CRE, nil, SIN_CHOQUE)
+		end
+		parte("Banderin", Vector3.new(0.9, 0.9, 0.08), CFrame.new(punto - Vector3.new(0, 0.6, 0)) * CFrame.Angles(0, 0, math.rad(45)),
+			COLORES_BANDERIN[(i + k) % #COLORES_BANDERIN + 1], nil, SIN_CHOQUE)
+		previo = punto
+	end
+end
+local function arbol(x, z, s) -- tronco y dos cubos de copa, como los de la Pradera
+	parte("Tronco", Vector3.new(1.4, 4.5, 1.4) * s, CFrame.new(x, 2.25 * s, z), MADERA)
+	parte("Copa", Vector3.new(5, 3.6, 5) * s, CFrame.new(x, 6.1 * s, z), HOJA, nil, SIN_CHOQUE)
+	parte("Copa", Vector3.new(3.4, 2.4, 3.4) * s, CFrame.new(x + 0.3 * s, 8.4 * s, z - 0.2 * s), HOJA2, nil, SIN_CHOQUE)
+end
+for _, z in ipairs({ 16, -14, -40, -86, -116, -136, -156 }) do
+	arbol(-30, z, 1 + (z * 7 % 3) * 0.12)
+	arbol(30, z + 6, 1 + (z * 5 % 3) * 0.12)
+end
+
 -- punto de aparicion en la plaza, mirando al cañon; se apaga el de la place de prueba (estaba en el Mar de Nubes)
 for _, s in ipairs(workspace:GetDescendants()) do
 	if s:IsA("SpawnLocation") and s.Parent ~= lobby then s.Enabled = false end
