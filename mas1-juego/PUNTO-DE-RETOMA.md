@@ -1,4 +1,4 @@
-# Punto de retoma del Coordinador (01/11/2026, de madrugada)
+# Punto de retoma del Coordinador (05/11/2026)
 
 Lo escribe el Coordinador (Claude en el PC de Maikol) para seguir sin perder el hilo si se resume la conversación. El director es Linux 2.0 (sesión en la nube). Maikol dijo «tienes todo permitido» y «que continúe». Subir audio a su cuenta solo con su «sí» en el chat del Coordinador.
 
@@ -16,9 +16,24 @@ Lo escribe el Coordinador (Claude en el PC de Maikol) para seguir sin perder el 
 ## Hecho después (01/11)
 - **d3bd1bf — MAS1_Modelos**: `assets/MAS1_Modelos.rbxmx` (11 mascotas y 3 alas, pivotes arreglados), metido en la place por `default.project.json` y `construir_place.py`, más `client/AnimaSeguidores.client.lua` (aleteo con Bone.Transform). Probado en Studio junto con las misiones del director.
 - Comprobación del mapa largo: 14 caras solapadas, todas en los anillos de los planetas del Espacio (lejos del carril).
+- **943e73f — alas con los clips reales, soporte en la espalda y cañón de Codex** (pedidos de Maikol y del director):
+  - **Alas.** `mas1-arte/tools/clips_a_lua.py` → `src/ClipsHuesos.lua`.
+    - Los huesos importados NO tienen los ejes de Blender: en los rigs con bake salen con giro identidad respecto a su padre, y en los de Codex con otros ejes. Por eso copiar `matrix_basis` cerraba las alas sobre el jugador.
+    - Ahora se pasa por el espacio del modelo: semejanza ajustada con los huesos (error 0, escala 1 en las 14 piezas), C·D·C⁻¹ por fotograma y `Transform = (pose_padre · Bone.CFrame)⁻¹ · pose`.
+    - Comprobado en Studio: `TransformedCFrame == CFrame * Transform`, y las avanzadas abren y aletean en V como el Flap.
+  - **Soporte de las alas** (Maikol: «más pegado al cuerpo, la mitad dentro»).
+    - `SOPORTE_ALAS` en `client/Seguidores.client.lua`: centro del soporte respecto al pivote, hacia atrás (iniciales −0,01, robóticas 0, avanzadas 0,27).
+    - Se pone en la superficie de la espalda (`torso.Size.Z / 2`). Medido en Play: pivote de las avanzadas a 0,229 del centro del torso.
+  - **Cañón pajarero de Codex** (Maikol: «usa el cañón que hizo ChatGPT»).
+    - Está en `assets/MAS1_Equipo.rbxmx` → `ReplicatedStorage.MAS1_Equipo.Canon`, y `server/Lobby.server.lua` lo pone ×3 en Z = −22, con la boca hacia −Z.
+    - Ver `mas1-arte/equipo-v01/canon/LEEME.md`. Un rig de piezas rígidas sale con Motor6D y al revés, como un estático: se gira el pivote.
+  - **Herramientas.**
+    - `tools/extraer_rbxmx.py`: de la place guardada a `.rbxmx`, sin el menú contextual, que no se ve en las capturas.
+    - `construir_place.py` ya no repite SharedStrings: Studio no abría la place si se repetían.
 
 ## En marcha
-- Comprobación de caras solapadas del mapa largo (`MAPA_RBX_FASE=check blender ... mapa_roblox.py`). Si da caras solapadas, arreglarlas (hay parpadeo en Roblox).
+- Probar a la vista las alas **iniciales** y **robóticas** en vuelo. Las matemáticas son las mismas que las de las avanzadas, que ya están comprobadas. El 05/11 no se hizo porque Maikol estaba jugando en Roblox Player y no se le quitó la pantalla.
+- Retroceso del cañón al lanzarse (`Launch_recoil`; el importador lo montó con Motor6D).
 
 ## Lista pendiente, en orden (del director)
 1. ~~**MAS1_Modelos**~~ HECHO (d3bd1bf). Detalles para rehacerlo: Models en `ReplicatedStorage.MAS1_Modelos.Mascotas.<id>` y `.Alas.<id>`, con el frente hacia −Z y `PrimaryPart`. Los lee `client/Seguidores.client.lua`.
@@ -45,7 +60,7 @@ Lo escribe el Coordinador (Claude en el PC de Maikol) para seguir sin perder el 
    - **Guardar la carpeta** como `.rbxmx`: clic derecho → Guardar / Exportar → Guardar en un archivo → `mas1-juego/assets/MAS1_Modelos.rbxmx`.
    - **Meterla en la place:** en `construir_place.py`, con referentes únicos y las `SharedStrings`; en `default.project.json`, `"$path"`.
    - **Probar `Seguidores`:** en Play, en el servidor, `plr:SetAttribute("MascotasEq", "aguila,nube,gorrion")` y `Alas = "avanzadas"`.
-   - **Animación:** no hay ids de Animation. Propuesta: aletear con `Bone.Transform` desde el cliente (eje = la dirección de frente en el espacio del hueso).
+   - **Animación:** sin ids de Animation. Los clips de Blender se convierten a `Bone.Transform` con `clips_a_lua.py` (HECHO, 943e73f). Si se reimporta un modelo, hay que volver a pasar `clips_a_lua.py`, porque lee los huesos de `MAS1_Modelos.rbxmx`.
 2. **Enemigos con mallas** en vez de piezas (`client/Entidades.client.lua`, carpetas `enemigos-v02`).
 3. **Medir números** (duración de vuelos con potencia 0, 100 y 1000; dinero frente a precios) y **probar con 2 clientes** (Prueba → Servidor local) y los FPS.
 4. **Sonidos:** 14 WAV en `mas1-sonidos/wav`. Se suben con el Gestor de recursos de Studio SOLO con el «sí» de Maikol, y los ids van en `src/Sonidos.lua`.
@@ -60,3 +75,7 @@ Lo escribe el Coordinador (Claude en el PC de Maikol) para seguir sin perder el 
 - **Cerrar la place** sin guardar: CloseMainWindow → «No guardar» en (760, 418).
 - **Play:** F5 / Shift+F5.
 - **Cámara:** la de la vista Servidor durante Play a veces no hace caso; mejor medir por código.
+- **Cámara del cliente para mirar algo:** en la vista Cliente, barra de comandos: `workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable` y `CFrame.lookAt(...)`.
+- **F para lanzarse:** si la barra de comandos tiene el foco, la F se escribe ahí. Mejor el botón «¡LANZAR!» de la pantalla, en (660, 550).
+- **Guardar algo importado:** Ctrl+S y después `python tools/extraer_rbxmx.py build/Mas1-prueba.rbxlx <Servicio/Carpeta> assets/<archivo>.rbxmx`.
+- **Antes de tomar la pantalla**, mirar si Maikol está jugando (ventana en primer plano `RobloxPlayerBeta`). Si lo está, no tocarla.
