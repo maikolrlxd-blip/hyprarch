@@ -130,4 +130,34 @@ for _ in range(60 * 30):
         break
 assert cogidos > 0 and r.aterrizaje.orbes == cogidos, (cogidos,)
 print('orbes: %d en el mapa; un vuelo recto sin tocar nada coge %d' % (len(po), cogidos))
+
+
+# los trazos se pueden seguir: un piloto sencillo (va al orbe aun no cogido mas cercano por delante) coge casi todos a velocidad
+# base y una buena parte con boost. Con 9 studs entre orbes y radio 3,5 eran el 95 % y el 30 %: a 85 studs/s no daba tiempo a cruzar.
+def piloto(boost, desde, hasta):
+    orbes = [(o, o.pos.x, o.pos.y, o.pos.z) for o in o1.values() if desde < -o.pos.z < hasta]
+    m, pos, hechos = Man.nuevo(), [0.0, 18.0, -desde], set()
+    m.t = 5.0   # sin el disparo del cañon
+    info = T({'planeando': False, 'boost': boost, 'impulso': 1})
+    while pos[2] > -hasta:
+        ent = {}
+        delante = [(pos[2] - oz, i) for i, (_, _, _, oz) in enumerate(orbes) if i not in hechos and 0 < pos[2] - oz < 70]
+        if delante:
+            _, i = min(delante)
+            dx, dy = orbes[i][1] - pos[0], orbes[i][2] - pos[1]
+            ent = {'lateral': max(-1, min(1, dx / 4.0)), 'subir': dy > 1.5, 'bajar': dy < -1.5}
+        Man.paso(m, 1 / 60, T(ent), info, pos[0], pos[1], VC)
+        antes = vec(*pos)
+        pos = [pos[0] + m.vx / 60, max(6.0, pos[1] + m.vy / 60), pos[2] - m.vf / 60]
+        ahora = vec(*pos)
+        for i, (o, _, _, oz) in enumerate(orbes):
+            if i not in hechos and abs(oz - pos[2]) < 30 and E.tocaOrbe(antes, ahora, o, EC.orbe.radio):
+                hechos.add(i)
+    return len(hechos) / len(orbes)
+
+
+for desde, hasta in ((300, 1300), (2500, 3500)):
+    a_base, con_boost = piloto(False, desde, hasta), piloto(True, desde, hasta)
+    assert a_base >= 0.9 and con_boost >= 0.55, (desde, a_base, con_boost)
+    print('piloto simulado en %d-%d: %.0f %% de los orbes a velocidad base, %.0f %% con boost' % (desde, hasta, 100 * a_base, 100 * con_boost))
 print('ok')

@@ -62,6 +62,9 @@ out = ['# Números de «+1 de lanzamiento por segundo» (medidos con `tools/medi
        '  llega al final del mapa (x6). Ahora piden 60 cofres o 75.000: de media hora a una hora de juego.',
        '- **Golpes**: cada ataque gastaba 3 de energía (120 studs de vuelo) por 30 de bote, y atacar siempre hacía perder dinero y exp.',
        '  Ahora el golpe que acierta devuelve la energía; solo cuestan los golpes al aire.',
+       '- **Orbes «+1»**: con 9 studs entre orbes y radio 3,5, un piloto simulado cogía el 95 % a velocidad base pero solo el 30 % con',
+       '  boost (85 studs/s: 0,1 s entre orbes, y el eslalon pide cruzar medio carril). Ahora 14 studs y radio 4,5: 100 % a base y 74 % con',
+       '  boost (`tests/test_encuentros.py` lo vigila). El número de orbes no cambia: 343 en el mapa.',
        '- **Sin tocar**: el ritmo del principio (primer huevo común en 3 vuelos), las zonas y los rebirths.',
        '- **Ojo, para decidir con Maikol**: el mapa acaba en %s studs. Con alas y mascotas buenas se llega al final con poca potencia, y' % fmt(C.finMapa),
        '  desde ahí más potencia ya no da más dinero por vuelo.', '']

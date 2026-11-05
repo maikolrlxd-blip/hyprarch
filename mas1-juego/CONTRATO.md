@@ -68,7 +68,12 @@ Están en ReplicatedStorage y los crea `src/Red.lua`.
   - `"golpe", pos`: un golpe, a un enemigo o al aire;
   - `"aro", pos`: solo al jugador, cuando cruza un aro o atrapa un cofre;
   - `"estela", nil, raíz, bool`: el rastro del boost, que se enciende y se apaga.
-- **`MAS1_Resultado`** (servidor → cliente), al aterrizar: `{ distancia, aros, golpes, cofres, multiplicador, dinero, exp, tiempo }`.
+- **`MAS1_Orbe`** (servidor → cliente): la lista de índices de los orbes «+1» que el jugador acaba de coger.
+  - Los orbes son trazos de 7 (en eslalon, en subida o en diagonal), uno cada ~180 studs de zona: 343 en el mapa.
+  - Cliente y servidor los generan iguales con `Encuentros.colocarOrbes()` y la semilla `Encuentros.CFG.orbe.semilla`; el índice es la posición en esa lista.
+  - Se cogen a menos de `Encuentros.CFG.orbe.radio` (4,5 studs) y cada uno da +1 de potencia al momento. Separación de 14 studs: con 9 y radio 3,5 no se podían coger con boost.
+  - Atributos del jugador: `Orbes` (cogidos en este vuelo) y `Combo` (aros, orbes, cofres y golpes seguidos; se apaga a los 1,5 s sin ninguno).
+- **`MAS1_Resultado`** (servidor → cliente), al aterrizar: `{ distancia, aros, golpes, cofres, orbes, multiplicador, dinero, exp, tiempo }`.
 - **`MAS1_Aviso`** (servidor → cliente): `texto` para mostrar, como «Te falta potencia para el rebirth: 320 / 500».
 - **`MAS1_Huevo`** (servidor → cliente, hito 4): `{ rareza, mascotaId, nueva }`.
   - `rareza` es la del huevo y `nueva` indica si es la primera vez que la consigue.
