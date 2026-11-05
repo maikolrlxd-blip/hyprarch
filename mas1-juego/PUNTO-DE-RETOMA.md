@@ -31,9 +31,31 @@ Lo escribe el Coordinador (Claude en el PC de Maikol) para seguir sin perder el 
     - `tools/extraer_rbxmx.py`: de la place guardada a `.rbxmx`, sin el menú contextual, que no se ve en las capturas.
     - `construir_place.py` ya no repite SharedStrings: Studio no abría la place si se repetían.
 
-## En marcha
-- Probar a la vista las alas **iniciales** y **robóticas** en vuelo. Las matemáticas son las mismas que las de las avanzadas, que ya están comprobadas. El 05/11 no se hizo porque Maikol estaba jugando en Roblox Player y no se le quitó la pantalla.
-- Retroceso del cañón al lanzarse (`Launch_recoil`; el importador lo montó con Motor6D).
+## Noche del 05/11 (Maikol dormía; cola del director: trabajar solos, commits pequeños, push permitido)
+Studio se actualizó solo a `version-fee454b8e2094ba9`. El permiso de pantalla para él se pidió y salió **denegado** (`user_denied`). Por eso esta noche nada está probado en Studio: todo va marcado así.
+- **e61dc13 — reproductor de clips compartido y enemigos listos para sus mallas.**
+  - `src/Clips.lua`: bucle o una vez, por encima de otro clip y con escala; lo prueba `tests/test_clips.py`.
+  - `AnimaSeguidores` ya lo usa.
+  - `Entidades`: si existe `ReplicatedStorage.MAS1_Enemigos`, malla ×2,2 girada hacia +Z, con Idle, Blink y Defeat; si no, las piezas.
+  - `clips_a_lua.py` genera `src/ClipsEnemigos.lua` en cuanto exista `assets/MAS1_Enemigos.rbxmx`. Además, cada clip empieza con los huesos en reposo.
+- **6a8bc2e — números medidos** (`NUMEROS.md`, `tools/medir_numeros.py`, con los módulos en lupa) **y dos ajustes:**
+  - **Alas avanzadas:** antes 10 cofres o 25.000, que se tenían en 3-7 minutos y llegaban al final del mapa con potencia 100-300. Ahora 60 cofres o 75.000.
+  - **Golpes:** el golpe que acierta devuelve la energía del ataque; antes atacar siempre hacía perder dinero.
+- **c8908e7 — retroceso del cañón.**
+  - `clips_a_lua.py`, modo «motor» → `src/ClipsEquipo.lua`.
+  - `client/Canon.client.lua` mueve las 12 piezas del barril y la palanca con el efecto `"lanzamiento"`: apaga sus Motor6D en ese cliente y los vuelve a encender al acabar.
+- **a9d7181 — icono v02** (`mas1-arte/icono-v02/`, `tools/icono_v02.py`).
+- **1fa378b — vida en el lobby:** 20 farolas, 5 tiras de banderines y 14 árboles de bloques (`server/Lobby.server.lua`).
+
+## En marcha / bloqueado por Studio (hace falta que Maikol acepte el aviso de pantalla para `version-fee454b8e2094ba9`)
+1. **Importar los 6 enemigos voxel.** Los FBX con la regla de ejes están en el scratchpad de la sesión (`C:\Users\maiko\AppData\Local\Temp\claude\C--Users-maiko--local-bin\03b310d9-fea9-45c3-b932-e706bacfa36e\scratchpad\enemigos-fbx\<tipo>.fbx`). Se rehacen con `exportar_rig_roblox.py`: `BLEND=mas1-arte/enemigos-v02/<carpeta>/<Nombre>.blend`, `SALIDA=<tipo>.fbx`.
+   - Importarlos uno a uno y pasarles `mas1-juego/tools/studio/preparar_enemigos.lua` en la barra de comandos: frente hacia −Z, pivote, anclados y carpeta `ReplicatedStorage.MAS1_Enemigos`.
+   - Ctrl+S → `python tools/extraer_rbxmx.py build/Mas1-prueba.rbxlx ReplicatedStorage/MAS1_Enemigos assets/MAS1_Enemigos.rbxmx`.
+   - Añadir `"MAS1_Enemigos": { "$path": "assets/MAS1_Enemigos.rbxmx" }` a `default.project.json`.
+   - Volver a pasar `clips_a_lua.py` (genera `ClipsEnemigos.lua`) y `construir_place.py`, y probar en vuelo.
+2. **Ver en vuelo** las alas iniciales y robóticas, el retroceso del cañón, las farolas, los banderines y los árboles.
+3. **2 clientes** (Prueba → Servidor local) y FPS.
+4. **Cofre con malla:** el «Cofre mensajero» de Codex (`equipo-inicial-v01/Cofre-mensajero-v01.blend`, clips `Courier_flight` y `Reward_open`). Tiene piezas rígidas, como el cañón: Motor6D y modo «motor».
 
 ## Lista pendiente, en orden (del director)
 1. ~~**MAS1_Modelos**~~ HECHO (d3bd1bf). Detalles para rehacerlo: Models en `ReplicatedStorage.MAS1_Modelos.Mascotas.<id>` y `.Alas.<id>`, con el frente hacia −Z y `PrimaryPart`. Los lee `client/Seguidores.client.lua`.
