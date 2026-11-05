@@ -55,7 +55,7 @@ Están en ReplicatedStorage y los crea `src/Red.lua`.
   - `"lanzar"`: solo en el suelo y fuera de un vuelo.
   - `"boost", bool`: mantener pulsado (W o joystick arriba). El servidor lo confirma en el atributo `Boost`.
   - `"turbo"`: un toque (botón TURBO del HUD) que da 1,2 s de boost.
-  - `"ataque"`, `"puno"` o `"patada"`: gasta `Vuelo.CFG.costeAtaque` de energía y no se puede planeando. Golpea al enemigo vivo más cercano a 12 studs (`Encuentros.CFG.alcance`); vuelve a los 15 s.
+  - `"ataque"`, `"puno"` o `"patada"`: gasta `Vuelo.CFG.costeAtaque` de energía y no se puede planeando. Golpea al enemigo vivo más cercano a 12 studs (`Encuentros.CFG.alcance`), que vuelve a los 15 s. Si acierta, devuelve esa energía: solo cuestan los golpes al aire.
   - `"rebirth"`: solo en tierra y con `Potencia ≥ CosteRebirth`. Reinicia solo la potencia, suma un rebirth y lanza el efecto `"rebirth"`. Si falta potencia, llega un `MAS1_Aviso`.
   - Inventario (hito 4; solo en tierra, y si algo falla llega un `MAS1_Aviso` con el motivo):
     - `"abrirHuevo", rareza`: cobra `Mascotas.PRECIO_HUEVO[rareza]` del `Dinero`;
@@ -90,7 +90,7 @@ Están en ReplicatedStorage y los crea `src/Red.lua`.
 - **Alas**: se desbloquean solas al cumplir el requisito. Las primeras se equipan solas, y llega un `MAS1_Aviso` «¡Nuevas alas: …!».
   - iniciales: en el 3.er lanzamiento;
   - robóticas: con 3 días seguidos;
-  - avanzadas: con 10 cofres, o comprándolas por 25.000.
+  - avanzadas: con 60 cofres, o comprándolas por 75.000 (antes 10 y 25.000: se tenían en 3-7 minutos; ver `NUMEROS.md`).
 
 ## Entrenamiento y rebirth (hito 3)
 - Zonas del mapa (irán en la Pradera; en la place de prueba son dos placas junto al spawn):

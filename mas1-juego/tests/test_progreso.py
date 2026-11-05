@@ -31,7 +31,8 @@ assert A.bonus('nada', 3).impulso == 1
 mas_fuerte_mascota = max(max(p.bonus.values()) for p in M.LISTA.values() if p.rareza != 'robux')
 assert A.get('iniciales').resistencia >= 50 > 0 and A.get('avanzadas').resistencia > mas_fuerte_mascota
 assert A.desbloqueada('iniciales', T({'lanzamientos': 3})) and not A.desbloqueada('iniciales', T({'lanzamientos': 2}))
-assert A.desbloqueada('avanzadas', T({'cofres': 10})) and not A.desbloqueada('roboticas', T({}))
+assert A.desbloqueada('avanzadas', T({'cofres': 60})) and not A.desbloqueada('avanzadas', T({'cofres': 59}))
+assert not A.desbloqueada('roboticas', T({}))
 tot = A.combinar(M.multiplicadores(T(['nube'])), A.bonus('iniciales', 0))
 assert abs(tot.resistencia - 1.2 * 1.5) < 1e-9 and abs(tot.impulso - 1.2) < 1e-9 and tot.dinero == 1
 

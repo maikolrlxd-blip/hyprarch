@@ -50,7 +50,7 @@ r = I.comprarAla(A, inv, 10 ** 6, 'iniciales')
 assert r[0] is False and 'no se compran' in r[1]
 r = I.comprarAla(A, inv, 100, 'avanzadas')
 assert r[0] is False and 'cuestan' in r[1]
-ok, queda = I.comprarAla(A, inv, 30000, 'avanzadas')
+ok, queda = I.comprarAla(A, inv, A.get('avanzadas').precio + 5000, 'avanzadas')
 assert ok and queda == 5000 and I.tieneAla(inv, 'avanzadas') and I.comprarAla(A, inv, 10 ** 6, 'avanzadas')[0] is False
 assert I.equiparAla(inv, 'roboticas')[0] is False and I.equiparAla(inv, 'avanzadas') and inv.alaEquipada == 'avanzadas'
 assert I.darAla(inv, 'iniciales') and not I.darAla(inv, 'iniciales')

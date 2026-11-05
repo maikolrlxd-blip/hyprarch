@@ -17,8 +17,10 @@ assert vb>va and b.energia<a.energia
 # planeando: boost y ataque no funcionan
 v=V.nuevo(0); v.energia=0; V.paso(v,0.1,l.table_from({'boost':True}))
 assert v.planeando and not V.atacar(v)
-# ataque consume
+# ataque consume; el golpe que acierta devuelve la energia (solo cuestan los golpes al aire)
 v=V.nuevo(100); e=v.energia; assert V.atacar(v) and v.energia==e-3
+V.golpearEnemigo(v); assert v.energia==e and v.bote==V.CFG.puntosEnemigo
+V.golpearEnemigo(v); assert v.energia==v.energiaMax
 # multiplicador de zona
 assert V.multiplicadorZona(0)==1 and V.multiplicadorZona(600)==2 and V.multiplicadorZona(1300)==3
 assert V.multiplicadorZona(2400)==4 and V.multiplicadorZona(4000)==5 and V.multiplicadorZona(6000)==6

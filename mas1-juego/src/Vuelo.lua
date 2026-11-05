@@ -102,6 +102,9 @@ end
 function V.golpearEnemigo(v)
 	if v.terminado then return end
 	v.bote = v.bote + v.cfg.puntosEnemigo
+	-- el golpe que acierta devuelve la energia del ataque: solo cuestan los golpes al aire. Antes cada golpe gastaba 3 de energia
+	-- (120 studs de vuelo) por 30 de bote y atacar siempre hacia perder dinero y exp (medido con tools/medir_numeros.py, 05/11)
+	v.energia = math.min(v.energiaMax, v.energia + v.cfg.costeAtaque)
 end
 
 function V.cruzarAro(v)

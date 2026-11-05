@@ -1,8 +1,10 @@
 -- Alas de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa): datos, requisitos y bonus. Maikol (30/10): las alas dan un
 -- multiplicador de resistencia y de impulso «mucho mas notorio que las mascotas», y escalan con los rebirths; se multiplican con los
 -- bonus de las mascotas. Requisitos de Maikol: iniciales en el 3.er lanzamiento, roboticas con 3 dias seguidos, avanzadas con
--- puntos, misiones o cofres (aqui: 10 cofres, o comprarlas). La interfaz (client/Inventario.client.lua) lee LISTA con
+-- puntos, misiones o cofres (aqui: 60 cofres, o comprarlas). La interfaz (client/Inventario.client.lua) lee LISTA con
 -- {id, nombre, requisito, precio}. CIFRAS PROVISIONALES. Modelos: Codex (iniciales, roboticas), Coordinador (avanzadas v0.2).
+-- Avanzadas medidas con tools/medir_numeros.py (05/11): con 10 cofres (salen 2 por vuelo) o 25.000 se tenian en 3-7 minutos y, con
+-- ellas, potencia 100-300 ya llega al final del mapa (x6). Con 60 cofres o 75.000 cuestan de media hora a una hora de juego.
 local A = {}
 
 A.LISTA = {
@@ -10,8 +12,8 @@ A.LISTA = {
 		pide = { lanzamientos = 3 } },
 	{ id = "roboticas", nombre = "Alas robóticas", requisito = "Juega 3 días seguidos", precio = 0, impulso = 40, resistencia = 100,
 		pide = { diasSeguidos = 3 } },
-	{ id = "avanzadas", nombre = "Alas avanzadas", requisito = "Atrapa 10 cofres o cómpralas", precio = 25000, impulso = 80,
-		resistencia = 200, pide = { cofres = 10 } },
+	{ id = "avanzadas", nombre = "Alas avanzadas", requisito = "Atrapa 60 cofres o cómpralas", precio = 75000, impulso = 80,
+		resistencia = 200, pide = { cofres = 60 } },
 }
 A.PORREBIRTH = 0.25 -- cada rebirth sube un 25% lo que dan las alas
 
