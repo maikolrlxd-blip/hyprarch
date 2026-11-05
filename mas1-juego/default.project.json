@@ -6,7 +6,8 @@
       "$className": "ReplicatedStorage",
       "Mas1": { "$path": "src" },
       "MAS1_Modelos": { "$path": "assets/MAS1_Modelos.rbxmx" },
-      "MAS1_Equipo": { "$path": "assets/MAS1_Equipo.rbxmx" }
+      "MAS1_Equipo": { "$path": "assets/MAS1_Equipo.rbxmx" },
+      "MAS1_Enemigos": { "$path": "assets/MAS1_Enemigos.rbxmx" }
     },
     "ServerScriptService": { "$className": "ServerScriptService", "Mas1Servidor": { "$path": "server" } },
     "StarterPlayer": {
