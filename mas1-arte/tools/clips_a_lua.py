@@ -48,9 +48,13 @@ ENEMIGOS = {   # Tipo del enemigo en el juego: (.blend de enemigos-v02, clips); 
                                ('nubarron', 'nubarron', 'NubarronTormenta'), ('cometa', 'cometa', 'CometaEnfadada'),
                                ('ovni', 'ovni', 'OvniEnfadado'), ('meteorito', 'meteorito', 'MeteoritoFurioso'))
 }
-TRABAJOS = (   # (módulo que se escribe, modelos de Roblox con sus huesos, piezas, qué son)
-    (os.path.join(JUEGO, 'src', 'ClipsHuesos.lua'), os.path.join(JUEGO, 'assets', 'MAS1_Modelos.rbxmx'), PIEZAS, 'mascotas y alas'),
-    (os.path.join(JUEGO, 'src', 'ClipsEnemigos.lua'), os.path.join(JUEGO, 'assets', 'MAS1_Enemigos.rbxmx'), ENEMIGOS, 'enemigos'),
+EQUIPO = {   # piezas rígidas de Codex que el 3D Importer montó con Motor6D (no con piel): se guarda el movimiento de cada hueso
+    'Canon': (os.path.join(CODEX, 'equipo-inicial-v01', 'Canon-pajarero-v01.blend'), ('Launch_recoil',)),
+}
+TRABAJOS = (   # (módulo que se escribe, modelos de Roblox con sus huesos, piezas, qué son, modo)
+    (os.path.join(JUEGO, 'src', 'ClipsHuesos.lua'), os.path.join(JUEGO, 'assets', 'MAS1_Modelos.rbxmx'), PIEZAS, 'mascotas y alas', 'hueso'),
+    (os.path.join(JUEGO, 'src', 'ClipsEnemigos.lua'), os.path.join(JUEGO, 'assets', 'MAS1_Enemigos.rbxmx'), ENEMIGOS, 'enemigos', 'hueso'),
+    (os.path.join(JUEGO, 'src', 'ClipsEquipo.lua'), os.path.join(JUEGO, 'assets', 'MAS1_Equipo.rbxmx'), EQUIPO, 'el equipo (cañón)', 'motor'),
 )
 
 
@@ -113,11 +117,23 @@ def a_reposo(rig):
         pb.scale = (1, 1, 1)
 
 
-def pieza(id_, ruta, clips, rob, resumen):
-    """Los clips de una pieza como texto Lua: '<id> = { Clip = { n, dur, huesos = {...} }, ... }'."""
+def pieza(id_, ruta, clips, rob, resumen, modo='hueso'):
+    """Los clips de una pieza como texto Lua: '<id> = { Clip = { n, dur, huesos = {...} }, ... }'. modo 'hueso': Bone.Transform de
+    cada hueso. modo 'motor' (piezas rígidas con Motor6D): el movimiento de cada hueso en el espacio de la pieza raíz, D = C·D·C⁻¹
+    (la pieza que va con ese hueso se pone en raíz · D · C0 · C1⁻¹), y devuelve también qué malla va con qué hueso."""
     bpy.ops.wm.open_mainfile(filepath=ruta, load_ui=False)
     rig = next(o for o in bpy.data.objects if o.type == 'ARMATURE')
     acciones = {tr.name: tr.strips[0].action for tr in rig.animation_data.nla_tracks if tr.strips} if rig.animation_data else {}
+    acciones.update({c: bpy.data.actions[c] for c in clips if c not in acciones and c in bpy.data.actions})   # pistas sin nombre
+    mallas = {}
+    for o in bpy.data.objects:   # cada malla rígida va con el grupo de vértices que más pesa
+        if o.type == 'MESH' and o.vertex_groups and any(m.type == 'ARMATURE' and m.object == rig for m in o.modifiers):
+            peso = {}
+            for v in o.data.vertices:
+                for g in v.groups:
+                    peso[g.group] = peso.get(g.group, 0) + g.weight
+            if peso:
+                mallas[o.name] = o.vertex_groups[max(peso, key=peso.get)].name
     rig.animation_data_clear()
     ad = rig.animation_data_create()
     sc = bpy.context.scene
@@ -186,7 +202,7 @@ def pieza(id_, ruta, clips, rob, resumen):
                 else:
                     D = pb.matrix @ rig.data.bones[n].matrix_local.inverted()
                     pose[n] = C @ D @ Ci @ reposo[n]
-                    T = (base @ cf).inverted() @ pose[n]
+                    T = (base @ cf).inverted() @ pose[n] if modo == 'hueso' else C @ D @ Ci
                 q = T.to_quaternion().normalized()
                 previo = datos[n][-1] if datos[n] else None
                 if previo and q.x * previo[3] + q.y * previo[4] + q.z * previo[5] + q.w * previo[6] < 0:
@@ -199,21 +215,37 @@ def pieza(id_, ruta, clips, rob, resumen):
                            for n, v in sorted(vivos.items()))
         partes.append('%s = { n = %d, dur = %s, huesos = { %s } }' % (c, len(cuadros), num((f1 - f0) / sc.render.fps, 4), cuerpo))
         resumen.setdefault(id_, {})[c] = (len(cuadros), sorted(vivos))
-    return '\t%s = { %s },' % (id_, ', '.join(partes))
+    texto = '\t%s = { %s },' % (id_, ', '.join(partes))
+    if modo == 'motor':
+        return texto, '\t%s = { %s },' % (id_, ', '.join('["%s"] = "%s"' % kv for kv in sorted(mallas.items())))
+    return texto
 
 
-def generar(salida, modelos, piezas, que):
+def generar(salida, modelos, piezas, que, modo):
     if not os.path.exists(modelos):
         print('SALTO', os.path.basename(salida), '(aún no hay', os.path.basename(modelos) + ')')
         return
     roblox = huesos_roblox(modelos)
-    lua = ['-- GENERADO por mas1-arte/tools/clips_a_lua.py: no editar a mano. Clips de Blender de %s pasados a Bone.Transform' % que,
-           '-- de los huesos de %s (studs a escala 1), %d fotogramas por segundo: por hueso, 7 numeros por' % (os.path.basename(modelos), FPS),
-           '-- fotograma (x, y, z, qx, qy, qz, qw). Los reproduce src/Clips.lua.',
-           'return {']
-    resumen = {}
+    if modo == 'hueso':
+        lua = ['-- GENERADO por mas1-arte/tools/clips_a_lua.py: no editar a mano. Clips de Blender de %s pasados a Bone.Transform' % que,
+               '-- de los huesos de %s (studs a escala 1), %d fotogramas por segundo: por hueso, 7 numeros por' % (os.path.basename(modelos), FPS),
+               '-- fotograma (x, y, z, qx, qy, qz, qw). Los reproduce src/Clips.lua.',
+               'return {']
+    else:
+        lua = ['-- GENERADO por mas1-arte/tools/clips_a_lua.py: no editar a mano. Clips de Blender de %s, montado con Motor6D (piezas' % que,
+               '-- rigidas): por hueso, su movimiento en el espacio de la pieza raiz de %s (studs a escala 1), %d fotogramas por' % (os.path.basename(modelos), FPS),
+               '-- segundo, 7 numeros por fotograma (x, y, z, qx, qy, qz, qw). Una pieza con Motor6D de la raiz va en raiz * D * C0 * C1:Inverse().',
+               '-- piezas: que hueso mueve cada pieza (por su nombre). Lo usa client/Canon.client.lua.',
+               'return {', 'clips = {']
+    resumen, mapas = {}, []
     for id_, (ruta, clips) in piezas.items():
-        lua.append(pieza(id_, ruta, clips, roblox[id_], resumen))
+        r = pieza(id_, ruta, clips, roblox[id_], resumen, modo)
+        if modo == 'motor':
+            r, mapa = r
+            mapas.append(mapa)
+        lua.append(r)
+    if modo == 'motor':
+        lua += ['},', 'piezas = {'] + mapas + ['},']
     lua.append('}')
     open(salida, 'w', encoding='utf-8', newline='\n').write('\n'.join(lua) + '\n')
     print('CLIPS', os.path.basename(salida), os.path.getsize(salida),

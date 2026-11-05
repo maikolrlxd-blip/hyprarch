@@ -206104,11 +206104,11 @@
 </Properties>
 </Item>
 </Item>
-<Item class="ReplicatedStorage" referent="RBXJ0000010">
+<Item class="ReplicatedStorage" referent="RBXJ0000011">
 <Properties>
 <string name="Name">ReplicatedStorage</string>
 </Properties>
-<Item class="Folder" referent="RBXJ000000F">
+<Item class="Folder" referent="RBXJ0000010">
 <Properties>
 <string name="Name">Mas1</string>
 </Properties>
@@ -206239,6 +206239,24 @@ return Clips
 </Item>
 <Item class="ModuleScript" referent="RBXJ0000003">
 <Properties>
+<string name="Name">ClipsEquipo</string>
+<ProtectedString name="Source"><![CDATA[-- GENERADO por mas1-arte/tools/clips_a_lua.py: no editar a mano. Clips de Blender de el equipo (cañón), montado con Motor6D (piezas
+-- rigidas): por hueso, su movimiento en el espacio de la pieza raiz de MAS1_Equipo.rbxmx (studs a escala 1), 15 fotogramas por
+-- segundo, 7 numeros por fotograma (x, y, z, qx, qy, qz, qw). Una pieza con Motor6D de la raiz va en raiz * D * C0 * C1:Inverse().
+-- piezas: que hueso mueve cada pieza (por su nombre). Lo usa client/Canon.client.lua.
+return {
+clips = {
+	Canon = { Launch_recoil = { n = 19, dur = 1.2083, huesos = { Barrel = { 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, -0.051, -0.059, 0, 0, 0, 1, 0, -0.186, -0.217, 0, 0, 0, 1, 0, -0.178, -0.208, 0, 0, 0, 1, 0, -0.117, -0.137, 0, 0, 0, 1, 0, -0.043, -0.05, 0, 0, 0, 1, 0, 0.014, 0.016, 0, 0, 0, 1, 0, 0.026, 0.03, 0, 0, 0, 1, 0, 0.024, 0.028, 0, 0, 0, 1, 0, 0.02, 0.023, 0, 0, 0, 1, 0, 0.015, 0.017, 0, 0, 0, 1, 0, 0.01, 0.011, 0, 0, 0, 1, 0, 0.005, 0.006, 0, 0, 0, 1, 0, 0.002, 0.002, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1 }, Lever = { 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, -0.101, -0.161, 0.0699, 0, 0, 0.9976, 0, -0.251, -0.644, 0.2541, 0, 0, 0.9672, 0, -0.247, -0.615, 0.2436, 0, 0, 0.9699, 0, -0.198, -0.393, 0.1616, 0, 0, 0.9869, 0, -0.087, -0.136, 0.0593, 0, 0, 0.9982, 0, 0.031, 0.041, -0.019, 0, 0, 0.9998, 0, 0.06, 0.077, -0.0357, 0, 0, 0.9994, 0, 0.055, 0.07, -0.0328, 0, 0, 0.9995, 0, 0.046, 0.059, -0.0275, 0, 0, 0.9996, 0, 0.034, 0.045, -0.0207, 0, 0, 0.9998, 0, 0.022, 0.029, -0.0135, 0, 0, 0.9999, 0, 0.011, 0.015, -0.007, 0, 0, 1, 0, 0.004, 0.005, -0.0022, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1 } } } },
+},
+piezas = {
+	Canon = { ["Barrel_hollow_staves"] = "Barrel", ["Barrel_inlay_-1_0"] = "Barrel", ["Barrel_inlay_-1_1"] = "Barrel", ["Barrel_inlay_-1_2"] = "Barrel", ["Barrel_inlay_1_0"] = "Barrel", ["Barrel_inlay_1_1"] = "Barrel", ["Barrel_inlay_1_2"] = "Barrel", ["Blue_breech_cuff"] = "Barrel", ["Blue_forward_cuff"] = "Barrel", ["Cradle_feather_-1_0"] = "Root", ["Cradle_feather_-1_1"] = "Root", ["Cradle_feather_-1_2"] = "Root", ["Cradle_feather_1_0"] = "Root", ["Cradle_feather_1_1"] = "Root", ["Cradle_feather_1_2"] = "Root", ["Cradle_fork_-1"] = "Root", ["Cradle_fork_1"] = "Root", ["Front_crossbeam"] = "Root", ["Lever_grip"] = "Lever", ["Lever_stem"] = "Lever", ["Pivot_badge_-1"] = "Root", ["Pivot_badge_1"] = "Root", ["Rear_brace_-1"] = "Root", ["Rear_brace_1"] = "Root", ["Rear_crossbeam"] = "Root", ["Sled_runner_-1"] = "Root", ["Sled_runner_1"] = "Root", ["Wide_sky_muzzle"] = "Barrel" },
+},
+}
+]]></ProtectedString>
+</Properties>
+</Item>
+<Item class="ModuleScript" referent="RBXJ0000004">
+<Properties>
 <string name="Name">ClipsHuesos</string>
 <ProtectedString name="Source"><![CDATA[-- GENERADO por mas1-arte/tools/clips_a_lua.py: no editar a mano. Clips de Blender de mascotas y alas pasados a Bone.Transform
 -- de los huesos de MAS1_Modelos.rbxmx (studs a escala 1), 15 fotogramas por segundo: por hueso, 7 numeros por
@@ -206262,7 +206280,7 @@ return {
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000004">
+<Item class="ModuleScript" referent="RBXJ0000005">
 <Properties>
 <string name="Name">Datos</string>
 <ProtectedString name="Source"><![CDATA[-- Datos guardados de un jugador de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa; el DataStore lo lleva
@@ -206352,7 +206370,7 @@ return D
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000005">
+<Item class="ModuleScript" referent="RBXJ0000006">
 <Properties>
 <string name="Name">Efectos</string>
 <ProtectedString name="Source"><![CDATA[-- Efectos visuales de «+1 de lanzamiento por segundo»: especificaciones de ParticleEmitter (datos puros, sin API de Roblox) para
@@ -206382,7 +206400,7 @@ return E
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000006">
+<Item class="ModuleScript" referent="RBXJ0000007">
 <Properties>
 <string name="Name">Encuentros</string>
 <ProtectedString name="Source"><![CDATA[-- Encuentros del vuelo de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa): aros que se cruzan, enemigos que se golpean y
@@ -206547,7 +206565,7 @@ return E
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000007">
+<Item class="ModuleScript" referent="RBXJ0000008">
 <Properties>
 <string name="Name">Inventario</string>
 <ProtectedString name="Source"><![CDATA[-- Inventario de un jugador de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa): mascotas por cantidad, hasta 3 equipadas
@@ -206663,7 +206681,7 @@ return I
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000008">
+<Item class="ModuleScript" referent="RBXJ0000009">
 <Properties>
 <string name="Name">Manejo</string>
 <ProtectedString name="Source"><![CDATA[-- Manejo del vuelo de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa): a que velocidad volar en cada fotograma segun los
@@ -206726,7 +206744,7 @@ return M
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000009">
+<Item class="ModuleScript" referent="RBXJ000000A">
 <Properties>
 <string name="Name">Mascotas</string>
 <ProtectedString name="Source"><![CDATA[-- Mascotas de «+1 de lanzamiento por segundo»: datos y calculo de bonus (Lua puro, sin API de Roblox).
@@ -206811,7 +206829,7 @@ return M
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ000000A">
+<Item class="ModuleScript" referent="RBXJ000000B">
 <Properties>
 <string name="Name">Misiones</string>
 <ProtectedString name="Source"><![CDATA[-- Misiones de sesion de «+1 de lanzamiento por segundo» (Lua puro, sin API de Roblox). Cada jugador tiene 3 misiones a la vez; al
@@ -206905,7 +206923,7 @@ return M
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ000000B">
+<Item class="ModuleScript" referent="RBXJ000000C">
 <Properties>
 <string name="Name">Partida</string>
 <ProtectedString name="Source"><![CDATA[-- Sesion de vuelo de un jugador en el servidor de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa; el adaptador de
@@ -207103,7 +207121,7 @@ return P
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ000000C">
+<Item class="ModuleScript" referent="RBXJ000000D">
 <Properties>
 <string name="Name">Red</string>
 <ProtectedString name="Source"><![CDATA[-- RemoteEvents de «+1 de lanzamiento por segundo» en ReplicatedStorage (adaptador de Roblox, no es Lua puro): en el servidor se
@@ -207128,7 +207146,7 @@ return R
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ000000D">
+<Item class="ModuleScript" referent="RBXJ000000E">
 <Properties>
 <string name="Name">Sonidos</string>
 <ProtectedString name="Source"><![CDATA[-- ids de audio de Roblox de «+1 de lanzamiento por segundo». VACIOS hasta subir los WAV de mas1-sonidos/wav (Maikol: cuenta de Roblox;
@@ -207142,7 +207160,7 @@ return {
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ000000E">
+<Item class="ModuleScript" referent="RBXJ000000F">
 <Properties>
 <string name="Name">Vuelo</string>
 <ProtectedString name="Source"><![CDATA[-- Logica pura del vuelo de «+1 de lanzamiento por segundo» (sin API de Roblox, probada con lupa).
@@ -240243,15 +240261,15 @@ ZjViYzQwNDQ0</BinaryString>
 
 
 </Item>
-<Item class="ServerScriptService" referent="RBXJ0000016">
+<Item class="ServerScriptService" referent="RBXJ0000017">
 <Properties>
 <string name="Name">ServerScriptService</string>
 </Properties>
-<Item class="Folder" referent="RBXJ0000015">
+<Item class="Folder" referent="RBXJ0000016">
 <Properties>
 <string name="Name">Mas1Servidor</string>
 </Properties>
-<Item class="Script" referent="RBXJ0000011">
+<Item class="Script" referent="RBXJ0000012">
 <Properties>
 <string name="Name">DemoVisual</string>
 <ProtectedString name="Source"><![CDATA[-- SOLO PARA VER LA CAPA VISUAL antes de que exista el juego: si workspace tiene el atributo MAS1_Demo = true, simula un vuelo (energia que baja,
@@ -240288,7 +240306,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000012">
+<Item class="ModuleScript" referent="RBXJ0000013">
 <Properties>
 <string name="Name">Guardado</string>
 <ProtectedString name="Source"><![CDATA[-- Guardado de «+1 de lanzamiento por segundo» con DataStore: adaptador de Roblox de src/Datos.lua (Lua puro, probado con lupa).
@@ -240384,7 +240402,7 @@ return G
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="Script" referent="RBXJ0000013">
+<Item class="Script" referent="RBXJ0000014">
 <Properties>
 <string name="Name">Lobby</string>
 <ProtectedString name="Source"><![CDATA[-- Lobby de «+1 de lanzamiento por segundo» (PROVISIONAL, hecho con piezas hasta importar la Pradera de Codex): plaza de salida, el
@@ -240497,7 +240515,7 @@ Lighting.Brightness = math.max(Lighting.Brightness, 2)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="Script" referent="RBXJ0000014">
+<Item class="Script" referent="RBXJ0000015">
 <Properties>
 <string name="Name">Partida</string>
 <ProtectedString name="Source"><![CDATA[-- Partida de «+1 de lanzamiento por segundo» en el servidor: adaptador de Roblox de src/Partida.lua y src/Encuentros.lua (Lua puro,
@@ -240988,19 +241006,19 @@ end)
 </Item>
 </Item>
 </Item>
-<Item class="StarterPlayer" referent="RBXJ0000029">
+<Item class="StarterPlayer" referent="RBXJ000002A">
 <Properties>
 <string name="Name">StarterPlayer</string>
 </Properties>
-<Item class="StarterPlayerScripts" referent="RBXJ0000028">
+<Item class="StarterPlayerScripts" referent="RBXJ0000029">
 <Properties>
 <string name="Name">StarterPlayerScripts</string>
 </Properties>
-<Item class="Folder" referent="RBXJ0000027">
+<Item class="Folder" referent="RBXJ0000028">
 <Properties>
 <string name="Name">Mas1Cliente</string>
 </Properties>
-<Item class="LocalScript" referent="RBXJ0000017">
+<Item class="LocalScript" referent="RBXJ0000018">
 <Properties>
 <string name="Name">AnimaSeguidores</string>
 <ProtectedString name="Source"><![CDATA[-- Animacion de las mallas de mascotas y alas que pone client/Seguidores.client.lua (modelos «Mas1Mascota_<id>» y «Mas1Alas» del
@@ -241063,7 +241081,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000018">
+<Item class="LocalScript" referent="RBXJ0000019">
 <Properties>
 <string name="Name">Ayuda</string>
 <ProtectedString name="Source"><![CDATA[-- Ayuda de mandos de «+1 de lanzamiento por segundo»: un jugador nuevo no sabe que A/D mueven ni que W da boost. Muestra una tira
@@ -241114,23 +241132,82 @@ refrescar()
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000019">
+<Item class="LocalScript" referent="RBXJ000001A">
 <Properties>
 <string name="Name">Canon</string>
-<ProtectedString name="Source"><![CDATA[-- Cañon del lobby: al activar el aviso del cañon (E, toque o mando) pide el lanzamiento al servidor. SIN PROBAR EN STUDIO.
-local PPS, Players, RS = game:GetService("ProximityPromptService"), game:GetService("Players"), game:GetService("ReplicatedStorage")
-local Red = require(RS:WaitForChild("Mas1"):WaitForChild("Red"))
+<ProtectedString name="Source"><![CDATA[-- Cañon del lobby: al activar el aviso del cañon (E, toque o mando) pide el lanzamiento al servidor; y cuando alguien sale disparado
+-- (efecto "lanzamiento" junto al cañon) el «Cañón pajarero» de Codex hace su retroceso: el clip Launch_recoil de Blender, en
+-- src/ClipsEquipo.lua. Sus piezas estan ancladas y unidas a RootPart con Motor6D (asi las monto el 3D Importer): mientras dura el clip,
+-- en este cliente, se apagan los Motor6D de las piezas que se mueven y cada una va a raiz * D * C0 * C1:Inverse(); al acabar vuelven
+-- a su sitio y se encienden. El retroceso SIN PROBAR EN STUDIO (05/11: sin permiso de pantalla para el Studio nuevo).
+local PPS, Players, RS, RunService = game:GetService("ProximityPromptService"), game:GetService("Players"), game:GetService("ReplicatedStorage"),
+	game:GetService("RunService")
+local Mas1 = RS:WaitForChild("Mas1")
+local Red = require(Mas1:WaitForChild("Red"))
+local Clips = require(Mas1:WaitForChild("Clips"))
 local accion = Red.evento("MAS1_Accion")
+local efecto = Red.evento("MAS1_Efecto")
 local plr = Players.LocalPlayer
 PPS.PromptTriggered:Connect(function(prompt, jugador)
 	if jugador == plr and prompt.Parent and prompt.Parent.Name == "MAS1_Canon" and plr:GetAttribute("EnVuelo") ~= true then
 		accion:FireServer("lanzar")
 	end
 end)
+
+local moduloEquipo = Mas1:FindFirstChild("ClipsEquipo")
+local equipo = moduloEquipo and require(moduloEquipo)
+local clipsCanon = equipo and Clips.preparar(equipo.clips.Canon)
+local RETROCESO = clipsCanon and clipsCanon.Launch_recoil
+local PIEZAS = equipo and equipo.piezas.Canon or {}
+local CERCA_CANON = 60 -- studs: un lanzamiento a esta distancia del cañon sale de el
+local enMarcha = false
+
+local function retroceso(canon)
+	local raiz = canon.PrimaryPart
+	if not raiz or enMarcha then return end
+	local mover = {} -- { motor, pieza, reposo (respecto a la raiz), fotogramas }
+	for _, m in ipairs(canon:GetDescendants()) do
+		if m:IsA("Motor6D") and m.Part0 == raiz and m.Part1 then
+			local f = RETROCESO.huesos[PIEZAS[m.Part1.Name] or ""]
+			if f then mover[#mover + 1] = { m = m, p = m.Part1, reposo = m.C0 * m.C1:Inverse(), f = f } end
+		end
+	end
+	if #mover == 0 then return end
+	enMarcha = true
+	local escala = canon:GetScale()
+	for _, x in ipairs(mover) do x.m.Enabled = false end
+	local t0 = os.clock()
+	local con
+	con = RunService.RenderStepped:Connect(function()
+		local t = os.clock() - t0
+		local fase = math.min(t / RETROCESO.dur, 1) * (RETROCESO.n - 1)
+		local i = math.floor(fase)
+		local a = fase - i
+		for _, x in ipairs(mover) do
+			local d = x.f[i + 1]:Lerp(x.f[math.min(i + 2, RETROCESO.n)], a)
+			x.p.CFrame = raiz.CFrame * (d - d.Position + d.Position * escala) * x.reposo
+		end
+		if t >= RETROCESO.dur then
+			con:Disconnect()
+			for _, x in ipairs(mover) do
+				x.p.CFrame = raiz.CFrame * x.reposo
+				x.m.Enabled = true
+			end
+			enMarcha = false
+		end
+	end)
+end
+
+efecto.OnClientEvent:Connect(function(tipo, pos)
+	if tipo ~= "lanzamiento" or not RETROCESO or typeof(pos) ~= "Vector3" then return end
+	local lobby = workspace:FindFirstChild("MAS1_Lobby")
+	local canon = lobby and lobby:FindFirstChild("CanonPajarero")
+	if canon and canon.PrimaryPart and (canon.PrimaryPart.Position - pos).Magnitude < CERCA_CANON then retroceso(canon) end
+end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ000001A">
+<Item class="LocalScript" referent="RBXJ000001B">
 <Properties>
 <string name="Name">Efectos</string>
 <ProtectedString name="Source"><![CDATA[-- Dibuja los efectos de src/Efectos.lua con ParticleEmitter. El servidor (o el juego) dispara RemoteEvent MAS1_Efecto:
@@ -241172,7 +241249,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ000001B">
+<Item class="LocalScript" referent="RBXJ000001C">
 <Properties>
 <string name="Name">Entidades</string>
 <ProtectedString name="Source"><![CDATA[-- Enemigos y cofres de «+1 de lanzamiento por segundo» vistos en el cliente. El servidor solo pone anclas invisibles en
@@ -241374,7 +241451,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ000001C">
+<Item class="LocalScript" referent="RBXJ000001D">
 <Properties>
 <string name="Name">HudVuelo</string>
 <ProtectedString name="Source"><![CDATA[-- HUD de vuelo de «+1 de lanzamiento por segundo». Lee atributos del jugador local (los pone el juego o DemoVisual.server.lua):
@@ -241476,7 +241553,7 @@ refrescar()
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ000001D">
+<Item class="LocalScript" referent="RBXJ000001E">
 <Properties>
 <string name="Name">Inventario</string>
 <ProtectedString name="Source"><![CDATA[-- Inventario de «+1 de lanzamiento por segundo»: pestañas MASCOTAS (equipar hasta 3), HUEVOS (abrir con dinero) y ALAS (comprar y
@@ -241662,7 +241739,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ000001E">
+<Item class="LocalScript" referent="RBXJ000001F">
 <Properties>
 <string name="Name">Misiones</string>
 <ProtectedString name="Source"><![CDATA[-- Panel de misiones de «+1 de lanzamiento por segundo»: 3 misiones de la sesion con barra de progreso, a la izquierda, solo en tierra.
@@ -241703,7 +241780,7 @@ ver()
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ000001F">
+<Item class="LocalScript" referent="RBXJ0000020">
 <Properties>
 <string name="Name">Orbes</string>
 <ProtectedString name="Source"><![CDATA[-- Orbes «+1» de «+1 de lanzamiento por segundo» vistos en el cliente: los mismos que genera el servidor (Encuentros.colocarOrbes,
@@ -241757,7 +241834,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000020">
+<Item class="LocalScript" referent="RBXJ0000021">
 <Properties>
 <string name="Name">Rebirth</string>
 <ProtectedString name="Source"><![CDATA[-- Rebirth y avisos de «+1 de lanzamiento por segundo»: boton REBIRTH (solo en tierra) con un panel de confirmacion que muestra
@@ -241838,7 +241915,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000021">
+<Item class="LocalScript" referent="RBXJ0000022">
 <Properties>
 <string name="Name">Resultados</string>
 <ProtectedString name="Source"><![CDATA[-- Pantalla de resultados del vuelo de «+1 de lanzamiento por segundo»: aparece al aterrizar (MAS1_Resultado), cuenta hacia arriba
@@ -241910,7 +241987,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000022">
+<Item class="LocalScript" referent="RBXJ0000023">
 <Properties>
 <string name="Name">Seguidores</string>
 <ProtectedString name="Source"><![CDATA[-- Mascotas que te siguen y alas puestas de «+1 de lanzamiento por segundo» (todo en el cliente, para todos los jugadores).
@@ -242080,7 +242157,7 @@ Players.PlayerRemoving:Connect(limpiar)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000023">
+<Item class="LocalScript" referent="RBXJ0000024">
 <Properties>
 <string name="Name">Sonidos</string>
 <ProtectedString name="Source"><![CDATA[-- Sonido de «+1 de lanzamiento por segundo» en el cliente: engancha los eventos del juego (efectos, orbes, huevos, avisos, atributos) y
@@ -242124,7 +242201,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000024">
+<Item class="ModuleScript" referent="RBXJ0000025">
 <Properties>
 <string name="Name">Tema</string>
 <ProtectedString name="Source"><![CDATA[-- Tema de interfaz de «+1 de lanzamiento por segundo»: paneles gruesos con contorno oscuro y sombra dura, colores vivos, tipografia redondeada.
@@ -242195,7 +242272,7 @@ return T
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000025">
+<Item class="LocalScript" referent="RBXJ0000026">
 <Properties>
 <string name="Name">VueloControl</string>
 <ProtectedString name="Source"><![CDATA[-- Control del vuelo en el cliente de «+1 de lanzamiento por segundo». El cliente mueve su propio personaje (asi responde al instante)
@@ -242370,7 +242447,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000026">
+<Item class="LocalScript" referent="RBXJ0000027">
 <Properties>
 <string name="Name">Zonas</string>
 <ProtectedString name="Source"><![CDATA[-- Cielo y niebla por zona en el cliente de «+1 de lanzamiento por segundo»: al cruzar el arco de cada zona cambian la hora y la
