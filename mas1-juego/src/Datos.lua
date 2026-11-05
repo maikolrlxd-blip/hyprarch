@@ -29,7 +29,8 @@ function D.limpiar(d, M, A)
 	local inv = type(d.inventario) == "table" and d.inventario or {}
 	if type(inv.mascotas) == "table" then
 		for id, c in pairs(inv.mascotas) do
-			if type(id) == "string" and M.get(id) and type(c) == "number" and c >= 1 then n.inventario.mascotas[id] = math.floor(c) end
+			c = numero(c, 0) -- infinito o NaN no valen: serian mascotas sin fin
+			if type(id) == "string" and M.get(id) and c >= 1 then n.inventario.mascotas[id] = math.floor(c) end
 		end
 	end
 	local usadas = {}
@@ -61,7 +62,11 @@ function D.tomar(guardado, sesion, ahora, caduca)
 		return true, { dato = D.nuevo(), bloqueo = { sesion = sesion, t = ahora } } -- jugador nuevo
 	end
 	local b = guardado.bloqueo
-	if type(b) == "table" and b.sesion ~= sesion and type(b.t) == "number" and ahora - b.t < caduca then return false end
+	-- un bloqueo con la hora en el futuro (dato roto, o el reloj de otro servidor muy adelantado) no caducaria nunca y el jugador
+	-- no podria volver a entrar: solo vale si su hora esta a menos de «caduca» de ahora, hacia atras o hacia delante
+	if type(b) == "table" and b.sesion ~= sesion and type(b.t) == "number" and ahora - b.t < caduca and b.t - ahora < caduca then
+		return false
+	end
 	return true, { dato = guardado.dato, bloqueo = { sesion = sesion, t = ahora } }
 end
 

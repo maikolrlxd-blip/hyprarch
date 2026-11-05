@@ -38,6 +38,15 @@ ok, g3 = D.escribir(g2, 'B', T({'dinero': 99}), 1202, True)          # B guarda 
 assert ok and g3.dato.dinero == 99 and g3.bloqueo is None
 ok, g4 = D.tomar(g3, 'C', 1203, 180)                       # suelto: otro servidor lo toma al momento
 assert ok and g4.bloqueo.sesion == 'C'
+# un bloqueo con la hora rota en el futuro no deja al jugador fuera para siempre; uno de hace un momento sí se respeta
+roto = T({'dato': T({'dinero': 7}), 'bloqueo': T({'sesion': 'X', 't': 10 ** 12})})
+ok, g5 = D.tomar(roto, 'D', 2000, 180)
+assert ok and g5.bloqueo.sesion == 'D' and g5.dato.dinero == 7
+assert D.tomar(T({'dato': T({}), 'bloqueo': T({'sesion': 'X', 't': 2050})}), 'D', 2000, 180) is False   # reloj de X algo adelantado
+assert D.tomar(T({'dato': T({}), 'bloqueo': T({'sesion': 'X', 't': nan})}), 'D', 2000, 180)[0] is True
+# mascotas con cantidad infinita o NaN no cuentan
+n = D.limpiar(T({'inventario': T({'mascotas': T({'grifo': float('inf'), 'nube': nan, 'gorrion': 3.9})})}), M, A)
+assert dict(n.inventario.mascotas) == {'gorrion': 3}
 
 # racha de dias seguidos
 d = D.nuevo()
