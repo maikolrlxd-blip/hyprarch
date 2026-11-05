@@ -44,11 +44,25 @@ Studio se actualizó solo a `version-fee454b8e2094ba9`. El permiso de pantalla p
 - **c8908e7 — retroceso del cañón.**
   - `clips_a_lua.py`, modo «motor» → `src/ClipsEquipo.lua`.
   - `client/Canon.client.lua` mueve las 12 piezas del barril y la palanca con el efecto `"lanzamiento"`: apaga sus Motor6D en ese cliente y los vuelve a encender al acabar.
-- **a9d7181 — icono v02** (`mas1-arte/icono-v02/`, `tools/icono_v02.py`).
+- **a9d7181 y 0c2f9c4 — icono v02** (`mas1-arte/icono-v02/`, `tools/icono_v02.py`). La segunda vuelta recoge la revisión del director: avatar más grande en el centro del aro, alas en V y que se lea a 128 px.
 - **1fa378b — vida en el lobby:** 20 farolas, 5 tiras de banderines y 14 árboles de bloques (`server/Lobby.server.lua`).
+- **b0445e7 — pruebas de trampas** en `test_partida.py` (golpe que acierta, aros y orbes una vez por vuelo, ir de lado, salirse del carril, ir un 25 % más rápido). Además, el x2 del circuito de entrenamiento exige movimiento horizontal real.
+- **463df88 — guardado más robusto:** un bloqueo de sesión con la hora en el futuro ya no deja fuera al jugador, y las mascotas con cantidad infinita se descartan.
+- **68d9eec — dos pruebas de guarda:** `test_clips_datos.py` (los clips encajan con los huesos de los `.rbxmx`: avisa si se reimporta un modelo sin volver a pasar `clips_a_lua.py`) y `test_sintaxis.py` (los 35 scripts compilan).
+- **ba8dc60 — orbes «+1» que se pueden coger con boost:** 14 studs entre orbes y radio 4,5. Con 9 y 3,5, un piloto simulado cogía el 30 % con boost; ahora el 71-76 %, y el 100 % a velocidad base. `CONTRATO.md` describe por fin `MAS1_Orbe`.
+- **e42f88e — chispa dorada al coger un orbe** (efecto `orbe`) y `test_efectos.py`, que vigila que todos los efectos que dispara el servidor existan.
+
+**Antes de cada commit:** `python tools/construir_place.py` y `for t in tests/test_*.py; do python $t; done` desde `mas1-juego` (13 pruebas). Commits con `git -c user.name=Maikol -c user.email=maikolrlxd@gmail.com`.
 
 ## En marcha / bloqueado por Studio (hace falta que Maikol acepte el aviso de pantalla para `version-fee454b8e2094ba9`)
-1. **Importar los 6 enemigos voxel.** Los FBX con la regla de ejes están en el scratchpad de la sesión (`C:\Users\maiko\AppData\Local\Temp\claude\C--Users-maiko--local-bin\03b310d9-fea9-45c3-b932-e706bacfa36e\scratchpad\enemigos-fbx\<tipo>.fbx`). Se rehacen con `exportar_rig_roblox.py`: `BLEND=mas1-arte/enemigos-v02/<carpeta>/<Nombre>.blend`, `SALIDA=<tipo>.fbx`.
+1. **Importar los 6 enemigos voxel.** Los FBX con la regla de ejes se sacan de los `.blend` con (desde `hyprarch`, en Git Bash; `SALIDA` en una carpeta nueva, por ejemplo `C:/Users/maiko/Documents/mas1-enemigos-fbx`, que no está en el repo):
+   ```bash
+   for par in globo:globo/GloboGrunon nube:nube-grunona/NubeGrunona nubarron:nubarron/NubarronTormenta cometa:cometa/CometaEnfadada ovni:ovni/OvniEnfadado meteorito:meteorito/MeteoritoFurioso; do
+     BLEND="$(cygpath -w "$PWD/mas1-arte/enemigos-v02/${par#*:}.blend")" SALIDA="C:/Users/maiko/Documents/mas1-enemigos-fbx/${par%%:*}.fbx" \
+       "/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" -b --factory-startup -P mas1-arte/tools/exportar_rig_roblox.py
+   done
+   ```
+   Cada modelo se tiene que llamar como el archivo (`globo`, `nube`, `nubarron`, `cometa`, `ovni`, `meteorito`).
    - Importarlos uno a uno y pasarles `mas1-juego/tools/studio/preparar_enemigos.lua` en la barra de comandos: frente hacia −Z, pivote, anclados y carpeta `ReplicatedStorage.MAS1_Enemigos`.
    - Ctrl+S → `python tools/extraer_rbxmx.py build/Mas1-prueba.rbxlx ReplicatedStorage/MAS1_Enemigos assets/MAS1_Enemigos.rbxmx`.
    - Añadir `"MAS1_Enemigos": { "$path": "assets/MAS1_Enemigos.rbxmx" }` a `default.project.json`.
