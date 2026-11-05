@@ -75,7 +75,7 @@ Studio se actualizó solo a `version-fee454b8e2094ba9`. El permiso de pantalla p
    - Ctrl+S → `python tools/extraer_rbxmx.py build/Mas1-prueba.rbxlx ReplicatedStorage/MAS1_Enemigos assets/MAS1_Enemigos.rbxmx`.
    - Añadir `"MAS1_Enemigos": { "$path": "assets/MAS1_Enemigos.rbxmx" }` a `default.project.json`.
    - Volver a pasar `clips_a_lua.py` (genera `ClipsEnemigos.lua`) y `construir_place.py`, y probar en vuelo.
-2. **Ver en vuelo** las alas iniciales y robóticas, el retroceso del cañón, las farolas, los banderines y los árboles.
+2. **Ver en vuelo** las alas iniciales y robóticas (ya verificadas con números: `clips_a_lua.py` reconstruye cada pose como lo hará el juego, con los valores redondeados que guarda, y la compara con la de Blender: error máximo 0,0009 studs en los 19 clips; solo falta verlas), el retroceso del cañón, las farolas, los banderines y los árboles.
 3. **2 clientes** (Prueba → Servidor local) y FPS.
 4. **Cofre con malla:** el «Cofre mensajero» de Codex (`equipo-inicial-v01/Cofre-mensajero-v01.blend`, clips `Courier_flight` y `Reward_open`). Tiene piezas rígidas, como el cañón: Motor6D y modo «motor».
 

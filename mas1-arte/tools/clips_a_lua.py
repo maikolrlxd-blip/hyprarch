@@ -19,7 +19,7 @@
 import bpy, os, json, math
 import xml.etree.ElementTree as ET
 import numpy as np
-from mathutils import Matrix
+from mathutils import Matrix, Quaternion
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ARTE = os.path.abspath(os.path.join(HERE, '..'))
@@ -189,6 +189,7 @@ def pieza(id_, ruta, clips, rob, resumen, modo='hueso'):
             cuadros.append(f)
             f += paso
         datos = {n: [] for n in orden}
+        pose_f, cabezas = [], []   # por fotograma: la pose en Roblox y la cabeza de cada hueso segun Blender (en el espacio de Roblox)
         for f in cuadros:
             sc.frame_set(int(f), subframe=f - int(f))
             pose = {}
@@ -209,8 +210,30 @@ def pieza(id_, ruta, clips, rob, resumen, modo='hueso'):
                     q.negate()   # mismo giro, sin saltos de signo entre fotogramas
                 p = T.translation
                 datos[n].append((p.x, p.y, p.z, q.x, q.y, q.z, q.w))
+            pose_f.append(pose)
+            cabezas.append({n: C @ rig.pose.bones[n].matrix.translation for n in orden if rig.pose.bones.get(n) is not None})
         vivos = {n: v for n, v in datos.items()
                  if any(abs(a - b) > 1e-4 for fr in v for a, b in zip(fr, (0, 0, 0, 0, 0, 0, 1)))}
+        if modo == 'hueso':
+            # verificacion de lo que reconstruira el juego: CFrame * Transform por hueso con los numeros redondeados que se guardan (y los
+            # huesos que no se animan, en identidad) frente a la pose de Blender: las cabezas de los huesos y las matrices enteras
+            err_pos = err_mat = 0.0
+            for k in range(len(cuadros)):
+                pose2 = {}
+                for n in orden:
+                    padre, cf = rob[n]
+                    if n in vivos:
+                        px, py, pz, qx, qy, qz, qw = datos[n][k]
+                        T2 = Quaternion((round(qw, 4), round(qx, 4), round(qy, 4), round(qz, 4))).normalized().to_matrix().to_4x4()
+                        T2.translation = (round(px, 3), round(py, 3), round(pz, 3))
+                    else:
+                        T2 = Matrix.Identity(4)
+                    pose2[n] = (pose2[padre] if padre else Matrix.Identity(4)) @ cf @ T2
+                    err_mat = max(err_mat, max(abs(a - b) for fa, fb in zip(pose2[n], pose_f[k][n]) for a, b in zip(fa, fb)))
+                    if n in cabezas[k]:
+                        err_pos = max(err_pos, (pose2[n].translation - cabezas[k][n]).length)
+            print('VERIF', id_, c, 'error de las cabezas de los huesos %.4f studs, de las matrices %.4f' % (err_pos, err_mat))
+            assert err_pos < 0.02 and err_mat < 0.02, (id_, c, 'la pose que reconstruye el juego no coincide con la de Blender', err_pos, err_mat)
         cuerpo = ', '.join('%s = { %s }' % (n, ', '.join(num(x, 3 if k < 3 else 4) for fr in v for k, x in enumerate(fr)))
                            for n, v in sorted(vivos.items()))
         partes.append('%s = { n = %d, dur = %s, huesos = { %s } }' % (c, len(cuadros), num((f1 - f0) / sc.render.fps, 4), cuerpo))
