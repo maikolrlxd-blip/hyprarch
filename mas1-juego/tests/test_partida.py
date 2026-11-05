@@ -7,6 +7,7 @@ import lupa
 l = lupa.LuaRuntime()
 V = l.execute(open('src/Vuelo.lua', encoding='utf-8').read())
 P = l.execute(open('src/Partida.lua', encoding='utf-8').read())
+E = l.execute(open('src/Encuentros.lua', encoding='utf-8').read())
 Man = l.execute(open('src/Manejo.lua', encoding='utf-8').read())
 C = V.CFG
 T = l.table_from
@@ -119,4 +120,42 @@ assert P.lanzar(s, vec(0, 4, 0), 0, None) and not P.lanzar(s, vec(0, 4, 0), 0, N
 s, r, i = volar(potencia=900, z0=-8300.0, con_z=True)
 assert r is not None and -i['pos'][2] <= 8812 and i['pos'][1] <= 4.5, i
 print('final del mapa: aterriza a %.0f studs (el carril acaba en 8812)' % -i['pos'][2])
+
+# 9) golpe que acierta: devuelve la energia y el enemigo cae; volver a golpearle (ya caido) es un golpe al aire y cuesta
+s = P.nueva(V, E); P.lanzar(s, vec(0, 4, 0), 0, None)
+mundo = T({'enemigos': T([T({'pos': vec(0, 4, -6), 'vivo': True})])})
+e = s.v.energia
+fx, i = P.intencion(s, 'puno', None, mundo)
+assert fx == 'golpe' and i == 1 and mundo.enemigos[1].vivo is False and abs(s.v.energia - e) < 1e-9 and s.v.bote == C.puntosEnemigo
+fx, i = P.intencion(s, 'puno', None, mundo)
+assert fx == 'golpe' and i is None and abs(s.v.energia - (e - C.costeAtaque)) < 1e-9 and s.v.bote == C.puntosEnemigo
+
+
+# 10) aros y orbes cuentan una vez por vuelo aunque se crucen varias veces (ida, vuelta y otra vez ida)
+def ruta(s, mundo, zs, dt=1 / 60):
+    for z in zs:
+        r = P.tick(s, dt, vec(0, 4, z), mundo)
+        assert not r.corregir, r.motivo
+s = P.nueva(V, E); P.lanzar(s, vec(0, 4, 0), 0, None)
+mundo = T({'aros': T([T({'centro': vec(0, 4, -20), 'radio': 8})]), 'orbes': T([T({'pos': vec(0, 4, -30)})])})
+ruta(s, mundo, [-0.8 * k for k in range(1, 46)] + [-36 + 0.8 * k for k in range(1, 31)] + [-12 - 0.8 * k for k in range(1, 46)])
+assert s.v.aros == 1 and s.v.orbes == 1, (s.v.aros, s.v.orbes)
+
+# 11) trampas de lado: correr de lado a 120 studs/s, o salirse del carril, se corrige
+def de_lado(t, pos):
+    return [pos[0] + 2.0, pos[1], pos[2]] if 2 < t < 3 else None
+s, r, i = volar(trampa=de_lado)
+assert s.violaciones > 0, 'no se detecto ir de lado demasiado rapido'
+def fuera(t, pos):
+    return [55.0, pos[1], pos[2]] if abs(t - 3) < 0.009 else None
+s, r, i = volar(trampa=fuera)
+assert s.violaciones > 0 and i['max_x'] < 60, (s.violaciones, i['max_x'])
+
+
+# 12) trampa fina: un 25 % mas rapido de lo permitido todo el rato pasa el control de cada paso (margen x1,3) pero no la media
+def poco_rapido(t, pos):
+    return [pos[0], pos[1], pos[2] - 0.25 * C.velocidadBase / 60] if 2 < t < 11 else None
+s, r, i = volar(trampa=poco_rapido)
+assert s.violaciones > 0, 'no se detecto ir un 25 % mas rapido de forma seguida'
+print('trampas de lado, fuera del carril y un 25 %% mas rapido: corregidas (%d correcciones en la ultima)' % s.violaciones)
 print('ok')

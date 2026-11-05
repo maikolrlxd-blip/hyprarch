@@ -240898,6 +240898,7 @@ local function lanzar(plr, j)
 	j.nVuelo = (j.nVuelo or 0) + 1 -- para que la vuelta al lobby de un vuelo viejo no saque al jugador de uno nuevo
 	plr:SetAttribute("Lanzamientos", (plr:GetAttribute("Lanzamientos") or 0) + 1)
 	plr:SetAttribute("Entreno", 0)
+	j.posEntreno = nil -- al volver al lobby no cuenta el salto del vuelo como carrera
 	revisarAlas(plr, j)
 	quitarCofre(j)
 	if j.s.cofre then j.cofre = ancla("Cofre", v3(j.s.cofre.pos), { Tipo = "cofre", Dueno = plr.UserId }) end
@@ -240952,7 +240953,13 @@ RunService.Heartbeat:Connect(function(dt)
 			if j.entreno >= 0.25 then
 				local hrp, hum = raiz(plr)
 				if hrp then
-					local ritmo = V.ritmoEntreno(plr:GetAttribute("Rebirths") or 0, zonaDe(hrp.Position), hum.MoveDirection.Magnitude > 0.1)
+					-- corriendo = se ha movido de verdad en horizontal (4 studs/s o mas), no solo que MoveDirection lo diga: empujar
+					-- quieto contra una pared o falsear la direccion no cuenta como correr en el circuito
+					local p, antes = hrp.Position, j.posEntreno
+					local corriendo = antes ~= nil and hum.MoveDirection.Magnitude > 0.1
+						and Vector3.new(p.X - antes.X, 0, p.Z - antes.Z).Magnitude > 4 * j.entreno
+					j.posEntreno = p
+					local ritmo = V.ritmoEntreno(plr:GetAttribute("Rebirths") or 0, zonaDe(p), corriendo)
 					j.potencia += ritmo * j.entreno
 					plr:SetAttribute("Potencia", math.floor(j.potencia))
 					plr:SetAttribute("Entreno", ritmo)
