@@ -241788,7 +241788,13 @@ evHuevo.OnClientEvent:Connect(function(d)
 	local p = M.get(d.mascotaId)
 	if not p then return end
 	local fondo = n("Frame", { Size = UDim2.fromScale(1, 1), BackgroundColor3 = C.tinta, BackgroundTransparency = 0.35, BorderSizePixel = 0, ZIndex = 50 }, gui)
-	local huevo = T.texto(fondo, { Text = "🥚", TextSize = 140, Size = UDim2.fromOffset(200, 200), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.45), ZIndex = 51 })
+	local huevo = n("Frame", { Size = UDim2.fromOffset(150, 200), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.45), BackgroundColor3 = COLOR[d.rareza] or C.crema, BorderSizePixel = 0, ZIndex = 51 }, fondo)
+	n("UICorner", { CornerRadius = UDim.new(0.5, 0) }, huevo) -- huevo dibujado sin emoji ni imagenes
+	n("UIStroke", { Color = C.tinta, Thickness = 6 }, huevo)
+	for i = 1, 3 do
+		local raya = n("Frame", { Size = UDim2.new(1, 0, 0, 16), Position = UDim2.new(0, 0, 0.3 + i * 0.15, 0), BackgroundColor3 = C.crema, BackgroundTransparency = 0.35, BorderSizePixel = 0, ZIndex = 52 }, huevo)
+		raya.Rotation = (i % 2 == 0) and 4 or -4
+	end
 	task.spawn(function()
 		for i = 1, 10 do huevo.Rotation = (i % 2 == 0 and 14 or -14); task.wait(0.07) end
 		huevo:Destroy()
