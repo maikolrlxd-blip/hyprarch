@@ -53,6 +53,13 @@ def pieza_rig(sub, nombre, pos, rot_z=0.0, escala=1.0, clip='Fly', t=0.25):
     """Una pieza con rig (huevo, mascota, alas): la pone en pos, girada y en un instante de un clip."""
     obs = cargar(os.path.join(ARTE, sub, nombre + '.blend'), [nombre, nombre + '_Rig'])
     rig = next((o for o in obs if o.type == 'ARMATURE'), None)
+    if rig:   # si se trajo el archivo entero (maniquí, plataforma y regla de comprobación), solo el rig y sus mallas
+        quedan = [o for o in obs if o == rig or (o.type == 'MESH' and (o.parent == rig or any(
+            m.type == 'ARMATURE' and m.object == rig for m in o.modifiers)))]
+        for o in obs:
+            if o not in quedan:
+                bpy.data.objects.remove(o)
+        obs = quedan
     raiz = rig or obs[0]
     raiz.location, raiz.rotation_euler, raiz.scale = pos, (0, 0, math.radians(rot_z)), (escala,) * 3
     if rig and rig.animation_data and clip in rig.animation_data.nla_tracks:
@@ -74,7 +81,7 @@ def caja(padre, c, s, h, rot=(0, 0, 0)):
     return o
 
 
-def avatar(pos, cabeceo=-70, alabeo=0):
+def avatar(pos, cabeceo=-70, alabeo=0, escala_alas=0.95, clip_alas='Glide', t_alas=0.5):
     """Avatar de bloques (colores clasicos) en postura de vuelo de superheroe, con las alas avanzadas a la espalda."""
     e = bpy.data.objects.new('Avatar', None)
     CM.objects.link(e)
@@ -85,8 +92,8 @@ def avatar(pos, cabeceo=-70, alabeo=0):
     caja(e, (0, 0.61, 4.38), (0.5, 0.04, 0.1), '#1d1626')                          # sonrisa
     for s in (-1, 1):
         caja(e, (s * 1.5, 0.3, 4.4), (1, 1, 2), '#f5cd30', rot=(-70, 0, 0))       # brazos hacia delante
-        caja(e, (s * 0.5, 0, 1.0), (1, 1, 2), '#4caf50')                            # piernas
-    alas = pieza_rig('alas-avanzadas-v02', 'AlasAvanzadas_v02', (0, -0.6, 3.6), rot_z=180, escala=0.95, clip='Glide', t=0.5)
+        caja(e, (s * 0.5, 0, 1.0), (0.88, 0.95, 2), '#3f9c48')                      # piernas, con un hueco entre ellas
+    alas = pieza_rig('alas-avanzadas-v02', 'AlasAvanzadas_v02', (0, -0.6, 3.6), rot_z=180, escala=escala_alas, clip=clip_alas, t=t_alas)
     alas.parent = e
     e.location = pos
     e.rotation_euler = (math.radians(cabeceo), math.radians(alabeo), 0)
@@ -100,7 +107,8 @@ FUENTE = bpy.data.fonts.load(FUENTE_TITULO) if os.path.exists(FUENTE_TITULO) els
 def titulo(cam, lineas, y0, tam, color='#ffd23f', borde='#1c1530', dist=12):
     """Lineas de titulo pegadas a la camara (siempre de cara): relleno de color con un contorno oscuro detras."""
     for i, (txt, f) in enumerate(lineas):
-        for capa, (h, z, k) in enumerate(((borde, -0.6, 1.0), (color, 0.0, 1.0))):   # el contorno bien detras: su bisel no tapa el relleno
+        # el contorno bien detras (mas cuanto mas grande la letra): su bisel no tapa el relleno
+        for capa, (h, z, k) in enumerate(((borde, -0.6 * max(1.0, tam * f / 3.6), 1.0), (color, 0.0, 1.0))):
             cu = bpy.data.curves.new('t', 'FONT')
             cu.body, cu.align_x, cu.align_y, cu.size = txt, 'CENTER', 'CENTER', tam * f * (0.85 if FUENTE else 1.0)
             if FUENTE:
@@ -113,12 +121,6 @@ def titulo(cam, lineas, y0, tam, color='#ffd23f', borde='#1c1530', dist=12):
             o.location = (0, y0 - i * tam * 1.05, -dist + z)
 
 
-sol(CC, 'Sol', 2.3, (-0.4, 0.5, -0.75))   # menos que en el mapa: el blanco de las nubes se quemaba
-sol(CC, 'Relleno', 0.9, (0.6, -0.3, -0.4), 20.0)
-mapa = cargar(os.path.join(ARTE, 'mapa-v01', 'Mapa-v01.blend'))
-PRADERA = r'C:\Users\maiko\Documents\Codex\2026-10-21\c\outputs\mas-1-lanzamiento\art\zona-inicial-v01\Pradera-inicio-ambiente-v01.blend'
-if os.path.exists(PRADERA):   # la Pradera de Codex detras (solo se lee su archivo, sin tocarlo)
-    cargar(PRADERA)
 fotos = []
 
 
@@ -141,20 +143,27 @@ def foto(nombre, res, loc, objetivo, lente, lineas, y0, tam, t=0.25):
     fotos.append(ruta)
 
 
-# escena: el avatar con alas volando sobre el Mar de Nubes hacia el arco, con mascotas detras y un aro delante
-avatar((0, 150, 22), cabeceo=-72, alabeo=-12)
-pieza_rig('mascotas-enemigos-v01/nube', 'MascotaNube', (-8, 147, 26), rot_z=0, escala=1.6)   # al otro lado de la camara: no tapan
-pieza_rig('mascotas-enemigos-v01/meteorito', 'MascotaMeteorito', (-11, 153, 19), rot_z=0, escala=1.5)
-pieza_rig('mascotas-altas-v02/grifo-mitico', 'GrifoMitico', (-5, 143, 31), rot_z=0, escala=1.2)
-for i, (sub, nombre) in enumerate((('raro', 'HuevoAladoRaro'), ('legendario', 'HuevoAladoLegendario'), ('mitico', 'HuevoAladoMitico'))):
-    pieza_rig('huevos-alados-v03/' + sub, nombre, (-14 + i * 14, 205, 14 + 3 * i), rot_z=180, escala=1.8)
+if __name__ == '__main__':   # importado (tools/icono_v02.py) solo da las funciones
+    sol(CC, 'Sol', 2.3, (-0.4, 0.5, -0.75))   # menos que en el mapa: el blanco de las nubes se quemaba
+    sol(CC, 'Relleno', 0.9, (0.6, -0.3, -0.4), 20.0)
+    mapa = cargar(os.path.join(ARTE, 'mapa-v01', 'Mapa-v01.blend'))
+    PRADERA = r'C:\Users\maiko\Documents\Codex\2026-10-21\c\outputs\mas-1-lanzamiento\art\zona-inicial-v01\Pradera-inicio-ambiente-v01.blend'
+    if os.path.exists(PRADERA):   # la Pradera de Codex detras (solo se lee su archivo, sin tocarlo)
+        cargar(PRADERA)
+    # escena: el avatar con alas volando sobre el Mar de Nubes hacia el arco, con mascotas detras y un aro delante
+    avatar((0, 150, 22), cabeceo=-72, alabeo=-12)
+    pieza_rig('mascotas-enemigos-v01/nube', 'MascotaNube', (-8, 147, 26), rot_z=0, escala=1.6)   # al otro lado de la camara: no tapan
+    pieza_rig('mascotas-enemigos-v01/meteorito', 'MascotaMeteorito', (-11, 153, 19), rot_z=0, escala=1.5)
+    pieza_rig('mascotas-altas-v02/grifo-mitico', 'GrifoMitico', (-5, 143, 31), rot_z=0, escala=1.2)
+    for i, (sub, nombre) in enumerate((('raro', 'HuevoAladoRaro'), ('legendario', 'HuevoAladoLegendario'), ('mitico', 'HuevoAladoMitico'))):
+        pieza_rig('huevos-alados-v03/' + sub, nombre, (-14 + i * 14, 205, 14 + 3 * i), rot_z=180, escala=1.8)
 
-foto('Icono-512', (1024, 1024), (8, 166, 27), (0, 151, 22.5), 28, [('+1', 1.0)], 4.0, 3.6)
-foto('Miniatura-1-vuelo', (1920, 1080), (13, 171, 29), (-1, 150, 22), 30, [('+1 DE LANZAMIENTO', 1.0), ('POR SEGUNDO', 0.8)], 3.2, 1.0)
-foto('Miniatura-2-huevos', (1920, 1080), (0, 168, 19), (0, 210, 18), 32, [('HUEVOS ALADOS', 1.0), ('MASCOTAS MITICAS', 0.75)], 3.1, 1.1)
-im = bpy.data.images.load(os.path.join(OUT, 'Icono-512.jpg'))   # el icono, a 512
-im.scale(512, 512)
-im.filepath_raw = os.path.join(OUT, 'Icono-512.jpg')
-im.file_format = 'JPEG'
-im.save()
-A.log('listo', fotos)
+    foto('Icono-512', (1024, 1024), (8, 166, 27), (0, 151, 22.5), 28, [('+1', 1.0)], 4.0, 3.6)
+    foto('Miniatura-1-vuelo', (1920, 1080), (13, 171, 29), (-1, 150, 22), 30, [('+1 DE LANZAMIENTO', 1.0), ('POR SEGUNDO', 0.8)], 3.2, 1.0)
+    foto('Miniatura-2-huevos', (1920, 1080), (0, 168, 19), (0, 210, 18), 32, [('HUEVOS ALADOS', 1.0), ('MASCOTAS MITICAS', 0.75)], 3.1, 1.1)
+    im = bpy.data.images.load(os.path.join(OUT, 'Icono-512.jpg'))   # el icono, a 512
+    im.scale(512, 512)
+    im.filepath_raw = os.path.join(OUT, 'Icono-512.jpg')
+    im.file_format = 'JPEG'
+    im.save()
+    A.log('listo', fotos)
