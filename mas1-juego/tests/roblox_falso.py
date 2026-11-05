@@ -275,6 +275,7 @@ workspace = servicio("Workspace")
 workspace._d.DescendantAdded = nuevaSenal()
 servicio("Lighting")._d.Brightness = 1
 game = { GetService = function(_, n) return servicio(n) end, IsLoaded = function() return true end }
+__V3, __CF, __nv3, __ncf, __Inst, __nueva = V3, CF, nv3, ncf, Inst, nueva   -- para PRELUDIO_CLIENTE
 '''
 
 PRELUDIO_SERVIDOR = r'''
@@ -466,6 +467,179 @@ end
 '''
 
 
+# Lo que añade el cliente: Lerp y Dot de Vector3, CFrame con cuaternion y Lerp, math.clamp, senales ChildAdded y ChildRemoved,
+# Bone (Transform), Motor6D, Camera, pivotes con PrimaryPart, ScaleTo que escala tambien huesos y uniones, Clone que reasigna las
+# referencias internas (Part0, Part1, PrimaryPart) y GetExtentsSize.
+PRELUDIO_CLIENTE = r"""
+local V3, CF, nv3, ncf, Inst, nueva = __V3, __CF, __nv3, __ncf, __Inst, __nueva
+local function cruz(a, b) return nv3(a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X) end
+math.clamp = function(x, a, b) return math.max(a, math.min(b, x)) end
+typeof = function(v)
+	local mt = getmetatable(v)
+	if mt == V3 then return "Vector3" elseif mt == CF then return "CFrame" elseif mt == Inst then return "Instance" end
+	return type(v)
+end
+local indiceV3 = V3.__index
+V3.__index = function(t, k)
+	if k == "Lerp" then return function(a, b, f) return a + (b - a) * f end end
+	if k == "Dot" then return function(a, b) return a.X * b.X + a.Y * b.Y + a.Z * b.Z end end
+	return indiceV3(t, k)
+end
+local nuevoCF = CFrame.new
+CFrame.new = function(x, y, z, ...)
+	local r = { ... }
+	if #r == 4 then   -- CFrame.new(x, y, z, qx, qy, qz, qw)
+		local qx, qy, qz, qw = r[1], r[2], r[3], r[4]
+		local n = math.sqrt(qx * qx + qy * qy + qz * qz + qw * qw)
+		qx, qy, qz, qw = qx / n, qy / n, qz / n, qw / n
+		return ncf(nv3(x, y, z), { 1 - 2 * (qy * qy + qz * qz), 2 * (qx * qy - qz * qw), 2 * (qx * qz + qy * qw),
+			2 * (qx * qy + qz * qw), 1 - 2 * (qx * qx + qz * qz), 2 * (qy * qz - qx * qw),
+			2 * (qx * qz - qy * qw), 2 * (qy * qz + qx * qw), 1 - 2 * (qx * qx + qy * qy) })
+	end
+	return nuevoCF(x, y, z, ...)
+end
+local function rot(m, v) return nv3(m[1] * v.X + m[2] * v.Y + m[3] * v.Z, m[4] * v.X + m[5] * v.Y + m[6] * v.Z, m[7] * v.X + m[8] * v.Y + m[9] * v.Z) end
+function CF.Inverse(a)   -- la inversa exacta (no la traspuesta): con rotaciones algo imperfectas la traspuesta duplica el error en cada PivotTo encadenado
+	local m = a.r
+	local c11, c12, c13 = m[5] * m[9] - m[6] * m[8], m[6] * m[7] - m[4] * m[9], m[4] * m[8] - m[5] * m[7]
+	local det = m[1] * c11 + m[2] * c12 + m[3] * c13
+	local inv = {
+		c11 / det, (m[3] * m[8] - m[2] * m[9]) / det, (m[2] * m[6] - m[3] * m[5]) / det,
+		c12 / det, (m[1] * m[9] - m[3] * m[7]) / det, (m[3] * m[4] - m[1] * m[6]) / det,
+		c13 / det, (m[2] * m[7] - m[1] * m[8]) / det, (m[1] * m[5] - m[2] * m[4]) / det }
+	return ncf(-rot(inv, a.p), inv)
+end
+function CF.PointToWorldSpace(a, p) return a * p end
+function CF.Lerp(a, b, f)   -- posicion lineal y giro por interpolacion de la matriz y reortonormalizacion (basta para pruebas)
+	local r = {}
+	for i = 1, 9 do r[i] = a.r[i] + (b.r[i] - a.r[i]) * f end
+	local x = nv3(r[1], r[4], r[7]).Unit
+	local z = cruz(x, nv3(r[2], r[5], r[8])).Unit
+	local y = cruz(z, x)
+	return ncf(a.p + (b.p - a.p) * f, { x.X, y.X, z.X, x.Y, y.Y, z.Y, x.Z, y.Z, z.Z })
+end
+
+local indice = Inst.__index
+Inst.__index = function(t, k)
+	if k == "ChildAdded" or k == "ChildRemoved" then
+		local d = rawget(t, "_d")
+		d[k] = d[k] or __senal()
+		return d[k]
+	end
+	return indice(t, k)
+end
+local asigna = Inst.__newindex
+Inst.__newindex = function(t, k, v)
+	if k == "Parent" then
+		local viejo = rawget(t, "_d").Parent
+		asigna(t, k, v)
+		if viejo and viejo._d.ChildRemoved then viejo._d.ChildRemoved:Fire(t) end
+		if v and v._d.ChildAdded then v._d.ChildAdded:Fire(t) end
+	else
+		asigna(t, k, v)
+	end
+end
+local crear = Instance.new
+Instance.new = function(clase)
+	local o = crear(clase)
+	if clase == "Bone" then o._d.Transform = CFrame.identity end
+	if clase == "Motor6D" then o._d.Enabled = true end
+	if clase == "Camera" then o._d.CFrame = CFrame.identity end
+	return o
+end
+function Inst.GetPivot(t)
+	local pp = t._d.PrimaryPart
+	if pp then return pp._d.CFrame * (pp._d.PivotOffset or CFrame.identity) end
+	return t._d.pivote or CFrame.identity
+end
+function Inst.PivotTo(t, cf)
+	local delta = cf * t:GetPivot():Inverse()
+	for _, d in ipairs(t:GetDescendants()) do
+		if d:IsA("BasePart") then d._d.CFrame = delta * d._d.CFrame end
+	end
+	if not t._d.PrimaryPart then t._d.pivote = cf end
+end
+function Inst.ScaleTo(t, s)
+	local f, piv = s / t:GetScale(), t:GetPivot()
+	local inv = piv:Inverse()
+	for _, d in ipairs(t:GetDescendants()) do
+		local c = d._d.ClassName
+		if d:IsA("BasePart") then
+			local rel = inv * d._d.CFrame
+			d._d.Size = d._d.Size * f
+			d._d.CFrame = piv * ncf(rel.p * f, rel.r)
+			if d._d.PivotOffset then d._d.PivotOffset = ncf(d._d.PivotOffset.p * f, d._d.PivotOffset.r) end
+		elseif c == "Motor6D" then
+			d._d.C0, d._d.C1 = ncf(d._d.C0.p * f, d._d.C0.r), ncf(d._d.C1.p * f, d._d.C1.r)
+		elseif c == "Bone" then
+			d._d.CFrame = ncf(d._d.CFrame.p * f, d._d.CFrame.r)
+		end
+	end
+	t._d.escala = s
+end
+function Inst.Clone(t)
+	local mapa = {}
+	local function copiar(o)
+		local c = nueva(o._d.ClassName)
+		for k, v in pairs(o._d) do
+			if k ~= "Parent" and k ~= "_hijos" then c._d[k] = v end
+		end
+		mapa[o] = c
+		for _, h in ipairs(o._d._hijos) do copiar(h).Parent = c end
+		return c
+	end
+	local raiz = copiar(t)
+	for _, c in pairs(mapa) do   -- Part0, Part1, PrimaryPart... pasan a apuntar a las copias
+		for k, v in pairs(c._d) do
+			if getmetatable(v) == Inst and mapa[v] then c._d[k] = mapa[v] end
+		end
+	end
+	return raiz
+end
+function Inst.GetExtentsSize(t)
+	local mi, ma
+	for _, d in ipairs(t:GetDescendants()) do
+		if d:IsA("BasePart") then
+			local s, c = d._d.Size, d._d.CFrame
+			local r = c.r
+			local hx = (math.abs(r[1]) * s.X + math.abs(r[2]) * s.Y + math.abs(r[3]) * s.Z) / 2
+			local hy = (math.abs(r[4]) * s.X + math.abs(r[5]) * s.Y + math.abs(r[6]) * s.Z) / 2
+			local hz = (math.abs(r[7]) * s.X + math.abs(r[8]) * s.Y + math.abs(r[9]) * s.Z) / 2
+			local lo, hi = nv3(c.p.X - hx, c.p.Y - hy, c.p.Z - hz), nv3(c.p.X + hx, c.p.Y + hy, c.p.Z + hz)
+			mi = mi and nv3(math.min(mi.X, lo.X), math.min(mi.Y, lo.Y), math.min(mi.Z, lo.Z)) or lo
+			ma = ma and nv3(math.max(ma.X, hi.X), math.max(ma.Y, hi.Y), math.max(ma.Z, hi.Z)) or hi
+		end
+	end
+	return (ma and mi) and (ma - mi) or nv3(0, 0, 0)
+end
+local Pl = game:GetService("Players")
+local Run = game:GetService("RunService")
+Run._d.RenderStepped = __senal()
+Run._d.IsServer = function() return false end
+game:GetService("ProximityPromptService")._d.PromptTriggered = __senal()
+workspace._d.CurrentCamera = Instance.new("Camera")
+function H.local_(p) Pl._d.LocalPlayer = p end
+function H.nodo(clase, nombre, padre)
+	local o = Instance.new(clase)
+	o.Name = nombre
+	o.Parent = padre
+	return o
+end
+function H.cf(o, k, x, y, z, a, b, c, d, e, f, g, h, i) o[k] = CFrame.new(x, y, z, a, b, c, d, e, f, g, h, i) end
+function H.tam(o, x, y, z) o.Size = Vector3.new(x, y, z) end
+function H.ref(o, k, otro) o[k] = otro end
+function H.cuadro(dt)   -- un fotograma: RenderStepped y, despues, el reloj virtual
+	Run._d.RenderStepped:Fire(dt)
+	AVANZAR(dt)
+end
+function H.hueso_mundo(b)   -- TransformedWorldCFrame de un hueso: la cadena de CFrame * Transform desde la malla
+	local padre = b._d.Parent
+	local base = padre._d.ClassName == "Bone" and H.hueso_mundo(padre) or padre._d.CFrame
+	return base * b._d.CFrame * b._d.Transform
+end
+"""
+
+
 def _tokens(src):
     """(tipo, texto, inicio, fin) de palabras, cadenas, comentarios y otros caracteres sueltos de un fuente de Lua."""
     i, n, out = 0, len(src), []
@@ -645,3 +819,83 @@ def caja(parte):
 def solapan(a, b, margen=0.0):
     """¿Se pisan dos cajas (min, max)? margen > 0: tambien si quedan a menos de ese margen."""
     return all(a[0][i] < b[1][i] + margen and b[0][i] < a[1][i] + margen for i in range(3))
+
+
+class Cliente:
+    """Un cliente de juego de mentira: jugador local con personaje, el codigo real de src/, los modelos reales de assets/*.rbxmx (con sus
+    huesos y uniones Motor6D) en ReplicatedStorage, y los RemoteEvent. Los scripts se ejecutan con ejecutar() y se avanza con cuadros()."""
+
+    def __init__(self):
+        self.l = nuevo()
+        self.l.execute(PRELUDIO_SERVIDOR)
+        self.l.execute(PRELUDIO_CLIENTE)
+        self.H, self.g = self.l.globals().H, self.l.globals()
+        rs = self.l.eval('game:GetService("ReplicatedStorage")')
+        mas1 = self.H.carpeta(rs, 'Mas1')
+        for ruta in sorted(glob.glob('src/*.lua')):
+            self.H.codigo('ModuleScript', mas1, os.path.basename(ruta)[:-4], a_lua(open(ruta, encoding='utf-8').read()))
+        for n in ('MAS1_Accion', 'MAS1_Efecto', 'MAS1_Resultado', 'MAS1_Aviso', 'MAS1_Huevo', 'MAS1_Inventario', 'MAS1_Orbe'):
+            self.H.nodo('RemoteEvent', n, rs)
+        self.rs = rs
+        self.cargar_rbxmx('assets/MAS1_Modelos.rbxmx', rs)
+        self.cargar_rbxmx('assets/MAS1_Equipo.rbxmx', rs)
+        ws = self.g.workspace
+        self.entidades = self.H.carpeta(ws, 'MAS1_Entidades')
+        self.jugador = self.H.jugador('Maikol', 7)
+        personaje = self.H.personaje(self.jugador, 0.0, 3.0, 14.0)
+        torso = self.H.nodo('Part', 'UpperTorso', personaje)
+        self.H.tam(torso, 2.0, 1.6, 1.0)
+        self.H.cf(torso, 'CFrame', 0.0, 3.5, 14.0, 1, 0, 0, 0, 1, 0, 0, 0, 1)
+        self.H.local_(self.jugador)
+        self.carpeta_scripts = self.H.carpeta(self.l.eval('game:GetService("StarterPlayer")'), 'Mas1Cliente')
+
+    def cargar_rbxmx(self, ruta, padre):
+        import xml.etree.ElementTree as ET
+        raiz = ET.parse(ruta).getroot()
+        por_ref, pendientes = {}, []
+
+        def prop(it, n):
+            return next((c for c in it.find('Properties') if c.get('name').lower() == n.lower()), None)
+
+        def crear(it, padre_lua):
+            clase, nombre = it.get('class'), prop(it, 'Name').text
+            o = self.H.nodo(clase, nombre, padre_lua)
+            por_ref[it.get('referent')] = o
+            if clase in ('MeshPart', 'Part', 'Bone', 'Motor6D'):
+                for k in ('CFrame', 'C0', 'C1', 'PivotOffset'):
+                    c = prop(it, k)
+                    if c is not None and c.tag == 'CoordinateFrame':
+                        self.H.cf(o, k, *[float(c.find(x).text) for x in ('X', 'Y', 'Z', 'R00', 'R01', 'R02', 'R10', 'R11', 'R12', 'R20', 'R21', 'R22')])
+            s = prop(it, 'size')
+            if s is not None and clase in ('MeshPart', 'Part'):
+                self.H.tam(o, *[float(s.find(x).text) for x in 'XYZ'])
+            for k in ('Part0', 'Part1', 'PrimaryPart'):
+                r = prop(it, k)
+                if r is not None and r.text and r.text.strip() != 'null':
+                    pendientes.append((o, k, r.text.strip()))
+            for hijo in it.findall('Item'):
+                crear(hijo, o)
+        for it in raiz.findall('Item'):
+            crear(it, padre)
+        for o, k, ref in pendientes:
+            self.H.ref(o, k, por_ref[ref])
+
+    def ejecutar(self, ruta, carpeta=None):
+        """Ejecuta un script del juego (server/ o client/) como Script o LocalScript."""
+        nombre = os.path.basename(ruta).split('.')[0]
+        clase = 'Script' if '.server.' in ruta else 'LocalScript'
+        s = self.H.codigo(clase, carpeta or self.carpeta_scripts, nombre, a_lua(open(ruta, encoding='utf-8').read()))
+        self.H.correr(s)
+        return s
+
+    def cuadros(self, segundos, dt=1 / 60):
+        t = 0.0
+        while t < segundos - 1e-9:
+            self.H.cuadro(min(dt, segundos - t))
+            t += dt
+
+    def hijo(self, padre, nombre):
+        return self.l.eval('function(p, n) return p:FindFirstChild(n, true) end')(padre, nombre)
+
+    def lista(self, nodo):
+        return list(self.l.eval('function(n) return n:GetChildren() end')(nodo).values())
