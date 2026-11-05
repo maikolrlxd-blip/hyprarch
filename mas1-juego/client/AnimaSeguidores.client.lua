@@ -7,31 +7,10 @@
 -- Mascotas: Fly siempre. Alas del jugador: Flap en vuelo (mas rapido con turbo), Glide al planear y, en tierra, Glide despacio (alas
 -- abiertas, no pegadas al cuerpo). Los modelos de piezas provisionales no tienen huesos: no se tocan.
 local Players, RS, RunService = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService")
-local CLIPS = require(RS:WaitForChild("Mas1"):WaitForChild("ClipsHuesos"))
-local cache = setmetatable({}, { __mode = "k" }) -- [modelo] = { id, huesos = {nombre = Bone}, poses = {clip = {nombre = {CFrame}}} }
-
-local function poses(clip)
-	local p = {}
-	for nombre, v in pairs(clip.huesos) do
-		local lista = {}
-		for i = 0, clip.n - 1 do
-			local k = i * 7
-			lista[i + 1] = CFrame.new(v[k + 1], v[k + 2], v[k + 3], v[k + 4], v[k + 5], v[k + 6], v[k + 7])
-		end
-		p[nombre] = lista
-	end
-	return p
-end
-
-local preparados = {} -- [id] = {clip = poses}: las poses de cada pieza se calculan una vez
-local function posesDe(id)
-	if not preparados[id] and CLIPS[id] then
-		local t = {}
-		for nombre, clip in pairs(CLIPS[id]) do t[nombre] = { poses = poses(clip), n = clip.n, dur = clip.dur } end
-		preparados[id] = t
-	end
-	return preparados[id]
-end
+local Mas1 = RS:WaitForChild("Mas1")
+local Clips = require(Mas1:WaitForChild("Clips"))
+local CLIPS = require(Mas1:WaitForChild("ClipsHuesos"))
+local cache = setmetatable({}, { __mode = "k" }) -- [modelo] = { id, huesos = {nombre = Bone}, clips = {clip = preparado} }
 
 local function duenoDe(m) -- las alas van pegadas a la espalda de su jugador
 	local p = m:GetPivot().Position
@@ -42,21 +21,8 @@ local function duenoDe(m) -- las alas van pegadas a la espalda de su jugador
 	end
 end
 
-local function aplicar(c, clip, t, escala)
-	local actual = c.clips and c.clips[clip]
-	if not actual then return end
-	local fase = (t % actual.dur) / actual.dur * (actual.n - 1)
-	local i = math.floor(fase)
-	local a = fase - i
-	for nombre, hueso in pairs(c.huesos) do
-		local lista = actual.poses[nombre]
-		if lista then
-			local cf = lista[i + 1]:Lerp(lista[math.min(i + 2, actual.n)], a)
-			hueso.Transform = escala == 1 and cf or (cf - cf.Position + cf.Position * escala) -- la escala del modelo mueve los studs
-		else
-			hueso.Transform = CFrame.identity
-		end
-	end
+local function aplicar(c, clip, t, escala) -- en bucle; los huesos sin datos en el clip vuelven a reposo
+	Clips.aplicar(c.huesos, c.clips[clip], t, escala, true)
 end
 
 RunService.RenderStepped:Connect(function()
@@ -68,10 +34,7 @@ RunService.RenderStepped:Connect(function()
 			local dueno = not mascota and duenoDe(m) or nil
 			local id = mascota and m.Name:sub(13) or (dueno and dueno:GetAttribute("Alas")) or nil
 			if not c or c.id ~= id then
-				c = { id = id, huesos = {}, clips = id and posesDe(id), fase = math.random() * 3 }
-				for _, b in ipairs(m:GetDescendants()) do
-					if b:IsA("Bone") then c.huesos[b.Name] = b end
-				end
+				c = { id = id, huesos = Clips.huesos(m), clips = id and Clips.preparar(CLIPS[id]), fase = math.random() * 3 }
 				cache[m] = c
 			end
 			if c.clips and next(c.huesos) then

@@ -1,7 +1,8 @@
-# Los clips de Blender de las mascotas y alas del juego, fotograma a fotograma, en un módulo Lua (mas1-juego/src/ClipsHuesos.lua) que
-# client/AnimaSeguidores.client.lua reproduce con Bone.Transform. Así se ven las animaciones de verdad (Flap: recoger -> extender ->
-# impulsar; Fly; Glide) sin publicar una Animation por clip en la cuenta de Maikol. Lee los .blend (los de Codex sin tocarlos) y los
-# huesos tal como quedaron en Roblox (mas1-juego/assets/MAS1_Modelos.rbxmx).
+# Los clips de Blender de las mascotas, alas y enemigos del juego, fotograma a fotograma, en módulos Lua que reproduce src/Clips.lua
+# con Bone.Transform: mas1-juego/src/ClipsHuesos.lua (mascotas y alas, client/AnimaSeguidores.client.lua) y src/ClipsEnemigos.lua
+# (enemigos, client/Entidades.client.lua). Así se ven las animaciones de verdad (Flap: recoger -> extender -> impulsar; Fly; Glide;
+# Idle, Defeat y Blink de los enemigos) sin publicar una Animation por clip en la cuenta de Maikol. Lee los .blend (los de Codex sin
+# tocarlos) y los huesos tal como quedaron en Roblox (mas1-juego/assets/MAS1_Modelos.rbxmx y MAS1_Enemigos.rbxmx).
 #
 # Ojo (01/11): los huesos importados en Studio NO tienen los ejes locales de Blender. En los rigs exportados con bake_space_transform
 # todos los huesos salen con giro identidad respecto a su padre (alineados con Root), y en los de Codex con otros ejes. Copiar la
@@ -12,8 +13,9 @@
 #   2. por fotograma, D = pose @ reposo⁻¹ de cada hueso en Blender (lo que mueve la piel) y su versión en Roblox, C·D·C⁻¹;
 #   3. pose del hueso en Roblox = C·D·C⁻¹ · reposo_roblox, y Transform = (pose_padre · Bone.CFrame)⁻¹ · pose del hueso.
 # Así la piel se deforma igual que en Blender sean cuales sean los ejes de cada hueso. Se guarda Transform (posición en studs a escala
-# 1 y cuaternión) a 15 fotogramas por segundo.
-#   blender -b --factory-startup --python-exit-code 1 -P clips_a_lua.py   ->   mas1-juego/src/ClipsHuesos.lua
+# 1 y cuaternión) a 15 fotogramas por segundo. Antes de cada clip los huesos vuelven a reposo: un clip que no anima un hueso (Blink
+# solo mueve los párpados) no hereda la última postura del clip anterior. Un módulo cuyo .rbxmx aún no existe se salta.
+#   blender -b --factory-startup --python-exit-code 1 -P clips_a_lua.py
 import bpy, os, json, math
 import xml.etree.ElementTree as ET
 import numpy as np
@@ -23,8 +25,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ARTE = os.path.abspath(os.path.join(HERE, '..'))
 CODEX = r'C:\Users\maiko\Documents\Codex\2026-10-21\c\outputs\mas-1-lanzamiento\art'
 JUEGO = os.path.abspath(os.path.join(ARTE, '..', 'mas1-juego'))
-SALIDA = os.path.join(JUEGO, 'src', 'ClipsHuesos.lua')
-MODELOS = os.path.join(JUEGO, 'assets', 'MAS1_Modelos.rbxmx')
 FPS = 15
 PIEZAS = {   # id del juego: (.blend, clips que se usan)
     'gorrion': (os.path.join(CODEX, 'mascotas-comunes-v06', 'GorrionMiga_v06', 'GorrionMiga_v06.blend'), ('Fly',)),
@@ -42,6 +42,16 @@ PIEZAS = {   # id del juego: (.blend, clips que se usan)
     'roboticas': (os.path.join(CODEX, 'alas-roboticas-v02', 'Alas-Roboticas-v02.blend'), ('Flap', 'Glide', 'Deploy')),
     'avanzadas': (os.path.join(ARTE, 'alas-avanzadas-v02', 'AlasAvanzadas_v02.blend'), ('Flap', 'Glide', 'Deploy')),
 }
+ENEMIGOS = {   # Tipo del enemigo en el juego: (.blend de enemigos-v02, clips); los modelos, en MAS1_Enemigos con ese nombre
+    t: (os.path.join(ARTE, 'enemigos-v02', carpeta, nombre + '.blend'), ('Idle', 'Hit', 'Defeat', 'Blink'))
+    for t, carpeta, nombre in (('globo', 'globo', 'GloboGrunon'), ('nube', 'nube-grunona', 'NubeGrunona'),
+                               ('nubarron', 'nubarron', 'NubarronTormenta'), ('cometa', 'cometa', 'CometaEnfadada'),
+                               ('ovni', 'ovni', 'OvniEnfadado'), ('meteorito', 'meteorito', 'MeteoritoFurioso'))
+}
+TRABAJOS = (   # (módulo que se escribe, modelos de Roblox con sus huesos, piezas, qué son)
+    (os.path.join(JUEGO, 'src', 'ClipsHuesos.lua'), os.path.join(JUEGO, 'assets', 'MAS1_Modelos.rbxmx'), PIEZAS, 'mascotas y alas'),
+    (os.path.join(JUEGO, 'src', 'ClipsEnemigos.lua'), os.path.join(JUEGO, 'assets', 'MAS1_Enemigos.rbxmx'), ENEMIGOS, 'enemigos'),
+)
 
 
 def num(x, d):
@@ -94,14 +104,17 @@ def semejanza(a, b):
     return s, giro, t, d, err
 
 
-ROBLOX = huesos_roblox(MODELOS)
-lua = ['-- GENERADO por mas1-arte/tools/clips_a_lua.py: no editar a mano. Clips de Blender de mascotas y alas pasados a Bone.Transform',
-       '-- de los huesos de MAS1_Modelos (studs a escala 1), %d fotogramas por segundo: por hueso, 7 numeros por fotograma' % FPS,
-       '-- (x, y, z, qx, qy, qz, qw).',
-       'return {']
-resumen = {}
-for id_, (ruta, clips) in PIEZAS.items():
-    rob = ROBLOX[id_]
+def a_reposo(rig):
+    for pb in rig.pose.bones:
+        pb.location = (0, 0, 0)
+        pb.rotation_quaternion = (1, 0, 0, 0)
+        pb.rotation_euler = (0, 0, 0)
+        pb.rotation_axis_angle = (0, 0, 1, 0)
+        pb.scale = (1, 1, 1)
+
+
+def pieza(id_, ruta, clips, rob, resumen):
+    """Los clips de una pieza como texto Lua: '<id> = { Clip = { n, dur, huesos = {...} }, ... }'."""
     bpy.ops.wm.open_mainfile(filepath=ruta, load_ui=False)
     rig = next(o for o in bpy.data.objects if o.type == 'ARMATURE')
     acciones = {tr.name: tr.strips[0].action for tr in rig.animation_data.nla_tracks if tr.strips} if rig.animation_data else {}
@@ -143,7 +156,9 @@ for id_, (ruta, clips) in PIEZAS.items():
     for c in clips:
         act = acciones.get(c)
         if act is None:
+            print('FALTA EL CLIP', id_, c)
             continue
+        a_reposo(rig)
         ad.action = act
         try:
             if act.slots and ad.action_slot is None:
@@ -184,10 +199,29 @@ for id_, (ruta, clips) in PIEZAS.items():
                            for n, v in sorted(vivos.items()))
         partes.append('%s = { n = %d, dur = %s, huesos = { %s } }' % (c, len(cuadros), num((f1 - f0) / sc.render.fps, 4), cuerpo))
         resumen.setdefault(id_, {})[c] = (len(cuadros), sorted(vivos))
-    lua.append('\t%s = { %s },' % (id_, ', '.join(partes)))
-lua.append('}')
-open(SALIDA, 'w', encoding='utf-8', newline='\n').write('\n'.join(lua) + '\n')
-print('CLIPS', os.path.getsize(SALIDA), json.dumps({k: {c: n for c, (n, _) in v.items()} for k, v in resumen.items()}))
-for k, v in resumen.items():
-    for c, (n, hs) in v.items():
-        print('CLIP', k, c, n, 'huesos', hs)
+    return '\t%s = { %s },' % (id_, ', '.join(partes))
+
+
+def generar(salida, modelos, piezas, que):
+    if not os.path.exists(modelos):
+        print('SALTO', os.path.basename(salida), '(aún no hay', os.path.basename(modelos) + ')')
+        return
+    roblox = huesos_roblox(modelos)
+    lua = ['-- GENERADO por mas1-arte/tools/clips_a_lua.py: no editar a mano. Clips de Blender de %s pasados a Bone.Transform' % que,
+           '-- de los huesos de %s (studs a escala 1), %d fotogramas por segundo: por hueso, 7 numeros por' % (os.path.basename(modelos), FPS),
+           '-- fotograma (x, y, z, qx, qy, qz, qw). Los reproduce src/Clips.lua.',
+           'return {']
+    resumen = {}
+    for id_, (ruta, clips) in piezas.items():
+        lua.append(pieza(id_, ruta, clips, roblox[id_], resumen))
+    lua.append('}')
+    open(salida, 'w', encoding='utf-8', newline='\n').write('\n'.join(lua) + '\n')
+    print('CLIPS', os.path.basename(salida), os.path.getsize(salida),
+          json.dumps({k: {c: n for c, (n, _) in v.items()} for k, v in resumen.items()}))
+    for k, v in resumen.items():
+        for c, (n, hs) in v.items():
+            print('CLIP', k, c, n, 'huesos', hs)
+
+
+for trabajo in TRABAJOS:
+    generar(*trabajo)

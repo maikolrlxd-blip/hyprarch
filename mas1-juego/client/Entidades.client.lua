@@ -1,10 +1,21 @@
 -- Enemigos y cofres de «+1 de lanzamiento por segundo» vistos en el cliente. El servidor solo pone anclas invisibles en
--- Workspace.MAS1_Entidades (atributos Tipo, Vivo y, en los cofres, Dueno); aqui cada una se construye con piezas, se mueve suave y se
--- anima: los enemigos flotan con cara enfadada mirando a +Z (por donde llega el jugador) y encogen al ser golpeados; el cofre de cada
--- jugador (solo lo ve el) aletea mientras huye. Los modelos de piezas son PROVISIONALES hasta importar las mallas voxel de mas1-arte
--- (enemigos-v02). Colores de esas piezas. SIN PROBAR EN STUDIO.
-local Players, RunService = game:GetService("Players"), game:GetService("RunService")
+-- Workspace.MAS1_Entidades (atributos Tipo, Vivo y, en los cofres, Dueno); aqui cada una se dibuja, se mueve suave y se anima: los
+-- enemigos flotan con cara enfadada mirando a +Z (por donde llega el jugador) y encogen al ser golpeados; el cofre de cada jugador
+-- (solo lo ve el) aletea mientras huye. Los enemigos usan las mallas voxel de mas1-arte/enemigos-v02 si estan en
+-- ReplicatedStorage.MAS1_Enemigos (assets/MAS1_Enemigos.rbxmx), con sus clips de Blender (src/ClipsEnemigos.lua): Idle en bucle con
+-- parpadeos (Blink) y Defeat al derribarlos, antes de encoger. Si no estan, y para el cofre, piezas provisionales con esos colores.
+local Players, RS, RunService = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService")
 local plr = Players.LocalPlayer
+if not game:IsLoaded() then game.Loaded:Wait() end -- con todo replicado, las mallas y sus clips ya estan si existen
+local Mas1 = RS:WaitForChild("Mas1")
+local Clips = require(Mas1:WaitForChild("Clips"))
+local moduloClips = Mas1:FindFirstChild("ClipsEnemigos")
+local CLIPS = moduloClips and require(moduloClips) or {}
+local MALLAS = RS:FindFirstChild("MAS1_Enemigos")
+local ESCALA_MALLA = 2.2 -- las mallas miden de 2 a 4,5 studs: asi quedan como las piezas de antes (unos 9)
+local GIRO_MALLA = CFrame.Angles(0, math.pi, 0) -- el frente de la malla es su -Z; el enemigo mira a +Z, al jugador que llega
+local RETRASO_ENCOGER = 0.6 -- s: con malla, al derribarlo se ve un momento su Defeat antes de encoger
+local CERCA = 320 -- studs: mas lejos no se anima (no se aprecia y ahorra trabajo)
 local anclas = workspace:WaitForChild("MAS1_Entidades")
 local vista = Instance.new("Folder")
 vista.Name = "MAS1_EntidadesVista"
@@ -96,23 +107,42 @@ local MODELOS = {
 	end,
 }
 
-local vistos = {} -- [ancla] = { m, base (CFrame suavizado), fase, alas, vivo }
+-- [ancla] = { m, pos (suavizada), fase, alas, escala (1 = vivo), tam, giro, partes, huesos y clips (con malla), golpe, parpadeo }
+local vistos = {}
 
 local function crear(a)
-	local hacer = MODELOS[a:GetAttribute("Tipo") or ""]
-	if not hacer or vistos[a] then return end
-	if a:GetAttribute("Tipo") == "cofre" and a:GetAttribute("Dueno") ~= plr.UserId then return end -- cada uno ve solo su cofre
-	local m = Instance.new("Model")
-	m.Name = a:GetAttribute("Tipo")
-	hacer(m)
-	m.WorldPivot = CFrame.new() -- las piezas se hacen alrededor del origen: PivotTo y ScaleTo trabajan desde ahi
+	local tipo = a:GetAttribute("Tipo") or ""
+	local malla = tipo ~= "cofre" and MALLAS and MALLAS:FindFirstChild(tipo)
+	if (not malla and not MODELOS[tipo]) or vistos[a] then return end
+	if tipo == "cofre" and a:GetAttribute("Dueno") ~= plr.UserId then return end -- cada uno ve solo su cofre
+	local m
+	if malla then
+		m = malla:Clone()
+	else
+		m = Instance.new("Model")
+		MODELOS[tipo](m)
+		m.WorldPivot = CFrame.new() -- las piezas se hacen alrededor del origen: PivotTo y ScaleTo trabajan desde ahi
+	end
+	m.Name = tipo
+	local partes = {}
+	for _, p in ipairs(m:GetDescendants()) do
+		if p:IsA("BasePart") then
+			p.Anchored, p.CanCollide, p.CanQuery, p.CanTouch = true, false, false, false
+			partes[#partes + 1] = p
+		end
+	end
 	m.Parent = vista
 	local alas = {}
 	for _, n in ipairs({ "AlaIzq", "AlaDer" }) do
 		local p = m:FindFirstChild(n)
 		if p then alas[#alas + 1] = { p = p, base = p.CFrame, s = n == "AlaIzq" and -1 or 1 } end
 	end
-	vistos[a] = { m = m, pos = a.Position, fase = math.random() * 6.28, alas = alas, escala = 1 }
+	vistos[a] = {
+		m = m, pos = a.Position, fase = math.random() * 6.28, alas = alas, escala = 1, partes = partes,
+		tam = malla and ESCALA_MALLA or 1, giro = malla and GIRO_MALLA or CFrame.identity,
+		huesos = malla and Clips.huesos(m), clips = malla and Clips.preparar(CLIPS[tipo]),
+		parpadeo = os.clock() + 1 + math.random() * 3,
+	}
 end
 
 local function quitar(a)
@@ -127,21 +157,40 @@ for _, a in ipairs(anclas:GetChildren()) do crear(a) end
 anclas.ChildAdded:Connect(crear)
 anclas.ChildRemoved:Connect(quitar)
 
+local camara = workspace.CurrentCamera
+
 RunService.RenderStepped:Connect(function(dt)
 	local t = os.clock()
+	local ojo = camara.CFrame.Position
 	for a, v in pairs(vistos) do
 		v.pos = v.pos:Lerp(a.Position, 1 - math.exp(-12 * dt)) -- los cofres se mueven: suave aunque el servidor mande a saltos
 		local vivo = a:GetAttribute("Vivo") ~= false
-		local objetivo = vivo and 1 or 0.05 -- golpeado: encoge hasta desaparecer y vuelve al reaparecer
+		if vivo then v.golpe = nil elseif not v.golpe then v.golpe = t end -- golpe = cuando lo derribaron
+		-- golpeado: encoge hasta desaparecer y vuelve al reaparecer
+		local objetivo = (vivo or (v.huesos and t - v.golpe < RETRASO_ENCOGER)) and 1 or 0.05
 		v.escala += (objetivo - v.escala) * (1 - math.exp(-10 * dt))
 		local cf = CFrame.new(v.pos + Vector3.new(0, math.sin(t * 2 + v.fase) * 0.6, 0)) * CFrame.Angles(0, math.sin(t + v.fase) * 0.15, 0)
-		if math.abs(v.m:GetScale() - v.escala) > 0.01 then v.m:ScaleTo(math.max(0.05, v.escala)) end
-		v.m:PivotTo(cf)
+		local escala = math.max(0.05, v.escala) * v.tam
+		if math.abs(v.m:GetScale() - escala) > 0.01 then v.m:ScaleTo(escala) end
+		v.m:PivotTo(cf * v.giro)
 		for _, ala in ipairs(v.alas) do
 			ala.p.CFrame = cf * ala.base * CFrame.Angles(0, 0, ala.s * math.sin(t * 14) * 0.6)
 		end
-		for _, p in ipairs(v.m:GetDescendants()) do
-			if p:IsA("BasePart") then p.LocalTransparencyModifier = v.escala < 0.08 and 1 or 0 end
+		if v.clips and (v.pos - ojo).Magnitude < CERCA then
+			local e = v.m:GetScale()
+			if v.golpe then
+				Clips.aplicar(v.huesos, v.clips.Defeat, t - v.golpe, e, false)
+			else
+				Clips.aplicar(v.huesos, v.clips.Idle, t + v.fase, e, true)
+				local parpado = v.clips.Blink
+				if parpado and t >= v.parpadeo then
+					Clips.aplicar(v.huesos, parpado, t - v.parpadeo, e, false, true)
+					if t - v.parpadeo > parpado.dur then v.parpadeo = t + 2 + math.random() * 3 end
+				end
+			end
+		end
+		for _, p in ipairs(v.partes) do
+			p.LocalTransparencyModifier = v.escala < 0.08 and 1 or 0
 		end
 	end
 end)

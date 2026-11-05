@@ -206104,11 +206104,11 @@
 </Properties>
 </Item>
 </Item>
-<Item class="ReplicatedStorage" referent="RBXJ000000F">
+<Item class="ReplicatedStorage" referent="RBXJ0000010">
 <Properties>
 <string name="Name">ReplicatedStorage</string>
 </Properties>
-<Item class="Folder" referent="RBXJ000000E">
+<Item class="Folder" referent="RBXJ000000F">
 <Properties>
 <string name="Name">Mas1</string>
 </Properties>
@@ -206172,10 +206172,75 @@ return A
 </Item>
 <Item class="ModuleScript" referent="RBXJ0000002">
 <Properties>
+<string name="Name">Clips</string>
+<ProtectedString name="Source"><![CDATA[-- Reproduce en Bone.Transform los clips de Blender que convierte mas1-arte/tools/clips_a_lua.py: src/ClipsHuesos.lua (mascotas y
+-- alas) y src/ClipsEnemigos.lua (enemigos). Cada clip trae n fotogramas a 15 por segundo y, por hueso animado, 7 numeros por fotograma
+-- (posicion en studs a escala 1 y cuaternion), ya en los ejes de los huesos de Roblox. Lo usan client/AnimaSeguidores.client.lua y
+-- client/Entidades.client.lua.
+local Clips = {}
+local preparados = setmetatable({}, { __mode = "k" }) -- [datos de una pieza] = sus clips con los fotogramas en CFrame
+
+-- los clips de una pieza ({ Clip = { n, dur, huesos } }) con cada fotograma en CFrame; se calcula una vez por tabla de datos
+function Clips.preparar(datos)
+	if not datos then return nil end
+	local listo = preparados[datos]
+	if listo then return listo end
+	listo = {}
+	for nombre, clip in pairs(datos) do
+		local huesos = {}
+		for hueso, v in pairs(clip.huesos) do
+			local lista = {}
+			for i = 0, clip.n - 1 do
+				local k = i * 7
+				lista[i + 1] = CFrame.new(v[k + 1], v[k + 2], v[k + 3], v[k + 4], v[k + 5], v[k + 6], v[k + 7])
+			end
+			huesos[hueso] = lista
+		end
+		listo[nombre] = { n = clip.n, dur = clip.dur, huesos = huesos }
+	end
+	preparados[datos] = listo
+	return listo
+end
+
+-- los huesos de un modelo por su nombre
+function Clips.huesos(modelo)
+	local t = {}
+	for _, b in ipairs(modelo:GetDescendants()) do
+		if b:IsA("Bone") then t[b.Name] = b end
+	end
+	return t
+end
+
+-- pone el clip en el instante t (segundos). bucle: vuelve a empezar al acabar; si no, se queda en el ultimo fotograma. escala: la del
+-- modelo (Model:GetScale()), que agranda los desplazamientos. encima: solo toca los huesos que trae el clip (el parpadeo sobre el
+-- reposo); sin el, los huesos sin datos vuelven a su postura de reposo
+function Clips.aplicar(huesos, clip, t, escala, bucle, encima)
+	if not clip then return end
+	local avance = bucle and (t % clip.dur) / clip.dur or math.clamp(t / clip.dur, 0, 1)
+	local fase = avance * (clip.n - 1)
+	local i = math.floor(fase)
+	local a = fase - i
+	for nombre, hueso in pairs(huesos) do
+		local lista = clip.huesos[nombre]
+		if lista then
+			local cf = lista[i + 1]:Lerp(lista[math.min(i + 2, clip.n)], a)
+			hueso.Transform = escala == 1 and cf or (cf - cf.Position + cf.Position * escala)
+		elseif not encima then
+			hueso.Transform = CFrame.identity
+		end
+	end
+end
+
+return Clips
+]]></ProtectedString>
+</Properties>
+</Item>
+<Item class="ModuleScript" referent="RBXJ0000003">
+<Properties>
 <string name="Name">ClipsHuesos</string>
 <ProtectedString name="Source"><![CDATA[-- GENERADO por mas1-arte/tools/clips_a_lua.py: no editar a mano. Clips de Blender de mascotas y alas pasados a Bone.Transform
--- de los huesos de MAS1_Modelos (studs a escala 1), 15 fotogramas por segundo: por hueso, 7 numeros por fotograma
--- (x, y, z, qx, qy, qz, qw).
+-- de los huesos de MAS1_Modelos.rbxmx (studs a escala 1), 15 fotogramas por segundo: por hueso, 7 numeros por
+-- fotograma (x, y, z, qx, qy, qz, qw). Los reproduce src/Clips.lua.
 return {
 	gorrion = { Fly = { n = 16, dur = 1, huesos = { Body = { 0, 0, 0, 0, 0, 0, 1, 0, 0.01, 0, 0, 0, 0, 1, 0, 0.019, 0, 0, 0, 0, 1, 0, 0.024, 0, 0, 0, 0, 1, 0, 0.025, 0, 0, 0, 0, 1, 0, 0.022, 0, 0, 0, 0, 1, 0, 0.015, 0, 0, 0, 0, 1, 0, 0.005, 0, 0, 0, 0, 1, 0, -0.005, 0, 0, 0, 0, 1, 0, -0.015, 0, 0, 0, 0, 1, 0, -0.022, 0, 0, 0, 0, 1, 0, -0.025, 0, 0, 0, 0, 1, 0, -0.024, 0, 0, 0, 0, 1, 0, -0.019, 0, 0, 0, 0, 1, 0, -0.01, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1 }, Head = { 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0.0073, 0, 1, 0, 0, 0, 0, 0.013, 0, 0.9999, 0, 0, 0, 0, 0.0166, 0, 0.9999, 0, 0, 0, 0, 0.0174, 0, 0.9998, 0, 0, 0, 0, 0.0152, 0, 0.9999, 0, 0, 0, 0, 0.0103, 0, 0.9999, 0, 0, 0, 0, 0.0036, 0, 1, 0, 0, 0, 0, -0.0036, 0, 1, 0, 0, 0, 0, -0.0103, 0, 0.9999, 0, 0, 0, 0, -0.0152, 0, 0.9999, 0, 0, 0, 0, -0.0174, 0, 0.9998, 0, 0, 0, 0, -0.0166, 0, 0.9999, 0, 0, 0, 0, -0.013, 0, 0.9999, 0, 0, 0, 0, -0.0073, 0, 1, 0, 0, 0, 0, 0, 0, 1 }, Leg_L = { 0, 0, 0, 0.0443, 0, 0, 0.999, 0, 0, 0, 0.0135, 0, 0, 0.9999, 0, 0, 0, -0.0185, 0, 0, 0.9998, 0, 0, 0, -0.0479, 0, 0, 0.9989, 0, 0, 0, -0.069, 0, 0, 0.9976, 0, 0, 0, -0.0782, 0, 0, 0.9969, 0, 0, 0, -0.074, 0, 0, 0.9973, 0, 0, 0, -0.0568, 0, 0, 0.9984, 0, 0, 0, -0.0299, 0, 0, 0.9996, 0, 0, 0, 0.0022, 0, 0, 1, 0, 0, 0, 0.034, 0, 0, 0.9994, 0, 0, 0, 0.0598, 0, 0, 0.9982, 0, 0, 0, 0.0754, 0, 0, 0.9972, 0, 0, 0, 0.0777, 0, 0, 0.997, 0, 0, 0, 0.0674, 0, 0, 0.9977, 0, 0, 0, 0.0443, 0, 0, 0.999 }, Leg_R = { 0, 0, 0, 0.0443, 0, 0, 0.999, 0, 0, 0, 0.0135, 0, 0, 0.9999, 0, 0, 0, -0.0185, 0, 0, 0.9998, 0, 0, 0, -0.0479, 0, 0, 0.9989, 0, 0, 0, -0.069, 0, 0, 0.9976, 0, 0, 0, -0.0782, 0, 0, 0.9969, 0, 0, 0, -0.074, 0, 0, 0.9973, 0, 0, 0, -0.0568, 0, 0, 0.9984, 0, 0, 0, -0.0299, 0, 0, 0.9996, 0, 0, 0, 0.0022, 0, 0, 1, 0, 0, 0, 0.034, 0, 0, 0.9994, 0, 0, 0, 0.0598, 0, 0, 0.9982, 0, 0, 0, 0.0754, 0, 0, 0.9972, 0, 0, 0, 0.0777, 0, 0, 0.997, 0, 0, 0, 0.0674, 0, 0, 0.9977, 0, 0, 0, 0.0443, 0, 0, 0.999 }, Tail = { 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, -0.0083, 0, 0, 1, 0, 0, 0, -0.0149, 0, 0, 0.9999, 0, 0, 0, -0.019, 0, 0, 0.9998, 0, 0, 0, -0.0199, 0, 0, 0.9998, 0, 0, 0, -0.0173, 0, 0, 0.9999, 0, 0, 0, -0.0118, 0, 0, 0.9999, 0, 0, 0, -0.0042, 0, 0, 1, 0, 0, 0, 0.0042, 0, 0, 1, 0, 0, 0, 0.0118, 0, 0, 0.9999, 0, 0, 0, 0.0173, 0, 0, 0.9999, 0, 0, 0, 0.0199, 0, 0, 0.9998, 0, 0, 0, 0.019, 0, 0, 0.9998, 0, 0, 0, 0.0149, 0, 0, 0.9999, 0, 0, 0, 0.0083, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1 }, Tip_L = { 0, 0, 0, 0, 0, -0.0698, 0.9976, 0, 0, 0, 0, 0, -0.0135, 0.9999, 0, 0, 0, 0, 0, 0.0432, 0.9991, 0, 0, 0, 0, 0, 0.0933, 0.9956, 0, 0, 0, 0, 0, 0.1272, 0.9919, 0, 0, 0, 0, 0, 0.1392, 0.9903, 0, 0, 0, 0, 0, 0.1272, 0.9919, 0, 0, 0, 0, 0, 0.0933, 0.9956, 0, 0, 0, 0, 0, 0.0431, 0.9991, 0, 0, 0, 0, 0, -0.0146, 0.9999, 0, 0, 0, 0, 0, -0.0698, 0.9976, 0, 0, 0, 0, 0, -0.1127, 0.9936, 0, 0, 0, 0, 0, -0.1362, 0.9907, 0, 0, 0, 0, 0, -0.1362, 0.9907, 0, 0, 0, 0, 0, -0.1138, 0.9935, 0, 0, 0, 0, 0, -0.0698, 0.9976 }, Tip_R = { 0, 0, 0, 0, 0, 0.0698, 0.9976, 0, 0, 0, 0, 0, 0.0135, 0.9999, 0, 0, 0, 0, 0, -0.0432, 0.9991, 0, 0, 0, 0, 0, -0.0933, 0.9956, 0, 0, 0, 0, 0, -0.1272, 0.9919, 0, 0, 0, 0, 0, -0.1392, 0.9903, 0, 0, 0, 0, 0, -0.1272, 0.9919, 0, 0, 0, 0, 0, -0.0933, 0.9956, 0, 0, 0, 0, 0, -0.0431, 0.9991, 0, 0, 0, 0, 0, 0.0146, 0.9999, 0, 0, 0, 0, 0, 0.0698, 0.9976, 0, 0, 0, 0, 0, 0.1127, 0.9936, 0, 0, 0, 0, 0, 0.1362, 0.9907, 0, 0, 0, 0, 0, 0.1362, 0.9907, 0, 0, 0, 0, 0, 0.1138, 0.9935, 0, 0, 0, 0, 0, 0.0698, 0.9976 }, Wing_L = { 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0.1519, 0.9884, 0, 0, 0, 0, 0, 0.2693, 0.9631, 0, 0, 0, 0, 0, 0.3415, 0.9399, 0, 0, 0, 0, 0, 0.3565, 0.9343, 0, 0, 0, 0, 0, 0.3121, 0.95, 0, 0, 0, 0, 0, 0.2138, 0.9769, 0, 0, 0, 0, 0, 0.0761, 0.9971, 0, 0, 0, 0, 0, -0.0761, 0.9971, 0, 0, 0, 0, 0, -0.2138, 0.9769, 0, 0, 0, 0, 0, -0.3121, 0.95, 0, 0, 0, 0, 0, -0.3565, 0.9343, 0, 0, 0, 0, 0, -0.3415, 0.9399, 0, 0, 0, 0, 0, -0.2693, 0.9631, 0, 0, 0, 0, 0, -0.1519, 0.9884, 0, 0, 0, 0, 0, 0, 1 }, Wing_R = { 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, -0.1519, 0.9884, 0, 0, 0, 0, 0, -0.2693, 0.9631, 0, 0, 0, 0, 0, -0.3415, 0.9399, 0, 0, 0, 0, 0, -0.3565, 0.9343, 0, 0, 0, 0, 0, -0.3121, 0.95, 0, 0, 0, 0, 0, -0.2138, 0.9769, 0, 0, 0, 0, 0, -0.0761, 0.9971, 0, 0, 0, 0, 0, 0.0761, 0.9971, 0, 0, 0, 0, 0, 0.2138, 0.9769, 0, 0, 0, 0, 0, 0.3121, 0.95, 0, 0, 0, 0, 0, 0.3565, 0.9343, 0, 0, 0, 0, 0, 0.3415, 0.9399, 0, 0, 0, 0, 0, 0.2693, 0.9631, 0, 0, 0, 0, 0, 0.1519, 0.9884, 0, 0, 0, 0, 0, 0, 1 } } } },
 	golondrina = { Fly = { n = 16, dur = 1, huesos = { Body = { 0, 0, 0, 0, 0, 0, 1, 0, 0.01, 0, 0, 0, 0, 1, 0, 0.019, 0, 0, 0, 0, 1, 0, 0.024, 0, 0, 0, 0, 1, 0, 0.025, 0, 0, 0, 0, 1, 0, 0.022, 0, 0, 0, 0, 1, 0, 0.015, 0, 0, 0, 0, 1, 0, 0.005, 0, 0, 0, 0, 1, 0, -0.005, 0, 0, 0, 0, 1, 0, -0.015, 0, 0, 0, 0, 1, 0, -0.022, 0, 0, 0, 0, 1, 0, -0.025, 0, 0, 0, 0, 1, 0, -0.024, 0, 0, 0, 0, 1, 0, -0.019, 0, 0, 0, 0, 1, 0, -0.01, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1 }, Head = { 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0.0073, 0, 1, 0, 0, 0, 0, 0.013, 0, 0.9999, 0, 0, 0, 0, 0.0166, 0, 0.9999, 0, 0, 0, 0, 0.0174, 0, 0.9998, 0, 0, 0, 0, 0.0152, 0, 0.9999, 0, 0, 0, 0, 0.0103, 0, 0.9999, 0, 0, 0, 0, 0.0036, 0, 1, 0, 0, 0, 0, -0.0036, 0, 1, 0, 0, 0, 0, -0.0103, 0, 0.9999, 0, 0, 0, 0, -0.0152, 0, 0.9999, 0, 0, 0, 0, -0.0174, 0, 0.9998, 0, 0, 0, 0, -0.0166, 0, 0.9999, 0, 0, 0, 0, -0.013, 0, 0.9999, 0, 0, 0, 0, -0.0073, 0, 1, 0, 0, 0, 0, 0, 0, 1 }, Leg_L = { 0, 0, 0, 0.0443, 0, 0, 0.999, 0, 0, 0, 0.0135, 0, 0, 0.9999, 0, 0, 0, -0.0185, 0, 0, 0.9998, 0, 0, 0, -0.0479, 0, 0, 0.9989, 0, 0, 0, -0.069, 0, 0, 0.9976, 0, 0, 0, -0.0782, 0, 0, 0.9969, 0, 0, 0, -0.074, 0, 0, 0.9973, 0, 0, 0, -0.0568, 0, 0, 0.9984, 0, 0, 0, -0.0299, 0, 0, 0.9996, 0, 0, 0, 0.0022, 0, 0, 1, 0, 0, 0, 0.034, 0, 0, 0.9994, 0, 0, 0, 0.0598, 0, 0, 0.9982, 0, 0, 0, 0.0754, 0, 0, 0.9972, 0, 0, 0, 0.0777, 0, 0, 0.997, 0, 0, 0, 0.0674, 0, 0, 0.9977, 0, 0, 0, 0.0443, 0, 0, 0.999 }, Leg_R = { 0, 0, 0, 0.0443, 0, 0, 0.999, 0, 0, 0, 0.0135, 0, 0, 0.9999, 0, 0, 0, -0.0185, 0, 0, 0.9998, 0, 0, 0, -0.0479, 0, 0, 0.9989, 0, 0, 0, -0.069, 0, 0, 0.9976, 0, 0, 0, -0.0782, 0, 0, 0.9969, 0, 0, 0, -0.074, 0, 0, 0.9973, 0, 0, 0, -0.0568, 0, 0, 0.9984, 0, 0, 0, -0.0299, 0, 0, 0.9996, 0, 0, 0, 0.0022, 0, 0, 1, 0, 0, 0, 0.034, 0, 0, 0.9994, 0, 0, 0, 0.0598, 0, 0, 0.9982, 0, 0, 0, 0.0754, 0, 0, 0.9972, 0, 0, 0, 0.0777, 0, 0, 0.997, 0, 0, 0, 0.0674, 0, 0, 0.9977, 0, 0, 0, 0.0443, 0, 0, 0.999 }, Tail = { 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, -0.0083, 0, 0, 1, 0, 0, 0, -0.0149, 0, 0, 0.9999, 0, 0, 0, -0.019, 0, 0, 0.9998, 0, 0, 0, -0.0199, 0, 0, 0.9998, 0, 0, 0, -0.0173, 0, 0, 0.9999, 0, 0, 0, -0.0118, 0, 0, 0.9999, 0, 0, 0, -0.0042, 0, 0, 1, 0, 0, 0, 0.0042, 0, 0, 1, 0, 0, 0, 0.0118, 0, 0, 0.9999, 0, 0, 0, 0.0173, 0, 0, 0.9999, 0, 0, 0, 0.0199, 0, 0, 0.9998, 0, 0, 0, 0.019, 0, 0, 0.9998, 0, 0, 0, 0.0149, 0, 0, 0.9999, 0, 0, 0, 0.0083, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1 }, Tip_L = { 0, 0, 0, 0, 0, -0.0698, 0.9976, 0, 0, 0, 0, 0, -0.0135, 0.9999, 0, 0, 0, 0, 0, 0.0432, 0.9991, 0, 0, 0, 0, 0, 0.0933, 0.9956, 0, 0, 0, 0, 0, 0.1272, 0.9919, 0, 0, 0, 0, 0, 0.1392, 0.9903, 0, 0, 0, 0, 0, 0.1272, 0.9919, 0, 0, 0, 0, 0, 0.0933, 0.9956, 0, 0, 0, 0, 0, 0.0431, 0.9991, 0, 0, 0, 0, 0, -0.0146, 0.9999, 0, 0, 0, 0, 0, -0.0698, 0.9976, 0, 0, 0, 0, 0, -0.1127, 0.9936, 0, 0, 0, 0, 0, -0.1362, 0.9907, 0, 0, 0, 0, 0, -0.1362, 0.9907, 0, 0, 0, 0, 0, -0.1138, 0.9935, 0, 0, 0, 0, 0, -0.0698, 0.9976 }, Tip_R = { 0, 0, 0, 0, 0, 0.0698, 0.9976, 0, 0, 0, 0, 0, 0.0135, 0.9999, 0, 0, 0, 0, 0, -0.0432, 0.9991, 0, 0, 0, 0, 0, -0.0933, 0.9956, 0, 0, 0, 0, 0, -0.1272, 0.9919, 0, 0, 0, 0, 0, -0.1392, 0.9903, 0, 0, 0, 0, 0, -0.1272, 0.9919, 0, 0, 0, 0, 0, -0.0933, 0.9956, 0, 0, 0, 0, 0, -0.0431, 0.9991, 0, 0, 0, 0, 0, 0.0146, 0.9999, 0, 0, 0, 0, 0, 0.0698, 0.9976, 0, 0, 0, 0, 0, 0.1127, 0.9936, 0, 0, 0, 0, 0, 0.1362, 0.9907, 0, 0, 0, 0, 0, 0.1362, 0.9907, 0, 0, 0, 0, 0, 0.1138, 0.9935, 0, 0, 0, 0, 0, 0.0698, 0.9976 }, Wing_L = { 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0.1519, 0.9884, 0, 0, 0, 0, 0, 0.2693, 0.9631, 0, 0, 0, 0, 0, 0.3415, 0.9399, 0, 0, 0, 0, 0, 0.3565, 0.9343, 0, 0, 0, 0, 0, 0.3121, 0.95, 0, 0, 0, 0, 0, 0.2138, 0.9769, 0, 0, 0, 0, 0, 0.0761, 0.9971, 0, 0, 0, 0, 0, -0.0761, 0.9971, 0, 0, 0, 0, 0, -0.2138, 0.9769, 0, 0, 0, 0, 0, -0.3121, 0.95, 0, 0, 0, 0, 0, -0.3565, 0.9343, 0, 0, 0, 0, 0, -0.3415, 0.9399, 0, 0, 0, 0, 0, -0.2693, 0.9631, 0, 0, 0, 0, 0, -0.1519, 0.9884, 0, 0, 0, 0, 0, 0, 1 }, Wing_R = { 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, -0.1519, 0.9884, 0, 0, 0, 0, 0, -0.2693, 0.9631, 0, 0, 0, 0, 0, -0.3415, 0.9399, 0, 0, 0, 0, 0, -0.3565, 0.9343, 0, 0, 0, 0, 0, -0.3121, 0.95, 0, 0, 0, 0, 0, -0.2138, 0.9769, 0, 0, 0, 0, 0, -0.0761, 0.9971, 0, 0, 0, 0, 0, 0.0761, 0.9971, 0, 0, 0, 0, 0, 0.2138, 0.9769, 0, 0, 0, 0, 0, 0.3121, 0.95, 0, 0, 0, 0, 0, 0.3565, 0.9343, 0, 0, 0, 0, 0, 0.3415, 0.9399, 0, 0, 0, 0, 0, 0.2693, 0.9631, 0, 0, 0, 0, 0, 0.1519, 0.9884, 0, 0, 0, 0, 0, 0, 1 } } } },
@@ -206195,7 +206260,7 @@ return {
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000003">
+<Item class="ModuleScript" referent="RBXJ0000004">
 <Properties>
 <string name="Name">Datos</string>
 <ProtectedString name="Source"><![CDATA[-- Datos guardados de un jugador de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa; el DataStore lo lleva
@@ -206285,7 +206350,7 @@ return D
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000004">
+<Item class="ModuleScript" referent="RBXJ0000005">
 <Properties>
 <string name="Name">Efectos</string>
 <ProtectedString name="Source"><![CDATA[-- Efectos visuales de «+1 de lanzamiento por segundo»: especificaciones de ParticleEmitter (datos puros, sin API de Roblox) para
@@ -206315,7 +206380,7 @@ return E
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000005">
+<Item class="ModuleScript" referent="RBXJ0000006">
 <Properties>
 <string name="Name">Encuentros</string>
 <ProtectedString name="Source"><![CDATA[-- Encuentros del vuelo de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa): aros que se cruzan, enemigos que se golpean y
@@ -206480,7 +206545,7 @@ return E
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000006">
+<Item class="ModuleScript" referent="RBXJ0000007">
 <Properties>
 <string name="Name">Inventario</string>
 <ProtectedString name="Source"><![CDATA[-- Inventario de un jugador de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa): mascotas por cantidad, hasta 3 equipadas
@@ -206596,7 +206661,7 @@ return I
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000007">
+<Item class="ModuleScript" referent="RBXJ0000008">
 <Properties>
 <string name="Name">Manejo</string>
 <ProtectedString name="Source"><![CDATA[-- Manejo del vuelo de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa): a que velocidad volar en cada fotograma segun los
@@ -206659,7 +206724,7 @@ return M
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000008">
+<Item class="ModuleScript" referent="RBXJ0000009">
 <Properties>
 <string name="Name">Mascotas</string>
 <ProtectedString name="Source"><![CDATA[-- Mascotas de «+1 de lanzamiento por segundo»: datos y calculo de bonus (Lua puro, sin API de Roblox).
@@ -206744,7 +206809,7 @@ return M
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000009">
+<Item class="ModuleScript" referent="RBXJ000000A">
 <Properties>
 <string name="Name">Misiones</string>
 <ProtectedString name="Source"><![CDATA[-- Misiones de sesion de «+1 de lanzamiento por segundo» (Lua puro, sin API de Roblox). Cada jugador tiene 3 misiones a la vez; al
@@ -206838,7 +206903,7 @@ return M
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ000000A">
+<Item class="ModuleScript" referent="RBXJ000000B">
 <Properties>
 <string name="Name">Partida</string>
 <ProtectedString name="Source"><![CDATA[-- Sesion de vuelo de un jugador en el servidor de «+1 de lanzamiento por segundo» (Lua puro, probado con lupa; el adaptador de
@@ -207036,7 +207101,7 @@ return P
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ000000B">
+<Item class="ModuleScript" referent="RBXJ000000C">
 <Properties>
 <string name="Name">Red</string>
 <ProtectedString name="Source"><![CDATA[-- RemoteEvents de «+1 de lanzamiento por segundo» en ReplicatedStorage (adaptador de Roblox, no es Lua puro): en el servidor se
@@ -207061,7 +207126,7 @@ return R
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ000000C">
+<Item class="ModuleScript" referent="RBXJ000000D">
 <Properties>
 <string name="Name">Sonidos</string>
 <ProtectedString name="Source"><![CDATA[-- ids de audio de Roblox de «+1 de lanzamiento por segundo». VACIOS hasta subir los WAV de mas1-sonidos/wav (Maikol: cuenta de Roblox;
@@ -207075,7 +207140,7 @@ return {
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ000000D">
+<Item class="ModuleScript" referent="RBXJ000000E">
 <Properties>
 <string name="Name">Vuelo</string>
 <ProtectedString name="Source"><![CDATA[-- Logica pura del vuelo de «+1 de lanzamiento por segundo» (sin API de Roblox, probada con lupa).
@@ -240173,15 +240238,15 @@ ZjViYzQwNDQ0</BinaryString>
 
 
 </Item>
-<Item class="ServerScriptService" referent="RBXJ0000015">
+<Item class="ServerScriptService" referent="RBXJ0000016">
 <Properties>
 <string name="Name">ServerScriptService</string>
 </Properties>
-<Item class="Folder" referent="RBXJ0000014">
+<Item class="Folder" referent="RBXJ0000015">
 <Properties>
 <string name="Name">Mas1Servidor</string>
 </Properties>
-<Item class="Script" referent="RBXJ0000010">
+<Item class="Script" referent="RBXJ0000011">
 <Properties>
 <string name="Name">DemoVisual</string>
 <ProtectedString name="Source"><![CDATA[-- SOLO PARA VER LA CAPA VISUAL antes de que exista el juego: si workspace tiene el atributo MAS1_Demo = true, simula un vuelo (energia que baja,
@@ -240218,7 +240283,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000011">
+<Item class="ModuleScript" referent="RBXJ0000012">
 <Properties>
 <string name="Name">Guardado</string>
 <ProtectedString name="Source"><![CDATA[-- Guardado de «+1 de lanzamiento por segundo» con DataStore: adaptador de Roblox de src/Datos.lua (Lua puro, probado con lupa).
@@ -240314,7 +240379,7 @@ return G
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="Script" referent="RBXJ0000012">
+<Item class="Script" referent="RBXJ0000013">
 <Properties>
 <string name="Name">Lobby</string>
 <ProtectedString name="Source"><![CDATA[-- Lobby de «+1 de lanzamiento por segundo» (PROVISIONAL, hecho con piezas hasta importar la Pradera de Codex): plaza de salida, el
@@ -240427,7 +240492,7 @@ Lighting.Brightness = math.max(Lighting.Brightness, 2)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="Script" referent="RBXJ0000013">
+<Item class="Script" referent="RBXJ0000014">
 <Properties>
 <string name="Name">Partida</string>
 <ProtectedString name="Source"><![CDATA[-- Partida de «+1 de lanzamiento por segundo» en el servidor: adaptador de Roblox de src/Partida.lua y src/Encuentros.lua (Lua puro,
@@ -240918,19 +240983,19 @@ end)
 </Item>
 </Item>
 </Item>
-<Item class="StarterPlayer" referent="RBXJ0000028">
+<Item class="StarterPlayer" referent="RBXJ0000029">
 <Properties>
 <string name="Name">StarterPlayer</string>
 </Properties>
-<Item class="StarterPlayerScripts" referent="RBXJ0000027">
+<Item class="StarterPlayerScripts" referent="RBXJ0000028">
 <Properties>
 <string name="Name">StarterPlayerScripts</string>
 </Properties>
-<Item class="Folder" referent="RBXJ0000026">
+<Item class="Folder" referent="RBXJ0000027">
 <Properties>
 <string name="Name">Mas1Cliente</string>
 </Properties>
-<Item class="LocalScript" referent="RBXJ0000016">
+<Item class="LocalScript" referent="RBXJ0000017">
 <Properties>
 <string name="Name">AnimaSeguidores</string>
 <ProtectedString name="Source"><![CDATA[-- Animacion de las mallas de mascotas y alas que pone client/Seguidores.client.lua (modelos «Mas1Mascota_<id>» y «Mas1Alas» del
@@ -240942,31 +241007,10 @@ end)
 -- Mascotas: Fly siempre. Alas del jugador: Flap en vuelo (mas rapido con turbo), Glide al planear y, en tierra, Glide despacio (alas
 -- abiertas, no pegadas al cuerpo). Los modelos de piezas provisionales no tienen huesos: no se tocan.
 local Players, RS, RunService = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService")
-local CLIPS = require(RS:WaitForChild("Mas1"):WaitForChild("ClipsHuesos"))
-local cache = setmetatable({}, { __mode = "k" }) -- [modelo] = { id, huesos = {nombre = Bone}, poses = {clip = {nombre = {CFrame}}} }
-
-local function poses(clip)
-	local p = {}
-	for nombre, v in pairs(clip.huesos) do
-		local lista = {}
-		for i = 0, clip.n - 1 do
-			local k = i * 7
-			lista[i + 1] = CFrame.new(v[k + 1], v[k + 2], v[k + 3], v[k + 4], v[k + 5], v[k + 6], v[k + 7])
-		end
-		p[nombre] = lista
-	end
-	return p
-end
-
-local preparados = {} -- [id] = {clip = poses}: las poses de cada pieza se calculan una vez
-local function posesDe(id)
-	if not preparados[id] and CLIPS[id] then
-		local t = {}
-		for nombre, clip in pairs(CLIPS[id]) do t[nombre] = { poses = poses(clip), n = clip.n, dur = clip.dur } end
-		preparados[id] = t
-	end
-	return preparados[id]
-end
+local Mas1 = RS:WaitForChild("Mas1")
+local Clips = require(Mas1:WaitForChild("Clips"))
+local CLIPS = require(Mas1:WaitForChild("ClipsHuesos"))
+local cache = setmetatable({}, { __mode = "k" }) -- [modelo] = { id, huesos = {nombre = Bone}, clips = {clip = preparado} }
 
 local function duenoDe(m) -- las alas van pegadas a la espalda de su jugador
 	local p = m:GetPivot().Position
@@ -240977,21 +241021,8 @@ local function duenoDe(m) -- las alas van pegadas a la espalda de su jugador
 	end
 end
 
-local function aplicar(c, clip, t, escala)
-	local actual = c.clips and c.clips[clip]
-	if not actual then return end
-	local fase = (t % actual.dur) / actual.dur * (actual.n - 1)
-	local i = math.floor(fase)
-	local a = fase - i
-	for nombre, hueso in pairs(c.huesos) do
-		local lista = actual.poses[nombre]
-		if lista then
-			local cf = lista[i + 1]:Lerp(lista[math.min(i + 2, actual.n)], a)
-			hueso.Transform = escala == 1 and cf or (cf - cf.Position + cf.Position * escala) -- la escala del modelo mueve los studs
-		else
-			hueso.Transform = CFrame.identity
-		end
-	end
+local function aplicar(c, clip, t, escala) -- en bucle; los huesos sin datos en el clip vuelven a reposo
+	Clips.aplicar(c.huesos, c.clips[clip], t, escala, true)
 end
 
 RunService.RenderStepped:Connect(function()
@@ -241003,10 +241034,7 @@ RunService.RenderStepped:Connect(function()
 			local dueno = not mascota and duenoDe(m) or nil
 			local id = mascota and m.Name:sub(13) or (dueno and dueno:GetAttribute("Alas")) or nil
 			if not c or c.id ~= id then
-				c = { id = id, huesos = {}, clips = id and posesDe(id), fase = math.random() * 3 }
-				for _, b in ipairs(m:GetDescendants()) do
-					if b:IsA("Bone") then c.huesos[b.Name] = b end
-				end
+				c = { id = id, huesos = Clips.huesos(m), clips = id and Clips.preparar(CLIPS[id]), fase = math.random() * 3 }
 				cache[m] = c
 			end
 			if c.clips and next(c.huesos) then
@@ -241030,7 +241058,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000017">
+<Item class="LocalScript" referent="RBXJ0000018">
 <Properties>
 <string name="Name">Ayuda</string>
 <ProtectedString name="Source"><![CDATA[-- Ayuda de mandos de «+1 de lanzamiento por segundo»: un jugador nuevo no sabe que A/D mueven ni que W da boost. Muestra una tira
@@ -241081,7 +241109,7 @@ refrescar()
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000018">
+<Item class="LocalScript" referent="RBXJ0000019">
 <Properties>
 <string name="Name">Canon</string>
 <ProtectedString name="Source"><![CDATA[-- Cañon del lobby: al activar el aviso del cañon (E, toque o mando) pide el lanzamiento al servidor. SIN PROBAR EN STUDIO.
@@ -241097,7 +241125,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000019">
+<Item class="LocalScript" referent="RBXJ000001A">
 <Properties>
 <string name="Name">Efectos</string>
 <ProtectedString name="Source"><![CDATA[-- Dibuja los efectos de src/Efectos.lua con ParticleEmitter. El servidor (o el juego) dispara RemoteEvent MAS1_Efecto:
@@ -241139,16 +241167,27 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ000001A">
+<Item class="LocalScript" referent="RBXJ000001B">
 <Properties>
 <string name="Name">Entidades</string>
 <ProtectedString name="Source"><![CDATA[-- Enemigos y cofres de «+1 de lanzamiento por segundo» vistos en el cliente. El servidor solo pone anclas invisibles en
--- Workspace.MAS1_Entidades (atributos Tipo, Vivo y, en los cofres, Dueno); aqui cada una se construye con piezas, se mueve suave y se
--- anima: los enemigos flotan con cara enfadada mirando a +Z (por donde llega el jugador) y encogen al ser golpeados; el cofre de cada
--- jugador (solo lo ve el) aletea mientras huye. Los modelos de piezas son PROVISIONALES hasta importar las mallas voxel de mas1-arte
--- (enemigos-v02). Colores de esas piezas. SIN PROBAR EN STUDIO.
-local Players, RunService = game:GetService("Players"), game:GetService("RunService")
+-- Workspace.MAS1_Entidades (atributos Tipo, Vivo y, en los cofres, Dueno); aqui cada una se dibuja, se mueve suave y se anima: los
+-- enemigos flotan con cara enfadada mirando a +Z (por donde llega el jugador) y encogen al ser golpeados; el cofre de cada jugador
+-- (solo lo ve el) aletea mientras huye. Los enemigos usan las mallas voxel de mas1-arte/enemigos-v02 si estan en
+-- ReplicatedStorage.MAS1_Enemigos (assets/MAS1_Enemigos.rbxmx), con sus clips de Blender (src/ClipsEnemigos.lua): Idle en bucle con
+-- parpadeos (Blink) y Defeat al derribarlos, antes de encoger. Si no estan, y para el cofre, piezas provisionales con esos colores.
+local Players, RS, RunService = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService")
 local plr = Players.LocalPlayer
+if not game:IsLoaded() then game.Loaded:Wait() end -- con todo replicado, las mallas y sus clips ya estan si existen
+local Mas1 = RS:WaitForChild("Mas1")
+local Clips = require(Mas1:WaitForChild("Clips"))
+local moduloClips = Mas1:FindFirstChild("ClipsEnemigos")
+local CLIPS = moduloClips and require(moduloClips) or {}
+local MALLAS = RS:FindFirstChild("MAS1_Enemigos")
+local ESCALA_MALLA = 2.2 -- las mallas miden de 2 a 4,5 studs: asi quedan como las piezas de antes (unos 9)
+local GIRO_MALLA = CFrame.Angles(0, math.pi, 0) -- el frente de la malla es su -Z; el enemigo mira a +Z, al jugador que llega
+local RETRASO_ENCOGER = 0.6 -- s: con malla, al derribarlo se ve un momento su Defeat antes de encoger
+local CERCA = 320 -- studs: mas lejos no se anima (no se aprecia y ahorra trabajo)
 local anclas = workspace:WaitForChild("MAS1_Entidades")
 local vista = Instance.new("Folder")
 vista.Name = "MAS1_EntidadesVista"
@@ -241240,23 +241279,42 @@ local MODELOS = {
 	end,
 }
 
-local vistos = {} -- [ancla] = { m, base (CFrame suavizado), fase, alas, vivo }
+-- [ancla] = { m, pos (suavizada), fase, alas, escala (1 = vivo), tam, giro, partes, huesos y clips (con malla), golpe, parpadeo }
+local vistos = {}
 
 local function crear(a)
-	local hacer = MODELOS[a:GetAttribute("Tipo") or ""]
-	if not hacer or vistos[a] then return end
-	if a:GetAttribute("Tipo") == "cofre" and a:GetAttribute("Dueno") ~= plr.UserId then return end -- cada uno ve solo su cofre
-	local m = Instance.new("Model")
-	m.Name = a:GetAttribute("Tipo")
-	hacer(m)
-	m.WorldPivot = CFrame.new() -- las piezas se hacen alrededor del origen: PivotTo y ScaleTo trabajan desde ahi
+	local tipo = a:GetAttribute("Tipo") or ""
+	local malla = tipo ~= "cofre" and MALLAS and MALLAS:FindFirstChild(tipo)
+	if (not malla and not MODELOS[tipo]) or vistos[a] then return end
+	if tipo == "cofre" and a:GetAttribute("Dueno") ~= plr.UserId then return end -- cada uno ve solo su cofre
+	local m
+	if malla then
+		m = malla:Clone()
+	else
+		m = Instance.new("Model")
+		MODELOS[tipo](m)
+		m.WorldPivot = CFrame.new() -- las piezas se hacen alrededor del origen: PivotTo y ScaleTo trabajan desde ahi
+	end
+	m.Name = tipo
+	local partes = {}
+	for _, p in ipairs(m:GetDescendants()) do
+		if p:IsA("BasePart") then
+			p.Anchored, p.CanCollide, p.CanQuery, p.CanTouch = true, false, false, false
+			partes[#partes + 1] = p
+		end
+	end
 	m.Parent = vista
 	local alas = {}
 	for _, n in ipairs({ "AlaIzq", "AlaDer" }) do
 		local p = m:FindFirstChild(n)
 		if p then alas[#alas + 1] = { p = p, base = p.CFrame, s = n == "AlaIzq" and -1 or 1 } end
 	end
-	vistos[a] = { m = m, pos = a.Position, fase = math.random() * 6.28, alas = alas, escala = 1 }
+	vistos[a] = {
+		m = m, pos = a.Position, fase = math.random() * 6.28, alas = alas, escala = 1, partes = partes,
+		tam = malla and ESCALA_MALLA or 1, giro = malla and GIRO_MALLA or CFrame.identity,
+		huesos = malla and Clips.huesos(m), clips = malla and Clips.preparar(CLIPS[tipo]),
+		parpadeo = os.clock() + 1 + math.random() * 3,
+	}
 end
 
 local function quitar(a)
@@ -241271,28 +241329,47 @@ for _, a in ipairs(anclas:GetChildren()) do crear(a) end
 anclas.ChildAdded:Connect(crear)
 anclas.ChildRemoved:Connect(quitar)
 
+local camara = workspace.CurrentCamera
+
 RunService.RenderStepped:Connect(function(dt)
 	local t = os.clock()
+	local ojo = camara.CFrame.Position
 	for a, v in pairs(vistos) do
 		v.pos = v.pos:Lerp(a.Position, 1 - math.exp(-12 * dt)) -- los cofres se mueven: suave aunque el servidor mande a saltos
 		local vivo = a:GetAttribute("Vivo") ~= false
-		local objetivo = vivo and 1 or 0.05 -- golpeado: encoge hasta desaparecer y vuelve al reaparecer
+		if vivo then v.golpe = nil elseif not v.golpe then v.golpe = t end -- golpe = cuando lo derribaron
+		-- golpeado: encoge hasta desaparecer y vuelve al reaparecer
+		local objetivo = (vivo or (v.huesos and t - v.golpe < RETRASO_ENCOGER)) and 1 or 0.05
 		v.escala += (objetivo - v.escala) * (1 - math.exp(-10 * dt))
 		local cf = CFrame.new(v.pos + Vector3.new(0, math.sin(t * 2 + v.fase) * 0.6, 0)) * CFrame.Angles(0, math.sin(t + v.fase) * 0.15, 0)
-		if math.abs(v.m:GetScale() - v.escala) > 0.01 then v.m:ScaleTo(math.max(0.05, v.escala)) end
-		v.m:PivotTo(cf)
+		local escala = math.max(0.05, v.escala) * v.tam
+		if math.abs(v.m:GetScale() - escala) > 0.01 then v.m:ScaleTo(escala) end
+		v.m:PivotTo(cf * v.giro)
 		for _, ala in ipairs(v.alas) do
 			ala.p.CFrame = cf * ala.base * CFrame.Angles(0, 0, ala.s * math.sin(t * 14) * 0.6)
 		end
-		for _, p in ipairs(v.m:GetDescendants()) do
-			if p:IsA("BasePart") then p.LocalTransparencyModifier = v.escala < 0.08 and 1 or 0 end
+		if v.clips and (v.pos - ojo).Magnitude < CERCA then
+			local e = v.m:GetScale()
+			if v.golpe then
+				Clips.aplicar(v.huesos, v.clips.Defeat, t - v.golpe, e, false)
+			else
+				Clips.aplicar(v.huesos, v.clips.Idle, t + v.fase, e, true)
+				local parpado = v.clips.Blink
+				if parpado and t >= v.parpadeo then
+					Clips.aplicar(v.huesos, parpado, t - v.parpadeo, e, false, true)
+					if t - v.parpadeo > parpado.dur then v.parpadeo = t + 2 + math.random() * 3 end
+				end
+			end
+		end
+		for _, p in ipairs(v.partes) do
+			p.LocalTransparencyModifier = v.escala < 0.08 and 1 or 0
 		end
 	end
 end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ000001B">
+<Item class="LocalScript" referent="RBXJ000001C">
 <Properties>
 <string name="Name">HudVuelo</string>
 <ProtectedString name="Source"><![CDATA[-- HUD de vuelo de «+1 de lanzamiento por segundo». Lee atributos del jugador local (los pone el juego o DemoVisual.server.lua):
@@ -241394,7 +241471,7 @@ refrescar()
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ000001C">
+<Item class="LocalScript" referent="RBXJ000001D">
 <Properties>
 <string name="Name">Inventario</string>
 <ProtectedString name="Source"><![CDATA[-- Inventario de «+1 de lanzamiento por segundo»: pestañas MASCOTAS (equipar hasta 3), HUEVOS (abrir con dinero) y ALAS (comprar y
@@ -241580,7 +241657,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ000001D">
+<Item class="LocalScript" referent="RBXJ000001E">
 <Properties>
 <string name="Name">Misiones</string>
 <ProtectedString name="Source"><![CDATA[-- Panel de misiones de «+1 de lanzamiento por segundo»: 3 misiones de la sesion con barra de progreso, a la izquierda, solo en tierra.
@@ -241621,7 +241698,7 @@ ver()
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ000001E">
+<Item class="LocalScript" referent="RBXJ000001F">
 <Properties>
 <string name="Name">Orbes</string>
 <ProtectedString name="Source"><![CDATA[-- Orbes «+1» de «+1 de lanzamiento por segundo» vistos en el cliente: los mismos que genera el servidor (Encuentros.colocarOrbes,
@@ -241675,7 +241752,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ000001F">
+<Item class="LocalScript" referent="RBXJ0000020">
 <Properties>
 <string name="Name">Rebirth</string>
 <ProtectedString name="Source"><![CDATA[-- Rebirth y avisos de «+1 de lanzamiento por segundo»: boton REBIRTH (solo en tierra) con un panel de confirmacion que muestra
@@ -241756,7 +241833,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000020">
+<Item class="LocalScript" referent="RBXJ0000021">
 <Properties>
 <string name="Name">Resultados</string>
 <ProtectedString name="Source"><![CDATA[-- Pantalla de resultados del vuelo de «+1 de lanzamiento por segundo»: aparece al aterrizar (MAS1_Resultado), cuenta hacia arriba
@@ -241828,7 +241905,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000021">
+<Item class="LocalScript" referent="RBXJ0000022">
 <Properties>
 <string name="Name">Seguidores</string>
 <ProtectedString name="Source"><![CDATA[-- Mascotas que te siguen y alas puestas de «+1 de lanzamiento por segundo» (todo en el cliente, para todos los jugadores).
@@ -241998,7 +242075,7 @@ Players.PlayerRemoving:Connect(limpiar)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000022">
+<Item class="LocalScript" referent="RBXJ0000023">
 <Properties>
 <string name="Name">Sonidos</string>
 <ProtectedString name="Source"><![CDATA[-- Sonido de «+1 de lanzamiento por segundo» en el cliente: engancha los eventos del juego (efectos, orbes, huevos, avisos, atributos) y
@@ -242042,7 +242119,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="ModuleScript" referent="RBXJ0000023">
+<Item class="ModuleScript" referent="RBXJ0000024">
 <Properties>
 <string name="Name">Tema</string>
 <ProtectedString name="Source"><![CDATA[-- Tema de interfaz de «+1 de lanzamiento por segundo»: paneles gruesos con contorno oscuro y sombra dura, colores vivos, tipografia redondeada.
@@ -242113,7 +242190,7 @@ return T
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000024">
+<Item class="LocalScript" referent="RBXJ0000025">
 <Properties>
 <string name="Name">VueloControl</string>
 <ProtectedString name="Source"><![CDATA[-- Control del vuelo en el cliente de «+1 de lanzamiento por segundo». El cliente mueve su propio personaje (asi responde al instante)
@@ -242288,7 +242365,7 @@ end)
 ]]></ProtectedString>
 </Properties>
 </Item>
-<Item class="LocalScript" referent="RBXJ0000025">
+<Item class="LocalScript" referent="RBXJ0000026">
 <Properties>
 <string name="Name">Zonas</string>
 <ProtectedString name="Source"><![CDATA[-- Cielo y niebla por zona en el cliente de «+1 de lanzamiento por segundo»: al cruzar el arco de cada zona cambian la hora y la
