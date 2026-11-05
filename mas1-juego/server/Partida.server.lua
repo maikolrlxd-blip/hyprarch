@@ -130,7 +130,7 @@ local function golpeado(i)
 end
 
 -- ---------------------------------------------------------------- jugadores: datos, alas que se desbloquean y guardado
-local function revisarAlas(plr, j) -- hito 6: iniciales en el 3.er lanzamiento, roboticas con 3 dias seguidos, avanzadas con 10 cofres
+local function revisarAlas(plr, j) -- hito 6: iniciales en el 3.er lanzamiento, roboticas con 3 dias seguidos, avanzadas con 60 cofres
 	local progreso = { lanzamientos = plr:GetAttribute("Lanzamientos") or 0, diasSeguidos = j.dias.diasSeguidos,
 		cofres = plr:GetAttribute("Cofres") or 0 }
 	local nuevas = false
