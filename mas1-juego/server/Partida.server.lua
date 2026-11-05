@@ -428,6 +428,7 @@ RunService.Heartbeat:Connect(function(dt)
 			plr:SetAttribute("Potencia", math.floor(j.potencia))
 			plr:SetAttribute("Orbes", j.s.v.orbes or 0)
 			orbeEv:FireClient(plr, r.orbes)
+			for _, i in ipairs(r.orbes) do efecto:FireClient(plr, "orbe", v3(mundo.orbes[i].pos)) end -- la chispa de Efectos.client
 		end
 		if sumaCombo > 0 then -- combo: aros, orbes y cofres seguidos (el HUD de Linux 2.0 lo pinta)
 			j.combo = ((j.comboHasta or 0) > os.clock() and j.combo or 0) + sumaCombo
