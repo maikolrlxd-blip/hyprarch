@@ -469,6 +469,7 @@ RunService.Heartbeat:Connect(function(dt)
 			local res = r.aterrizaje
 			plr:SetAttribute("Dinero", (plr:GetAttribute("Dinero") or 0) + res.dinero)
 			plr:SetAttribute("Exp", (plr:GetAttribute("Exp") or 0) + res.exp)
+			efecto:FireAllClients("aterrizaje", hrp.Position - Vector3.new(0, 2.8, 0)) -- el polvo, a los pies
 			cerrarVuelo(plr, j, hrp)
 			local premio, hechas = Mis.registrar(j.misiones, { distancia = res.distancia, aros = res.aros, golpes = res.golpes, cofres = res.cofres, orbes = res.orbes }, math.random)
 			if premio > 0 then

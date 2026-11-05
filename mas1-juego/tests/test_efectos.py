@@ -30,6 +30,6 @@ for ruta in glob.glob('server/*.lua'):
 assert usados, 'no se encontro ningun efecto disparado: ha cambiado la forma de llamarlos'
 for nombre, rutas in usados.items():
     assert nombre in orden, ('el servidor dispara un efecto que no existe', nombre, sorted(rutas))
-for nombre in ('lanzamiento', 'aro', 'golpe', 'rebirth', 'estela', 'orbe'):
+for nombre in ('lanzamiento', 'aro', 'golpe', 'rebirth', 'estela', 'orbe', 'aterrizaje'):
     assert nombre in usados, ('el juego ya no dispara', nombre)
 print('ok (%d efectos; el servidor dispara %s)' % (len(orden), ', '.join(sorted(usados))))

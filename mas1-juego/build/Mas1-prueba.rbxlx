@@ -206391,6 +206391,8 @@ E.TIPOS = {
 	golpe = { count = 14, life = { 0.25, 0.45 }, speed = { 12, 22 }, size = { 1.4, 0 }, spread = 180, accel = { 0, 0, 0 }, colors = { "#ffffff", "#ff5d8f" }, light = 0.5 },
 	-- chispa corta al coger un orbe «+1»: pequeña y dorada, para que no tape el siguiente orbe del trazo (a 14 studs de este)
 	orbe = { count = 7, life = { 0.2, 0.35 }, speed = { 6, 12 }, size = { 0.9, 0 }, spread = 180, accel = { 0, 0, 0 }, colors = { "#fff7c2", "#ffd23f" }, light = 0.8 },
+	-- nube de polvo al aterrizar en el carril: crece al subir y se va aclarando (casi sin luz propia, para que sea polvo y no chispas)
+	aterrizaje = { count = 26, life = { 0.5, 0.9 }, speed = { 6, 15 }, size = { 1.2, 3.4 }, spread = 180, accel = { 0, 2, 0 }, colors = { "#ffffff", "#e6e9fb", "#cfd3f2" }, light = 0.05 },
 	rebirth = { count = 120, life = { 0.8, 1.6 }, speed = { 10, 30 }, size = { 3, 0 }, spread = 180, accel = { 0, 6, 0 }, colors = { "#7c5cff", "#3ddc97", "#ffd23f" }, light = 0.7 },
 	fuego_fenix = { rate = 70, life = { 0.4, 0.8 }, speed = { 3, 8 }, size = { 2.2, 0 }, spread = 25, accel = { 0, 10, 0 }, colors = { "#fff3b0", "#ff9d00", "#ff3d00" }, light = 0.8 },
 	-- Auras de huevos/mascotas por rareza (continuas, sobre el modelo). Comun: sin aura.
@@ -206401,7 +206403,7 @@ E.TIPOS = {
 }
 
 -- Orden fijo para las pruebas (sin depender de pairs)
-E.ORDEN = { "lanzamiento", "estela", "aleteo", "aro", "golpe", "orbe", "rebirth", "fuego_fenix", "aura_poco_comun", "aura_raro", "aura_legendario", "aura_mitico" }
+E.ORDEN = { "lanzamiento", "estela", "aleteo", "aro", "golpe", "orbe", "aterrizaje", "rebirth", "fuego_fenix", "aura_poco_comun", "aura_raro", "aura_legendario", "aura_mitico" }
 
 return E
 ]]></ProtectedString>
@@ -241043,6 +241045,7 @@ RunService.Heartbeat:Connect(function(dt)
 			local res = r.aterrizaje
 			plr:SetAttribute("Dinero", (plr:GetAttribute("Dinero") or 0) + res.dinero)
 			plr:SetAttribute("Exp", (plr:GetAttribute("Exp") or 0) + res.exp)
+			efecto:FireAllClients("aterrizaje", hrp.Position - Vector3.new(0, 2.8, 0)) -- el polvo, a los pies
 			cerrarVuelo(plr, j, hrp)
 			local premio, hechas = Mis.registrar(j.misiones, { distancia = res.distancia, aros = res.aros, golpes = res.golpes, cofres = res.cofres, orbes = res.orbes }, math.random)
 			if premio > 0 then
