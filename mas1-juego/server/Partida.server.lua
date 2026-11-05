@@ -184,7 +184,12 @@ local function alEntrar(plr)
 	plr.CharacterAdded:Connect(function() mandarInventario(plr, j) end) -- para cuando los scripts del cliente ya escuchan
 	task.spawn(function()
 		local d, motivo = G.cargar(plr)
-		if not plr.Parent or jugadores[plr] ~= j then return end
+		if not plr.Parent or jugadores[plr] ~= j then
+			-- se fue mientras cargaba: G.cargar ya habia tomado el bloqueo y nadie lo soltaria (despedir no guarda lo que no llego a
+			-- cargarse), asi que no podria entrar en otro servidor hasta que caducara (3 minutos); se escribe lo cargado y se suelta
+			if d then G.guardar(plr, d, true) end
+			return
+		end
 		if not d then -- mejor no jugar que jugar con datos vacios y pisar los buenos al guardar
 			plr:Kick(motivo == "bloqueado" and "Tus datos siguen abiertos en otro servidor. Vuelve a entrar en un momento."
 				or "No se pudieron cargar tus datos. Vuelve a entrar en un momento.")

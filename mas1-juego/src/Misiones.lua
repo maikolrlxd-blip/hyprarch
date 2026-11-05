@@ -39,13 +39,15 @@ local function porId(id)
 	for _, m in ipairs(M.LISTA) do if m.id == id then return m end end
 end
 
--- Descripcion de las activas: { texto, progreso, meta, premio }
+-- Descripcion de las activas: { texto, progreso, meta, premio }. El progreso va ENTERO: la distancia se acumula con decimales y el
+-- cliente (client/Misiones.client.lua) lee el atributo con un patron de enteros (%d+): una fila con «1234.5678» no encaja y la mision
+-- desaparecia del panel en cuanto se volaba con «Vuela metros» activa.
 function M.ver(e)
 	local out = {}
 	for _, a in ipairs(e.activas) do
 		local m = porId(a.id)
 		local n = ordenar(e, a.id)
-		out[#out + 1] = { id = a.id, texto = m.texto, progreso = math.min((e.acumulado[m.stat] or 0) - a.base, m.metas[n]), meta = m.metas[n], premio = m.premio[n] }
+		out[#out + 1] = { id = a.id, texto = m.texto, progreso = math.floor(math.min((e.acumulado[m.stat] or 0) - a.base, m.metas[n])), meta = m.metas[n], premio = m.premio[n] }
 	end
 	return out
 end

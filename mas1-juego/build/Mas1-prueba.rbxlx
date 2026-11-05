@@ -206883,13 +206883,15 @@ local function porId(id)
 	for _, m in ipairs(M.LISTA) do if m.id == id then return m end end
 end
 
--- Descripcion de las activas: { texto, progreso, meta, premio }
+-- Descripcion de las activas: { texto, progreso, meta, premio }. El progreso va ENTERO: la distancia se acumula con decimales y el
+-- cliente (client/Misiones.client.lua) lee el atributo con un patron de enteros (%d+): una fila con «1234.5678» no encaja y la mision
+-- desaparecia del panel en cuanto se volaba con «Vuela metros» activa.
 function M.ver(e)
 	local out = {}
 	for _, a in ipairs(e.activas) do
 		local m = porId(a.id)
 		local n = ordenar(e, a.id)
-		out[#out + 1] = { id = a.id, texto = m.texto, progreso = math.min((e.acumulado[m.stat] or 0) - a.base, m.metas[n]), meta = m.metas[n], premio = m.premio[n] }
+		out[#out + 1] = { id = a.id, texto = m.texto, progreso = math.floor(math.min((e.acumulado[m.stat] or 0) - a.base, m.metas[n])), meta = m.metas[n], premio = m.premio[n] }
 	end
 	return out
 end
@@ -240756,7 +240758,12 @@ local function alEntrar(plr)
 	plr.CharacterAdded:Connect(function() mandarInventario(plr, j) end) -- para cuando los scripts del cliente ya escuchan
 	task.spawn(function()
 		local d, motivo = G.cargar(plr)
-		if not plr.Parent or jugadores[plr] ~= j then return end
+		if not plr.Parent or jugadores[plr] ~= j then
+			-- se fue mientras cargaba: G.cargar ya habia tomado el bloqueo y nadie lo soltaria (despedir no guarda lo que no llego a
+			-- cargarse), asi que no podria entrar en otro servidor hasta que caducara (3 minutos); se escribe lo cargado y se suelta
+			if d then G.guardar(plr, d, true) end
+			return
+		end
 		if not d then -- mejor no jugar que jugar con datos vacios y pisar los buenos al guardar
 			plr:Kick(motivo == "bloqueado" and "Tus datos siguen abiertos en otro servidor. Vuelve a entrar en un momento."
 				or "No se pudieron cargar tus datos. Vuelve a entrar en un momento.")
