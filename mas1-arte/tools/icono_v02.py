@@ -63,12 +63,17 @@ def nube(c, s):
 cielo('#c9f4ff', '#2f6bff')
 sol(IM.CC, 'Sol', 2.6, (0.3, 0.6, -0.7))            # desde detrás de la cámara: ilumina la espalda y las alas
 sol(IM.CC, 'Contra', 1.4, (-0.2, -0.8, -0.3), 12)   # de cara a la cámara: borde de luz en la silueta
-IM.avatar((0, 0, 0), cabeceo=-52, alabeo=0, escala_alas=1.75, clip_alas='Flap', t_alas=0.0)   # alas «arriba extendida»
-aro((0, 22, 10.5), 9.5, 1.0)
-aro((0, 22, 10.5), 8.1, 0.26, color='#7df9ff', brillo=1.5)   # brillo cian por dentro, como los aros del juego
-for i in range(5):                                          # orbes «+1» camino del aro
-    bola((math.sin(i * 1.3) * 1.4, 7 + i * 3.0, 6.5 + i * 0.8), 0.45, '#ffe14d', 2.0)
-for c, s in (((-12, 20, -9), 3.4), ((13, 26, -10), 4.0), ((0, 36, -12), 5.0), ((-7, 6, -11), 2.6), ((8, 9, -10.5), 2.4)):
+# revisión del director (05/11): avatar más grande en el centro del aro, alas abiertas en V (no una franja plana) y que se lean a
+# 128 px. El avatar casi de pie, de espaldas, con las alas «arriba extendida» muy grandes, y detrás un disco de luz dentro del aro
+# para que la silueta oscura de las alas se recorte
+IM.avatar((0, 0, 0), cabeceo=-18, alabeo=0, escala_alas=2.1, clip_alas='Flap', t_alas=0.0)
+aro((0, 9, 3.6), 9.2, 1.0)
+aro((0, 9, 3.6), 7.9, 0.26, color='#7df9ff', brillo=1.5)    # brillo cian por dentro, como los aros del juego
+bpy.ops.mesh.primitive_cylinder_add(radius=7.9, depth=0.1, vertices=72, location=(0, 9.6, 3.6), rotation=(math.radians(90), 0, 0))
+a_escena(bpy.context.active_object).data.materials.append(IM.mat('#fff4c4', 1.6))   # luz dentro del aro
+for i, (x, z) in enumerate(((-10.5, 12.0), (10.8, 10.5), (-11.5, -3.0), (11.2, -4.5))):   # orbes «+1» alrededor
+    bola((x, 6, z), 0.55, '#ffe14d', 2.0)
+for c, s in (((-12, 14, -9), 3.4), ((13, 18, -10), 4.0), ((0, 26, -12), 5.0), ((-7, 4, -10), 2.6), ((8, 5, -10.5), 2.4)):
     nube(c, s)
 
 res, muestras = ((512, 512), 12) if PRUEBA else ((1024, 1024), 64)
@@ -77,9 +82,9 @@ cielo('#c9f4ff', '#2f6bff')   # setup_render no toca el mundo, pero por si acaso
 for o in bpy.data.objects:
     if o.type == 'ARMATURE' and '_t' in o:
         bpy.context.scene.frame_set(int(round(o['_t'] * 30)))
-cam = A.camera(IM.CC, 'cam_icono', (2.6, -21.0, 0.6), (0, 6, 7.6), lens=46)   # de espaldas, de lejos: menos perspectiva
+cam = A.camera(IM.CC, 'cam_icono', (0.6, -28.5, 7.4), (0, 4, 0.8), lens=50)   # de espaldas, algo por encima, de lejos
 cam.data.clip_end = 500
-IM.titulo(cam, [('+1', 1.0)], 2.4, 6.3)
+IM.titulo(cam, [('+1', 1.0)], -2.15, 5.4)   # abajo, sobre las nubes: la V de las alas queda libre arriba
 bpy.context.scene.render.image_settings.file_format = 'PNG'
 ruta = os.path.join(OUT, 'Icono-v02-prueba.png' if PRUEBA else 'Icono-v02-1024.png')
 A.render(ruta, cam)
