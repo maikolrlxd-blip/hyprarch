@@ -49,7 +49,8 @@ def carpeta(ruta, nombre):
     return item('Folder', nombre, hijos)
 
 
-COMPARTIDAS = []  # bloques <SharedStrings> de los .rbxmx (datos de malla que las piezas citan por su md5)
+COMPARTIDAS = {}  # md5 -> <SharedString> de los .rbxmx (datos de malla que las piezas citan por su md5); cada md5 una sola vez,
+                  # que Studio no abre la place si dos modelos declaran la misma («duplicate declared shared string»)
 
 
 def modelo_rbxmx(ruta):
@@ -58,7 +59,8 @@ def modelo_rbxmx(ruta):
     texto = open(ruta, encoding='utf-8').read()
     m = re.search(r'<SharedStrings>(.*?)</SharedStrings>', texto, re.S)
     if m:
-        COMPARTIDAS.append(m.group(1))
+        for b in re.finditer(r'<SharedString md5="([^"]+)">.*?</SharedString>', m.group(1), re.S):
+            COMPARTIDAS.setdefault(b.group(1), b.group(0))
         texto = texto[:m.start()] + texto[m.end():]
     cuerpo = texto[texto.index('<Item '):texto.rindex('</roblox>')]
     cuerpo = re.sub(r'referent="(RBX[0-9A-Fa-f]+)"', r'referent="M\1"', cuerpo)
@@ -103,9 +105,11 @@ texto = texto[:fin] + '\n' + '\n'.join(placas) + texto[fin:]
 texto = texto.rstrip()[:-len('</roblox>')] + '\n'.join(servicios) + '\n</roblox>\n'
 if COMPARTIDAS:  # los datos de malla de los .rbxmx, en el bloque SharedStrings de la place (uno solo, al final)
     if '<SharedStrings>' in texto:
-        texto = texto.replace('</SharedStrings>', ''.join(COMPARTIDAS) + '</SharedStrings>', 1)
+        ya = set(re.findall(r'<SharedString md5="([^"]+)">', texto[texto.index('<SharedStrings>'):]))
+        nuevas = ''.join(b for k, b in COMPARTIDAS.items() if k not in ya)
+        texto = texto.replace('</SharedStrings>', nuevas + '</SharedStrings>', 1)
     else:
-        texto = texto.replace('\n</roblox>\n', '\n<SharedStrings>' + ''.join(COMPARTIDAS) + '</SharedStrings>\n</roblox>\n')
+        texto = texto.replace('\n</roblox>\n', '\n<SharedStrings>' + ''.join(COMPARTIDAS.values()) + '</SharedStrings>\n</roblox>\n')
 os.makedirs(os.path.dirname(SALIDA), exist_ok=True)
 with open(SALIDA, 'w', encoding='utf-8', newline='\n') as f:
     f.write(texto)

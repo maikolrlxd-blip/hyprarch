@@ -44,15 +44,30 @@ for z = 0, -170, -20 do
 	parte("Franja", Vector3.new(3, 0.1, 8), CFrame.new(0, 0.02, z), CRE, nil, { CanCollide = false, CanQuery = false })
 end
 
--- CAÑON: base, tubo inclinado hacia -Z y boca dorada, con la plataforma MAS1_Canon delante (de donde sale el jugador)
+-- CAÑON apuntando a -Z, con la plataforma MAS1_Canon delante (de donde sale el jugador). Es el «Cañón pajarero» de Codex
+-- (ReplicatedStorage.MAS1_Equipo.Canon: mide 3,8 x 5,7 x 4,8 studs, aquí x3) y, si no está, el provisional de piezas
 local cz = -22
-parte("CanonBase", Vector3.new(14, 3, 14), CFrame.new(0, 1.5, cz), rgb(150, 70, 60))
-parte("CanonRueda", Vector3.new(3, 8, 8), CFrame.new(-7.5, 4, cz) * CFrame.Angles(0, 0, 0), TIN, nil, { Shape = Enum.PartType.Cylinder })
-parte("CanonRueda", Vector3.new(3, 8, 8), CFrame.new(7.5, 4, cz), TIN, nil, { Shape = Enum.PartType.Cylinder })
-local tubo = parte("CanonTubo", Vector3.new(7, 7, 18), CFrame.new(0, 7, cz) * CFrame.Angles(math.rad(28), 0, 0), ROS)
-parte("CanonAro", Vector3.new(8.5, 8.5, 2.2), tubo.CFrame * CFrame.new(0, 0, -9), SOL)
-parte("CanonAro", Vector3.new(8.5, 8.5, 2.2), tubo.CFrame * CFrame.new(0, 0, 5), SOL)
-parte("CanonBoca", Vector3.new(5, 5, 0.6), tubo.CFrame * CFrame.new(0, 0, -9.6), TIN)
+local ESCALA_CANON = 3
+local equipo = game:GetService("ReplicatedStorage"):FindFirstChild("MAS1_Equipo")
+local plantillaCanon = equipo and equipo:FindFirstChild("Canon")
+if plantillaCanon then
+	local canon = plantillaCanon:Clone()
+	canon.Name = "CanonPajarero"
+	canon:ScaleTo(ESCALA_CANON)
+	canon:PivotTo(CFrame.new(0, 0, cz)) -- el pivote es el centro del suelo bajo el cañón, con la boca hacia -Z
+	for _, d in ipairs(canon:GetDescendants()) do
+		if d:IsA("BasePart") then d.Anchored = true end
+	end
+	canon.Parent = lobby
+else
+	parte("CanonBase", Vector3.new(14, 3, 14), CFrame.new(0, 1.5, cz), rgb(150, 70, 60))
+	parte("CanonRueda", Vector3.new(3, 8, 8), CFrame.new(-7.5, 4, cz), TIN, nil, { Shape = Enum.PartType.Cylinder })
+	parte("CanonRueda", Vector3.new(3, 8, 8), CFrame.new(7.5, 4, cz), TIN, nil, { Shape = Enum.PartType.Cylinder })
+	local tubo = parte("CanonTubo", Vector3.new(7, 7, 18), CFrame.new(0, 7, cz) * CFrame.Angles(math.rad(28), 0, 0), ROS)
+	parte("CanonAro", Vector3.new(8.5, 8.5, 2.2), tubo.CFrame * CFrame.new(0, 0, -9), SOL)
+	parte("CanonAro", Vector3.new(8.5, 8.5, 2.2), tubo.CFrame * CFrame.new(0, 0, 5), SOL)
+	parte("CanonBoca", Vector3.new(5, 5, 0.6), tubo.CFrame * CFrame.new(0, 0, -9.6), TIN)
+end
 local plat = parte("MAS1_Canon", Vector3.new(10, 1, 10), CFrame.new(0, 0.5, cz - 16), CIE, Enum.Material.Neon)
 cartel("¡CAÑÓN!", Vector3.new(0, 16, cz + 4), 14, SOL)
 

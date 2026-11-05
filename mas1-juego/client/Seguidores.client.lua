@@ -8,6 +8,10 @@ local M = require(Mas1:WaitForChild("Mascotas"))
 local COLOR = { comun = Color3.fromRGB(190, 190, 200), poco_comun = Color3.fromRGB(110, 210, 120), raro = Color3.fromRGB(80, 160, 255),
 	epico = Color3.fromRGB(170, 100, 255), legendario = Color3.fromRGB(255, 190, 40), mitico = Color3.fromRGB(255, 80, 140), robux = Color3.fromRGB(255, 120, 40) }
 local ALAS_COLOR = { iniciales = Color3.fromRGB(245, 235, 210), roboticas = Color3.fromRGB(235, 240, 250), avanzadas = Color3.fromRGB(32, 36, 70) }
+-- centro del soporte de cada ala (la placa o el bloque que va a la espalda) respecto a su pivote, en studs hacia atras, medido en los
+-- .blend: Back_mount de las iniciales, bloque central de las roboticas y placa con gema de las avanzadas. Ese centro se pone en la
+-- superficie de la espalda, asi el soporte queda medio metido en el torso (Maikol, 01/11: «mas pegado al cuerpo, la mitad dentro»)
+local SOPORTE_ALAS = { iniciales = -0.01, roboticas = 0, avanzadas = 0.27 }
 
 local function modelos(carpeta, id)
 	local m = RS:FindFirstChild("MAS1_Modelos")
@@ -145,7 +149,7 @@ RunService.RenderStepped:Connect(function(dt)
 		if e.alas then
 			local torso = plr.Character:FindFirstChild("UpperTorso") or plr.Character:FindFirstChild("Torso") or hrp
 			local abre = vuela and (0.35 + (boost and 0.35 or 0.15) * math.sin(t * (boost and 14 or 7))) or 0.15 + 0.03 * math.sin(t * 1.5)
-			local base = torso.CFrame * CFrame.new(0, 0.4, 0.7)
+			local base = torso.CFrame * CFrame.new(0, 0.4, torso.Size.Z / 2 - (SOPORTE_ALAS[e.idAlas] or -0.2))
 			if e.alas.PrimaryPart and #e.alas:GetChildren() == 2 and not modelos("Alas", e.idAlas) then
 				local ai, ad = e.alas:FindFirstChild("AlaI"), e.alas:FindFirstChild("AlaD")
 				if ai then ai.CFrame = base * CFrame.new(-2, 0, 0) * CFrame.Angles(0, 0, -abre) end

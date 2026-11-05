@@ -1,25 +1,36 @@
--- Aleteo de las mallas de mascotas y alas que pone client/Seguidores.client.lua (modelos «Mas1Mascota_<id>» y «Mas1Alas» del
--- Workspace, sacados de ReplicatedStorage.MAS1_Modelos). Todavia no hay ids de Animation subidas, asi que mueve los huesos de las
--- alas (Wing_, Mid_, Tip_) con Bone.Transform: el eje de giro es el frente del modelo visto desde cada hueso, y el signo sale del lado
--- en que queda el hueso (las alas de Codex llaman R al lado izquierdo). Las mascotas aletean siempre; las alas del jugador, en vuelo
--- (mas con turbo) y casi quietas en tierra. Los modelos de piezas provisionales no tienen huesos: no se tocan.
-local Players, RunService = game:GetService("Players"), game:GetService("RunService")
-local cache = setmetatable({}, { __mode = "k" }) -- [modelo] = { huesos = {{hueso, eje, lado, retraso}}, fase }
+-- Animacion de las mallas de mascotas y alas que pone client/Seguidores.client.lua (modelos «Mas1Mascota_<id>» y «Mas1Alas» del
+-- Workspace, sacados de ReplicatedStorage.MAS1_Modelos) con los clips DE VERDAD de Blender: src/ClipsHuesos.lua, generado por
+-- mas1-arte/tools/clips_a_lua.py, guarda el Bone.Transform de cada hueso animado (15 fotogramas por segundo), ya pasado a los ejes
+-- de los huesos de Roblox (no son los de Blender), y aqui se pone interpolando. Sin publicar una Animation por clip. Maikol (01/11):
+-- con el aleteo inventado «las alas solo se mueven adelante y atras, abrazando al jugador»; ahora es el Flap de Blender (recoger ->
+-- extender -> impulsar). Comprobado en Studio: Roblox compone CFrame * Transform, como supone clips_a_lua.py.
+-- Mascotas: Fly siempre. Alas del jugador: Flap en vuelo (mas rapido con turbo), Glide al planear y, en tierra, Glide despacio (alas
+-- abiertas, no pegadas al cuerpo). Los modelos de piezas provisionales no tienen huesos: no se tocan.
+local Players, RS, RunService = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService")
+local CLIPS = require(RS:WaitForChild("Mas1"):WaitForChild("ClipsHuesos"))
+local cache = setmetatable({}, { __mode = "k" }) -- [modelo] = { id, huesos = {nombre = Bone}, poses = {clip = {nombre = {CFrame}}} }
 
-local function preparar(m)
-	local piv = m:GetPivot()
-	local lista = {}
-	for _, b in ipairs(m:GetDescendants()) do
-		if b:IsA("Bone") and (b.Name:match("^Wing_") or b.Name:match("^Mid_") or b.Name:match("^Tip_")) then
-			lista[#lista + 1] = {
-				hueso = b,
-				eje = b.WorldCFrame:VectorToObjectSpace(piv.LookVector), -- con Transform aun sin tocar
-				lado = (b.WorldPosition - piv.Position):Dot(piv.RightVector) >= 0 and 1 or -1, -- +: baja el ala derecha
-				retraso = b.Name:match("^Tip_") and 0.7 or b.Name:match("^Mid_") and 0.35 or 0, -- la punta va detras del hombro
-			}
+local function poses(clip)
+	local p = {}
+	for nombre, v in pairs(clip.huesos) do
+		local lista = {}
+		for i = 0, clip.n - 1 do
+			local k = i * 7
+			lista[i + 1] = CFrame.new(v[k + 1], v[k + 2], v[k + 3], v[k + 4], v[k + 5], v[k + 6], v[k + 7])
 		end
+		p[nombre] = lista
 	end
-	return { huesos = lista, fase = math.random() * 2 * math.pi }
+	return p
+end
+
+local preparados = {} -- [id] = {clip = poses}: las poses de cada pieza se calculan una vez
+local function posesDe(id)
+	if not preparados[id] and CLIPS[id] then
+		local t = {}
+		for nombre, clip in pairs(CLIPS[id]) do t[nombre] = { poses = poses(clip), n = clip.n, dur = clip.dur } end
+		preparados[id] = t
+	end
+	return preparados[id]
 end
 
 local function duenoDe(m) -- las alas van pegadas a la espalda de su jugador
@@ -31,33 +42,51 @@ local function duenoDe(m) -- las alas van pegadas a la espalda de su jugador
 	end
 end
 
+local function aplicar(c, clip, t, escala)
+	local actual = c.clips and c.clips[clip]
+	if not actual then return end
+	local fase = (t % actual.dur) / actual.dur * (actual.n - 1)
+	local i = math.floor(fase)
+	local a = fase - i
+	for nombre, hueso in pairs(c.huesos) do
+		local lista = actual.poses[nombre]
+		if lista then
+			local cf = lista[i + 1]:Lerp(lista[math.min(i + 2, actual.n)], a)
+			hueso.Transform = escala == 1 and cf or (cf - cf.Position + cf.Position * escala) -- la escala del modelo mueve los studs
+		else
+			hueso.Transform = CFrame.identity
+		end
+	end
+end
+
 RunService.RenderStepped:Connect(function()
-	local t = os.clock()
+	local reloj = os.clock()
 	for _, m in ipairs(workspace:GetChildren()) do
 		local mascota = m.Name:sub(1, 12) == "Mas1Mascota_"
 		if m:IsA("Model") and (mascota or m.Name == "Mas1Alas") then
 			local c = cache[m]
-			if not c then
-				c = preparar(m)
+			local dueno = not mascota and duenoDe(m) or nil
+			local id = mascota and m.Name:sub(13) or (dueno and dueno:GetAttribute("Alas")) or nil
+			if not c or c.id ~= id then
+				c = { id = id, huesos = {}, clips = id and posesDe(id), fase = math.random() * 3 }
+				for _, b in ipairs(m:GetDescendants()) do
+					if b:IsA("Bone") then c.huesos[b.Name] = b end
+				end
 				cache[m] = c
 			end
-			if #c.huesos > 0 then
-				local amp, frec
+			if c.clips and next(c.huesos) then
+				local escala = m:GetScale()
 				if mascota then
-					amp, frec = math.rad(32), 2.2
+					aplicar(c, "Fly", reloj + c.fase, escala)
 				else
-					local dueno = duenoDe(m)
 					local vuela = dueno and dueno:GetAttribute("EnVuelo") == true
-					local boost = dueno and dueno:GetAttribute("Boost") == true
-					if vuela then
-						amp, frec = math.rad(boost and 30 or 20), boost and 2.6 or 1.4
+					if vuela and dueno:GetAttribute("Planeando") then
+						aplicar(c, "Glide", reloj, escala)
+					elseif vuela then
+						aplicar(c, "Flap", reloj * (dueno:GetAttribute("Boost") and 1.6 or 1), escala)
 					else
-						amp, frec = math.rad(4), 0.5
+						aplicar(c, "Glide", reloj * 0.5, escala)
 					end
-				end
-				for _, h in ipairs(c.huesos) do
-					local a = amp * (h.retraso > 0 and 0.6 or 1) * math.sin(t * frec * 2 * math.pi + c.fase - h.retraso)
-					h.hueso.Transform = CFrame.fromAxisAngle(h.eje, h.lado * a)
 				end
 			end
 		end

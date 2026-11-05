@@ -18,6 +18,8 @@ Borrador de Claude nube (30/10), puesto al día por el Coordinador con el hito 1
 - **Vuelta al lobby**: 3 s después de aterrizar el servidor lleva al jugador al `SpawnLocation` de `MAS1_Lobby` (si no se ha vuelto a lanzar).
 
 - **Lanzamiento**: sale de una parte llamada `MAS1_Canon` en el Workspace (la del cañón de la Pradera, cuando esté). Si no la hay, sale desde donde está el jugador, que tiene que estar en el suelo.
+- **Cañón del lobby**: es el «Cañón pajarero» de Codex (`ReplicatedStorage.MAS1_Equipo.Canon`, de `assets/MAS1_Equipo.rbxmx`). `server/Lobby.server.lua` lo pone ×3 en Z = −22 con la boca hacia −Z, por encima de la plataforma `MAS1_Canon`. Si falta, usa el cañón de piezas.
+- **Mallas de mascotas y alas**: `client/Seguidores.client.lua` las saca de `ReplicatedStorage.MAS1_Modelos`. `client/AnimaSeguidores.client.lua` las anima con los clips de Blender que guarda `src/ClipsHuesos.lua`, generado por `mas1-arte/tools/clips_a_lua.py`. El soporte de las alas queda medio metido en la espalda.
 
 ## Atributos del jugador
 Los escribe el servidor; la interfaz solo los lee.
